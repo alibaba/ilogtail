@@ -30,14 +30,14 @@ public:
         WriteMetrics::GetInstance()->CreateMetricsRecordRef(mMetricsRecordRef,
                                                             {
                                                                 {METRIC_LABEL_PROJECT, ctx.GetProjectName()},
-                                                                {METRIC_LABEL_CONFIG_NAME, ctx.GetConfigName()},
+                                                                {METRIC_LABEL_PIPELINE_NAME, ctx.GetConfigName()},
                                                             });
 
-        mInItemsCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_IN_ITEMS_CNT);
+        mInItemsTotal = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_IN_ITEMS_TOTAL);
         mInItemDataSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_IN_ITEM_SIZE_BYTES);
-        mOutItemsCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_OUT_ITEMS_CNT);
+        mOutItemsTotal = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_OUT_ITEMS_TOTAL);
         mTotalDelayMs = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_TOTAL_DELAY_MS);
-        mQueueSize = mMetricsRecordRef.CreateIntGauge(METRIC_COMPONENT_QUEUE_SIZE_CNT);
+        mQueueSizeTotal = mMetricsRecordRef.CreateIntGauge(METRIC_COMPONENT_QUEUE_SIZE_TOTAL);
         mQueueDataSizeByte = mMetricsRecordRef.CreateIntGauge(METRIC_COMPONENT_QUEUE_SIZE_BYTES);
     }
     virtual ~QueueInterface() = default;
@@ -59,11 +59,11 @@ protected:
     size_t mCapacity = 0;
 
     mutable MetricsRecordRef mMetricsRecordRef;
-    CounterPtr mInItemsCnt;
+    CounterPtr mInItemsTotal;
     CounterPtr mInItemDataSizeBytes;
-    CounterPtr mOutItemsCnt;
+    CounterPtr mOutItemsTotal;
     CounterPtr mTotalDelayMs;
-    IntGaugePtr mQueueSize;
+    IntGaugePtr mQueueSizeTotal;
     IntGaugePtr mQueueDataSizeByte;
 
 private:

@@ -34,9 +34,9 @@ bool ProcessorInstance::Init(const Json::Value& config, PipelineContext& context
     }
 
     // should init plugin first， then could GetMetricsRecordRef from plugin
-    mProcInRecordsTotal = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PROC_IN_RECORDS_TOTAL);
-    mProcOutRecordsTotal = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PROC_OUT_RECORDS_TOTAL);
-    mProcTimeMS = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PROC_TIME_MS);
+    mInEventsTotal = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_IN_EVENTS_TOTAL);
+    mOutEventsTotal = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_OUT_EVENTS_TOTAL);
+    mCostTimeMS = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_COST_TIME_MS);
 
     return true;
 }
@@ -46,15 +46,15 @@ void ProcessorInstance::Process(vector<PipelineEventGroup>& logGroupList) {
         return;
     } 
     for (const auto& logGroup : logGroupList) {
-        mProcInRecordsTotal->Add(logGroup.GetEvents().size());
+        mInEventsTotal->Add(logGroup.GetEvents().size());
     }
 
     auto before = chrono::system_clock::now();
     mPlugin->Process(logGroupList);
-    mProcTimeMS->Add(chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - before).count());
+    mCostTimeMS->Add(chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - before).count());
 
     for (const auto& logGroup : logGroupList) {
-        mProcOutRecordsTotal->Add(logGroup.GetEvents().size());
+        mOutEventsTotal->Add(logGroup.GetEvents().size());
     }    
 }
 

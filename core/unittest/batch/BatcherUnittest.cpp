@@ -578,16 +578,16 @@ void BatcherUnittest::TestMetric() {
         batch.Add(std::move(g), res);
         APSARA_TEST_EQUAL(5U, batch.mMetricsRecordRef->GetLabels()->size());
         APSARA_TEST_TRUE(batch.mMetricsRecordRef.HasLabel(METRIC_LABEL_PROJECT, ""));
-        APSARA_TEST_TRUE(batch.mMetricsRecordRef.HasLabel(METRIC_LABEL_CONFIG_NAME, "test_config"));
+        APSARA_TEST_TRUE(batch.mMetricsRecordRef.HasLabel(METRIC_LABEL_PIPELINE_NAME, "test_config"));
         APSARA_TEST_TRUE(batch.mMetricsRecordRef.HasLabel(METRIC_LABEL_KEY_COMPONENT_NAME, "batcher"));
         APSARA_TEST_TRUE(batch.mMetricsRecordRef.HasLabel(METRIC_LABEL_KEY_FLUSHER_NODE_ID, "1"));
         APSARA_TEST_TRUE(batch.mMetricsRecordRef.HasLabel("enable_group_batch", "false"));
-        APSARA_TEST_EQUAL(3U, batch.mInEventsCnt->GetValue());
+        APSARA_TEST_EQUAL(3U, batch.mInEventsTotal->GetValue());
         APSARA_TEST_EQUAL(groupSize, batch.mInGroupDataSizeBytes->GetValue());
-        APSARA_TEST_EQUAL(2U, batch.mOutEventsCnt->GetValue());
-        APSARA_TEST_EQUAL(1U, batch.mEventBatchItemsCnt->GetValue());
-        APSARA_TEST_EQUAL(1U, batch.mBufferedGroupsCnt->GetValue());
-        APSARA_TEST_EQUAL(1U, batch.mBufferedEventsCnt->GetValue());
+        APSARA_TEST_EQUAL(2U, batch.mOutEventsTotal->GetValue());
+        APSARA_TEST_EQUAL(1U, batch.mEventBatchItemsTotal->GetValue());
+        APSARA_TEST_EQUAL(1U, batch.mBufferedGroupsTotal->GetValue());
+        APSARA_TEST_EQUAL(1U, batch.mBufferedEventsTotal->GetValue());
         APSARA_TEST_EQUAL(batchSize, batch.mBufferedDataSizeByte->GetValue());
     }
     {
@@ -607,12 +607,12 @@ void BatcherUnittest::TestMetric() {
         batch.Add(std::move(g), res);
         batch.FlushQueue(0, res[0]);
         APSARA_TEST_TRUE(batch.mMetricsRecordRef.HasLabel("enable_group_batch", "true"));
-        APSARA_TEST_EQUAL(3U, batch.mInEventsCnt->GetValue());
+        APSARA_TEST_EQUAL(3U, batch.mInEventsTotal->GetValue());
         APSARA_TEST_EQUAL(groupSize, batch.mInGroupDataSizeBytes->GetValue());
-        APSARA_TEST_EQUAL(2U, batch.mOutEventsCnt->GetValue());
-        APSARA_TEST_EQUAL(1U, batch.mEventBatchItemsCnt->GetValue());
-        APSARA_TEST_EQUAL(1U, batch.mBufferedGroupsCnt->GetValue());
-        APSARA_TEST_EQUAL(1U, batch.mBufferedEventsCnt->GetValue());
+        APSARA_TEST_EQUAL(2U, batch.mOutEventsTotal->GetValue());
+        APSARA_TEST_EQUAL(1U, batch.mEventBatchItemsTotal->GetValue());
+        APSARA_TEST_EQUAL(1U, batch.mBufferedGroupsTotal->GetValue());
+        APSARA_TEST_EQUAL(1U, batch.mBufferedEventsTotal->GetValue());
         APSARA_TEST_EQUAL(batchSize, batch.mBufferedDataSizeByte->GetValue());
     }
 }

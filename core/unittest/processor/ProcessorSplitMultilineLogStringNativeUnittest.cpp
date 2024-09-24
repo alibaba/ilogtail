@@ -324,11 +324,11 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginCon
 
     // metric
     APSARA_TEST_EQUAL_FATAL(0 + 1 + 1 + 2 + 1 + 0,
-                            ProcessorSplitMultilineLogStringNative.mProcMatchedEventsCnt->GetValue());
+                            ProcessorSplitMultilineLogStringNative.mMatchedEventsTotal->GetValue());
     APSARA_TEST_EQUAL_FATAL(0 + 1 + 3 + 2 + 3 + 0,
-                            ProcessorSplitMultilineLogStringNative.mProcMatchedLinesCnt->GetValue());
+                            ProcessorSplitMultilineLogStringNative.mMatchedLinesTotal->GetValue());
     APSARA_TEST_EQUAL_FATAL(2 + 1 + 2 + 1 + 1 + 1,
-                            ProcessorSplitMultilineLogStringNative.mProcUnmatchedLinesCnt->GetValue());
+                            ProcessorSplitMultilineLogStringNative.mUnmatchedLinesTotal->GetValue());
 }
 
 void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginEnd() {
@@ -577,11 +577,11 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginEnd
 
     // metric
     APSARA_TEST_EQUAL_FATAL(0 + 0 + 1 + 0 + 1 + 1,
-                            ProcessorSplitMultilineLogStringNative.mProcMatchedEventsCnt->GetValue());
+                            ProcessorSplitMultilineLogStringNative.mMatchedEventsTotal->GetValue());
     APSARA_TEST_EQUAL_FATAL(0 + 0 + 2 + 0 + 2 + 3,
-                            ProcessorSplitMultilineLogStringNative.mProcMatchedLinesCnt->GetValue());
+                            ProcessorSplitMultilineLogStringNative.mMatchedLinesTotal->GetValue());
     APSARA_TEST_EQUAL_FATAL(2 + 3 + 2 + 2 + 1 + 1,
-                            ProcessorSplitMultilineLogStringNative.mProcUnmatchedLinesCnt->GetValue());
+                            ProcessorSplitMultilineLogStringNative.mUnmatchedLinesTotal->GetValue());
 }
 
 void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBegin() {
@@ -826,10 +826,10 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBegin() 
 
     // metric
     APSARA_TEST_EQUAL_FATAL(1 + 0 + 2 + 1 + 1,
-                            ProcessorSplitMultilineLogStringNative.mProcMatchedEventsCnt->GetValue());
-    APSARA_TEST_EQUAL_FATAL(1 + 0 + 2 + 2 + 3, ProcessorSplitMultilineLogStringNative.mProcMatchedLinesCnt->GetValue());
+                            ProcessorSplitMultilineLogStringNative.mMatchedEventsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(1 + 0 + 2 + 2 + 3, ProcessorSplitMultilineLogStringNative.mMatchedLinesTotal->GetValue());
     APSARA_TEST_EQUAL_FATAL(1 + 1 + 0 + 0 + 1,
-                            ProcessorSplitMultilineLogStringNative.mProcUnmatchedLinesCnt->GetValue());
+                            ProcessorSplitMultilineLogStringNative.mUnmatchedLinesTotal->GetValue());
 }
 
 void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithContinueEnd() {
@@ -1030,10 +1030,10 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithContinue
 
     // metric
     APSARA_TEST_EQUAL_FATAL(0 + 0 + 1 + 0 + 1,
-                            ProcessorSplitMultilineLogStringNative.mProcMatchedEventsCnt->GetValue());
-    APSARA_TEST_EQUAL_FATAL(0 + 0 + 3 + 0 + 1, ProcessorSplitMultilineLogStringNative.mProcMatchedLinesCnt->GetValue());
+                            ProcessorSplitMultilineLogStringNative.mMatchedEventsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0 + 0 + 3 + 0 + 1, ProcessorSplitMultilineLogStringNative.mMatchedLinesTotal->GetValue());
     APSARA_TEST_EQUAL_FATAL(1 + 2 + 0 + 1 + 0,
-                            ProcessorSplitMultilineLogStringNative.mProcUnmatchedLinesCnt->GetValue());
+                            ProcessorSplitMultilineLogStringNative.mUnmatchedLinesTotal->GetValue());
 }
 
 void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithEnd() {
@@ -1173,9 +1173,9 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithEnd() {
     }
 
     // metric
-    APSARA_TEST_EQUAL_FATAL(1 + 0 + 1, ProcessorSplitMultilineLogStringNative.mProcMatchedEventsCnt->GetValue());
-    APSARA_TEST_EQUAL_FATAL(1 + 0 + 2, ProcessorSplitMultilineLogStringNative.mProcMatchedLinesCnt->GetValue());
-    APSARA_TEST_EQUAL_FATAL(0 + 1 + 1, ProcessorSplitMultilineLogStringNative.mProcUnmatchedLinesCnt->GetValue());
+    APSARA_TEST_EQUAL_FATAL(1 + 0 + 1, ProcessorSplitMultilineLogStringNative.mMatchedEventsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(1 + 0 + 2, ProcessorSplitMultilineLogStringNative.mMatchedLinesTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0 + 1 + 1, ProcessorSplitMultilineLogStringNative.mUnmatchedLinesTotal->GetValue());
 }
 
 class ProcessorSplitMultilineLogKeepUnmatchUnittest : public ::testing::Test {
@@ -1560,11 +1560,11 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
 
     // metric
     APSARA_TEST_EQUAL_FATAL(0 + 1 + 1 + 2 + 1 + 0,
-                            ProcessorSplitMultilineLogStringNative.mProcMatchedEventsCnt->GetValue());
+                            ProcessorSplitMultilineLogStringNative.mMatchedEventsTotal->GetValue());
     APSARA_TEST_EQUAL_FATAL(0 + 1 + 3 + 2 + 3 + 0,
-                            ProcessorSplitMultilineLogStringNative.mProcMatchedLinesCnt->GetValue());
+                            ProcessorSplitMultilineLogStringNative.mMatchedLinesTotal->GetValue());
     APSARA_TEST_EQUAL_FATAL(2 + 1 + 2 + 1 + 1 + 1,
-                            ProcessorSplitMultilineLogStringNative.mProcUnmatchedLinesCnt->GetValue());
+                            ProcessorSplitMultilineLogStringNative.mUnmatchedLinesTotal->GetValue());
 }
 
 void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
@@ -1942,11 +1942,11 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
 
     // metric
     APSARA_TEST_EQUAL_FATAL(0 + 0 + 1 + 0 + 1 + 1,
-                            ProcessorSplitMultilineLogStringNative.mProcMatchedEventsCnt->GetValue());
+                            ProcessorSplitMultilineLogStringNative.mMatchedEventsTotal->GetValue());
     APSARA_TEST_EQUAL_FATAL(0 + 0 + 2 + 0 + 2 + 3,
-                            ProcessorSplitMultilineLogStringNative.mProcMatchedLinesCnt->GetValue());
+                            ProcessorSplitMultilineLogStringNative.mMatchedLinesTotal->GetValue());
     APSARA_TEST_EQUAL_FATAL(2 + 3 + 2 + 2 + 1 + 1,
-                            ProcessorSplitMultilineLogStringNative.mProcUnmatchedLinesCnt->GetValue());
+                            ProcessorSplitMultilineLogStringNative.mUnmatchedLinesTotal->GetValue());
 }
 
 void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithBegin() {
@@ -2214,10 +2214,10 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithBegin() {
 
     // metric
     APSARA_TEST_EQUAL_FATAL(1 + 0 + 2 + 1 + 1,
-                            ProcessorSplitMultilineLogStringNative.mProcMatchedEventsCnt->GetValue());
-    APSARA_TEST_EQUAL_FATAL(1 + 0 + 2 + 2 + 2, ProcessorSplitMultilineLogStringNative.mProcMatchedLinesCnt->GetValue());
+                            ProcessorSplitMultilineLogStringNative.mMatchedEventsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(1 + 0 + 2 + 2 + 2, ProcessorSplitMultilineLogStringNative.mMatchedLinesTotal->GetValue());
     APSARA_TEST_EQUAL_FATAL(1 + 1 + 0 + 0 + 0,
-                            ProcessorSplitMultilineLogStringNative.mProcUnmatchedLinesCnt->GetValue());
+                            ProcessorSplitMultilineLogStringNative.mUnmatchedLinesTotal->GetValue());
 }
 
 void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithContinueEnd() {
@@ -2476,10 +2476,10 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithContinueEnd(
 
     // metric
     APSARA_TEST_EQUAL_FATAL(0 + 0 + 1 + 0 + 1,
-                            ProcessorSplitMultilineLogStringNative.mProcMatchedEventsCnt->GetValue());
-    APSARA_TEST_EQUAL_FATAL(0 + 0 + 3 + 0 + 1, ProcessorSplitMultilineLogStringNative.mProcMatchedLinesCnt->GetValue());
+                            ProcessorSplitMultilineLogStringNative.mMatchedEventsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0 + 0 + 3 + 0 + 1, ProcessorSplitMultilineLogStringNative.mMatchedLinesTotal->GetValue());
     APSARA_TEST_EQUAL_FATAL(1 + 2 + 0 + 1 + 0,
-                            ProcessorSplitMultilineLogStringNative.mProcUnmatchedLinesCnt->GetValue());
+                            ProcessorSplitMultilineLogStringNative.mUnmatchedLinesTotal->GetValue());
 }
 
 void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithEnd() {
@@ -2649,9 +2649,9 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithEnd() {
     }
 
     // metric
-    APSARA_TEST_EQUAL_FATAL(1 + 0 + 1, ProcessorSplitMultilineLogStringNative.mProcMatchedEventsCnt->GetValue());
-    APSARA_TEST_EQUAL_FATAL(1 + 0 + 2, ProcessorSplitMultilineLogStringNative.mProcMatchedLinesCnt->GetValue());
-    APSARA_TEST_EQUAL_FATAL(0 + 1 + 1, ProcessorSplitMultilineLogStringNative.mProcUnmatchedLinesCnt->GetValue());
+    APSARA_TEST_EQUAL_FATAL(1 + 0 + 1, ProcessorSplitMultilineLogStringNative.mMatchedEventsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(1 + 0 + 2, ProcessorSplitMultilineLogStringNative.mMatchedLinesTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0 + 1 + 1, ProcessorSplitMultilineLogStringNative.mUnmatchedLinesTotal->GetValue());
 }
 } // namespace logtail
 

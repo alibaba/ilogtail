@@ -50,22 +50,22 @@ public:
         WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
             mMetricsRecordRef,
             {{METRIC_LABEL_PROJECT, f->GetContext().GetProjectName()},
-             {METRIC_LABEL_CONFIG_NAME, f->GetContext().GetConfigName()},
+             {METRIC_LABEL_PIPELINE_NAME, f->GetContext().GetConfigName()},
              {METRIC_LABEL_KEY_COMPONENT_NAME, "serializer"},
              {METRIC_LABEL_KEY_FLUSHER_NODE_ID, f->GetNodeID()}});
-        mInItemsCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_IN_ITEMS_CNT);
+        mInItemsTotal = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_IN_ITEMS_TOTAL);
         mInItemSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_IN_ITEM_SIZE_BYTES);
-        mOutItemsCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_OUT_ITEMS_CNT);
+        mOutItemsTotal = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_OUT_ITEMS_TOTAL);
         mOutItemSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_OUT_ITEM_SIZE_BYTES);
         mTotalDelayMs = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_TOTAL_DELAY_MS);
-        mDiscardedItemsCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_DISCARDED_ITEMS_CNT);
+        mDiscardedItemsTotal = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_DISCARDED_ITEMS_TOTAL);
         mDiscardedItemSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_DISCARDED_ITEMS_SIZE_BYTES);
     }
     virtual ~Serializer() = default;
 
     bool DoSerialize(T&& p, std::string& output, std::string& errorMsg) {
         auto inputSize = GetInputSize(p);
-        mInItemsCnt->Add(1);
+        mInItemsTotal->Add(1);
         mInItemSizeBytes->Add(inputSize);
 
         auto before = std::chrono::system_clock::now();
@@ -74,10 +74,10 @@ public:
             std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - before).count());
 
         if (res) {
-            mOutItemsCnt->Add(1);
+            mOutItemsTotal->Add(1);
             mOutItemSizeBytes->Add(output.size());
         } else {
-            mDiscardedItemsCnt->Add(1);
+            mDiscardedItemsTotal->Add(1);
             mDiscardedItemSizeBytes->Add(inputSize);
         }
         return res;
@@ -88,11 +88,11 @@ protected:
     const Flusher* mFlusher = nullptr;
 
     mutable MetricsRecordRef mMetricsRecordRef;
-    CounterPtr mInItemsCnt;
+    CounterPtr mInItemsTotal;
     CounterPtr mInItemSizeBytes;
-    CounterPtr mOutItemsCnt;
+    CounterPtr mOutItemsTotal;
     CounterPtr mOutItemSizeBytes;
-    CounterPtr mDiscardedItemsCnt;
+    CounterPtr mDiscardedItemsTotal;
     CounterPtr mDiscardedItemSizeBytes;
     CounterPtr mTotalDelayMs;
 

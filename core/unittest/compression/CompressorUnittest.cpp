@@ -49,11 +49,11 @@ void CompressorUnittest::TestMetric() {
         string output;
         string errorMsg;
         compressor.DoCompress(input, output, errorMsg);
-        APSARA_TEST_EQUAL(1U, compressor.mInItemsCnt->GetValue());
+        APSARA_TEST_EQUAL(1U, compressor.mInItemsTotal->GetValue());
         APSARA_TEST_EQUAL(input.size(), compressor.mInItemSizeBytes->GetValue());
-        APSARA_TEST_EQUAL(1U, compressor.mOutItemsCnt->GetValue());
+        APSARA_TEST_EQUAL(1U, compressor.mOutItemsTotal->GetValue());
         APSARA_TEST_EQUAL(output.size(), compressor.mOutItemSizeBytes->GetValue());
-        APSARA_TEST_EQUAL(0U, compressor.mDiscardedItemsCnt->GetValue());
+        APSARA_TEST_EQUAL(0U, compressor.mDiscardedItemsTotal->GetValue());
         APSARA_TEST_EQUAL(0U, compressor.mDiscardedItemSizeBytes->GetValue());
     }
     {
@@ -63,11 +63,11 @@ void CompressorUnittest::TestMetric() {
         string output;
         string errorMsg;
         compressor.DoCompress(input, output, errorMsg);
-        APSARA_TEST_EQUAL(1U, compressor.mInItemsCnt->GetValue());
+        APSARA_TEST_EQUAL(1U, compressor.mInItemsTotal->GetValue());
         APSARA_TEST_EQUAL(input.size(), compressor.mInItemSizeBytes->GetValue());
-        APSARA_TEST_EQUAL(0U, compressor.mOutItemsCnt->GetValue());
+        APSARA_TEST_EQUAL(0U, compressor.mOutItemsTotal->GetValue());
         APSARA_TEST_EQUAL(0U, compressor.mOutItemSizeBytes->GetValue());
-        APSARA_TEST_EQUAL(1U, compressor.mDiscardedItemsCnt->GetValue());
+        APSARA_TEST_EQUAL(1U, compressor.mDiscardedItemsTotal->GetValue());
         APSARA_TEST_EQUAL(input.size(), compressor.mDiscardedItemSizeBytes->GetValue());
     }
 }

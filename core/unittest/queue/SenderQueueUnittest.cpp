@@ -173,7 +173,7 @@ void SenderQueueUnittest::TestGetAllAvailableItems() {
 void SenderQueueUnittest::TestMetric() {
     APSARA_TEST_EQUAL(5U, mQueue->mMetricsRecordRef->GetLabels()->size());
     APSARA_TEST_TRUE(mQueue->mMetricsRecordRef.HasLabel(METRIC_LABEL_PROJECT, ""));
-    APSARA_TEST_TRUE(mQueue->mMetricsRecordRef.HasLabel(METRIC_LABEL_CONFIG_NAME, "test_config"));
+    APSARA_TEST_TRUE(mQueue->mMetricsRecordRef.HasLabel(METRIC_LABEL_PIPELINE_NAME, "test_config"));
     APSARA_TEST_TRUE(mQueue->mMetricsRecordRef.HasLabel(METRIC_LABEL_KEY_COMPONENT_NAME, "sender_queue"));
     APSARA_TEST_TRUE(mQueue->mMetricsRecordRef.HasLabel(METRIC_LABEL_KEY_QUEUE_TYPE, "bounded"));
     APSARA_TEST_TRUE(mQueue->mMetricsRecordRef.HasLabel(METRIC_LABEL_KEY_FLUSHER_NODE_ID, sFlusherId));
@@ -183,9 +183,9 @@ void SenderQueueUnittest::TestMetric() {
     auto ptr1 = item1.get();
     mQueue->Push(std::move(item1));
 
-    APSARA_TEST_EQUAL(1U, mQueue->mInItemsCnt->GetValue());
+    APSARA_TEST_EQUAL(1U, mQueue->mInItemsTotal->GetValue());
     APSARA_TEST_EQUAL(dataSize, mQueue->mInItemDataSizeBytes->GetValue());
-    APSARA_TEST_EQUAL(1U, mQueue->mQueueSize->GetValue());
+    APSARA_TEST_EQUAL(1U, mQueue->mQueueSizeTotal->GetValue());
     APSARA_TEST_EQUAL(dataSize, mQueue->mQueueDataSizeByte->GetValue());
     APSARA_TEST_EQUAL(1U, mQueue->mValidToPushFlag->GetValue());
 
@@ -195,25 +195,25 @@ void SenderQueueUnittest::TestMetric() {
 
     mQueue->Push(GenerateItem());
 
-    APSARA_TEST_EQUAL(3U, mQueue->mInItemsCnt->GetValue());
+    APSARA_TEST_EQUAL(3U, mQueue->mInItemsTotal->GetValue());
     APSARA_TEST_EQUAL(dataSize * 3, mQueue->mInItemDataSizeBytes->GetValue());
-    APSARA_TEST_EQUAL(2U, mQueue->mQueueSize->GetValue());
+    APSARA_TEST_EQUAL(2U, mQueue->mQueueSizeTotal->GetValue());
     APSARA_TEST_EQUAL(dataSize * 2, mQueue->mQueueDataSizeByte->GetValue());
     APSARA_TEST_EQUAL(0U, mQueue->mValidToPushFlag->GetValue());
     APSARA_TEST_EQUAL(1U, mQueue->mExtraBufferSize->GetValue());
     APSARA_TEST_EQUAL(dataSize, mQueue->mExtraBufferDataSizeBytes->GetValue());
 
     mQueue->Remove(ptr1);
-    APSARA_TEST_EQUAL(1U, mQueue->mOutItemsCnt->GetValue());
-    APSARA_TEST_EQUAL(2U, mQueue->mQueueSize->GetValue());
+    APSARA_TEST_EQUAL(1U, mQueue->mOutItemsTotal->GetValue());
+    APSARA_TEST_EQUAL(2U, mQueue->mQueueSizeTotal->GetValue());
     APSARA_TEST_EQUAL(dataSize * 2, mQueue->mQueueDataSizeByte->GetValue());
     APSARA_TEST_EQUAL(0U, mQueue->mValidToPushFlag->GetValue());
     APSARA_TEST_EQUAL(0U, mQueue->mExtraBufferSize->GetValue());
     APSARA_TEST_EQUAL(0U, mQueue->mExtraBufferDataSizeBytes->GetValue());
 
     mQueue->Remove(ptr2);
-    APSARA_TEST_EQUAL(2U, mQueue->mOutItemsCnt->GetValue());
-    APSARA_TEST_EQUAL(1U, mQueue->mQueueSize->GetValue());
+    APSARA_TEST_EQUAL(2U, mQueue->mOutItemsTotal->GetValue());
+    APSARA_TEST_EQUAL(1U, mQueue->mQueueSizeTotal->GetValue());
     APSARA_TEST_EQUAL(dataSize, mQueue->mQueueDataSizeByte->GetValue());
     APSARA_TEST_EQUAL(1U, mQueue->mValidToPushFlag->GetValue());
 }

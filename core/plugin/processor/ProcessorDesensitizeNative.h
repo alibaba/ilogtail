@@ -56,7 +56,7 @@ private:
 
     std::shared_ptr<re2::RE2> mRegex;
 
-    CounterPtr mProcDesensitizeRecodesTotal;
+    CounterPtr mDesensitizeRecodesTotal;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorParseApsaraNativeUnittest;

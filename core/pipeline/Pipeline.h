@@ -87,8 +87,8 @@ private:
 
     mutable MetricsRecordRef mMetricsRecordRef;
     IntGaugePtr mStartTime;
-    CounterPtr mProcessorsInEventsCnt;
-    CounterPtr mProcessorsInGroupsCnt;
+    CounterPtr mProcessorsInEventsTotal;
+    CounterPtr mProcessorsInGroupsTotal;
     CounterPtr mProcessorsInGroupDataSizeBytes;
     CounterPtr mProcessorsTotalDelayMs;
 

@@ -74,11 +74,11 @@ private:
     bool ParseContainerdTextLogLine(LogEvent& sourceEvent, std::string& errorMsg, PipelineEventGroup& logGroup);
     bool ParseDockerJsonLogLine(LogEvent& sourceEvent, std::string& errorMsg);
 
-    CounterPtr mProcParseInSizeBytes; // 成功且保留的日志中，解析字段的INBYTES
-    CounterPtr mProcParseOutSizeBytes; // 成功且保留的日志中，解析出来字段的OUTBYTES
-    CounterPtr mProcParseErrorTotal; // 解析失败条数
-    CounterPtr mProcParseStdoutTotal;
-    CounterPtr mProcParseStderrTotal;
+    CounterPtr mInBufferSizeBytes; // 成功且保留的日志中，解析字段的INBYTES
+    CounterPtr mOutBufferSizeBytes; // 成功且保留的日志中，解析出来字段的OUTBYTES
+    CounterPtr mErrorTotal; // 解析失败条数
+    CounterPtr mParseStdoutTotal;
+    CounterPtr mParseStderrTotal;
     // CounterPtr mProcParseSuccessSizeBytes; // 成功bytes
     // CounterPtr mProcParseErrorSizeBytes; // 失败bytes
 

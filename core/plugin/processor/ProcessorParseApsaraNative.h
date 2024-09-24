@@ -54,11 +54,11 @@ private:
     int* mLogGroupSize = nullptr;
     int* mParseFailures = nullptr;
     int* mHistoryFailures = nullptr;
-    CounterPtr mProcParseInSizeBytes;
-    CounterPtr mProcParseOutSizeBytes;
-    CounterPtr mProcDiscardRecordsTotal;
-    CounterPtr mProcParseErrorTotal;
-    CounterPtr mProcHistoryFailureTotal;
+    CounterPtr mInBufferSizeBytes;
+    CounterPtr mOutBufferSizeBytes;
+    CounterPtr mDiscardEventsTotal;
+    CounterPtr mErrorTotal;
+    CounterPtr mHistoryFailureTotal;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorParseApsaraNativeUnittest;

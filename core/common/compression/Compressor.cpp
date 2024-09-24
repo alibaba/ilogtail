@@ -25,18 +25,18 @@ namespace logtail {
 void Compressor::SetMetricRecordRef(MetricLabels&& labels, DynamicMetricLabels&& dynamicLabels) {
     WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
         mMetricsRecordRef, std::move(labels), std::move(dynamicLabels));
-    mInItemsCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_IN_ITEMS_CNT);
+    mInItemsTotal = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_IN_ITEMS_TOTAL);
     mInItemSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_IN_ITEM_SIZE_BYTES);
-    mOutItemsCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_OUT_ITEMS_CNT);
+    mOutItemsTotal = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_OUT_ITEMS_TOTAL);
     mOutItemSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_OUT_ITEM_SIZE_BYTES);
     mTotalDelayMs = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_TOTAL_DELAY_MS);
-    mDiscardedItemsCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_DISCARDED_ITEMS_CNT);
+    mDiscardedItemsTotal = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_DISCARDED_ITEMS_TOTAL);
     mDiscardedItemSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_DISCARDED_ITEMS_SIZE_BYTES);
 }
 
 bool Compressor::DoCompress(const string& input, string& output, string& errorMsg) {
     if (mMetricsRecordRef != nullptr) {
-        mInItemsCnt->Add(1);
+        mInItemsTotal->Add(1);
         mInItemSizeBytes->Add(input.size());
     }
 
@@ -46,10 +46,10 @@ bool Compressor::DoCompress(const string& input, string& output, string& errorMs
     if (mMetricsRecordRef != nullptr) {
         mTotalDelayMs->Add(chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - before).count());
         if (res) {
-            mOutItemsCnt->Add(1);
+            mOutItemsTotal->Add(1);
             mOutItemSizeBytes->Add(output.size());
         } else {
-            mDiscardedItemsCnt->Add(1);
+            mDiscardedItemsTotal->Add(1);
             mDiscardedItemSizeBytes->Add(input.size());
         }
     }

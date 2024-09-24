@@ -46,7 +46,7 @@ public:
 private:
     std::unique_ptr<Flusher> mPlugin;
 
-    CounterPtr mInEventsCnt;
+    CounterPtr mInEventsTotal;
     CounterPtr mInGroupDataSizeBytes;
 };
 

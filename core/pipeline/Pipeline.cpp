@@ -316,10 +316,10 @@ bool Pipeline::Init(PipelineConfig&& config) {
     }
 
     WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
-        mMetricsRecordRef, {{METRIC_LABEL_PROJECT, mContext.GetProjectName()}, {METRIC_LABEL_CONFIG_NAME, mName}});
+        mMetricsRecordRef, {{METRIC_LABEL_PROJECT, mContext.GetProjectName()}, {METRIC_LABEL_PIPELINE_NAME, mName}});
     mStartTime = mMetricsRecordRef.CreateIntGauge(METRIC_PIPELINE_START_TIME);
-    mProcessorsInEventsCnt = mMetricsRecordRef.CreateCounter(METRIC_PIPELINE_PROCESSORS_IN_EVENTS_CNT);
-    mProcessorsInGroupsCnt = mMetricsRecordRef.CreateCounter(METRIC_PIPELINE_PROCESSORS_IN_EVENT_GROUPS_CNT);
+    mProcessorsInEventsTotal = mMetricsRecordRef.CreateCounter(METRIC_PIPELINE_PROCESSORS_IN_EVENTS_TOTAL);
+    mProcessorsInGroupsTotal = mMetricsRecordRef.CreateCounter(METRIC_PIPELINE_PROCESSORS_IN_EVENT_GROUPS_TOTAL);
     mProcessorsInGroupDataSizeBytes
         = mMetricsRecordRef.CreateCounter(METRIC_PIPELINE_PROCESSORS_IN_EVENT_GROUP_SIZE_BYTES);
     mProcessorsTotalDelayMs = mMetricsRecordRef.CreateCounter(METRIC_PIPELINE_PROCESSORS_TOTAL_DELAY_MS);
@@ -355,10 +355,10 @@ void Pipeline::Start() {
 
 void Pipeline::Process(vector<PipelineEventGroup>& logGroupList, size_t inputIndex) {
     for (const auto& logGroup : logGroupList) {
-        mProcessorsInEventsCnt->Add(logGroup.GetEvents().size());
+        mProcessorsInEventsTotal->Add(logGroup.GetEvents().size());
         mProcessorsInGroupDataSizeBytes->Add(logGroup.DataSize());
     }
-    mProcessorsInGroupsCnt->Add(logGroupList.size());
+    mProcessorsInGroupsTotal->Add(logGroupList.size());
 
     auto before = chrono::system_clock::now();
     for (auto& p : mInputs[inputIndex]->GetInnerProcessors()) {

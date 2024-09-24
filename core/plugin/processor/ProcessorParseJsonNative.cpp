@@ -50,10 +50,10 @@ bool ProcessorParseJsonNative::Init(const Json::Value& config) {
     mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
     mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
 
-    mProcParseInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
-    mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
-    mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
-    mProcParseErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
+    mInBufferSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_IN_BUFFER_SIZE_BYTES);
+    mOutBufferSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_OUT_BUFFER_SIZE_BYTES);
+    mDiscardEventsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_DISCARD_EVENTS_TOTAL);
+    mErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_ERROR_TOTAL);
 
     return true;
 }
@@ -102,7 +102,7 @@ bool ProcessorParseJsonNative::ProcessEvent(const StringView& logPath, PipelineE
         AddLog(mCommonParserOptions.legacyUnmatchedRawLogKey, rawContent, sourceEvent, false);
     }
     if (mCommonParserOptions.ShouldEraseEvent(parseSuccess, sourceEvent)) {
-        mProcDiscardRecordsTotal->Add(1);
+        mDiscardEventsTotal->Add(1);
         return false;
     }
     return true;
@@ -117,7 +117,7 @@ bool ProcessorParseJsonNative::JsonLogLineParser(LogEvent& sourceEvent,
     if (buffer.empty())
         return false;
 
-    mProcParseInSizeBytes->Add(buffer.size());
+    mInBufferSizeBytes->Add(buffer.size());
 
     bool parseSuccess = true;
     rapidjson::Document doc;
@@ -135,7 +135,7 @@ bool ProcessorParseJsonNative::JsonLogLineParser(LogEvent& sourceEvent,
                                                    GetContext().GetRegion());
         }
         ++(*mParseFailures);
-        mProcParseErrorTotal->Add(1);
+        mErrorTotal->Add(1);
         parseSuccess = false;
     } else if (!doc.IsObject()) {
         if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
@@ -149,7 +149,7 @@ bool ProcessorParseJsonNative::JsonLogLineParser(LogEvent& sourceEvent,
                                                    GetContext().GetRegion());
         }
         ++(*mParseFailures);
-        mProcParseErrorTotal->Add(1);
+        mErrorTotal->Add(1);
         parseSuccess = false;
     }
     if (!parseSuccess) {
@@ -209,7 +209,7 @@ void ProcessorParseJsonNative::AddLog(const StringView& key,
     }
     targetEvent.SetContentNoCopy(key, value);
     *mLogGroupSize += key.size() + value.size() + 5;
-    mProcParseOutSizeBytes->Add(key.size() + value.size());
+    mOutBufferSizeBytes->Add(key.size() + value.size());
 }
 
 bool ProcessorParseJsonNative::IsSupportedEvent(const PipelineEventPtr& e) const {

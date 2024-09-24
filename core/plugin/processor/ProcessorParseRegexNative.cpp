@@ -96,11 +96,11 @@ bool ProcessorParseRegexNative::Init(const Json::Value& config) {
     mRegexMatchFailures = &(GetContext().GetProcessProfile().regexMatchFailures);
     mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
 
-    mProcParseInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
-    mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
-    mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
-    mProcParseErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
-    mProcKeyCountNotMatchErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_KEY_COUNT_NOT_MATCH_ERROR_TOTAL);
+    mInBufferSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_IN_BUFFER_SIZE_BYTES);
+    mOutBufferSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_OUT_BUFFER_SIZE_BYTES);
+    mDiscardEventsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_DISCARD_EVENTS_TOTAL);
+    mErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_ERROR_TOTAL);
+    mKeyCountNotMatchErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_KEY_COUNT_NOT_MATCH_ERROR_TOTAL);
 
     return true;
 }
@@ -156,7 +156,7 @@ bool ProcessorParseRegexNative::ProcessEvent(const StringView& logPath, Pipeline
         AddLog(mCommonParserOptions.legacyUnmatchedRawLogKey, rawContent, sourceEvent, false);
     }
     if (mCommonParserOptions.ShouldEraseEvent(parseSuccess, sourceEvent)) {
-        mProcDiscardRecordsTotal->Add(1);
+        mDiscardEventsTotal->Add(1);
         return false;
     }
     return true;
@@ -165,7 +165,7 @@ bool ProcessorParseRegexNative::ProcessEvent(const StringView& logPath, Pipeline
 bool ProcessorParseRegexNative::WholeLineModeParser(LogEvent& sourceEvent, const std::string& key) {
     StringView buffer = sourceEvent.GetContent(mSourceKey);
     AddLog(StringView(key), buffer, sourceEvent);
-    mProcParseInSizeBytes->Add(buffer.size());
+    mInBufferSizeBytes->Add(buffer.size());
     return true;
 }
 
@@ -178,7 +178,7 @@ void ProcessorParseRegexNative::AddLog(const StringView& key,
     }
     targetEvent.SetContentNoCopy(key, value);
     *mLogGroupSize += key.size() + value.size() + 5;
-    mProcParseOutSizeBytes->Add(key.size() + value.size());
+    mOutBufferSizeBytes->Add(key.size() + value.size());
 }
 
 bool ProcessorParseRegexNative::RegexLogLineParser(LogEvent& sourceEvent,
@@ -189,7 +189,7 @@ bool ProcessorParseRegexNative::RegexLogLineParser(LogEvent& sourceEvent,
     std::string exception;
     StringView buffer = sourceEvent.GetContent(mSourceKey);
     bool parseSuccess = true;
-    mProcParseInSizeBytes->Add(buffer.size());
+    mInBufferSizeBytes->Add(buffer.size());
     if (!BoostRegexMatch(buffer.data(), buffer.size(), reg, exception, what, boost::match_default)) {
         if (!exception.empty()) {
             if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
@@ -221,7 +221,7 @@ bool ProcessorParseRegexNative::RegexLogLineParser(LogEvent& sourceEvent,
         }
         ++(*mRegexMatchFailures);
         ++(*mParseFailures);
-        mProcParseErrorTotal->Add(1);
+        mErrorTotal->Add(1);
         parseSuccess = false;
     } else if (what.size() <= keys.size()) {
         if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
@@ -240,7 +240,7 @@ bool ProcessorParseRegexNative::RegexLogLineParser(LogEvent& sourceEvent,
         }
         ++(*mRegexMatchFailures);
         ++(*mParseFailures);
-        mProcKeyCountNotMatchErrorTotal->Add(1);
+        mKeyCountNotMatchErrorTotal->Add(1);
         parseSuccess = false;
     }
     if (!parseSuccess) {

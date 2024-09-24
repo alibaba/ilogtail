@@ -67,11 +67,11 @@ void SerializerUnittest::TestMetric() {
         string output;
         string errorMsg;
         serializer.DoSerialize(std::move(input), output, errorMsg);
-        APSARA_TEST_EQUAL(1U, serializer.mInItemsCnt->GetValue());
+        APSARA_TEST_EQUAL(1U, serializer.mInItemsTotal->GetValue());
         APSARA_TEST_EQUAL(inputSize, serializer.mInItemSizeBytes->GetValue());
-        APSARA_TEST_EQUAL(1U, serializer.mOutItemsCnt->GetValue());
+        APSARA_TEST_EQUAL(1U, serializer.mOutItemsTotal->GetValue());
         APSARA_TEST_EQUAL(output.size(), serializer.mOutItemSizeBytes->GetValue());
-        APSARA_TEST_EQUAL(0U, serializer.mDiscardedItemsCnt->GetValue());
+        APSARA_TEST_EQUAL(0U, serializer.mDiscardedItemsTotal->GetValue());
         APSARA_TEST_EQUAL(0U, serializer.mDiscardedItemSizeBytes->GetValue());
     }
     {
@@ -81,11 +81,11 @@ void SerializerUnittest::TestMetric() {
         string output;
         string errorMsg;
         serializer.DoSerialize(std::move(input), output, errorMsg);
-        APSARA_TEST_EQUAL(1U, serializer.mInItemsCnt->GetValue());
+        APSARA_TEST_EQUAL(1U, serializer.mInItemsTotal->GetValue());
         APSARA_TEST_EQUAL(inputSize, serializer.mInItemSizeBytes->GetValue());
-        APSARA_TEST_EQUAL(0U, serializer.mOutItemsCnt->GetValue());
+        APSARA_TEST_EQUAL(0U, serializer.mOutItemsTotal->GetValue());
         APSARA_TEST_EQUAL(0U, serializer.mOutItemSizeBytes->GetValue());
-        APSARA_TEST_EQUAL(1U, serializer.mDiscardedItemsCnt->GetValue());
+        APSARA_TEST_EQUAL(1U, serializer.mDiscardedItemsTotal->GetValue());
         APSARA_TEST_EQUAL(inputSize, serializer.mDiscardedItemSizeBytes->GetValue());
     }
 }

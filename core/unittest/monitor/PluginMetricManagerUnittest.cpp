@@ -25,8 +25,8 @@ public:
         defaultLabels->emplace_back(METRIC_LABEL_PROJECT, "default_project");
         defaultLabels->emplace_back(METRIC_LABEL_LOGSTORE, "default_logstore");
         defaultLabels->emplace_back(METRIC_LABEL_REGION, "default_region");
-        defaultLabels->emplace_back(METRIC_LABEL_CONFIG_NAME, "default_config");
-        defaultLabels->emplace_back(METRIC_LABEL_PLUGIN_NAME, "default_plugin");
+        defaultLabels->emplace_back(METRIC_LABEL_PIPELINE_NAME, "default_config");
+        defaultLabels->emplace_back(METRIC_LABEL_PLUGIN_TYPE, "default_plugin");
         defaultLabels->emplace_back(METRIC_LABEL_PLUGIN_ID, "default_id");
         WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, std::move(*defaultLabels));
         std::unordered_map<std::string, MetricType> metricKeys;

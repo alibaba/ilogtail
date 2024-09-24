@@ -42,8 +42,8 @@ public:
                              const std::string& childNodeID) {
         WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef,
                                                              {{METRIC_LABEL_PROJECT, mContext->GetProjectName()},
-                                                              {METRIC_LABEL_CONFIG_NAME, mContext->GetConfigName()},
-                                                              {METRIC_LABEL_PLUGIN_NAME, name},
+                                                              {METRIC_LABEL_PIPELINE_NAME, mContext->GetConfigName()},
+                                                              {METRIC_LABEL_PLUGIN_TYPE, name},
                                                               {METRIC_LABEL_PLUGIN_ID, id},
                                                               {METRIC_LABEL_NODE_ID, nodeID},
                                                               {METRIC_LABEL_CHILD_NODE_ID, childNodeID}});

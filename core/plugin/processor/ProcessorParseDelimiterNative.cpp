@@ -178,10 +178,10 @@ bool ProcessorParseDelimiterNative::Init(const Json::Value& config) {
     mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
     mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
 
-    mProcParseInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
-    mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
-    mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
-    mProcParseErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
+    mInBufferSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_IN_BUFFER_SIZE_BYTES);
+    mOutBufferSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_OUT_BUFFER_SIZE_BYTES);
+    mDiscardEventsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_DISCARD_EVENTS_TOTAL);
+    mErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_ERROR_TOTAL);
 
     return true;
 }
@@ -215,7 +215,7 @@ bool ProcessorParseDelimiterNative::ProcessEvent(const StringView& logPath, Pipe
         return true;
     }
     StringView buffer = sourceEvent.GetContent(mSourceKey);
-    mProcParseInSizeBytes->Add(buffer.size());
+    mInBufferSizeBytes->Add(buffer.size());
     int32_t endIdx = buffer.size();
     if (endIdx == 0)
         return true;
@@ -290,7 +290,7 @@ bool ProcessorParseDelimiterNative::ProcessEvent(const StringView& logPath, Pipe
                                                   GetContext().GetProjectName(),
                                                   GetContext().GetLogstoreName(),
                                                   GetContext().GetRegion());
-                mProcParseErrorTotal->Add(1);
+                mErrorTotal->Add(1);
                 ++(*mParseFailures);
                 parseSuccess = false;
             }
@@ -301,7 +301,7 @@ bool ProcessorParseDelimiterNative::ProcessEvent(const StringView& logPath, Pipe
                                                    GetContext().GetProjectName(),
                                                    GetContext().GetLogstoreName(),
                                                    GetContext().GetRegion());
-            mProcParseErrorTotal->Add(1);
+            mErrorTotal->Add(1);
             ++(*mParseFailures);
             parseSuccess = false;
         }
@@ -314,7 +314,7 @@ bool ProcessorParseDelimiterNative::ProcessEvent(const StringView& logPath, Pipe
         LOG_WARNING(sLogger,
                     ("parse delimiter log fail", "no column keys defined")("project", GetContext().GetProjectName())(
                         "logstore", GetContext().GetLogstoreName())("file", logPath));
-        mProcParseErrorTotal->Add(1);
+        mErrorTotal->Add(1);
         ++(*mParseFailures);
         parseSuccess = false;
     }
@@ -350,7 +350,7 @@ bool ProcessorParseDelimiterNative::ProcessEvent(const StringView& logPath, Pipe
         AddLog(mCommonParserOptions.legacyUnmatchedRawLogKey, buffer, sourceEvent, false);
     }
     if (mCommonParserOptions.ShouldEraseEvent(parseSuccess, sourceEvent)) {
-        mProcDiscardRecordsTotal->Add(1);
+        mDiscardEventsTotal->Add(1);
         return false;
     }
     return true;
@@ -410,7 +410,7 @@ void ProcessorParseDelimiterNative::AddLog(const StringView& key,
     }
     targetEvent.SetContentNoCopy(key, value);
     *mLogGroupSize += key.size() + value.size() + 5;
-    mProcParseOutSizeBytes->Add(key.size() + value.size());
+    mOutBufferSizeBytes->Add(key.size() + value.size());
 }
 
 bool ProcessorParseDelimiterNative::IsSupportedEvent(const PipelineEventPtr& e) const {

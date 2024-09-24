@@ -136,7 +136,7 @@ bool ProcessorDesensitizeNative::Init(const Json::Value& config) {
                               mContext->GetRegion());
     }
 
-    mProcDesensitizeRecodesTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DESENSITIZE_RECORDS_TOTAL);
+    mDesensitizeRecodesTotal = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_DESENSITIZE_RECORDS_TOTAL);
 
     return true;
 }
@@ -173,7 +173,7 @@ void ProcessorDesensitizeNative::ProcessEvent(PipelineEventPtr& e) {
         }
         std::string value = item.second.to_string();
         CastOneSensitiveWord(&value);
-        mProcDesensitizeRecodesTotal->Add(1);
+        mDesensitizeRecodesTotal->Add(1);
         StringBuffer valueBuffer = sourceEvent.GetSourceBuffer()->CopyString(value);
         sourceEvent.SetContentNoCopy(item.first, StringView(valueBuffer.data, valueBuffer.size));
     }

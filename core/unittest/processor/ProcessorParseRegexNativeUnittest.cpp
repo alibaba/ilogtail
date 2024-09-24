@@ -143,16 +143,16 @@ void ProcessorParseRegexNativeUnittest::TestProcessWholeLine() {
     std::string outJson = eventGroupList[0].ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(inJson).c_str(), CompactJson(outJson).c_str());
     // metric
-    APSARA_TEST_EQUAL_FATAL(2, processorInstance.mProcInRecordsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(2, processorInstance.mInEventsTotal->GetValue());
     std::string expectValue = "line1\nline2";
-    APSARA_TEST_EQUAL_FATAL((expectValue.length()) * 2, processor.mProcParseInSizeBytes->GetValue());
-    APSARA_TEST_EQUAL_FATAL(2, processorInstance.mProcOutRecordsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL((expectValue.length()) * 2, processor.mInBufferSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL(2, processorInstance.mOutEventsTotal->GetValue());
     expectValue = "contentline1\nline2";
-    APSARA_TEST_EQUAL_FATAL((expectValue.length()) * 2, processor.mProcParseOutSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL((expectValue.length()) * 2, processor.mOutBufferSizeBytes->GetValue());
 
-    APSARA_TEST_EQUAL_FATAL(0, processor.mProcDiscardRecordsTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(0, processor.mProcParseErrorTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(0, processor.mProcKeyCountNotMatchErrorTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0, processor.mDiscardEventsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0, processor.mErrorTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0, processor.mKeyCountNotMatchErrorTotal->GetValue());
 }
 
 void ProcessorParseRegexNativeUnittest::TestProcessRegex() {
@@ -228,7 +228,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegex() {
     })";
     std::string outJson = eventGroupList[0].ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-    APSARA_TEST_GE_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
+    APSARA_TEST_GE_FATAL(processorInstance.mCostTimeMS->GetValue(), 0);
 }
 
 void ProcessorParseRegexNativeUnittest::TestProcessRegexRaw() {
@@ -302,7 +302,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexRaw() {
     })";
     std::string outJson = eventGroupList[0].ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-    APSARA_TEST_GE_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
+    APSARA_TEST_GE_FATAL(processorInstance.mCostTimeMS->GetValue(), 0);
 }
 
 void ProcessorParseRegexNativeUnittest::TestProcessRegexContent() {
@@ -378,7 +378,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexContent() {
     })";
     std::string outJson = eventGroupList[0].ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-    APSARA_TEST_GE_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
+    APSARA_TEST_GE_FATAL(processorInstance.mCostTimeMS->GetValue(), 0);
 }
 
 void ProcessorParseRegexNativeUnittest::TestAddLog() {
@@ -483,17 +483,17 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeepUnmatch() {
     APSARA_TEST_EQUAL_FATAL(count, processor.GetContext().GetProcessProfile().regexMatchFailures);
     APSARA_TEST_EQUAL_FATAL(count, processor.GetContext().GetProcessProfile().parseFailures);
 
-    APSARA_TEST_EQUAL_FATAL(count, processorInstance.mProcInRecordsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(count, processorInstance.mInEventsTotal->GetValue());
     std::string expectValue = "value1";
-    APSARA_TEST_EQUAL_FATAL((expectValue.length()) * count, processor.mProcParseInSizeBytes->GetValue());
-    APSARA_TEST_EQUAL_FATAL(count, processorInstance.mProcOutRecordsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL((expectValue.length()) * count, processor.mInBufferSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL(count, processorInstance.mOutEventsTotal->GetValue());
     expectValue = "rawLogvalue1";
-    APSARA_TEST_EQUAL_FATAL((expectValue.length()) * count, processor.mProcParseOutSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL((expectValue.length()) * count, processor.mOutBufferSizeBytes->GetValue());
 
-    APSARA_TEST_EQUAL_FATAL(0, processor.mProcDiscardRecordsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0, processor.mDiscardEventsTotal->GetValue());
 
-    APSARA_TEST_EQUAL_FATAL(count, processor.mProcParseErrorTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(0, processor.mProcKeyCountNotMatchErrorTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(count, processor.mErrorTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0, processor.mKeyCountNotMatchErrorTotal->GetValue());
 }
 
 void ProcessorParseRegexNativeUnittest::TestProcessEventDiscardUnmatch() {
@@ -573,16 +573,16 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventDiscardUnmatch() {
     APSARA_TEST_EQUAL_FATAL(count, processor.GetContext().GetProcessProfile().regexMatchFailures);
     APSARA_TEST_EQUAL_FATAL(count, processor.GetContext().GetProcessProfile().parseFailures);
 
-    APSARA_TEST_EQUAL_FATAL(count, processorInstance.mProcInRecordsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(count, processorInstance.mInEventsTotal->GetValue());
     std::string expectValue = "value1";
-    APSARA_TEST_EQUAL_FATAL((expectValue.length()) * count, processor.mProcParseInSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL((expectValue.length()) * count, processor.mInBufferSizeBytes->GetValue());
     // discard unmatch, so output is 0
-    APSARA_TEST_EQUAL_FATAL(0, processorInstance.mProcOutRecordsTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(0, processor.mProcParseOutSizeBytes->GetValue());
-    APSARA_TEST_EQUAL_FATAL(count, processor.mProcDiscardRecordsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0, processorInstance.mOutEventsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0, processor.mOutBufferSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL(count, processor.mDiscardEventsTotal->GetValue());
 
-    APSARA_TEST_EQUAL_FATAL(count, processor.mProcParseErrorTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(0, processor.mProcKeyCountNotMatchErrorTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(count, processor.mErrorTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0, processor.mKeyCountNotMatchErrorTotal->GetValue());
 }
 
 void ProcessorParseRegexNativeUnittest::TestProcessEventKeyCountUnmatch() {
@@ -663,17 +663,17 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeyCountUnmatch() {
     APSARA_TEST_EQUAL_FATAL(count, processor.GetContext().GetProcessProfile().regexMatchFailures);
     APSARA_TEST_EQUAL_FATAL(count, processor.GetContext().GetProcessProfile().parseFailures);
 
-    APSARA_TEST_EQUAL_FATAL(count, processorInstance.mProcInRecordsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(count, processorInstance.mInEventsTotal->GetValue());
     std::string expectValue = "value1\tvalue2";
-    APSARA_TEST_EQUAL_FATAL((expectValue.length()) * count, processor.mProcParseInSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL((expectValue.length()) * count, processor.mInBufferSizeBytes->GetValue());
     // discard unmatch, so output is 0
-    APSARA_TEST_EQUAL_FATAL(0, processorInstance.mProcOutRecordsTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(0, processor.mProcParseOutSizeBytes->GetValue());
-    APSARA_TEST_EQUAL_FATAL(count, processor.mProcDiscardRecordsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0, processorInstance.mOutEventsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0, processor.mOutBufferSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL(count, processor.mDiscardEventsTotal->GetValue());
 
-    // mProcKeyCountNotMatchErrorTotal should equal count
-    APSARA_TEST_EQUAL_FATAL(0, processor.mProcParseErrorTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(count, processor.mProcKeyCountNotMatchErrorTotal->GetValue());
+    // mKeyCountNotMatchErrorTotal should equal count
+    APSARA_TEST_EQUAL_FATAL(0, processor.mErrorTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(count, processor.mKeyCountNotMatchErrorTotal->GetValue());
 }
 
 UNIT_TEST_CASE(ProcessorParseRegexNativeUnittest, TestInit)

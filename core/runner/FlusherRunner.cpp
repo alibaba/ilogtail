@@ -43,13 +43,13 @@ bool FlusherRunner::Init() {
     srand(time(nullptr));
     WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef,
                                                          {{METRIC_LABEL_KEY_RUNNER_NAME, "flusher_runner"}});
-    mInItemsCnt = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_ITEMS_CNT);
+    mInItemsTotal = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_ITEMS_TOTAL);
     mInItemDataSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_ITEM_SIZE_BYTES);
-    mOutItemsCnt = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_OUT_ITEMS_CNT);
+    mOutItemsTotal = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_OUT_ITEMS_TOTAL);
     mTotalDelayMs = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_TOTAL_DELAY_MS);
     mLastRunTime = mMetricsRecordRef.CreateIntGauge(METRIC_RUNNER_LAST_RUN_TIME);
     mInItemRawDataSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_FLUSHER_IN_ITEM_RAW_SIZE_BYTES);
-    mWaitingItemsCnt = mMetricsRecordRef.CreateIntGauge(METRIC_RUNNER_FLUSHER_WAITING_ITEMS_CNT);
+    mWaitingItemsTotal = mMetricsRecordRef.CreateIntGauge(METRIC_RUNNER_FLUSHER_WAITING_ITEMS_TOTAL);
 
     mThreadRes = async(launch::async, &FlusherRunner::Run, this);
     mLastCheckSendClientTime = time(nullptr);
@@ -120,8 +120,8 @@ void FlusherRunner::Run() {
                 mInItemDataSizeBytes->Add((*itr)->mData.size());
                 mInItemRawDataSizeBytes->Add((*itr)->mRawSize);
             }
-            mInItemsCnt->Add(items.size());
-            mWaitingItemsCnt->Add(items.size());
+            mInItemsTotal->Add(items.size());
+            mWaitingItemsTotal->Add(items.size());
 
             // smoothing send tps, walk around webserver load burst
             uint32_t bufferPackageCount = items.size();
@@ -150,8 +150,8 @@ void FlusherRunner::Run() {
             }
 
             Dispatch(*itr);
-            mWaitingItemsCnt->Sub(1);
-            mOutItemsCnt->Add(1);
+            mWaitingItemsTotal->Sub(1);
+            mOutItemsTotal->Add(1);
             mTotalDelayMs->Add(
                 chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - curTime).count());
         }

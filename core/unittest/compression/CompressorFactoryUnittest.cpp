@@ -97,7 +97,7 @@ void CompressorFactoryUnittest::TestMetric() {
         = CompressorFactory::GetInstance()->Create(Json::Value(), mCtx, "test_plugin", mFlusherId, CompressType::LZ4);
     APSARA_TEST_EQUAL(4U, compressor->mMetricsRecordRef->GetLabels()->size());
     APSARA_TEST_TRUE(compressor->mMetricsRecordRef.HasLabel(METRIC_LABEL_PROJECT, ""));
-    APSARA_TEST_TRUE(compressor->mMetricsRecordRef.HasLabel(METRIC_LABEL_CONFIG_NAME, "test_config"));
+    APSARA_TEST_TRUE(compressor->mMetricsRecordRef.HasLabel(METRIC_LABEL_PIPELINE_NAME, "test_config"));
     APSARA_TEST_TRUE(compressor->mMetricsRecordRef.HasLabel(METRIC_LABEL_KEY_COMPONENT_NAME, "compressor"));
     APSARA_TEST_TRUE(compressor->mMetricsRecordRef.HasLabel(METRIC_LABEL_KEY_FLUSHER_NODE_ID, mFlusherId));
 }

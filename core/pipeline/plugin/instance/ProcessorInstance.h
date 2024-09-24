@@ -40,11 +40,11 @@ public:
 private:
     std::unique_ptr<Processor> mPlugin;
 
-    CounterPtr mProcInRecordsTotal;
-    CounterPtr mProcOutRecordsTotal;
+    CounterPtr mInEventsTotal;
+    CounterPtr mOutEventsTotal;
     // CounterPtr mProcInRecordsSizeBytes;
     // CounterPtr mProcOutRecordsSizeBytes;
-    CounterPtr mProcTimeMS;
+    CounterPtr mCostTimeMS;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorInstanceUnittest;

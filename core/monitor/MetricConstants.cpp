@@ -26,8 +26,14 @@ const std::string METRIC_TOPIC_FIELD_NAME = "__topic__";
 const std::string LABEL_PREFIX = "label.";
 const std::string VALUE_PREFIX = "value.";
 
-// global metrics labels
+//////////////////////////////////////////////////////////////////////////
+// labels
+//////////////////////////////////////////////////////////////////////////
 
+// common
+const std::string METRIC_LABEL_PROJECT = "project";
+
+// agent
 const std::string METRIC_LABEL_ALIUIDS = "aliuids";
 const std::string METRIC_LABEL_INSTANCE_ID = "instance_id";
 const std::string METRIC_LABEL_IP = "ip";
@@ -37,7 +43,33 @@ const std::string METRIC_LABEL_USER_DEFINED_ID = "user_defined_id";
 const std::string METRIC_LABEL_UUID = "uuid";
 const std::string METRIC_LABEL_VERSION = "version";
 
-// global metrics values
+// pipeline
+const std::string METRIC_LABEL_LOGSTORE = "logstore";
+const std::string METRIC_LABEL_REGION = "region";
+const std::string METRIC_LABEL_PIPELINE_NAME = "pipeline_name";
+
+// plugin
+const std::string METRIC_LABEL_PLUGIN_TYPE = "plugin_type";
+const std::string METRIC_LABEL_PLUGIN_ID = "plugin_id";
+const std::string METRIC_LABEL_NODE_ID = "node_id";
+const std::string METRIC_LABEL_CHILD_NODE_ID = "child_node_id";
+// input file plugin labels
+const std::string METRIC_LABEL_FILE_DEV = "file_dev";
+const std::string METRIC_LABEL_FILE_INODE = "file_inode";
+const std::string METRIC_LABEL_FILE_NAME = "file_name";
+
+// component
+const std::string METRIC_LABEL_KEY_COMPONENT_NAME = "component_name";
+const std::string METRIC_LABEL_KEY_QUEUE_TYPE = "queue_type";
+const std::string METRIC_LABEL_KEY_EXACTLY_ONCE_FLAG = "is_exactly_once";
+const std::string METRIC_LABEL_KEY_FLUSHER_NODE_ID = "flusher_node_id";
+
+// runner
+const std::string METRIC_LABEL_KEY_RUNNER_NAME = "runner_name";
+
+//////////////////////////////////////////////////////////////////////////
+// agent
+//////////////////////////////////////////////////////////////////////////
 
 const std::string METRIC_AGENT_CPU = "agent_cpu_percent";
 const std::string METRIC_AGENT_CPU_GO = "agent_go_cpu_percent";
@@ -52,137 +84,101 @@ const std::string METRIC_AGENT_CRD_PIPELINE_CONFIG_TOTAL = "agent_crd_pipeline_c
 const std::string METRIC_AGENT_CONSOLE_PIPELINE_CONFIG_TOTAL = "agent_console_pipeline_config_total";
 const std::string METRIC_AGENT_PLUGIN_TOTAL = "agent_plugin_total";
 
-// common plugin labels
-const std::string METRIC_LABEL_PROJECT = "project";
-const std::string METRIC_LABEL_LOGSTORE = "logstore";
-const std::string METRIC_LABEL_REGION = "region";
-const std::string METRIC_LABEL_CONFIG_NAME = "config_name";
-const std::string METRIC_LABEL_PLUGIN_NAME = "plugin_name";
-const std::string METRIC_LABEL_PLUGIN_ID = "plugin_id";
-const std::string METRIC_LABEL_NODE_ID = "node_id";
-const std::string METRIC_LABEL_CHILD_NODE_ID = "child_node_id";
-
-const std::string METRIC_LABEL_KEY_COMPONENT_NAME = "component_name";
-const std::string METRIC_LABEL_KEY_RUNNER_NAME = "runner_name";
-const std::string METRIC_LABEL_KEY_QUEUE_TYPE = "queue_type";
-const std::string METRIC_LABEL_KEY_EXACTLY_ONCE_FLAG = "is_exactly_once";
-const std::string METRIC_LABEL_KEY_FLUSHER_NODE_ID = "flusher_node_id";
-
-// input file plugin labels
-const std::string METRIC_LABEL_FILE_DEV = "file_dev";
-const std::string METRIC_LABEL_FILE_INODE = "file_inode";
-const std::string METRIC_LABEL_FILE_NAME = "file_name";
-
-// input file metrics
-const std::string METRIC_INPUT_RECORDS_TOTAL = "input_records_total";
-const std::string METRIC_INPUT_RECORDS_SIZE_BYTES = "input_records_size_bytes";
-const std::string METRIC_INPUT_BATCH_TOTAL = "input_batch_total";
-const std::string METRIC_INPUT_READ_TOTAL = "input_read_total";
-const std::string METRIC_INPUT_FILE_SIZE_BYTES = "input_file_size_bytes";
-const std::string METRIC_INPUT_FILE_READ_DELAY_TIME_MS = "input_file_read_delay_time_ms";
-const std::string METRIC_INPUT_FILE_OFFSET_BYTES = "input_file_offset_bytes";
-const std::string METRIC_INPUT_FILE_MONITOR_TOTAL = "input_file_monitor_total";
-
-// processor common metrics
-const std::string METRIC_PROC_IN_RECORDS_TOTAL = "proc_in_records_total";
-const std::string METRIC_PROC_IN_RECORDS_SIZE_BYTES = "proc_in_records_size_bytes";
-const std::string METRIC_PROC_OUT_RECORDS_TOTAL = "proc_out_records_total";
-const std::string METRIC_PROC_OUT_RECORDS_SIZE_BYTES = "proc_out_records_size_bytes";
-const std::string METRIC_PROC_DISCARD_RECORDS_TOTAL = "proc_discard_records_total";
-const std::string METRIC_PROC_TIME_MS = "proc_time_ms";
-
-// processor cunstom metrics
-const std::string METRIC_PROC_PARSE_IN_SIZE_BYTES = "proc_parse_in_size_bytes";
-const std::string METRIC_PROC_PARSE_OUT_SIZE_BYTES = "proc_parse_out_size_bytes";
-
-const std::string METRIC_PROC_PARSE_ERROR_TOTAL = "proc_parse_error_total";
-const std::string METRIC_PROC_PARSE_SUCCESS_TOTAL = "proc_parse_success_total";
-const std::string METRIC_PROC_KEY_COUNT_NOT_MATCH_ERROR_TOTAL = "proc_key_count_not_match_error_total";
-const std::string METRIC_PROC_HISTORY_FAILURE_TOTAL = "proc_history_failure_total";
-
-const std::string METRIC_PROC_SPLIT_MULTILINE_LOG_MATCHED_RECORDS_TOTAL
-    = "proc_split_multiline_log_matched_records_total";
-const std::string METRIC_PROC_SPLIT_MULTILINE_LOG_MATCHED_LINES_TOTAL = "proc_split_multiline_log_matched_lines_total";
-const std::string METRIC_PROC_SPLIT_MULTILINE_LOG_UNMATCHED_LINES_TOTAL
-    = "proc_split_multiline_log_unmatched_lines_total";
-
-// processor filter metrics
-const std::string METRIC_PROC_FILTER_IN_SIZE_BYTES = "proc_filter_in_size_bytes";
-const std::string METRIC_PROC_FILTER_OUT_SIZE_BYTES = "proc_filter_out_size_bytes";
-const std::string METRIC_PROC_FILTER_ERROR_TOTAL = "proc_filter_error_total";
-const std::string METRIC_PROC_FILTER_RECORDS_TOTAL = "proc_filter_records_total";
-
-// processore plugin name
-const std::string PLUGIN_PROCESSOR_PARSE_REGEX_NATIVE = "processor_parse_regex_native";
-
-// processor desensitize metrics
-const std::string METRIC_PROC_DESENSITIZE_RECORDS_TOTAL = "proc_desensitize_records_total";
-
-// processor merge multiline log metrics
-const std::string METRIC_PROC_MERGE_MULTILINE_LOG_MERGED_RECORDS_TOTAL
-    = "proc_merge_multiline_log_merged_records_total";
-const std::string METRIC_PROC_MERGE_MULTILINE_LOG_UNMATCHED_RECORDS_TOTAL
-    = "proc_merge_multiline_log_unmatched_records_total";
-
-// processor parse container log native metrics
-const std::string METRIC_PROC_PARSE_STDOUT_TOTAL = "proc_parse_stdout_total";
-const std::string METRIC_PROC_PARSE_STDERR_TOTAL = "proc_parse_stderr_total";
-
-// flusher common metrics
-const std::string METRIC_FLUSHER_ERROR_TOTAL = "flusher_error_total";
-const std::string METRIC_FLUSHER_DISCARD_RECORDS_TOTAL = "flusher_discard_records_total";
-const std::string METRIC_FLUSHER_SUCCESS_RECORDS_TOTAL = "flusher_success_records_total";
-const std::string METRIC_FLUSHER_SUCCESS_TIME_MS = "flusher_success_time_ms";
-const std::string METRIC_FLUSHER_ERROR_TIME_MS = "flusher_error_time_ms";
-
-// flusher sls metrics
-const std::string METRIC_FLUSHER_NETWORK_ERROR_TOTAL = "flusher_network_error_total";
-const std::string METRIC_FLUSHER_QUOTA_ERROR_TOTAL = "flusher_quota_error_total";
-const std::string METRIC_FLUSHER_RETRIES_TOTAL = "flusher_retries_total";
-const std::string METRIC_FLUSHER_RETRIES_ERROR_TOTAL = "flusher_retries_error_total";
-
 //////////////////////////////////////////////////////////////////////////
 // plugin
 //////////////////////////////////////////////////////////////////////////
+
 // common metrics
-const std::string METRIC_PLUGIN_IN_EVENTS_CNT = "plugin_in_events_total";
-const std::string METRIC_PLUGIN_IN_EVENT_GROUP_SIZE_BYTES = "plugin_in_event_group_size_bytes";
+const std::string METRIC_PLUGIN_COST_TIME_MS = "plugin_cost_time_ms";
+const std::string METRIC_PLUGIN_IN_BUFFER_TOTAL = "plugin_in_buffer_total";
+const std::string METRIC_PLUGIN_IN_BUFFER_SIZE_BYTES = "plugin_in_buffer_size_bytes";
+const std::string METRIC_PLUGIN_OUT_BUFFER_TOTAL = "plugin_out_buffer_total";
+const std::string METRIC_PLUGIN_OUT_BUFFER_SIZE_BYTES = "plugin_out_buffer_size_bytes";
+const std::string METRIC_PLUGIN_IN_EVENTS_TOTAL = "plugin_in_events_total";
+const std::string METRIC_PLUGIN_IN_EVENTS_SIZE_BYTES = "plugin_in_events_size_bytes";
+const std::string METRIC_PLUGIN_OUT_EVENTS_TOTAL = "plugin_out_events_total";
+const std::string METRIC_PLUGIN_OUT_EVENTS_SIZE_BYTES = "plugin_out_events_size_bytes";
+const std::string METRIC_PLUGIN_IN_EVENT_GROUPS_TOTAL = "plugin_in_event_groups_total";
+const std::string METRIC_PLUGIN_IN_EVENT_GROUPS_SIZE_BYTES = "plugin_in_event_groups_size_bytes";
+const std::string METRIC_PLUGIN_OUT_EVENT_GROUPS_TOTAL = "plugin_in_event_groups_total";
+const std::string METRIC_PLUGIN_OUT_EVENT_GROUPS_SIZE_BYTES = "plugin_out_event_groups_size_bytes";
+const std::string METRIC_PLUGIN_DISCARD_EVENTS_TOTAL = "plugin_discard_events_total";
+const std::string METRIC_PLUGIN_ERROR_TOTAL = "plugin_error_total";
+
+// input input_file/input_container_stdio cunstom metrics
+const std::string METRIC_PLUGIN_READ_FILE_SIZE_BYTES = "plugin_read_file_size_bytes";
+const std::string METRIC_PLUGIN_READ_FILE_OFFSET_BYTES = "plugin_read_file_offset_bytes";
+const std::string METRIC_PLUGIN_MONITOR_FILE_TOTAL = "plugin_monitor_file_total";
+
+// processor processor_parse_regex_native cunstom metrics
+const std::string METRIC_PLUGIN_KEY_COUNT_NOT_MATCH_ERROR_TOTAL = "plugin_key_count_not_match_error_total";
+
+// processor processor_parse_apsara_native/processor_parse_timestamp_native cunstom metrics
+const std::string METRIC_PLUGIN_HISTORY_FAILURE_TOTAL = "plugin_history_failure_total";
+
+// processor  processor_split_multiline_log_string_native cunstom metrics
+const std::string METRIC_PLUGIN_SPLIT_MULTILINE_LOG_MATCHED_RECORDS_TOTAL
+    = "plugin_split_multiline_log_matched_records_total";
+const std::string METRIC_PLUGIN_SPLIT_MULTILINE_LOG_MATCHED_LINES_TOTAL
+    = "plugin_split_multiline_log_matched_lines_total";
+const std::string METRIC_PLUGIN_SPLIT_MULTILINE_LOG_UNMATCHED_LINES_TOTAL
+    = "plugin_split_multiline_log_unmatched_lines_total";
+
+// processor processor_desensitize cunstom metrics
+const std::string METRIC_PLUGIN_DESENSITIZE_RECORDS_TOTAL = "plugin_desensitize_records_total";
+
+// processor processor_merge_multiline_log_native cunstom metrics
+const std::string METRIC_PLUGIN_MERGE_MULTILINE_LOG_MERGED_RECORDS_TOTAL
+    = "plugin_merge_multiline_log_merged_records_total";
+const std::string METRIC_PLUGIN_MERGE_MULTILINE_LOG_UNMATCHED_RECORDS_TOTAL
+    = "plugin_merge_multiline_log_unmatched_records_total";
+
+// processor processor_parse_container_log_native cunstom metrics
+const std::string METRIC_PLUGIN_PARSE_STDOUT_TOTAL = "plugin_parse_stdout_total";
+const std::string METRIC_PLUGIN_PARSE_STDERR_TOTAL = "plugin_parse_stderr_total";
+
+// flusher flusher_sls cunstom metrics
+const std::string METRIC_PLUGIN_NETWORK_ERROR_TOTAL = "plugin_network_error_total";
+const std::string METRIC_PLUGIN_QUOTA_ERROR_TOTAL = "plugin_quota_error_total";
+const std::string METRIC_PLUGIN_RETRIES_TOTAL = "plugin_retries_total";
 
 //////////////////////////////////////////////////////////////////////////
 // component
 //////////////////////////////////////////////////////////////////////////
+
 // common metrics
-const std::string METRIC_COMPONENT_IN_EVENTS_CNT = "component_in_events_total";
-const std::string METRIC_COMPONENT_IN_ITEMS_CNT = "component_in_items_total";
+const std::string METRIC_COMPONENT_IN_EVENTS_TOTAL = "component_in_events_total";
+const std::string METRIC_COMPONENT_IN_ITEMS_TOTAL = "component_in_items_total";
 const std::string METRIC_COMPONENT_IN_EVENT_GROUP_SIZE_BYTES = "component_in_event_group_size_bytes";
 const std::string METRIC_COMPONENT_IN_ITEM_SIZE_BYTES = "component_in_item_size_bytes";
-const std::string METRIC_COMPONENT_OUT_EVENTS_CNT = "component_out_events_total";
-const std::string METRIC_COMPONENT_OUT_ITEMS_CNT = "component_out_items_total";
+const std::string METRIC_COMPONENT_OUT_EVENTS_TOTAL = "component_out_events_total";
+const std::string METRIC_COMPONENT_OUT_ITEMS_TOTAL = "component_out_items_total";
 const std::string METRIC_COMPONENT_OUT_ITEM_SIZE_BYTES = "component_out_item_size_bytes";
 const std::string METRIC_COMPONENT_TOTAL_DELAY_MS = "component_total_delay_ms";
-const std::string METRIC_COMPONENT_DISCARDED_ITEMS_CNT = "component_discarded_items_total";
+const std::string METRIC_COMPONENT_DISCARDED_ITEMS_TOTAL = "component_discarded_items_total";
 const std::string METRIC_COMPONENT_DISCARDED_ITEMS_SIZE_BYTES = "component_discarded_item_size_bytes";
 
 // batcher metrics
-const std::string METRIC_COMPONENT_BATCHER_EVENT_BATCHES_CNT = "component_event_batches_total";
-const std::string METRIC_COMPONENT_BATCHER_BUFFERED_GROUPS_CNT = "component_buffered_groups_total";
-const std::string METRIC_COMPONENT_BATCHER_BUFFERED_EVENTS_CNT = "component_buffered_events_total";
+const std::string METRIC_COMPONENT_BATCHER_EVENT_BATCHES_TOTAL = "component_event_batches_total";
+const std::string METRIC_COMPONENT_BATCHER_BUFFERED_GROUPS_TOTAL = "component_buffered_groups_total";
+const std::string METRIC_COMPONENT_BATCHER_BUFFERED_EVENTS_TOTAL = "component_buffered_events_total";
 const std::string METRIC_COMPONENT_BATCHER_BUFFERED_SIZE_BYTES = "component_buffered_size_bytes";
 
 // queue metrics
-const std::string METRIC_COMPONENT_QUEUE_SIZE_CNT = "component_queue_size";
+const std::string METRIC_COMPONENT_QUEUE_SIZE_TOTAL = "component_queue_size";
 const std::string METRIC_COMPONENT_QUEUE_SIZE_BYTES = "component_queue_size_bytes";
 const std::string METRIC_COMPONENT_QUEUE_VALID_TO_PUSH_FLAG = "component_valid_to_push";
 const std::string METRIC_COMPONENT_QUEUE_EXTRA_BUFFER_SIZE = "component_extra_buffer_size";
 const std::string METRIC_COMPONENT_QUEUE_EXTRA_BUFFER_SIZE_BYTES = "component_extra_buffer_size";
-const std::string METRIC_COMPONENT_QUEUE_DISCARDED_EVENTS_CNT = "component_discarded_events_total";
+const std::string METRIC_COMPONENT_QUEUE_DISCARDED_EVENTS_TOTAL = "component_discarded_events_total";
 
 //////////////////////////////////////////////////////////////////////////
 // pipeline
 //////////////////////////////////////////////////////////////////////////
+
 const std::string METRIC_PIPELINE_START_TIME = "pipeline_start_time";
-const std::string METRIC_PIPELINE_PROCESSORS_IN_EVENTS_CNT = "pipeline_processors_in_events_total";
-const std::string METRIC_PIPELINE_PROCESSORS_IN_EVENT_GROUPS_CNT = "pipeline_processors_in_event_groups_total";
+const std::string METRIC_PIPELINE_PROCESSORS_IN_EVENTS_TOTAL = "pipeline_processors_in_events_total";
+const std::string METRIC_PIPELINE_PROCESSORS_IN_EVENT_GROUPS_TOTAL = "pipeline_processors_in_event_groups_total";
 const std::string METRIC_PIPELINE_PROCESSORS_IN_EVENT_GROUP_SIZE_BYTES
     = "pipeline_processors_in_event_group_size_bytes";
 const std::string METRIC_PIPELINE_PROCESSORS_TOTAL_DELAY_MS = "pipeline_processors_total_delay_ms";
@@ -190,29 +186,30 @@ const std::string METRIC_PIPELINE_PROCESSORS_TOTAL_DELAY_MS = "pipeline_processo
 //////////////////////////////////////////////////////////////////////////
 // runner
 //////////////////////////////////////////////////////////////////////////
+
 // common metrics
-const std::string METRIC_RUNNER_IN_EVENTS_CNT = "runner_in_events_total";
-const std::string METRIC_RUNNER_IN_EVENT_GROUPS_CNT = "runner_in_event_groups_total";
-const std::string METRIC_RUNNER_IN_ITEMS_CNT = "runner_in_items_total";
+const std::string METRIC_RUNNER_IN_EVENTS_TOTAL = "runner_in_events_total";
+const std::string METRIC_RUNNER_IN_EVENT_GROUPS_TOTAL = "runner_in_event_groups_total";
+const std::string METRIC_RUNNER_IN_ITEMS_TOTAL = "runner_in_items_total";
 const std::string METRIC_RUNNER_IN_EVENT_GROUP_SIZE_BYTES = "runner_in_event_group_size_bytes";
 const std::string METRIC_RUNNER_IN_ITEM_SIZE_BYTES = "runner_in_item_size_bytes";
-const std::string METRIC_RUNNER_OUT_ITEMS_CNT = "runner_out_items_total";
+const std::string METRIC_RUNNER_OUT_ITEMS_TOTAL = "runner_out_items_total";
 const std::string METRIC_RUNNER_TOTAL_DELAY_MS = "runner_total_delay_ms";
 const std::string METRIC_RUNNER_LAST_RUN_TIME = "runner_last_run_time";
 
 // http sink metrics
-const std::string METRIC_RUNNER_HTTP_SINK_OUT_SUCCESSFUL_ITEMS_CNT = "runner_out_successful_items_total";
-const std::string METRIC_RUNNER_HTTP_SINK_OUT_FAILED_ITEMS_CNT = "runner_out_failed_items_total";
-const std::string METRIC_RUNNER_HTTP_SINK_SENDING_ITEMS_CNT = "runner_sending_items_total";
+const std::string METRIC_RUNNER_HTTP_SINK_OUT_SUCCESSFUL_ITEMS_TOTAL = "runner_out_successful_items_total";
+const std::string METRIC_RUNNER_HTTP_SINK_OUT_FAILED_ITEMS_TOTAL = "runner_out_failed_items_total";
+const std::string METRIC_RUNNER_HTTP_SINK_SENDING_ITEMS_TOTAL = "runner_sending_items_total";
 const std::string METRIC_RUNNER_HTTP_SINK_SEND_CONCURRENCY = "runner_send_concurrency";
 
 // flusher runner metrics
 const std::string METRIC_RUNNER_FLUSHER_IN_ITEM_RAW_SIZE_BYTES = "runner_in_item_raw_size_bytes";
-const std::string METRIC_RUNNER_FLUSHER_WAITING_ITEMS_CNT = "runner_waiting_items_total";
+const std::string METRIC_RUNNER_FLUSHER_WAITING_ITEMS_TOTAL = "runner_waiting_items_total";
 
 // file server metrics
-const std::string METRIC_RUNNER_FILE_WATCHED_DIRS_CNT = "runner_watched_dirs_total";
-const std::string METRIC_RUNNER_FILE_ACTIVE_READERS_CNT = "runner_active_readers_total";
+const std::string METRIC_RUNNER_FILE_WATCHED_DIRS_TOTAL = "runner_watched_dirs_total";
+const std::string METRIC_RUNNER_FILE_ACTIVE_READERS_TOTAL = "runner_active_readers_total";
 const std::string METRIC_RUNNER_FILE_ENABLE_FILE_INCLUDED_BY_MULTI_CONFIGS_FLAG
     = "runner_enable_file_included_by_multi_configs";
 const std::string METRIC_RUNNER_FILE_POLLING_MODIFY_CACHE_SIZE = "runner_polling_modify_cache_size";

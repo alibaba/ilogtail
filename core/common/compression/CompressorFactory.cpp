@@ -62,7 +62,7 @@ unique_ptr<Compressor> CompressorFactory::Create(const Json::Value& config,
         compressor = Create(defaultType);
     }
     compressor->SetMetricRecordRef({{METRIC_LABEL_PROJECT, ctx.GetProjectName()},
-                                    {METRIC_LABEL_CONFIG_NAME, ctx.GetConfigName()},
+                                    {METRIC_LABEL_PIPELINE_NAME, ctx.GetConfigName()},
                                     {METRIC_LABEL_KEY_COMPONENT_NAME, "compressor"},
                                     {METRIC_LABEL_KEY_FLUSHER_NODE_ID, flusherId}});
     return compressor;

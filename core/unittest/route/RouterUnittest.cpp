@@ -152,7 +152,7 @@ void RouterUnittest::TestMetric() {
 
     APSARA_TEST_EQUAL(3U, router.mMetricsRecordRef->GetLabels()->size());
     APSARA_TEST_TRUE(router.mMetricsRecordRef.HasLabel(METRIC_LABEL_PROJECT, ""));
-    APSARA_TEST_TRUE(router.mMetricsRecordRef.HasLabel(METRIC_LABEL_CONFIG_NAME, "test_config"));
+    APSARA_TEST_TRUE(router.mMetricsRecordRef.HasLabel(METRIC_LABEL_PIPELINE_NAME, "test_config"));
     APSARA_TEST_TRUE(router.mMetricsRecordRef.HasLabel(METRIC_LABEL_KEY_COMPONENT_NAME, "router"));
 
     PipelineEventGroup g(make_shared<SourceBuffer>());
@@ -160,7 +160,7 @@ void RouterUnittest::TestMetric() {
     auto size = g.DataSize();
     router.Route(g);
 
-    APSARA_TEST_EQUAL(1U, router.mInEventsCnt->GetValue());
+    APSARA_TEST_EQUAL(1U, router.mInEventsTotal->GetValue());
     APSARA_TEST_EQUAL(size, router.mInGroupDataSizeBytes->GetValue());
 }
 

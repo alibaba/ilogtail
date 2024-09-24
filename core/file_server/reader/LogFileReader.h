@@ -537,10 +537,10 @@ protected:
     MetricLabels mMetricLabels;
     bool mMetricInited;
     ReentrantMetricsRecordRef mMetricsRecordRef;
-    CounterPtr mInputRecordsSizeBytesCounter;
-    CounterPtr mInputReadTotalCounter;
-    IntGaugePtr mInputFileSizeBytesGauge;
-    IntGaugePtr mInputFileOffsetBytesGauge;
+    CounterPtr mOutBufferSizeBytesCounter;
+    CounterPtr mOutBufferTotalCounter;
+    IntGaugePtr mReadFileSizeBytesGauge;
+    IntGaugePtr mReadFileOffsetBytesGauge;
 
 private:
     bool mHasReadContainerBom = false;
