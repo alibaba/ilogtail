@@ -57,12 +57,7 @@ private:
     void DecreasePluginUsageCnt(
         const std::unordered_map<std::string, std::unordered_map<std::string, uint32_t>>& statistics);
     void FlushAllBatch();
-    // 过渡使用
-    void CheckIfInputUpdated(const Json::Value& config,
-                             bool& isInputObserverChanged,
-                             bool& isInputFileChanged,
-                             bool& isInputStreamChanged,
-                             bool& isInputContainerStdioChanged);
+    bool CheckIfFileServerUpdated(const Json::Value& config);
 
     std::unordered_map<std::string, std::shared_ptr<Pipeline>> mPipelineNameEntityMap;
     mutable SpinLock mPluginCntMapLock;

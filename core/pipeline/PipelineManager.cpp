@@ -39,29 +39,16 @@ namespace logtail {
 void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
 #ifndef APSARA_UNIT_TEST_MAIN
     // 过渡使用
-    static bool isFileServerStarted = false, isInputObserverStarted = false;
-    bool isInputObserverChanged = false, isInputFileChanged = false, isInputStreamChanged = false,
-         isInputContainerStdioChanged = false;
+    static bool isFileServerStarted = false;
+    bool isInputFileChanged = false;
     for (const auto& name : diff.mRemoved) {
-        CheckIfInputUpdated(mPipelineNameEntityMap[name]->GetConfig()["inputs"][0],
-                            isInputObserverChanged,
-                            isInputFileChanged,
-                            isInputStreamChanged,
-                            isInputContainerStdioChanged);
+        isInputFileChanged = CheckIfFileServerUpdated(mPipelineNameEntityMap[name]->GetConfig()["inputs"][0]);
     }
     for (const auto& config : diff.mModified) {
-        CheckIfInputUpdated(*config.mInputs[0],
-                            isInputObserverChanged,
-                            isInputFileChanged,
-                            isInputStreamChanged,
-                            isInputContainerStdioChanged);
+        isInputFileChanged = CheckIfFileServerUpdated(*config.mInputs[0]);
     }
     for (const auto& config : diff.mAdded) {
-        CheckIfInputUpdated(*config.mInputs[0],
-                            isInputObserverChanged,
-                            isInputFileChanged,
-                            isInputStreamChanged,
-                            isInputContainerStdioChanged);
+        isInputFileChanged = CheckIfFileServerUpdated(*config.mInputs[0]);
     }
 
 #if defined(__ENTERPRISE__) && defined(__linux__) && !defined(__ANDROID__)
@@ -69,7 +56,7 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
         ShennongManager::GetInstance()->Pause();
     }
 #endif
-    if (isFileServerStarted && (isInputFileChanged || isInputContainerStdioChanged)) {
+    if (isFileServerStarted && isInputFileChanged) {
         FileServer::GetInstance()->Pause();
     }
 #endif
@@ -137,7 +124,7 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
     // 在Flusher改造完成前，先不执行如下步骤，不会造成太大影响
     // Sender::CleanUnusedAk();
 
-    if (isInputFileChanged || isInputContainerStdioChanged) {
+    if (isInputFileChanged) {
         if (isFileServerStarted) {
             FileServer::GetInstance()->Resume();
         } else {
@@ -250,21 +237,9 @@ void PipelineManager::DecreasePluginUsageCnt(const unordered_map<string, unorder
     }
 }
 
-void PipelineManager::CheckIfInputUpdated(const Json::Value& config,
-                                          bool& isInputObserverChanged,
-                                          bool& isInputFileChanged,
-                                          bool& isInputStreamChanged,
-                                          bool& isInputContainerStdioChanged) {
+bool PipelineManager::CheckIfFileServerUpdated(const Json::Value& config) {
     string inputType = config["Type"].asString();
-    if (inputType == "input_observer_network") {
-        isInputObserverChanged = true;
-    } else if (inputType == "input_file") {
-        isInputFileChanged = true;
-    } else if (inputType == "input_stream") {
-        isInputStreamChanged = true;
-    } else if (inputType == "input_container_stdio") {
-        isInputContainerStdioChanged = true;
-    }
+    return inputType == "input_file" || inputType == "input_container_stdio";
 }
 
 } // namespace logtail
