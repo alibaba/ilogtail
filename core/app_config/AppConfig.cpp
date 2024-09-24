@@ -1538,7 +1538,7 @@ void AppConfig::LoadInstanceConfig(std::map<std::string, Json::Value>& remoteCon
     mLocalInstanceConfig.clear();
     for (auto& config : remoteConfig) {
         if (config.first == AppConfig::sLocalConfigDir) {
-            mLocalInstanceConfig = std::move(config.second);
+            MergeJson(mLocalInstanceConfig, config.second);
         } else {
             MergeJson(mRemoteConfig, config.second);
         }
