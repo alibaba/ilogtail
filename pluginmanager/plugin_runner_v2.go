@@ -189,7 +189,7 @@ func (p *pluginv2Runner) addAggregator(pluginMeta *pipeline.PluginMeta, aggregat
 	p.AggregatorPlugins = append(p.AggregatorPlugins, &wrapper)
 	p.TimerRunner = append(p.TimerRunner, &timerRunner{
 		state:         aggregator,
-		interval:      time.Millisecond * wrapper.Interval,
+		interval:      wrapper.Interval,
 		context:       p.LogstoreConfig.Context,
 		latencyMetric: p.LogstoreConfig.Statistics.CollecLatencytMetric,
 	})
