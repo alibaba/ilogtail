@@ -36,7 +36,6 @@ import (
 )
 
 var maxFlushOutTime = 5
-var embeddedNamingCnt = int64(0)
 
 const mixProcessModeFlag = "mix_process_mode"
 
@@ -71,6 +70,7 @@ func checkMixProcessMode(pluginCfg map[string]interface{}) mixProcessMode {
 }
 
 type LogstoreStatistics struct {
+	MetricRecord         *pipeline.MetricsRecord
 	CollecLatencytMetric pipeline.LatencyMetric
 	RawLogMetric         pipeline.CounterMetric
 	SplitLogMetric       pipeline.CounterMetric
@@ -124,14 +124,14 @@ type LogstoreConfig struct {
 
 func (p *LogstoreStatistics) Init(context pipeline.Context) {
 	labels := pipeline.GetCommonLabels(context, &pipeline.PluginMeta{})
-	metricsRecord := context.RegisterLogstoreConfigMetricRecord(labels)
-	p.CollecLatencytMetric = helper.NewLatencyMetricAndRegister(metricsRecord, "collect_latency")
-	p.RawLogMetric = helper.NewCounterMetricAndRegister(metricsRecord, "raw_log")
-	p.SplitLogMetric = helper.NewCounterMetricAndRegister(metricsRecord, "processed_log")
-	p.FlushLogMetric = helper.NewCounterMetricAndRegister(metricsRecord, "flush_log")
-	p.FlushLogGroupMetric = helper.NewCounterMetricAndRegister(metricsRecord, "flush_loggroup")
-	p.FlushReadyMetric = helper.NewAverageMetricAndRegister(metricsRecord, "flush_ready")
-	p.FlushLatencyMetric = helper.NewLatencyMetricAndRegister(metricsRecord, "flush_latency")
+	p.MetricRecord = context.RegisterLogstoreConfigMetricRecord(labels)
+	p.CollecLatencytMetric = helper.NewLatencyMetricAndRegister(p.MetricRecord, "collect_latency")
+	p.RawLogMetric = helper.NewCounterMetricAndRegister(p.MetricRecord, "raw_log")
+	p.SplitLogMetric = helper.NewCounterMetricAndRegister(p.MetricRecord, "processed_log")
+	p.FlushLogMetric = helper.NewCounterMetricAndRegister(p.MetricRecord, "flush_log")
+	p.FlushLogGroupMetric = helper.NewCounterMetricAndRegister(p.MetricRecord, "flush_loggroup")
+	p.FlushReadyMetric = helper.NewAverageMetricAndRegister(p.MetricRecord, "flush_ready")
+	p.FlushLatencyMetric = helper.NewLatencyMetricAndRegister(p.MetricRecord, "flush_latency")
 }
 
 // Start initializes plugin instances in config and starts them.

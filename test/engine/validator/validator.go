@@ -214,13 +214,13 @@ func InitCounter() {
 			for _, log := range group.Logs {
 				for _, content := range log.Contents {
 					switch content.Key {
-					case "raw_log":
+					case "value.raw_log":
 						RawLogCounter += getValue(content.Value)
-					case "processed_log":
+					case "value.processed_log":
 						ProcessedLogCounter += getValue(content.Value)
-					case "flush_log":
+					case "value.flush_log":
 						FlushLogCounter += getValue(content.Value)
-					case "flush_loggroup":
+					case "value.flush_loggroup":
 						FlushLogGroupCounter += getValue(content.Value)
 					}
 				}
