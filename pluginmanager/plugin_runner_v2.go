@@ -153,7 +153,7 @@ func (p *pluginv2Runner) addMetricInput(pluginMeta *pipeline.PluginMeta, input p
 	p.MetricPlugins = append(p.MetricPlugins, &wrapper)
 	p.TimerRunner = append(p.TimerRunner, &timerRunner{
 		state:         input,
-		interval:      wrapper.Interval * time.Millisecond,
+		interval:      wrapper.Interval,
 		context:       p.LogstoreConfig.Context,
 		latencyMetric: p.LogstoreConfig.Statistics.CollecLatencytMetric,
 	})
