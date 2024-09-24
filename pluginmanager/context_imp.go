@@ -69,7 +69,7 @@ func (p *ContextImp) GetExtension(name string, cfg any) (pipeline.Extension, err
 	}
 
 	// get the new created extension
-	exists, ok = p.logstoreC.PluginRunner.GetExtension(pluginMeta.PluginTypeWithID)
+	exists, ok = p.logstoreC.PluginRunner.GetExtension(getPluginTypeAndName(pluginMeta.PluginTypeWithID))
 	if !ok {
 		return nil, fmt.Errorf("failed to load extension: %s", pluginMeta.PluginTypeWithID)
 	}

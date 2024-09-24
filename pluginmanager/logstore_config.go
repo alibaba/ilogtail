@@ -854,6 +854,9 @@ func applyPluginConfig(plugin interface{}, pluginConfig interface{}) error {
 }
 
 // Rule: pluginTypeWithID=pluginType/{optional:instance_name}/pluginID#pluginPriority.
+// ext_basicauth/1 -> ext_basicauth
+// ext_basicauth/shared -> ext_basicauth
+// ext_basicauth/shared/1 -> ext_basicauth
 func getPluginType(pluginTypeWithID string) string {
 	if ids := strings.IndexByte(pluginTypeWithID, '/'); ids != -1 {
 		return pluginTypeWithID[:ids]
@@ -861,23 +864,37 @@ func getPluginType(pluginTypeWithID string) string {
 	return pluginTypeWithID
 }
 
+// ext_basicauth/1 -> ext_basicauth
+// ext_basicauth/shared -> ext_basicauth/shared
+// ext_basicauth/shared/1 -> ext_basicauth/shared
 func getPluginTypeAndName(pluginTypeWithID string) string {
 	if idx := strings.LastIndex(pluginTypeWithID, "/"); idx != -1 {
-		return pluginTypeWithID[:idx]
+		if isInteger(pluginTypeWithID[idx+1:]) {
+			return pluginTypeWithID[:idx]
+		}
 	}
 	return pluginTypeWithID
 }
 
+// Rule: pluginTypeWithID=pluginType/{optional:instance_name}/pluginID
+// ext_basicauth/1 -> "1"
+// ext_basicauth/shared -> ""
+// ext_basicauth/shared/1 -> "1"
 func getPluginID(pluginTypeWithID string) string {
 	if lastIdx := strings.LastIndexByte(pluginTypeWithID, '/'); lastIdx != -1 {
-		return pluginTypeWithID[lastIdx+1:]
+		if isInteger(pluginTypeWithID[lastIdx+1:]) {
+			return pluginTypeWithID[lastIdx+1:]
+		}
 	}
 	return ""
 }
 
+// ext_basicauth/1 -> true
+// ext_basicauth/shared -> false
+// ext_basicauth/shared/1 -> true
 func isPluginTypeWithID(pluginTypeWithID string) bool {
-	if idx := strings.IndexByte(pluginTypeWithID, '/'); idx != -1 {
-		return true
+	if lastIdx := strings.LastIndexByte(pluginTypeWithID, '/'); lastIdx != -1 {
+		return isInteger(pluginTypeWithID[lastIdx+1:])
 	}
 	return false
 }
@@ -893,40 +910,46 @@ func GetPluginPriority(pluginTypeWithID string) int {
 	return 0
 }
 
+func isInteger(s string) bool {
+	_, err := strconv.Atoi(s)
+	return err == nil
+}
+
 // pluginTypeWithID=pluginType/{optional:instance_name}/pluginID#pluginPriority.
 func (lc *LogstoreConfig) genPluginMeta(pluginTypeWithID string, genNodeID bool, lastOne bool) *pipeline.PluginMeta {
 	nodeID := ""
 	childNodeID := ""
+	// remove priority
+	if idx := strings.IndexByte(pluginTypeWithID, '#'); idx != -1 {
+		pluginTypeWithID = pluginTypeWithID[:idx]
+	}
+
 	if isPluginTypeWithID(pluginTypeWithID) {
 		pluginTypeWithID := pluginTypeWithID
-		if idx := strings.IndexByte(pluginTypeWithID, '#'); idx != -1 {
-			pluginTypeWithID = pluginTypeWithID[:idx]
+
+		if genNodeID {
+			nodeID, childNodeID = lc.genNodeID(lastOne)
 		}
 
-		if isPluginTypeWithID(pluginTypeWithID) {
-			if genNodeID {
-				nodeID, childNodeID = lc.genNodeID(lastOne)
-			}
+		if pluginID, err := strconv.ParseInt(getPluginID(pluginTypeWithID), 10, 32); err == nil {
+			atomic.StoreInt32(&lc.pluginID, int32(pluginID))
+		}
 
-			if pluginID, err := strconv.ParseInt(getPluginID(pluginTypeWithID), 10, 32); err == nil {
-				atomic.StoreInt32(&lc.pluginID, int32(pluginID))
-			}
-
-			return &pipeline.PluginMeta{
-				PluginTypeWithID: pluginTypeWithID,
-				PluginType:       getPluginType(pluginTypeWithID),
-				PluginID:         getPluginID(pluginTypeWithID),
-				NodeID:           nodeID,
-				ChildNodeID:      childNodeID,
-			}
+		return &pipeline.PluginMeta{
+			PluginTypeWithID: pluginTypeWithID,
+			PluginType:       getPluginType(pluginTypeWithID),
+			PluginID:         getPluginID(pluginTypeWithID),
+			NodeID:           nodeID,
+			ChildNodeID:      childNodeID,
 		}
 	}
-	pluginType := pluginTypeWithID
+	pluginName := pluginTypeWithID
+	pluginType := getPluginType(pluginName)
 	pluginID := lc.genPluginID()
 	if genNodeID {
 		nodeID, childNodeID = lc.genNodeID(lastOne)
 	}
-	pluginTypeWithID = fmt.Sprintf("%s/%s", pluginType, pluginID)
+	pluginTypeWithID = fmt.Sprintf("%s/%s", pluginName, pluginID)
 	return &pipeline.PluginMeta{
 		PluginTypeWithID: pluginTypeWithID,
 		PluginType:       pluginType,

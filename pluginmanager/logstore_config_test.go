@@ -582,8 +582,7 @@ func Test_getPluginTypeWithID(t *testing.T) {
 		assert.Equal(t, "ext_basicauth", getPluginType(input))
 		assert.Equal(t, "123", getPluginID(input))
 		assert.Equal(t, "ext_basicauth", getPluginTypeAndName(input))
-		assert.Equal(t, false, isPluginTypeWithID(input))
-
+		assert.Equal(t, true, isPluginTypeWithID(input))
 	}
 	{
 		input := "ext_basicauth"
