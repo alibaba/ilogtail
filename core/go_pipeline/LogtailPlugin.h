@@ -133,7 +133,7 @@ struct K8sContainerMeta {
 // Methods export by plugin.
 typedef GoInt (*LoadGlobalConfigFun)(GoString);
 typedef GoInt (*LoadPipelineFun)(GoString p, GoString l, GoString c, GoInt64 k, GoString p2);
-typedef GoInt (*UnloadPipelineFun)(GoString p, GoString l, GoString c);
+typedef GoInt (*UnloadPipelineFun)(GoString c);
 typedef void (*StopAllFun)(GoInt);
 typedef void (*StopFun)(GoString, GoInt);
 typedef void (*StopBuiltInFun)();

@@ -153,4 +153,12 @@ void ExactlyOnceSenderQueue::Reset(const vector<RangeCheckpointPtr>& checkpoints
     mRangeCheckpoints = checkpoints;
 }
 
+void ExactlyOnceSenderQueue::SetPipelineForItems(std::shared_ptr<Pipeline>& p) const {
+    for (size_t index = 0; index < mCapacity; ++index) {
+        if (!mQueue[index]) {
+            mQueue[index]->mPipeline = p;
+        }
+    }
+}
+
 } // namespace logtail

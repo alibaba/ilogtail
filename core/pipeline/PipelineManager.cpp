@@ -96,10 +96,9 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
         ConfigFeedbackReceiver::GetInstance().FeedbackPipelineConfigStatus(name, ConfigFeedbackStatus::DELETED);
     }
     for (auto& config : diff.mModified) {
-        auto iter = mPipelineNameEntityMap.find(config.mName);
         auto p = BuildPipeline(std::move(config)); // auto reuse old pipeline's process queue and sender queue
         if (!p) {
-            LOG_WARNING(sLogger,
+                        LOG_WARNING(sLogger,
                         ("failed to build pipeline for existing config",
                          "keep current pipeline running")("config", config.mName));
             LogtailAlarm::GetInstance()->SendAlarm(
@@ -115,6 +114,7 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
         LOG_INFO(sLogger,
                  ("pipeline building for existing config succeeded",
                   "stop the old pipeline and start the new one")("config", config.mName));
+        auto iter = mPipelineNameEntityMap.find(config.mName);
         iter->second->Stop(false);
         DecreasePluginUsageCnt(iter->second->GetPluginStatistics());
 
@@ -126,7 +126,7 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
     for (auto& config : diff.mAdded) {
         auto p = BuildPipeline(std::move(config));
         if (!p) {
-            LOG_WARNING(sLogger,
+                        LOG_WARNING(sLogger,
                         ("failed to build pipeline for new config", "skip current object")("config", config.mName));
             LogtailAlarm::GetInstance()->SendAlarm(
                 CATEGORY_CONFIG_ALARM,

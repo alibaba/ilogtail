@@ -58,6 +58,7 @@ protected:
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class FlusherInstanceUnittest;
     friend class FlusherRunnerUnittest;
+    friend class FlusherUnittest;
 #endif
 };
 

@@ -110,7 +110,6 @@ private:
     CounterPtr mProcessorsInGroupsCnt;
     CounterPtr mProcessorsInGroupDataSizeBytes;
     CounterPtr mProcessorsTotalDelayMs;
-    CounterPtr mLoadDelayMs;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class PipelineMock;

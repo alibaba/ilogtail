@@ -142,10 +142,10 @@ void SenderQueue::GetAllAvailableItems(vector<SenderQueueItem*>& items, bool wit
     }
 }
 
-void SenderQueue::SetPipelineForItems(std::shared_ptr<Pipeline>& pipeline) const {
+void SenderQueue::SetPipelineForItems(std::shared_ptr<Pipeline>& p) const {
     for (auto& item : mQueue) {
         if (!item->mPipeline) {
-            item->mPipeline = pipeline;
+            item->mPipeline = p;
         }
     }
 }

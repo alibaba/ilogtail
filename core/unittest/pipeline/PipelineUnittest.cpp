@@ -14,8 +14,10 @@
 
 #include <json/json.h>
 
+#include <future>
 #include <memory>
 #include <string>
+#include <thread>
 
 #include "app_config/AppConfig.h"
 #include "common/JsonUtil.h"
@@ -48,6 +50,7 @@ public:
     void TestSend() const;
     void TestFlushBatch() const;
     void TestInProcessingCount() const;
+    void TestWaitAllItemsInProcessFinished() const;
 
 protected:
     static void SetUpTestCase() {
@@ -2876,6 +2879,21 @@ void PipelineUnittest::TestInProcessingCount() const {
     APSARA_TEST_EQUAL(0, pipeline->mInProcessCnt.load());
 }
 
+void PipelineUnittest::TestWaitAllItemsInProcessFinished() const {
+    auto pipeline = make_shared<Pipeline>();
+    pipeline->mPluginID.store(0);
+    pipeline->mInProcessCnt.store(0);
+
+    pipeline->mInProcessCnt.store(1);
+    std::future<void> future = std::async(std::launch::async, &Pipeline::WaitAllItemsInProcessFinished, pipeline.get());
+
+    // block
+    APSARA_TEST_NOT_EQUAL(std::future_status::ready, future.wait_for(std::chrono::seconds(0)));
+    pipeline->mInProcessCnt.store(0);
+    // recover
+    APSARA_TEST_EQUAL(std::future_status::ready, future.wait_for(std::chrono::seconds(0)));
+}
+
 UNIT_TEST_CASE(PipelineUnittest, OnSuccessfulInit)
 UNIT_TEST_CASE(PipelineUnittest, OnFailedInit)
 UNIT_TEST_CASE(PipelineUnittest, TestProcessQueue)
@@ -2886,6 +2904,7 @@ UNIT_TEST_CASE(PipelineUnittest, TestProcess)
 UNIT_TEST_CASE(PipelineUnittest, TestSend)
 UNIT_TEST_CASE(PipelineUnittest, TestFlushBatch)
 UNIT_TEST_CASE(PipelineUnittest, TestInProcessingCount)
+UNIT_TEST_CASE(PipelineUnittest, TestWaitAllItemsInProcessFinished)
 
 } // namespace logtail
 

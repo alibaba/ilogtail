@@ -279,6 +279,14 @@ uint32_t ExactlyOnceQueueManager::GetProcessQueueCnt() const {
     return mProcessQueues.size();
 }
 
+void ExactlyOnceQueueManager::SetPipelineForSenderItems(QueueKey key, std::shared_ptr<Pipeline>& p) {
+    lock_guard<mutex> lock(mSenderQueueMux);
+    auto iter = mSenderQueues.find(key);
+    if (iter != mSenderQueues.end()) {
+        iter->second.SetPipelineForItems(p);
+    }
+}
+
 #ifdef APSARA_UNIT_TEST_MAIN
 void ExactlyOnceQueueManager::Clear() {
     {

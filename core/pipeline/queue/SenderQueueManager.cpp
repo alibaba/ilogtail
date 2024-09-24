@@ -202,6 +202,7 @@ void SenderQueueManager::SetPipelineForItems(QueueKey key, std::shared_ptr<Pipel
     if (iter != mQueues.end()) {
         iter->second.SetPipelineForItems(p);
     }
+    ExactlyOnceQueueManager::GetInstance()->SetPipelineForSenderItems(key, p);
 }
 
 #ifdef APSARA_UNIT_TEST_MAIN
