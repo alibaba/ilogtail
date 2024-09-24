@@ -15,7 +15,7 @@
 | Type                                  | String     | 是       | 插件类型                                                     |
 | Brokers                               | String数组 | 是       | Kafka Brokers                                                |
 | Topic                                 | String     | 是       | Kafka Topic,支持动态topic, 例如: `test_%{content.appname}`   |
-| Version                               | String     | 否       | Kafka协议版本号 ,例如：`2.0.0`，默认值：`1.0.0`              |
+| Version                               | String     | 否       | Kafka协议版本号 ,例如：`2.1.0`，默认值：`2.1.0`              |
 | Headers                               | header数组 | 否       | kafka消息头 ，配置使用请参考本文中`Headers`配置用例          |
 | Convert                               | Struct     | 否       | iLogtail数据转换协议配置                                     |
 | Convert.Protocol                      | String     | 否       | iLogtail数据转换协议，kafka flusher 可选值：`custom_single`,`custom_single_flatten`,`otlp_log_v1`。默认值：`custom_single` |
@@ -61,7 +61,7 @@
 | HashOnce                              | Boolean    | 否       |                                                              |
 | ClientID                              | String     | 否       | 写入Kafka的Client ID，默认取值：`LogtailPlugin`。            |
 
-- `Version`需要填写的是`kafka protocol version`版本号，`flusher_kafka_v2`当前支持的`kafka`版本范围：`0.8.2.x~3.3.1`。
+- `Version`需要填写的是`kafka protocol version`版本号，`flusher_kafka_v2`当前支持的`kafka`版本范围：`0.8.2.x~3.6.0`。
   请根据自己的`kafka`版本号参照下面的`kafka protocol version`规则进行配置。**建议根据自己的`kafka`
   版本指定对应`protocol version`**,
   `kafka protocol version`支持版本号如下：
