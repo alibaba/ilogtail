@@ -26,6 +26,7 @@ class SLSSerializerUnittest : public ::testing::Test {
 public:
     void TestSerializeEventGroup();
     void TestSerializeEventGroupList();
+    void TestSerializeBenchmark();
 
 protected:
     static void SetUpTestCase() { sFlusher = make_unique<FlusherSLS>(); }
@@ -39,6 +40,7 @@ protected:
 private:
     BatchedEvents CreateBatchedEvents(bool enableNanosecond);
     BatchedEvents CreateBatchedMetricEvents(bool enableNanosecond, uint32_t nanoTimestamp, bool emptyValue);
+    BatchedEvents CreateBenchmarkMetricEvents(bool enableNanosecond, uint32_t nanoTimestamp, bool emptyValue);
 
     static unique_ptr<FlusherSLS> sFlusher;
 
@@ -163,7 +165,7 @@ void SLSSerializerUnittest::TestSerializeEventGroup() {
         APSARA_TEST_EQUAL(logGroup.logs(0).contents(0).value(), "key1#$#value1|key2#$#value2");
 
         APSARA_TEST_EQUAL(logGroup.logs(0).contents(1).key(), "__time_nano__");
-        APSARA_TEST_EQUAL(logGroup.logs(0).contents(1).value(), "1234567890999999999");
+        APSARA_TEST_EQUAL(logGroup.logs(0).contents(1).value(), "1234567890199999999");
 
         APSARA_TEST_EQUAL(logGroup.logs(0).contents(2).key(), "__value__");
         APSARA_TEST_EQUAL(logGroup.logs(0).contents(2).value(), "0.100000");
@@ -202,6 +204,31 @@ void SLSSerializerUnittest::TestSerializeEventGroupList() {
 }
 
 
+void SLSSerializerUnittest::TestSerializeBenchmark() {
+    vector<BatchedEvents> events;
+    for (int i = 0; i < 100; ++i) {
+        events.emplace_back(CreateBenchmarkMetricEvents(false, 0, true));
+    }
+    SLSEventGroupSerializer serializer(sFlusher.get());
+    string res, errorMsg;
+
+    auto start = std::chrono::high_resolution_clock::now();
+
+    for (auto &e : events) {
+        serializer.Serialize(std::move(e), res, errorMsg);
+    }
+
+    auto end = std::chrono::high_resolution_clock::now();
+
+    auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+
+    cout << "elapsed: " << elapsed << " microseconds" << endl;
+
+    // use osstream: 473285 microseconds
+    // use string append: 2075143 microseconds
+}
+
+
 BatchedEvents SLSSerializerUnittest::CreateBatchedEvents(bool enableNanosecond) {
     PipelineEventGroup group(make_shared<SourceBuffer>());
     group.SetTag(LOG_RESERVED_KEY_TOPIC, "topic");
@@ -226,6 +253,45 @@ BatchedEvents SLSSerializerUnittest::CreateBatchedEvents(bool enableNanosecond) 
     return batch;
 }
 
+
+BatchedEvents SLSSerializerUnittest::CreateBenchmarkMetricEvents(bool enableNanosecond, uint32_t nanoTimestamp, bool emptyValue) {
+    PipelineEventGroup group(make_shared<SourceBuffer>());
+    group.SetTag(LOG_RESERVED_KEY_TOPIC, "topic");
+    group.SetTag(LOG_RESERVED_KEY_SOURCE, "source");
+    group.SetTag(LOG_RESERVED_KEY_MACHINE_UUID, "machine_uuid");
+    group.SetTag(LOG_RESERVED_KEY_PACKAGE_ID, "pack_id");
+
+    StringBuffer b = group.GetSourceBuffer()->CopyString(string("pack_id"));
+    group.SetMetadataNoCopy(EventGroupMetaKey::SOURCE_ID, StringView(b.data, b.size));
+    group.SetExactlyOnceCheckpoint(RangeCheckpointPtr(new RangeCheckpoint));
+
+    // 0.5KB * 10000 = 5MB 
+    for (int i = 0; i < 100000; ++i) {
+        MetricEvent* e = group.AddMetricEvent();
+        e->SetTag(string("container"), string("ack-node-problem-detector"));
+        e->SetTag(string("id"), string("/kubepods.slice/kubepods-burstable.slice/kubepods-burstable-pod32f2562e_f52f_411d_b4d8_8cd23adc1aa7.slice/cri-containerd-65c0d0bf5a1dca7d5d5e06a09436bf43e97bd1c1b318d748383f1784a4708142.scope"));
+        e->SetTag(string("image"), string("registry-cn-chengdu-vpc.ack.aliyuncs.com/acs/ack-node-problem-detector:v0.8.13-003ac31-aliyun"));
+        e->SetTag(string("name"), string("65c0d0bf5a1dca7d5d5e06a09436bf43e97bd1c1b318d748383f1784a4708142"));
+        e->SetTag(string("namespace"), string("kube-system"));
+        e->SetTag(string("pod"), string("ack-node-problem-detector-daemonset-2mqsc"));
+        //if (enableNanosecond) {
+        e->SetTimestamp(1726197371, 222000000);
+        if (!emptyValue) {
+            double value = 1.2570624e+07;
+            e->SetValue<UntypedSingleValue>(value);
+        }
+        e->SetName("test_gauge");
+    }
+
+
+
+    BatchedEvents batch(std::move(group.MutableEvents()),
+                        std::move(group.GetSizedTags()),
+                        std::move(group.GetSourceBuffer()),
+                        group.GetMetadata(EventGroupMetaKey::SOURCE_ID),
+                        std::move(group.GetExactlyOnceCheckpoint()));
+    return batch;
+}
 
 BatchedEvents SLSSerializerUnittest::CreateBatchedMetricEvents(bool enableNanosecond, uint32_t nanoTimestamp, bool emptyValue) {
     PipelineEventGroup group(make_shared<SourceBuffer>());
@@ -261,6 +327,8 @@ BatchedEvents SLSSerializerUnittest::CreateBatchedMetricEvents(bool enableNanose
 
 UNIT_TEST_CASE(SLSSerializerUnittest, TestSerializeEventGroup)
 UNIT_TEST_CASE(SLSSerializerUnittest, TestSerializeEventGroupList)
+UNIT_TEST_CASE(SLSSerializerUnittest, TestSerializeBenchmark)
+
 
 } // namespace logtail
 
