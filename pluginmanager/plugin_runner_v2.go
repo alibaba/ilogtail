@@ -228,7 +228,7 @@ func (p *pluginv2Runner) runInput() {
 
 func (p *pluginv2Runner) runMetricInput(control *pipeline.AsyncControl) {
 	for _, t := range p.TimerRunner {
-		if plugin, ok := t.state.(*MetricWrapperV2); ok {
+		if plugin, ok := t.state.(pipeline.MetricInputV2); ok {
 			metric := plugin
 			timer := t
 			control.Run(func(cc *pipeline.AsyncControl) {
@@ -236,6 +236,8 @@ func (p *pluginv2Runner) runMetricInput(control *pipeline.AsyncControl) {
 					return metric.Read(p.InputPipeContext)
 				}, cc)
 			})
+		} else {
+			logger.Error(p.LogstoreConfig.Context.GetRuntimeContext(), "METRIC_INPUT_V2_START_FAILURE", "type assertion", "failure")
 		}
 	}
 }
