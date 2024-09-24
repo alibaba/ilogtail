@@ -1533,7 +1533,7 @@ Json::Value AppConfig::mergeAllConfigs() {
     return mergedConfig;
 }
 
-void AppConfig::LoadInstanceConfig(std::unordered_map<std::string, Json::Value>& remoteConfig) {
+void AppConfig::LoadInstanceConfig(std::map<std::string, Json::Value>& remoteConfig) {
     mRemoteConfig.clear();
     mLocalInstanceConfig.clear();
     for (auto& config : remoteConfig) {

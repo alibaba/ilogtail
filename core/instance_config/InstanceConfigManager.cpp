@@ -44,7 +44,7 @@ void InstanceConfigManager::UpdateInstanceConfigs(InstanceConfigDiff& diff) {
         mInstanceConfigMap.erase(configName);
         ConfigFeedbackReceiver::GetInstance().FeedbackInstanceConfigStatus(configName, ConfigFeedbackStatus::DELETED);
     }
-    std::unordered_map<std::string, Json::Value> allConfigs;
+    std::map<std::string, Json::Value> allConfigs;
     for (auto& config : mInstanceConfigMap) {
         for (const auto& key : config.second->mDetail->getMemberNames()) {
             allConfigs[config.second->mDirName][key] = Json::Value((*config.second->mDetail)[key]);
