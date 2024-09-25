@@ -57,19 +57,19 @@ func (p *ContextImp) GetExtension(name string, cfg any) (pipeline.Extension, err
 	}
 
 	// if it's a naming extension, we won't do further create
-	if isPluginTypeWithID(name) {
+	if pluginHasName(name, false) {
 		return nil, fmt.Errorf("not found extension: %s", name)
 	}
 
 	// create if not found
-	pluginMeta := p.logstoreC.genPluginMeta(name, false, false)
+	pluginMeta := p.logstoreC.genPluginMeta(name, false, false, false)
 	err := loadExtension(pluginMeta, p.logstoreC, cfg)
 	if err != nil {
 		return nil, err
 	}
 
 	// get the new created extension
-	exists, ok = p.logstoreC.PluginRunner.GetExtension(getPluginTypeAndName(pluginMeta.PluginTypeWithID))
+	exists, ok = p.logstoreC.PluginRunner.GetExtension(pluginMeta.GetExtensionKey())
 	if !ok {
 		return nil, fmt.Errorf("failed to load extension: %s", pluginMeta.PluginTypeWithID)
 	}

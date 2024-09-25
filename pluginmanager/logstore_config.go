@@ -562,7 +562,7 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 				}
 				pluginType := getPluginType(pluginTypeWithIDStr)
 				logger.Debug(contextImp.GetRuntimeContext(), "add extension", pluginType)
-				err = loadExtension(logstoreC.genPluginMeta(pluginTypeWithIDStr, false, false), logstoreC, extension["detail"])
+				err = loadExtension(logstoreC.genPluginMeta(pluginTypeWithIDStr, true, false, false), logstoreC, extension["detail"])
 				if err != nil {
 					return nil, err
 				}
@@ -584,10 +584,10 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 							if _, isMetricInput := pipeline.MetricInputs[pluginType]; isMetricInput {
 								// Load MetricInput plugin defined in pipeline.MetricInputs
 								// pipeline.MetricInputs will be renamed in a future version
-								err = loadMetric(logstoreC.genPluginMeta(pluginTypeWithIDStr, true, false), logstoreC, input["detail"])
+								err = loadMetric(logstoreC.genPluginMeta(pluginTypeWithIDStr, true, true, false), logstoreC, input["detail"])
 							} else if _, isServiceInput := pipeline.ServiceInputs[pluginType]; isServiceInput {
 								// Load ServiceInput plugin defined in pipeline.ServiceInputs
-								err = loadService(logstoreC.genPluginMeta(pluginTypeWithIDStr, true, false), logstoreC, input["detail"])
+								err = loadService(logstoreC.genPluginMeta(pluginTypeWithIDStr, true, true, false), logstoreC, input["detail"])
 							}
 							if err != nil {
 								return nil, err
@@ -614,7 +614,7 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 						if pluginTypeWithIDStr, ok := pluginTypeWithID.(string); ok {
 							pluginType := getPluginType(pluginTypeWithIDStr)
 							logger.Debug(contextImp.GetRuntimeContext(), "add processor", pluginType)
-							err = loadProcessor(logstoreC.genPluginMeta(pluginTypeWithIDStr, true, false), i, logstoreC, processor["detail"])
+							err = loadProcessor(logstoreC.genPluginMeta(pluginTypeWithIDStr, true, true, false), i, logstoreC, processor["detail"])
 							if err != nil {
 								return nil, err
 							}
@@ -641,7 +641,7 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 						if pluginTypeWithIDStr, ok := pluginTypeWithID.(string); ok {
 							pluginType := getPluginType(pluginTypeWithIDStr)
 							logger.Debug(contextImp.GetRuntimeContext(), "add aggregator", pluginType)
-							err = loadAggregator(logstoreC.genPluginMeta(pluginTypeWithIDStr, true, false), logstoreC, aggregator["detail"])
+							err = loadAggregator(logstoreC.genPluginMeta(pluginTypeWithIDStr, true, true, false), logstoreC, aggregator["detail"])
 							if err != nil {
 								return nil, err
 							}
@@ -676,7 +676,7 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 							if num == flushersLen-1 {
 								lastOne = true
 							}
-							err = loadFlusher(logstoreC.genPluginMeta(pluginTypeWithIDStr, true, lastOne), logstoreC, flusher["detail"])
+							err = loadFlusher(logstoreC.genPluginMeta(pluginTypeWithIDStr, true, true, lastOne), logstoreC, flusher["detail"])
 							if err != nil {
 								return nil, err
 							}
@@ -857,19 +857,42 @@ func applyPluginConfig(plugin interface{}, pluginConfig interface{}) error {
 // ext_basicauth/1 -> ext_basicauth
 // ext_basicauth/shared -> ext_basicauth
 // ext_basicauth/shared/1 -> ext_basicauth
-func getPluginType(pluginTypeWithID string) string {
-	if ids := strings.IndexByte(pluginTypeWithID, '/'); ids != -1 {
-		return pluginTypeWithID[:ids]
+func getPluginType(pluginTypeNameWithID string) string {
+	if ids := strings.IndexByte(pluginTypeNameWithID, '/'); ids != -1 {
+		return pluginTypeNameWithID[:ids]
 	}
-	return pluginTypeWithID
+	return pluginTypeNameWithID
 }
 
-// ext_basicauth/1 -> ext_basicauth
-// ext_basicauth/shared -> ext_basicauth/shared
-// ext_basicauth/shared/1 -> ext_basicauth/shared
-func getPluginTypeAndName(pluginTypeWithID string) string {
-	if idx := strings.LastIndex(pluginTypeWithID, "/"); idx != -1 {
-		if isInteger(pluginTypeWithID[idx+1:]) {
+func getPluginName(pluginTypeNameWithID string, isCreatingPipeline bool) string {
+	if !pluginHasName(pluginTypeNameWithID, isCreatingPipeline) {
+		return ""
+	}
+
+	if isCreatingPipeline {
+		// found the substring between the two slashes.
+		if lastIdx := strings.LastIndexByte(pluginTypeNameWithID, '/'); lastIdx != -1 && isInteger(pluginTypeNameWithID[lastIdx+1:]) {
+			if firstIndex := strings.IndexByte(pluginTypeNameWithID, '/'); firstIndex != -1 {
+				return pluginTypeNameWithID[firstIndex+1 : lastIdx]
+			}
+		}
+	} else {
+		if lastIdx := strings.LastIndexByte(pluginTypeNameWithID, '/'); lastIdx != -1 {
+			return pluginTypeNameWithID[lastIdx+1:]
+		}
+	}
+	return ""
+}
+
+// for creating a pipeline:
+// 1. ext_basicauth/1 -> ext_basicauth
+// 3. ext_basicauth/shared/1 -> ext_basicauth/shared
+// for getting the extention plugins during plugin initialization:
+// 1. ext_basicauth/1 -> ext_basicauth/1
+// 2. ext_basicauth/shared -> ext_basicauth/shared
+func getPluginTypeAndName(pluginTypeWithID string, isCreatingPipeline bool) string {
+	if isCreatingPipeline {
+		if idx := strings.LastIndex(pluginTypeWithID, "/"); idx != -1 {
 			return pluginTypeWithID[:idx]
 		}
 	}
@@ -877,31 +900,58 @@ func getPluginTypeAndName(pluginTypeWithID string) string {
 }
 
 // Rule: pluginTypeWithID=pluginType/{optional:instance_name}/pluginID
-// ext_basicauth/1 -> "1"
-// ext_basicauth/shared -> ""
-// ext_basicauth/shared/1 -> "1"
-func getPluginID(pluginTypeWithID string) string {
-	if lastIdx := strings.LastIndexByte(pluginTypeWithID, '/'); lastIdx != -1 {
-		if isInteger(pluginTypeWithID[lastIdx+1:]) {
-			return pluginTypeWithID[lastIdx+1:]
+// for creating a pipeline:
+// 1. ext_basicauth/1 -> "1"
+// 2. ext_basicauth/shared -> ""
+// 3. ext_basicauth/shared/1 -> "1"
+// for getting the extention plugins during plugin initialization:
+// there is no plugin id.
+func getPluginID(pluginTypeNameWithID string, isCreatingPipeline bool) string {
+	if isCreatingPipeline {
+		if lastIdx := strings.LastIndexByte(pluginTypeNameWithID, '/'); lastIdx != -1 {
+			if isInteger(pluginTypeNameWithID[lastIdx+1:]) {
+				return pluginTypeNameWithID[lastIdx+1:]
+			}
 		}
 	}
 	return ""
 }
 
+// pluginHasID return true if the plugin has a id
 // ext_basicauth/1 -> true
-// ext_basicauth/shared -> false
+// ext_basicauth/shared -> true
 // ext_basicauth/shared/1 -> true
-func isPluginTypeWithID(pluginTypeWithID string) bool {
-	if lastIdx := strings.LastIndexByte(pluginTypeWithID, '/'); lastIdx != -1 {
-		return isInteger(pluginTypeWithID[lastIdx+1:])
+func pluginHasID(pluginTypeNameWithID string, isCreatingPipeline bool) bool {
+	if isCreatingPipeline {
+		if lastIdx := strings.LastIndexByte(pluginTypeNameWithID, '/'); lastIdx != -1 {
+			return isInteger(pluginTypeNameWithID[lastIdx+1:])
+		}
 	}
+	// TODO: check if GetExtension will support id in the future
 	return false
 }
 
-func GetPluginPriority(pluginTypeWithID string) int {
-	if idx := strings.IndexByte(pluginTypeWithID, '#'); idx != -1 {
-		val, err := strconv.Atoi(pluginTypeWithID[idx+1:])
+// pluginHasName returns true if the plugin name is specific to a instance
+// for creating a pipeline:
+// 1. ext_basicauth/1 -> false
+// 2. ext_basicauth/shared/1 -> true
+// for getting the extention plugins during plugin initialization:
+// 1. ext_basicauth -> false
+// 2. ext_basicauth/shared -> true
+func pluginHasName(pluginTypeNameAndID string, isCreatingPipeline bool) bool {
+	if isCreatingPipeline {
+		return strings.Count(pluginTypeNameAndID, "/") == 2
+	} else {
+		if lastIdx := strings.LastIndexByte(pluginTypeNameAndID, '/'); lastIdx != -1 {
+			return true
+		}
+		return false
+	}
+}
+
+func GetPluginPriority(pluginTypeNameID string) int {
+	if idx := strings.IndexByte(pluginTypeNameID, '#'); idx != -1 {
+		val, err := strconv.Atoi(pluginTypeNameID[idx+1:])
 		if err != nil {
 			return 0
 		}
@@ -915,44 +965,51 @@ func isInteger(s string) bool {
 	return err == nil
 }
 
-// pluginTypeWithID=pluginType/{optional:instance_name}/pluginID#pluginPriority.
-func (lc *LogstoreConfig) genPluginMeta(pluginTypeWithID string, genNodeID bool, lastOne bool) *pipeline.PluginMeta {
+// genPluginMeta can be called in two ways:
+// 1. creating the pipeline, which name looks like ext_basicauth/shared/1, ext_basicauth/2, service_input/3.
+// 2. get the extention plugins during pipeline initialization, which name looks like ext_basicauth, ext_basicauth/shared.
+// name=pluginType/{optional:instance_name}/{optional:pluginID}#{optional:pluginPriority}
+func (lc *LogstoreConfig) genPluginMeta(pluginTypeNameWithID string, isCreatingPipeline, genNodeID, lastOne bool) *pipeline.PluginMeta {
 	nodeID := ""
 	childNodeID := ""
 	// remove priority
-	if idx := strings.IndexByte(pluginTypeWithID, '#'); idx != -1 {
-		pluginTypeWithID = pluginTypeWithID[:idx]
+	if idx := strings.IndexByte(pluginTypeNameWithID, '#'); idx != -1 {
+		pluginTypeNameWithID = pluginTypeNameWithID[:idx]
 	}
 
-	if isPluginTypeWithID(pluginTypeWithID) {
-		pluginTypeWithID := pluginTypeWithID
+	if pluginHasID(pluginTypeNameWithID, isCreatingPipeline) {
+		pluginTypeWithID := pluginTypeNameWithID
 
 		if genNodeID {
 			nodeID, childNodeID = lc.genNodeID(lastOne)
 		}
 
-		if pluginID, err := strconv.ParseInt(getPluginID(pluginTypeWithID), 10, 32); err == nil {
+		if pluginID, err := strconv.ParseInt(getPluginID(pluginTypeWithID, isCreatingPipeline), 10, 32); err == nil {
 			atomic.StoreInt32(&lc.pluginID, int32(pluginID))
 		}
 
 		return &pipeline.PluginMeta{
 			PluginTypeWithID: pluginTypeWithID,
 			PluginType:       getPluginType(pluginTypeWithID),
-			PluginID:         getPluginID(pluginTypeWithID),
+			PluginName:       getPluginName(pluginTypeWithID, isCreatingPipeline),
+			PluginID:         getPluginID(pluginTypeWithID, isCreatingPipeline),
 			NodeID:           nodeID,
 			ChildNodeID:      childNodeID,
 		}
 	}
-	pluginName := pluginTypeWithID
-	pluginType := getPluginType(pluginName)
+
+	pluginType := getPluginType(pluginTypeNameWithID)
+	pluginName := getPluginName(pluginTypeNameWithID, isCreatingPipeline)
 	pluginID := lc.genPluginID()
 	if genNodeID {
 		nodeID, childNodeID = lc.genNodeID(lastOne)
 	}
-	pluginTypeWithID = fmt.Sprintf("%s/%s", pluginName, pluginID)
+	pluginTypeNameWithID = fmt.Sprintf("%s/%s", getPluginTypeAndName(pluginTypeNameWithID, isCreatingPipeline), pluginID)
+
 	return &pipeline.PluginMeta{
-		PluginTypeWithID: pluginTypeWithID,
+		PluginTypeWithID: pluginTypeNameWithID,
 		PluginType:       pluginType,
+		PluginName:       pluginName,
 		PluginID:         pluginID,
 		NodeID:           nodeID,
 		ChildNodeID:      childNodeID,

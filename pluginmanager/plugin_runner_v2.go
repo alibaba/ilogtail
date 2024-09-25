@@ -77,7 +77,7 @@ func (p *pluginv2Runner) Init(inputQueueSize int, flushQueueSize int) error {
 
 func (p *pluginv2Runner) AddDefaultAggregatorIfEmpty() error {
 	if len(p.AggregatorPlugins) == 0 {
-		pluginMeta := p.LogstoreConfig.genPluginMeta("aggregator_default", true, false)
+		pluginMeta := p.LogstoreConfig.genPluginMeta("aggregator_default", true, true, false)
 		logger.Debug(p.LogstoreConfig.Context.GetRuntimeContext(), "add default aggregator")
 		if err := loadAggregator(pluginMeta, p.LogstoreConfig, nil); err != nil {
 			return err
@@ -114,7 +114,7 @@ func (p *pluginv2Runner) AddPlugin(pluginMeta *pipeline.PluginMeta, category plu
 		}
 	case pluginExtension:
 		if extension, ok := plugin.(pipeline.Extension); ok {
-			return p.addExtension(getPluginTypeAndName(pluginMeta.PluginTypeWithID), extension)
+			return p.addExtension(pluginMeta.GetExtensionKey(), extension)
 		}
 	default:
 		return pluginCategoryUndefinedError(category)

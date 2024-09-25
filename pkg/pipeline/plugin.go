@@ -14,6 +14,8 @@
 
 package pipeline
 
+import "fmt"
+
 // logtail plugin type define
 const (
 	MetricInputType  = iota
@@ -30,11 +32,22 @@ type PluginContext struct {
 }
 
 type PluginMeta struct {
+	PluginTypeWithID string
+	PluginType       string
+	PluginName       string // optional, used for extension plugin
 	PluginID         string
 	NodeID           string
 	ChildNodeID      string
-	PluginType       string
-	PluginTypeWithID string
+}
+
+// GetExtensionKey returns the key in context map for an extension plugin.
+// If plugin name is set, the key is "<plugin_type>/<plugin_name>", and other plugins can reuse it by the same key.
+// otherwise the key is "<plugin_type>/<plugin_id>".
+func (p *PluginMeta) GetExtensionKey() string {
+	if p.PluginName != "" {
+		return fmt.Sprintf("%s/%s", p.PluginType, p.PluginName)
+	}
+	return fmt.Sprintf("%s/%s", p.PluginType, p.PluginID)
 }
 
 type MetricCreator func() MetricInput
