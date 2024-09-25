@@ -50,7 +50,7 @@
 #include "config/provider/EnterpriseConfigProvider.h"
 #endif
 #include "pipeline/PipelineManager.h"
-#include "profile_sender/ProfileSender.h"
+#include "provider/Provider.h"
 
 using namespace std;
 using namespace sls_logs;
@@ -116,8 +116,6 @@ bool LogtailMonitor::Init() {
     // init metrics
     mAgentCpuGauge = LoongCollectorMonitor::GetInstance()->GetDoubleGauge(METRIC_AGENT_CPU);
     mAgentMemoryGauge = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_AGENT_MEMORY);
-    mAgentUsedSendingConcurrency
-        = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_AGENT_USED_SENDING_CONCURRENCY);
 
     // Initialize monitor thread.
     mThreadRes = async(launch::async, &LogtailMonitor::Monitor, this);
@@ -286,7 +284,6 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
     AddLogContent(logPtr, "projects", FlusherSLS::GetAllProjects());
     AddLogContent(logPtr, "instance_id", Application::GetInstance()->GetInstanceId());
     AddLogContent(logPtr, "instance_key", id);
-    AddLogContent(logPtr, "syslog_open", AppConfig::GetInstance()->GetOpenStreamLog());
     // Host informations.
     AddLogContent(logPtr, "ip", LogFileProfiler::mIpAddr);
     AddLogContent(logPtr, "hostname", LogFileProfiler::mHostname);
@@ -299,7 +296,7 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
     AddLogContent(logPtr, "plugin_stats", PipelineManager::GetInstance()->GetPluginStatistics());
     // Metrics.
     vector<string> allProfileRegion;
-    ProfileSender::GetInstance()->GetAllProfileRegion(allProfileRegion);
+    GetProfileSender()->GetAllProfileRegion(allProfileRegion);
     UpdateMetric("region", allProfileRegion);
 #ifdef __ENTERPRISE__
     UpdateMetric("config_update_count", EnterpriseConfigProvider::GetInstance()->GetConfigUpdateTotalCount());
@@ -320,7 +317,6 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
     }
     int32_t usedSendingConcurrency = FlusherRunner::GetInstance()->GetSendingBufferCount();
     UpdateMetric("used_sending_concurrency", usedSendingConcurrency);
-    mAgentUsedSendingConcurrency->Set(usedSendingConcurrency);
 
     AddLogContent(logPtr, "metric_json", MetricToString());
     AddLogContent(logPtr, "status", CheckLogtailStatus());
@@ -347,10 +343,10 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
         }
 
         if (i == allProfileRegion.size() - 1) {
-            ProfileSender::GetInstance()->SendToProfileProject(allProfileRegion[i], logGroup);
+            GetProfileSender()->SendToProfileProject(allProfileRegion[i], logGroup);
         } else {
             LogGroup copyLogGroup = logGroup;
-            ProfileSender::GetInstance()->SendToProfileProject(allProfileRegion[i], copyLogGroup);
+            GetProfileSender()->SendToProfileProject(allProfileRegion[i], copyLogGroup);
         }
     }
     return true;
@@ -731,14 +727,6 @@ void LoongCollectorMonitor::Init() {
     mIntGauges[METRIC_AGENT_MEMORY_GO] = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_MEMORY_GO);
     mIntGauges[METRIC_AGENT_GO_ROUTINES_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_GO_ROUTINES_TOTAL);
     mIntGauges[METRIC_AGENT_OPEN_FD_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_OPEN_FD_TOTAL);
-    mIntGauges[METRIC_AGENT_POLLING_DIR_CACHE_SIZE_TOTAL]
-        = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_POLLING_DIR_CACHE_SIZE_TOTAL);
-    mIntGauges[METRIC_AGENT_POLLING_FILE_CACHE_SIZE_TOTAL]
-        = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_POLLING_FILE_CACHE_SIZE_TOTAL);
-    mIntGauges[METRIC_AGENT_POLLING_MODIFY_SIZE_TOTAL]
-        = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_POLLING_MODIFY_SIZE_TOTAL);
-    mIntGauges[METRIC_AGENT_REGISTER_HANDLER_TOTAL]
-        = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_REGISTER_HANDLER_TOTAL);
     // mIntGauges[METRIC_AGENT_INSTANCE_CONFIG_TOTAL] =
     // mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_INSTANCE_CONFIG_TOTAL);
     mIntGauges[METRIC_AGENT_PIPELINE_CONFIG_TOTAL]
@@ -750,14 +738,6 @@ void LoongCollectorMonitor::Init() {
     // mIntGauges[METRIC_AGENT_CONSOLE_PIPELINE_CONFIG_TOTAL]
     //     = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_CONSOLE_PIPELINE_CONFIG_TOTAL);
     // mIntGauges[METRIC_AGENT_PLUGIN_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_PLUGIN_TOTAL);
-    mIntGauges[METRIC_AGENT_PROCESS_QUEUE_FULL_TOTAL]
-        = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_PROCESS_QUEUE_FULL_TOTAL);
-    mIntGauges[METRIC_AGENT_PROCESS_QUEUE_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_PROCESS_QUEUE_TOTAL);
-    mIntGauges[METRIC_AGENT_SEND_QUEUE_FULL_TOTAL]
-        = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_SEND_QUEUE_FULL_TOTAL);
-    mIntGauges[METRIC_AGENT_SEND_QUEUE_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_SEND_QUEUE_TOTAL);
-    mIntGauges[METRIC_AGENT_USED_SENDING_CONCURRENCY]
-        = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_USED_SENDING_CONCURRENCY);
     LOG_INFO(sLogger, ("LoongCollectorMonitor", "started"));
 }
 
