@@ -13,6 +13,7 @@
 
 #include <ctime>
 #include <chrono>
+#include <thread>
 #include "k8sMetadata.h"
 #include "common/MachineInfoUtil.h"
 #include "logger/Logger.h"
@@ -83,7 +84,7 @@ namespace logtail {
         }
     }
 
-    bool K8sMetadata::SendRequestToOperator(const std::string& urlHost, const std::string& output, containerInfoType infoType) {    
+    int K8sMetadata::SendRequestToOperator(const std::string& urlHost, const std::string& output, containerInfoType infoType) {    
         std::unique_ptr<HttpRequest> request;
         HttpResponse res;
         std::string path = "/metadata/containerid";
@@ -94,7 +95,7 @@ namespace logtail {
         bool success = SendHttpRequest(std::move(request), res);
         if (res.mStatusCode != 200) {
             LOG_DEBUG(sLogger, ("fetch k8s meta from one operator fail, code is ", res.mStatusCode));
-            return false;
+            return res.mStatusCode;
         }
         if (success) {
             Json::CharReaderBuilder readerBuilder;
@@ -113,14 +114,14 @@ namespace logtail {
                     }
                 }
             } else {
-                return true;
+                return 200;
             }
 
             delete reader;
         } else {
             LOG_DEBUG(sLogger, ("fetch k8s meta from one operator fail", urlHost));
         }
-        return true;
+        return 200;
     }
 
     void K8sMetadata::GetByContainerIdsFromServer(std::vector<std::string> containerIds) {
@@ -143,7 +144,11 @@ namespace logtail {
         Json::StreamWriterBuilder writer;
         std::string output = Json::writeString(writer, jsonObj);
         std::string urlHost = mServiceHost;
-        SendRequestToOperator(urlHost, output, containerInfoType::ContainerIdInfo);
+        int code = SendRequestToOperator(urlHost, output, containerInfoType::ContainerIdInfo);
+         if (code == 503) {
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+            SendRequestToOperator(urlHost, output, containerInfoType::ContainerIdInfo);
+        }
     }
 
     void K8sMetadata::SetContainerCache(const Json::Value& root) {

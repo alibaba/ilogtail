@@ -79,7 +79,7 @@ namespace logtail {
             std::shared_ptr<k8sContainerInfo> GetInfoByContainerIdFromCache(const std::string& containerId);
             // get info by ip from cache
             std::shared_ptr<k8sContainerInfo> GetInfoByIpFromCache(const std::string& ip);
-            bool SendRequestToOperator(const std::string& urlHost, const std::string& output, containerInfoType infoType);
+            int SendRequestToOperator(const std::string& urlHost, const std::string& output, containerInfoType infoType);
     #ifdef APSARA_UNIT_TEST_MAIN
         friend class k8sMetadataUnittest;
     #endif
