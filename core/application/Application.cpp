@@ -32,13 +32,11 @@
 #include "common/version.h"
 #include "config/ConfigDiff.h"
 #include "config/watcher/ConfigWatcher.h"
-#include "file_server/EventDispatcher.h"
-#include "file_server/event_handler/LogInput.h"
 #include "file_server/ConfigManager.h"
+#include "file_server/EventDispatcher.h"
 #include "file_server/FileServer.h"
-#include "plugin/flusher/sls/DiskBufferWriter.h"
+#include "file_server/event_handler/LogInput.h"
 #include "go_pipeline/LogtailPlugin.h"
-#include "plugin/input/InputFeedbackInterfaceRegistry.h"
 #include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/MetricExportor.h"
@@ -46,10 +44,12 @@
 #include "pipeline/InstanceConfigManager.h"
 #include "pipeline/PipelineManager.h"
 #include "pipeline/plugin/PluginRegistry.h"
-#include "runner/LogProcess.h"
 #include "pipeline/queue/ExactlyOnceQueueManager.h"
 #include "pipeline/queue/SenderQueueManager.h"
+#include "plugin/flusher/sls/DiskBufferWriter.h"
+#include "plugin/input/InputFeedbackInterfaceRegistry.h"
 #include "runner/FlusherRunner.h"
+#include "runner/ProcessorRunner.h"
 #include "runner/sink/http/HttpSink.h"
 #ifdef __ENTERPRISE__
 #include "config/provider/EnterpriseConfigProvider.h"
@@ -270,7 +270,7 @@ void Application::Start() { // GCOVR_EXCL_START
         LogtailPlugin::GetInstance()->LoadPluginBase();
     }
 
-    LogProcess::GetInstance()->Start();
+    ProcessorRunner::GetInstance()->Init();
 
     time_t curTime = 0, lastProfilingCheckTime = 0, lastConfigCheckTime = 0, lastUpdateMetricTime = 0,
            lastCheckTagsTime = 0, lastQueueGCTime = 0;

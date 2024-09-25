@@ -23,6 +23,7 @@
 #include "common/Lock.h"
 #include "config/ConfigDiff.h"
 #include "pipeline/Pipeline.h"
+#include "runner/InputRunner.h"
 
 namespace logtail {
 
@@ -48,7 +49,7 @@ public:
     void StopAllPipelines();
 
 private:
-    PipelineManager() = default;
+    PipelineManager();
     ~PipelineManager() = default;
 
     virtual std::shared_ptr<Pipeline> BuildPipeline(PipelineConfig&& config); // virtual for ut
@@ -62,6 +63,8 @@ private:
     std::unordered_map<std::string, std::shared_ptr<Pipeline>> mPipelineNameEntityMap;
     mutable SpinLock mPluginCntMapLock;
     std::unordered_map<std::string, std::unordered_map<std::string, uint32_t>> mPluginCntMap;
+
+    std::vector<InputRunner*> mInputRunners;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class PipelineManagerMock;

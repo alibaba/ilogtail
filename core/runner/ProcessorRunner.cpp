@@ -1,4 +1,4 @@
-// Copyright 2022 iLogtail Authors
+// Copyright 2024 iLogtail Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,19 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "runner/LogProcess.h"
+#include "runner/ProcessorRunner.h"
+
+#include <shared_mutex>
 
 #include "app_config/AppConfig.h"
+#include "batch/TimeoutFlushManager.h"
 #include "common/Flags.h"
 #include "go_pipeline/LogtailPlugin.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/LogtailAlarm.h"
-#include "monitor/MetricConstants.h"
 #include "pipeline/PipelineManager.h"
-#include "pipeline/batch/TimeoutFlushManager.h"
-#include "pipeline/queue/ExactlyOnceQueueManager.h"
-#include "pipeline/queue/ProcessQueueManager.h"
-#include "pipeline/queue/QueueKeyManager.h"
+#include "queue/ExactlyOnceQueueManager.h"
+#include "queue/ProcessQueueManager.h"
+#include "queue/QueueKeyManager.h"
 
 DECLARE_FLAG_INT32(max_send_log_group_size);
 
@@ -40,42 +41,30 @@ DEFINE_FLAG_INT32(default_flush_merged_buffer_interval, "default flush merged bu
 
 namespace logtail {
 
-thread_local MetricsRecordRef LogProcess::sMetricsRecordRef;
-thread_local CounterPtr LogProcess::sInGroupsCnt;
-thread_local CounterPtr LogProcess::sInEventsCnt;
-thread_local CounterPtr LogProcess::sInGroupDataSizeBytes;
-thread_local IntGaugePtr LogProcess::sLastRunTime;
-
-LogProcess::LogProcess() : mAccessProcessThreadRWL(ReadWriteLock::PREFER_WRITER) {
+ProcessorRunner::ProcessorRunner()
+    : mThreadCount(AppConfig::GetInstance()->GetProcessThreadCount()), mThreadRes(mThreadCount) {
 }
 
-LogProcess::~LogProcess() {
-    for (int32_t threadNo = 0; threadNo < mThreadCount; ++threadNo) {
-        try {
-            mProcessThreads[threadNo]->GetValue(1000 * 100);
-        } catch (...) {
+void ProcessorRunner::Init() {
+    for (uint32_t threadNo = 0; threadNo < mThreadCount; ++threadNo) {
+        mThreadRes[threadNo] = async(launch::async, &ProcessorRunner::Run, this, threadNo);
+    }
+}
+
+void ProcessorRunner::Stop() {
+    mIsFlush = true;
+    ProcessQueueManager::GetInstance()->Trigger();
+    for (uint32_t threadNo = 0; threadNo < mThreadCount; ++threadNo) {
+        future_status s = mThreadRes[threadNo].wait_for(chrono::seconds(1));
+        if (s == future_status::ready) {
+            LOG_INFO(sLogger, ("processor runner", "stopped successfully")("threadNo", threadNo));
+        } else {
+            LOG_WARNING(sLogger, ("processor runner", "forced to stopped")("threadNo", threadNo));
         }
     }
-    delete[] mThreadFlags;
-    delete[] mProcessThreads;
 }
 
-void LogProcess::Start() {
-    if (mInitialized)
-        return;
-
-    mInitialized = true;
-    mThreadCount = AppConfig::GetInstance()->GetProcessThreadCount();
-    mProcessThreads = new ThreadPtr[mThreadCount];
-    mThreadFlags = new atomic_bool[mThreadCount];
-    for (int32_t threadNo = 0; threadNo < mThreadCount; ++threadNo) {
-        mThreadFlags[threadNo] = false;
-        mProcessThreads[threadNo] = CreateThread([this, threadNo]() { ProcessLoop(threadNo); });
-    }
-    LOG_INFO(sLogger, ("process daemon", "started"));
-}
-
-bool LogProcess::PushBuffer(QueueKey key, size_t inputIndex, PipelineEventGroup&& group, uint32_t retryTimes) {
+bool ProcessorRunner::PushQueue(QueueKey key, size_t inputIndex, PipelineEventGroup&& group, uint32_t retryTimes) {
     unique_ptr<ProcessQueueItem> item = make_unique<ProcessQueueItem>(std::move(group), inputIndex);
     for (size_t i = 0; i < retryTimes; ++i) {
         if (ProcessQueueManager::GetInstance()->PushQueue(key, std::move(item)) == 0) {
@@ -92,101 +81,68 @@ bool LogProcess::PushBuffer(QueueKey key, size_t inputIndex, PipelineEventGroup&
     return false;
 }
 
-void LogProcess::HoldOn() {
-    LOG_INFO(sLogger, ("process daemon pause", "starts"));
-    mAccessProcessThreadRWL.lock();
-    while (true) {
-        bool allThreadWait = true;
-        for (int32_t threadNo = 0; threadNo < mThreadCount; ++threadNo) {
-            if (mThreadFlags[threadNo]) {
-                allThreadWait = false;
-                break;
-            }
-        }
-        if (allThreadWait) {
-            LOG_INFO(sLogger, ("process daemon pause", "succeeded"));
-            return;
-        }
-        usleep(10 * 1000);
-    }
-}
-
-void LogProcess::Resume() {
-    LOG_INFO(sLogger, ("process daemon resume", "starts"));
-    mAccessProcessThreadRWL.unlock();
-    LOG_INFO(sLogger, ("process daemon resume", "succeeded"));
-}
-
-bool LogProcess::FlushOut(int32_t waitMs) {
-    ProcessQueueManager::GetInstance()->Trigger();
-    if (ProcessQueueManager::GetInstance()->IsAllQueueEmpty()) {
-        bool allThreadWait = true;
-        for (int32_t threadNo = 0; threadNo < mThreadCount; ++threadNo) {
-            if (mThreadFlags[threadNo]) {
-                allThreadWait = false;
-                break;
-            } else {
-                // sleep 1ms and double check
-                usleep(1000);
-                if (mThreadFlags[threadNo]) {
-                    allThreadWait = false;
-                    break;
-                }
-            }
-        }
-        if (allThreadWait)
-            return true;
-    }
-    usleep(waitMs * 1000);
-    return false;
-}
-
-void* LogProcess::ProcessLoop(int32_t threadNo) {
-    LOG_DEBUG(sLogger, ("LogProcess", "Start")("threadNo", threadNo));
-    // thread local metrics should be initialized in each thread
-    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
-        sMetricsRecordRef, {{METRIC_LABEL_KEY_RUNNER_NAME, "processor_runner"}, {"thread_no", ToString(threadNo)}});
-    sInGroupsCnt = sMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_EVENT_GROUPS_CNT);
-    sInEventsCnt = sMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_EVENTS_CNT);
-    sInGroupDataSizeBytes = sMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_EVENT_GROUP_SIZE_BYTES);
-    sLastRunTime = sMetricsRecordRef.CreateIntGauge(METRIC_RUNNER_LAST_RUN_TIME);
-
+void ProcessorRunner::Run(uint32_t threadNo) {
+    LOG_INFO(sLogger, ("processor runner", "started")("threadNo", threadNo));
     static int32_t lastMergeTime = 0;
+    static atomic_int s_processCount{0};
+    static atomic_long s_processBytes{0};
+    static atomic_int s_processLines{0};
+    // only thread 0 update metric
+    int32_t lastUpdateMetricTime = time(NULL);
     while (true) {
-        mThreadFlags[threadNo] = false;
-
         int32_t curTime = time(NULL);
         if (threadNo == 0 && curTime - lastMergeTime >= INT32_FLAG(default_flush_merged_buffer_interval)) {
             TimeoutFlushManager::GetInstance()->FlushTimeoutBatch();
             lastMergeTime = curTime;
         }
 
-        {
-            ReadLock lock(mAccessProcessThreadRWL);
-            sLastRunTime->Set(curTime);
+        if (threadNo == 0 && curTime - lastUpdateMetricTime >= 40) {
+            static auto sMonitor = LogtailMonitor::GetInstance();
 
+            // atomic counter will be negative if process speed is too fast.
+            sMonitor->UpdateMetric("process_tps", 1.0 * s_processCount / (curTime - lastUpdateMetricTime));
+            sMonitor->UpdateMetric("process_bytes_ps", 1.0 * s_processBytes / (curTime - lastUpdateMetricTime));
+            sMonitor->UpdateMetric("process_lines_ps", 1.0 * s_processLines / (curTime - lastUpdateMetricTime));
+            lastUpdateMetricTime = curTime;
+            s_processCount = 0;
+            s_processBytes = 0;
+            s_processLines = 0;
+
+            // update process queue status
+            uint32_t InvalidProcessQueueTotal = ProcessQueueManager::GetInstance()->GetInvalidCnt();
+            sMonitor->UpdateMetric("process_queue_full", InvalidProcessQueueTotal);
+            mGlobalProcessQueueFullTotal->Set(InvalidProcessQueueTotal);
+            uint32_t ProcessQueueTotal = ProcessQueueManager::GetInstance()->GetCnt();
+            sMonitor->UpdateMetric("process_queue_total", ProcessQueueTotal);
+            mGlobalProcessQueueTotal->Set(ProcessQueueTotal);
+            if (ExactlyOnceQueueManager::GetInstance()->GetProcessQueueCnt() > 0) {
+                sMonitor->UpdateMetric("eo_process_queue_full",
+                                       ExactlyOnceQueueManager::GetInstance()->GetInvalidProcessQueueCnt());
+                sMonitor->UpdateMetric("eo_process_queue_total",
+                                       ExactlyOnceQueueManager::GetInstance()->GetProcessQueueCnt());
+            }
+        }
+
+        {
             unique_ptr<ProcessQueueItem> item;
             string configName;
             if (!ProcessQueueManager::GetInstance()->PopItem(threadNo, item, configName)) {
+                if (mIsFlush && ProcessQueueManager::GetInstance()->IsAllQueueEmpty()) {
+                    break;
+                }
                 ProcessQueueManager::GetInstance()->Wait(100);
                 continue;
             }
-            sInEventsCnt->Add(item->mEventGroup.GetEvents().size());
-            sInGroupsCnt->Add(1);
-            sInGroupDataSizeBytes->Add(item->mEventGroup.DataSize());
 
-            mThreadFlags[threadNo] = true;
-            std::shared_ptr<Pipeline> pipeline;
-            if (item->mPipeline) {
-                pipeline = item->mPipeline;
-            } else {
+            shared_ptr<Pipeline> pipeline = item->mPipeline;
+            if (!pipeline) {
                 pipeline = PipelineManager::GetInstance()->FindConfigByName(configName);
-                if (!pipeline) {
-                    LOG_INFO(sLogger,
-                             ("pipeline not found during processing, perhaps due to config deletion",
-                              "discard data")("config", configName));
-                    continue;
-                }
+            }
+            if (!pipeline) {
+                LOG_INFO(sLogger,
+                         ("pipeline not found during processing, perhaps due to config deletion",
+                          "discard data")("config", configName));
+                continue;
             }
 
             // record profile, must be placed here since readbytes info exists only before processing
@@ -217,9 +173,12 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                                                             pipeline->GetContext().GetRegion());
             }
 
-            if (eventGroupList.empty()) {
-                continue;
+            s_processCount++;
+            if (isLog) {
+                s_processBytes += profile.readBytes;
+                s_processLines += profile.splitLines;
             }
+
             if (pipeline->IsFlushingThroughGoPipeline()) {
                 if (isLog) {
                     for (auto& group : eventGroupList) {
@@ -281,11 +240,10 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
             pipeline->SubInProcessCnt();
         }
     }
-    LOG_WARNING(sLogger, ("LogProcess", "Exit")("threadNo", threadNo));
-    return NULL;
+    LOG_WARNING(sLogger, ("ProcessorRunnerThread", "Exit")("threadNo", threadNo));
 }
 
-bool LogProcess::Serialize(
+bool ProcessorRunner::Serialize(
     const PipelineEventGroup& group, bool enableNanosecond, const string& logstore, string& res, string& errorMsg) {
     sls_logs::LogGroup logGroup;
     for (const auto& e : group.GetEvents()) {

@@ -23,7 +23,7 @@
 #if defined(__linux__) && !defined(__ANDROID__)
 #include "ebpf/eBPFServer.h"
 #endif
-#include "runner/LogProcess.h"
+#include "runner/ProcessorRunner.h"
 #if defined(__ENTERPRISE__) && defined(__linux__) && !defined(__ANDROID__)
 #include "app_config/AppConfig.h"
 #include "shennong/ShennongManager.h"
@@ -35,6 +35,15 @@
 using namespace std;
 
 namespace logtail {
+
+PipelineManager::PipelineManager()
+    : mInputRunners({
+          PrometheusInputRunner::GetInstance(),
+#if defined(__linux__) && !defined(__ANDROID__)
+          ebpf::eBPFServer::GetInstance(),
+#endif
+      }) {
+}
 
 void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
 #ifndef APSARA_UNIT_TEST_MAIN
@@ -175,25 +184,17 @@ void PipelineManager::StopAllPipelines() {
         StreamLogManager::GetInstance()->Shutdown();
     }
 #endif
-    PrometheusInputRunner::GetInstance()->Stop();
-#if defined(__linux__) && !defined(__ANDROID__)
-    ebpf::eBPFServer::GetInstance()->Stop();
-#endif
+    for (auto& item : mInputRunners) {
+        if (item->HasRegisteredPlugins()) {
+            item->Stop();
+        }
+    }
     FileServer::GetInstance()->Stop();
 
     LogtailPlugin::GetInstance()->StopAll(true);
     LogtailPlugin::GetInstance()->StopBuiltInModules();
 
-    bool logProcessFlushFlag = false;
-    for (int i = 0; !logProcessFlushFlag && i < 500; ++i) {
-        logProcessFlushFlag = LogProcess::GetInstance()->FlushOut(10);
-    }
-    if (!logProcessFlushFlag) {
-        LOG_WARNING(sLogger, ("flush process daemon queue", "failed"));
-    } else {
-        LOG_INFO(sLogger, ("flush process daemon queue", "succeeded"));
-    }
-    LogProcess::GetInstance()->HoldOn();
+    ProcessorRunner::GetInstance()->Stop();
 
     FlushAllBatch();
 
