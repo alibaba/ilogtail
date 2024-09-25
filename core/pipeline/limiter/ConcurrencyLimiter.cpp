@@ -13,26 +13,71 @@
 // limitations under the License.
 
 #include "pipeline/limiter/ConcurrencyLimiter.h"
+#include "app_config/AppConfig.h"
+#include "common/TimeUtil.h"
 
 using namespace std;
 
 namespace logtail {
 
 bool ConcurrencyLimiter::IsValidToPop() {
-    return mLimit != 0;
+    if (mLastSendTime == 0) {
+        mLastSendTime = time(nullptr);
+    }
+    if (mCocurrency > mInSendingCnt) {
+        return true;
+    } else {
+        time_t curTime = time(nullptr);
+        if (curTime -  mLastSendTime > mRetryIntervalSecond) {
+            mLastSendTime = curTime;
+            return true;
+        }
+    }
+    return false;
 }
 
 void ConcurrencyLimiter::PostPop() {
-    if (mLimit <= 0) {
-        return;
-    }
-    --mLimit;
+    mInSendingCnt ++;
+}
+
+void ConcurrencyLimiter::OnDone() {
+    -- mInSendingCnt;
 }
 
 void ConcurrencyLimiter::OnSuccess() {
+    ++ mCocurrency;
+    if (mCocurrency > mMaxCocurrency) {
+        mCocurrency = mMaxCocurrency;
+    }
+    int oldValue;
+    int newValue;
+    do {
+        oldValue = mRetryIntervalSecond.load(); // 读取当前值
+        newValue = oldValue * mDownRatio;   // 计算新的值
+    } while (!mRetryIntervalSecond.compare_exchange_strong(oldValue, newValue)); // 进行比较和交换
+    if (mRetryIntervalSecond.load() < mMinRetryIntervalSeconds) {
+        mRetryIntervalSecond.store(mMinRetryIntervalSeconds);
+    }
 }
 
 void ConcurrencyLimiter::OnFail(time_t curTime) {
+    int oldValue;
+    int newValue;
+    do {
+        oldValue = mCocurrency.load(); // 读取当前值
+        newValue = oldValue * mDownRatio;   // 计算新的值
+    } while (!mCocurrency.compare_exchange_strong(oldValue, newValue)); // 进行比较和交换
+
+    if (mCocurrency.load() < mMinCocurrency) {
+        mCocurrency.store(mMinCocurrency);
+        do {
+            oldValue = mRetryIntervalSecond.load(); // 读取当前值
+            newValue = oldValue * mUpRatio;   // 计算新的值
+        } while (!mRetryIntervalSecond.compare_exchange_strong(oldValue, newValue)); // 进行比较和交换
+    }
+    if (mRetryIntervalSecond.load() > mMaxRetryIntervalSecond ) {
+        mRetryIntervalSecond.store(mMaxRetryIntervalSecond);
+    }
 }
 
 } // namespace logtail

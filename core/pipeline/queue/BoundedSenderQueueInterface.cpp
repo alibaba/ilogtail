@@ -55,6 +55,22 @@ void BoundedSenderQueueInterface::SetConcurrencyLimiters(std::vector<std::shared
     }
 }
 
+void BoundedSenderQueueInterface::OnSendingSuccess() {
+    for (auto& limiter : mConcurrencyLimiters) {
+        if (limiter != nullptr) {
+            limiter->OnSuccess();
+        }
+    }
+}
+
+void BoundedSenderQueueInterface::DecreaseSendingCnt() {
+    for (auto& limiter : mConcurrencyLimiters) {
+        if (limiter != nullptr) {
+            limiter->OnDone();
+        }
+    }
+}
+
 void BoundedSenderQueueInterface::GiveFeedback() const {
     // 0 is just a placeholder
     sFeedback->Feedback(0);

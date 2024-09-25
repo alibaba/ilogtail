@@ -59,6 +59,7 @@ public:
     int PushQueue(QueueKey key, std::unique_ptr<SenderQueueItem>&& item);
     void GetAllAvailableItems(std::vector<SenderQueueItem*>& items, bool withLimits = true);
     bool RemoveItem(QueueKey key, SenderQueueItem* item);
+    void OnSendDone(QueueKey key, bool Success);
     bool IsAllQueueEmpty() const;
     void ClearUnusedQueues();
 
@@ -90,6 +91,7 @@ private:
     mutable std::mutex mStateMux;
     mutable std::condition_variable mCond;
     bool mValidToPop = false;
+    size_t mSenderQueueBeginIndex = 0;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class SenderQueueManagerUnittest;

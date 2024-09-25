@@ -23,19 +23,41 @@ namespace logtail {
 
 class ConcurrencyLimiter {
 public:
+    ConcurrencyLimiter() {}
+    ConcurrencyLimiter(int maxCocurrency, int minCocurrency, int cocurrency) : mMaxCocurrency(maxCocurrency), mMinCocurrency(minCocurrency), mCocurrency(cocurrency) {}
+
     bool IsValidToPop();
     void PostPop();
+    void OnDone();
+
     void OnSuccess();
     void OnFail(time_t curTime);
 
 #ifdef APSARA_UNIT_TEST_MAIN
-    void Reset() { mLimit = -1; }
-    void SetLimit(int limit) { mLimit = limit; }
-    int GetLimit() const { return mLimit; }
+    void Reset() { mCocurrency.store(-1); }
+    void SetLimit(int limit) { mCocurrency.store(limit); }
+    int GetLimit() const { return mCocurrency.load(); }
+    int GetCount() const { return mInSendingCnt.load(); }
+    int GetInterval() const { return mRetryIntervalSecond.load(); }
+
 #endif
 
 private:
-    std::atomic_int mLimit = -1;
+    double mUpRatio = 1.5;
+    double mDownRatio = 0.5;
+
+    std::atomic_int mInSendingCnt = 0;
+
+    int mMaxCocurrency = 0;
+    int mMinCocurrency = 0;
+    std::atomic_int mCocurrency = 0;
+
+    int mMaxRetryIntervalSecond = 3600;
+    int mMinRetryIntervalSeconds = 30;
+    std::atomic_int mRetryIntervalSecond = 30;
+
+    time_t mLastSendTime = 0;
+
 };
 
 } // namespace logtail

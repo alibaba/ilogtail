@@ -110,6 +110,26 @@ void FlusherSLS::RecycleResourceIfNotUsed() {
 mutex FlusherSLS::sMux;
 unordered_map<string, weak_ptr<ConcurrencyLimiter>> FlusherSLS::sProjectConcurrencyLimiterMap;
 unordered_map<string, weak_ptr<ConcurrencyLimiter>> FlusherSLS::sRegionConcurrencyLimiterMap;
+unordered_map<string, weak_ptr<ConcurrencyLimiter>> FlusherSLS::sLogstoreConcurrencyLimiterMap;
+
+
+shared_ptr<ConcurrencyLimiter> FlusherSLS::GetLogstoreConcurrencyLimiter(const std::string& project, const std::string& logstore) {
+    lock_guard<mutex> lock(sMux);
+    std::string key = project + "-" + logstore;
+
+    auto iter = sLogstoreConcurrencyLimiterMap.find(key);
+    if (iter == sLogstoreConcurrencyLimiterMap.end()) {
+        auto limiter = make_shared<ConcurrencyLimiter>();
+        sLogstoreConcurrencyLimiterMap.try_emplace(key, limiter);
+        return limiter;
+    }
+    if (iter->second.expired()) {
+        auto limiter = make_shared<ConcurrencyLimiter>();
+        iter->second = limiter;
+        return limiter;
+    }
+    return iter->second.lock();
+}
 
 shared_ptr<ConcurrencyLimiter> FlusherSLS::GetProjectConcurrencyLimiter(const string& project) {
     lock_guard<mutex> lock(sMux);
@@ -473,7 +493,8 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
             mNodeID,
             *mContext,
             vector<shared_ptr<ConcurrencyLimiter>>{GetRegionConcurrencyLimiter(mRegion),
-                                                   GetProjectConcurrencyLimiter(mProject)},
+                                                   GetProjectConcurrencyLimiter(mProject),
+                                                   GetLogstoreConcurrencyLimiter(mProject, mLogstore)},
             mMaxSendRate);
     }
 
@@ -627,7 +648,7 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
                       ToString(chrono::duration_cast<chrono::milliseconds>(curSystemTime - item->mEnqueTime).count())
                           + "ms")("try cnt", data->mTryCnt)("endpoint", data->mCurrentEndpoint)("is profile data",
                                                                                                 isProfileData));
-        GetRegionConcurrencyLimiter(mRegion)->OnSuccess();
+        SenderQueueManager::GetInstance()->OnSendDone(item->mQueueKey, true);
         DealSenderQueueItemAfterSend(item, false);
     } else {
         OperationOnFail operation;
@@ -658,15 +679,18 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
                 }
             }
             operation = data->mBufferOrNot ? OperationOnFail::RETRY_LATER : OperationOnFail::DISCARD;
+            GetRegionConcurrencyLimiter(mRegion)->OnFail(time(nullptr));
         } else if (sendResult == SEND_QUOTA_EXCEED) {
             BOOL_FLAG(global_network_success) = true;
             if (slsResponse.mErrorCode == sdk::LOGE_SHARD_WRITE_QUOTA_EXCEED) {
                 failDetail << "shard write quota exceed";
                 suggestion << "Split logstore shards. https://help.aliyun.com/zh/sls/user-guide/expansion-of-resources";
+                GetLogstoreConcurrencyLimiter(mProject, mLogstore)->OnFail(time(nullptr));
             } else {
                 failDetail << "project write quota exceed";
                 suggestion << "Submit quota modification request. "
                               "https://help.aliyun.com/zh/sls/user-guide/expansion-of-resources";
+                GetProjectConcurrencyLimiter(mProject)->OnFail(time(nullptr));
             }
             LogtailAlarm::GetInstance()->SendAlarm(SEND_QUOTA_EXCEED_ALARM,
                                                    "error_code: " + slsResponse.mErrorCode
@@ -782,6 +806,7 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
                     LOG_WARNING(sLogger, LOG_PATTERN);
                     data->mLastLogWarningTime = curTime;
                 }
+                SenderQueueManager::GetInstance()->OnSendDone(item->mQueueKey, false);
                 DealSenderQueueItemAfterSend(item, true);
                 break;
             case OperationOnFail::DISCARD:
@@ -799,6 +824,7 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
                         data->mLogstore,
                         mRegion);
                 }
+                SenderQueueManager::GetInstance()->OnSendDone(item->mQueueKey, false);
                 DealSenderQueueItemAfterSend(item, false);
                 break;
         }

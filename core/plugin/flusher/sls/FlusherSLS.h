@@ -38,6 +38,7 @@ class FlusherSLS : public HttpFlusher {
 public:
     enum class TelemetryType { LOG, METRIC };
 
+    static std::shared_ptr<ConcurrencyLimiter> GetLogstoreConcurrencyLimiter(const std::string& project, const std::string& logstore);
     static std::shared_ptr<ConcurrencyLimiter> GetProjectConcurrencyLimiter(const std::string& project);
     static std::shared_ptr<ConcurrencyLimiter> GetRegionConcurrencyLimiter(const std::string& region);
     static void ClearInvalidConcurrencyLimiters();
@@ -98,6 +99,7 @@ private:
     static std::mutex sMux;
     static std::unordered_map<std::string, std::weak_ptr<ConcurrencyLimiter>> sProjectConcurrencyLimiterMap;
     static std::unordered_map<std::string, std::weak_ptr<ConcurrencyLimiter>> sRegionConcurrencyLimiterMap;
+    static std::unordered_map<std::string, std::weak_ptr<ConcurrencyLimiter>> sLogstoreConcurrencyLimiterMap;
 
     static std::mutex sDefaultRegionLock;
     static std::string sDefaultRegion;

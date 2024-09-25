@@ -65,6 +65,7 @@ bool SenderQueue::Remove(SenderQueueItem* item) {
     if (item == nullptr) {
         return false;
     }
+    
     size_t size = 0;
     chrono::system_clock::time_point enQueuTime;
     auto index = mRead;
