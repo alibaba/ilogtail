@@ -56,9 +56,9 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
 
     if (scrapeConfig.isMember(prometheus::ENABLE_COMPRESSION)
         && scrapeConfig[prometheus::ENABLE_COMPRESSION].isBool()) {
-        InitEnableCompression(scrapeConfig[prometheus::ENABLE_COMPRESSION].asBool());
+        // InitEnableCompression(scrapeConfig[prometheus::ENABLE_COMPRESSION].asBool());
     } else {
-        InitEnableCompression(true);
+        // InitEnableCompression(true);
     }
 
     if (scrapeConfig.isMember(prometheus::METRICS_PATH) && scrapeConfig[prometheus::METRICS_PATH].isString()) {
