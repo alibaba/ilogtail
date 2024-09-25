@@ -84,8 +84,8 @@ func (p *MetricWrapperV1) AddDataWithContext(tags map[string]string, fields map[
 		logTime = t[0]
 	}
 	slsLog, _ := helper.CreateLog(logTime, len(t) != 0, p.Tags, tags, fields)
-	p.inputRecordsTotal.Add(1)
-	p.inputRecordsSizeBytes.Add(int64(slsLog.Size()))
+	p.outEventsTotal.Add(1)
+	p.outEventsSizeBytes.Add(int64(slsLog.Size()))
 	p.LogsChan <- &pipeline.LogWithContext{Log: slsLog, Context: ctx}
 }
 
@@ -101,13 +101,13 @@ func (p *MetricWrapperV1) AddDataArrayWithContext(tags map[string]string,
 		logTime = t[0]
 	}
 	slsLog, _ := helper.CreateLogByArray(logTime, len(t) != 0, p.Tags, tags, columns, values)
-	p.inputRecordsTotal.Add(1)
-	p.inputRecordsSizeBytes.Add(int64(slsLog.Size()))
+	p.outEventsTotal.Add(1)
+	p.outEventsSizeBytes.Add(int64(slsLog.Size()))
 	p.LogsChan <- &pipeline.LogWithContext{Log: slsLog, Context: ctx}
 }
 
 func (p *MetricWrapperV1) AddRawLogWithContext(log *protocol.Log, ctx map[string]interface{}) {
-	p.inputRecordsTotal.Add(1)
-	p.inputRecordsSizeBytes.Add(int64(log.Size()))
+	p.outEventsTotal.Add(1)
+	p.outEventsSizeBytes.Add(int64(log.Size()))
 	p.LogsChan <- &pipeline.LogWithContext{Log: log, Context: ctx}
 }

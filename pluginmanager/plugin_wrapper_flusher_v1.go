@@ -44,17 +44,14 @@ func (wrapper *FlusherWrapperV1) Flush(projectName string, logstoreName string, 
 		size += int64(logGroup.Size())
 	}
 
-	wrapper.flusherInRecordsTotal.Add(total)
-	wrapper.flusherInRecordsSizeBytes.Add(size)
+	wrapper.inEventsTotal.Add(total)
+	wrapper.inEventsSizeBytes.Add(size)
 	startTime := time.Now()
 	err := wrapper.Flusher.Flush(projectName, logstoreName, configName, logGroupList)
-	if err == nil {
-		wrapper.flusherSuccessRecordsTotal.Add(total)
-		wrapper.flusherSuccessTimeMs.Observe(float64(time.Since(startTime)))
-	} else {
-		wrapper.flusherErrorTotal.Add(1)
-		wrapper.flusherDiscardRecordsTotal.Add(total)
-		wrapper.flusherErrorTimeMs.Observe(float64(time.Since(startTime)))
+	if err != nil {
+		wrapper.errorTotal.Add(1)
+		wrapper.discardEventsTotal.Add(total)
 	}
+	wrapper.costTimeMs.Observe(float64(time.Since(startTime)))
 	return err
 }

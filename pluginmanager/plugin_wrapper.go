@@ -32,16 +32,16 @@ type InputWrapper struct {
 	Tags     map[string]string
 	Interval time.Duration
 
-	inputRecordsTotal     pipeline.CounterMetric
-	inputRecordsSizeBytes pipeline.CounterMetric
+	outEventsTotal     pipeline.CounterMetric
+	outEventsSizeBytes pipeline.CounterMetric
 }
 
 func (w *InputWrapper) InitMetricRecord(pluginMeta *pipeline.PluginMeta) {
 	labels := helper.GetCommonLabels(w.Config.Context, pluginMeta)
 	w.MetricRecord = w.Config.Context.RegisterMetricRecord(labels)
 
-	w.inputRecordsTotal = helper.NewCounterMetricAndRegister(w.MetricRecord, helper.MetricPluginOutEventsTotal)
-	w.inputRecordsSizeBytes = helper.NewCounterMetricAndRegister(w.MetricRecord, helper.MetricPluginOutEventsSizeBytes)
+	w.outEventsTotal = helper.NewCounterMetricAndRegister(w.MetricRecord, helper.MetricPluginOutEventsTotal)
+	w.outEventsSizeBytes = helper.NewCounterMetricAndRegister(w.MetricRecord, helper.MetricPluginOutEventsSizeBytes)
 }
 
 // The service plugin is an input plugin used for passively receiving data.
@@ -64,18 +64,18 @@ type ProcessorWrapper struct {
 	pipeline.PluginContext
 	Config *LogstoreConfig
 
-	procInRecordsTotal  pipeline.CounterMetric
-	procOutRecordsTotal pipeline.CounterMetric
-	procTimeMS          pipeline.CounterMetric
+	inEventsTotal  pipeline.CounterMetric
+	outEventsTotal pipeline.CounterMetric
+	costTimeMs     pipeline.CounterMetric
 }
 
 func (w *ProcessorWrapper) InitMetricRecord(pluginMeta *pipeline.PluginMeta) {
 	labels := helper.GetCommonLabels(w.Config.Context, pluginMeta)
 	w.MetricRecord = w.Config.Context.RegisterMetricRecord(labels)
 
-	w.procInRecordsTotal = helper.NewCounterMetricAndRegister(w.MetricRecord, helper.MetricPluginInEventsTotal)
-	w.procOutRecordsTotal = helper.NewCounterMetricAndRegister(w.MetricRecord, helper.MetricPluginOutEventsTotal)
-	w.procTimeMS = helper.NewCounterMetricAndRegister(w.MetricRecord, helper.MetricPluginCostTimeMs)
+	w.inEventsTotal = helper.NewCounterMetricAndRegister(w.MetricRecord, helper.MetricPluginInEventsTotal)
+	w.outEventsTotal = helper.NewCounterMetricAndRegister(w.MetricRecord, helper.MetricPluginOutEventsTotal)
+	w.costTimeMs = helper.NewCounterMetricAndRegister(w.MetricRecord, helper.MetricPluginCostTimeMs)
 }
 
 /*---------------------
@@ -88,18 +88,18 @@ type AggregatorWrapper struct {
 	Config   *LogstoreConfig
 	Interval time.Duration
 
-	aggrInRecordsTotal  pipeline.CounterMetric
-	aggrOutRecordsTotal pipeline.CounterMetric
-	aggrTimeMS          pipeline.CounterMetric
+	inEventsTotal  pipeline.CounterMetric
+	outEventsTotal pipeline.CounterMetric
+	costTimeMs     pipeline.CounterMetric
 }
 
 func (w *AggregatorWrapper) InitMetricRecord(pluginMeta *pipeline.PluginMeta) {
 	labels := helper.GetCommonLabels(w.Config.Context, pluginMeta)
 	w.MetricRecord = w.Config.Context.RegisterMetricRecord(labels)
 
-	w.aggrInRecordsTotal = helper.NewCounterMetricAndRegister(w.MetricRecord, helper.MetricPluginInEventsTotal)
-	w.aggrOutRecordsTotal = helper.NewCounterMetricAndRegister(w.MetricRecord, helper.MetricPluginOutEventsTotal)
-	w.aggrTimeMS = helper.NewCounterMetricAndRegister(w.MetricRecord, helper.MetricPluginCostTimeMs)
+	w.inEventsTotal = helper.NewCounterMetricAndRegister(w.MetricRecord, helper.MetricPluginInEventsTotal)
+	w.outEventsTotal = helper.NewCounterMetricAndRegister(w.MetricRecord, helper.MetricPluginOutEventsTotal)
+	w.costTimeMs = helper.NewCounterMetricAndRegister(w.MetricRecord, helper.MetricPluginCostTimeMs)
 }
 
 /*---------------------
@@ -117,23 +117,20 @@ type FlusherWrapper struct {
 	Config   *LogstoreConfig
 	Interval time.Duration
 
-	flusherInRecordsTotal      pipeline.CounterMetric
-	flusherInRecordsSizeBytes  pipeline.CounterMetric
-	flusherSuccessRecordsTotal pipeline.CounterMetric
-	flusherDiscardRecordsTotal pipeline.CounterMetric
-	flusherSuccessTimeMs       pipeline.LatencyMetric
-	flusherErrorTimeMs         pipeline.LatencyMetric
-	flusherErrorTotal          pipeline.CounterMetric
+	inEventsTotal      pipeline.CounterMetric
+	inEventsSizeBytes  pipeline.CounterMetric
+	discardEventsTotal pipeline.CounterMetric
+	errorTotal         pipeline.CounterMetric
+	costTimeMs         pipeline.LatencyMetric
 }
 
 func (w *FlusherWrapper) InitMetricRecord(pluginMeta *pipeline.PluginMeta) {
 	labels := helper.GetCommonLabels(w.Config.Context, pluginMeta)
 	w.MetricRecord = w.Config.Context.RegisterMetricRecord(labels)
 
-	w.flusherInRecordsTotal = helper.NewCounterMetricAndRegister(w.MetricRecord, helper.MetricPluginInEventsTotal)
-	w.flusherInRecordsSizeBytes = helper.NewCounterMetricAndRegister(w.MetricRecord, helper.MetricPluginInEventsSizeBytes)
-	w.flusherDiscardRecordsTotal = helper.NewCounterMetricAndRegister(w.MetricRecord, helper.MetricPluginDiscardEventsTotal)
-	w.flusherSuccessTimeMs = helper.NewLatencyMetricAndRegister(w.MetricRecord, helper.MetricPluginCostTimeMs)
-	w.flusherErrorTotal = helper.NewCounterMetricAndRegister(w.MetricRecord, helper.MetricPluginErrorTotal)
-
+	w.inEventsTotal = helper.NewCounterMetricAndRegister(w.MetricRecord, helper.MetricPluginInEventsTotal)
+	w.inEventsSizeBytes = helper.NewCounterMetricAndRegister(w.MetricRecord, helper.MetricPluginInEventsSizeBytes)
+	w.discardEventsTotal = helper.NewCounterMetricAndRegister(w.MetricRecord, helper.MetricPluginDiscardEventsTotal)
+	w.errorTotal = helper.NewCounterMetricAndRegister(w.MetricRecord, helper.MetricPluginErrorTotal)
+	w.costTimeMs = helper.NewLatencyMetricAndRegister(w.MetricRecord, helper.MetricPluginCostTimeMs)
 }

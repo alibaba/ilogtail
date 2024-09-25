@@ -44,17 +44,14 @@ func (wrapper *FlusherWrapperV2) Export(pipelineGroupEvents []*models.PipelineGr
 			size += event.GetSize()
 		}
 	}
-	wrapper.flusherInRecordsTotal.Add(total)
-	wrapper.flusherInRecordsSizeBytes.Add(size)
+	wrapper.inEventsTotal.Add(total)
+	wrapper.inEventsSizeBytes.Add(size)
 	startTime := time.Now()
 	err := wrapper.Flusher.Export(pipelineGroupEvents, pipelineContext)
-	if err == nil {
-		wrapper.flusherSuccessRecordsTotal.Add(total)
-		wrapper.flusherSuccessTimeMs.Observe(float64(time.Since(startTime)))
-	} else {
-		wrapper.flusherErrorTotal.Add(1)
-		wrapper.flusherDiscardRecordsTotal.Add(total)
-		wrapper.flusherErrorTimeMs.Observe(float64(time.Since(startTime)))
+	if err != nil {
+		wrapper.errorTotal.Add(1)
+		wrapper.discardEventsTotal.Add(total)
 	}
+	wrapper.costTimeMs.Observe(float64(time.Since(startTime)))
 	return err
 }

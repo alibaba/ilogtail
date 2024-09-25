@@ -33,9 +33,9 @@ func (wrapper *ProcessorWrapperV2) Init(pluginMeta *pipeline.PluginMeta) error {
 }
 
 func (wrapper *ProcessorWrapperV2) Process(in *models.PipelineGroupEvents, context pipeline.PipelineContext) {
-	wrapper.procInRecordsTotal.Add(int64(len(in.Events)))
+	wrapper.inEventsTotal.Add(int64(len(in.Events)))
 	startTime := time.Now().UnixMilli()
 	wrapper.Processor.Process(in, context)
-	wrapper.procTimeMS.Add(time.Now().UnixMilli() - startTime)
-	wrapper.procOutRecordsTotal.Add(int64(len(in.Events)))
+	wrapper.costTimeMs.Add(time.Now().UnixMilli() - startTime)
+	wrapper.outEventsTotal.Add(int64(len(in.Events)))
 }
