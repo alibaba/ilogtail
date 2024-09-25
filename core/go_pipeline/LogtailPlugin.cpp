@@ -30,7 +30,10 @@
 #include "monitor/LogtailAlarm.h"
 #include "pipeline/PipelineManager.h"
 #include "pipeline/queue/SenderQueueManager.h"
-#include "protobuf/sls/pipeline_event.pb.h"
+#include "protobuf/models/pipeline_event_group.pb.h"
+#include "protobuf/models/log_event.pb.h"
+#include "protobuf/models/metric_event.pb.h"
+#include "protobuf/models/span_event.pb.h"
 #include "provider/Provider.h"
 
 DEFINE_FLAG_BOOL(enable_sls_metrics_format, "if enable format metrics in SLS metricstore log pattern", false);
@@ -43,7 +46,10 @@ using namespace logtail;
 
 LogtailPlugin* LogtailPlugin::s_instance = NULL;
 
-std::optional<logtail::PipelineEventGroup> TransferPBToPipelineEventGroup(const sls_logs::PipelineEventGroup& src);
+bool TransferPBToPipelineEventGroup(const logtail::models::PipelineEventGroup& src, logtail::PipelineEventGroup& dst, std::string& errMsg);
+bool TransferPBToLogEvent(const logtail::models::LogEvent& src, logtail::LogEvent& dst, std::string& errMsg);
+bool TransferPBToMetricEvent(const logtail::models::MetricEvent& src, logtail::MetricEvent& dst, std::string& errMsg);
+bool TransferPBToSpanEvent(const logtail::models::SpanEvent& src, logtail::SpanEvent& dst, std::string& errMsg);
 
 LogtailPlugin::LogtailPlugin() {
     mPluginAdapterPtr = NULL;
@@ -567,69 +573,149 @@ K8sContainerMeta LogtailPlugin::GetContainerMeta(const string& containerID) {
     return K8sContainerMeta();
 }
 
-std::optional<logtail::PipelineEventGroup> TransferPBToPipelineEventGroup(const sls_logs::PipelineEventGroup& src) {
-    logtail::PipelineEventGroup dst(std::make_shared<SourceBuffer>());
-    switch (src.type())
-    {
-    case sls_logs::PipelineEventGroup::EventType::PipelineEventGroup_EventType_LOG:
-        if (src.logs_size() == 0) {
-            return std::nullopt;
+bool TransferPBToPipelineEventGroup(const logtail::models::PipelineEventGroup& src, logtail::PipelineEventGroup& dst, std::string& errMsg) {
+    // events
+    if (src.has_logs()) {
+        if (src.logs().array_size() == 0) {
+            errMsg = "error transfer PB to PipelineEventGroup: logs array is empty";
+            return false;
         }
-        dst.MutableEvents().reserve(src.logs_size());
-        for (auto& logSrc : src.logs()) {
+        dst.MutableEvents().reserve(src.logs().array_size());
+        for (auto& logSrc : src.logs().array()) {
             auto logDst = dst.CreateLogEvent();
-            std::optional<uint32_t> ns;
-            time_t t = time_t(logSrc.time());
-            if (logSrc.has_time_ns()) {
-                ns = logSrc.time_ns();
-            }
-            logDst->SetTimestamp(t, ns);
-            for (auto& content_pair : logSrc.contents()) {
-                logDst->SetContent(content_pair.key(), content_pair.value());
+            if (!TransferPBToLogEvent(logSrc, *logDst, errMsg)) {
+                return false;
             }
             dst.MutableEvents().emplace_back(std::move(logDst));
         }
-        break;
-    case sls_logs::PipelineEventGroup::EventType::PipelineEventGroup_EventType_METRIC:
-        if (src.metrics_size() == 0) {
-            return std::nullopt;
+    } else if (src.has_metrics()) {
+        if (src.metrics().array_size() == 0) {
+            errMsg = "error transfer PB to PipelineEventGroup: metrics array is empty";
+            return false;
         }
-        dst.MutableEvents().reserve(src.metrics_size());
-        for (auto& metricSrc : src.metrics()) {
+        dst.MutableEvents().reserve(src.metrics().array_size());
+        for (auto& metricSrc : src.metrics().array()) {
             auto metricDst = dst.CreateMetricEvent();
-            uint32_t t = metricSrc.time();
-            std::optional<uint32_t> ns;
-            if (metricSrc.has_time_ns()) {
-                ns = metricSrc.time_ns();
-            }
-            metricDst->SetTimestamp(t, ns);
-            metricDst->SetName(metricSrc.name());
-            switch (metricSrc.type()) {
-            case sls_logs::MetricEvent::MetricValueType::MetricEvent_MetricValueType_SINGLE:
-                metricDst->SetValue(UntypedSingleValue{metricSrc.singlevalue()});
-                break;
-            case sls_logs::MetricEvent::MetricValueType::MetricEvent_MetricValueType_MULTI:
-                LOG_ERROR(sLogger, ("metric value type mutivalue unsported", ""));
-            }
-            for (auto& tag_pair : metricSrc.tags()) {
-                metricDst->SetTag(tag_pair.first, tag_pair.second);
+            if (!TransferPBToMetricEvent(metricSrc, *metricDst, errMsg)) {
+                return false;
             }
             dst.MutableEvents().emplace_back(std::move(metricDst));
         }
-        break;
-    default:
-        return std::nullopt;
+    } else if (src.has_spans()) {
+        if (src.spans().array_size() == 0) {
+            errMsg = "error transfer PB to PipelineEventGroup: spans array is empty";
+            return false;
+        }
+        // timestamp
+        for (auto& spanSrc : src.spans().array()) {
+            auto spanDst = dst.CreateSpanEvent();
+            if (!TransferPBToSpanEvent(spanSrc, *spanDst, errMsg)) {
+                return false;
+            }
+            dst.MutableEvents().emplace_back(std::move(spanDst));
+        }
+    } else {
+        errMsg = "error transfer PB to PipelineEventGroup: unsupported event type";
+        return false;
     }
 
+    // tags
     for (auto& tag : src.tags()) {
         dst.SetTag(tag.first, tag.second);
     }
 
+    // metadatas
     for (auto& metaData : src.metadata()) {
-        if (metaData.first == "source") {
+        if (metaData.first == "source_id") {
             dst.SetMetadata(logtail::EventGroupMetaKey::SOURCE_ID, metaData.second);
         }
     }
 
-    return dst;
+    return true;
+}
+
+bool TransferPBToLogEvent(const logtail::models::LogEvent& src, logtail::LogEvent& dst, std::string& errMsg) {
+    // timestamp
+    time_t ts = static_cast<time_t>(src.timestamp() >> 32);
+    time_t tns = static_cast<time_t>(src.timestamp() << 32 >> 32);
+    dst.SetTimestamp(ts, tns);
+    // contents
+    for (auto& content_pair : src.contents()) {
+        dst.SetContent(content_pair.key(), content_pair.value());
+    }
+    // level
+    dst.SetLevel(src.level());
+    // fileoffset and rawsize
+    dst.SetPosition(src.fileoffset(), src.rawsize());
+    return true;
+}
+
+bool TransferPBToMetricEvent(const logtail::models::MetricEvent& src, logtail::MetricEvent& dst, std::string& errMsg) {
+    // timestamp
+    time_t ts = static_cast<time_t>(src.timestamp() >> 32);
+    time_t tns = static_cast<time_t>(src.timestamp() << 32 >> 32);
+    dst.SetTimestamp(ts, tns);
+    // name
+    dst.SetName(src.name());
+    // value
+    if (src.has_untypedsinglevalue()) {
+        dst.SetValue(logtail::UntypedSingleValue{src.untypedsinglevalue().value()});
+    } else {
+        errMsg = "error transfer PB to PipelineEventGroup: unsupported  value type";
+        return false;
+    }
+    // tags
+    for (auto& tag_pair : src.tags()) {
+        dst.SetTag(tag_pair.first, tag_pair.second);
+    }
+    return true;
+}
+
+bool TransferPBToSpanEvent(const logtail::models::SpanEvent& src, logtail::SpanEvent& dst, std::string& errMsg) {
+    // timestamp
+    time_t ts = static_cast<time_t>(src.timestamp() >> 32);
+    time_t tns = static_cast<time_t>(src.timestamp() << 32 >> 32);
+    dst.SetTimestamp(ts, tns);
+
+    dst.SetTraceId(src.traceid());
+    dst.SetSpanId(src.spanid());
+    dst.SetTraceState(src.tracestate());
+    dst.SetParentSpanId(src.parentspanid());
+    dst.SetName(src.name());
+    dst.SetKind(static_cast<logtail::SpanEvent::Kind>(src.kind()));
+    dst.SetStartTimeNs(src.starttimens());
+    dst.SetEndTimeNs(src.endtimens());
+
+    // tags
+    for (auto& tag_pair : src.tags()) {
+        dst.SetTag(tag_pair.first, tag_pair.second);
+    }
+    // inner events
+    for (auto& event : src.events()) {
+        auto dstEvent = dst.AddEvent();
+        dstEvent->SetTimestampNs(event.timestampns());
+        dstEvent->SetName(event.name());
+        for (auto& tag_pair : event.tags()) {
+            dstEvent->SetTag(tag_pair.first, tag_pair.second);
+        }
+    }
+    // span links
+    for (auto& link : src.links()) {
+        auto dstLink = dst.AddLink();
+        dstLink->SetTraceId(link.traceid());
+        dstLink->SetSpanId(link.spanid());
+        dstLink->SetTraceState(link.tracestate());
+        for (auto& tag_pair : link.tags()) {
+            dstLink->SetTag(tag_pair.first, tag_pair.second);
+        }
+    }
+
+    dst.SetStatus(static_cast<logtail::SpanEvent::StatusCode>(src.status()));
+
+    // scope tags
+    for (auto& tag_pair : src.scopetags()) {
+        dst.SetScopeTag(tag_pair.first, tag_pair.second);
+    }
+
+    return true;
 }
