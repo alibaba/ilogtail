@@ -181,9 +181,6 @@ bool ProcessorFilterNative::Init(const Json::Value& config) {
                               mContext->GetRegion());
     }
 
-    mErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_ERROR_TOTAL);
-    mDiscardEventsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_DISCARD_EVENTS_TOTAL);
-
     return true;
 }
 
@@ -201,8 +198,6 @@ void ProcessorFilterNative::Process(PipelineEventGroup& logGroup) {
                 events[wIdx] = std::move(events[rIdx]);
             }
             ++wIdx;
-        } else {
-            mDiscardEventsTotal->Add(1);
         }
     }
     events.resize(wIdx);
@@ -265,7 +260,6 @@ bool ProcessorFilterNative::FilterExpressionRoot(LogEvent& sourceEvent, const Ba
     try {
         return node->Match(sourceEvent, GetContext());
     } catch (...) {
-        mErrorTotal->Add(1);
         LOG_ERROR(GetContext().GetLogger(), ("filter error ", ""));
         return false;
     }
@@ -284,7 +278,6 @@ bool ProcessorFilterNative::FilterFilterRule(LogEvent& sourceEvent, const LogFil
     try {
         return IsMatched(sourceEvent, *filterRule);
     } catch (...) {
-        mErrorTotal->Add(1);
         LOG_ERROR(GetContext().GetLogger(), ("filter error ", ""));
         return false;
     }

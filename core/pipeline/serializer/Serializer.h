@@ -51,13 +51,13 @@ public:
             mMetricsRecordRef,
             {{METRIC_LABEL_PROJECT, f->GetContext().GetProjectName()},
              {METRIC_LABEL_PIPELINE_NAME, f->GetContext().GetConfigName()},
-             {METRIC_LABEL_KEY_COMPONENT_NAME, "serializer"},
+             {METRIC_LABEL_KEY_COMPONENT_NAME, METRIC_LABEL_VALUE_COMPONENT_NAME_SERIALIZER},
              {METRIC_LABEL_KEY_FLUSHER_NODE_ID, f->GetNodeID()}});
         mInItemsTotal = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_IN_ITEMS_TOTAL);
         mInItemSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_IN_ITEM_SIZE_BYTES);
         mOutItemsTotal = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_OUT_ITEMS_TOTAL);
         mOutItemSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_OUT_ITEM_SIZE_BYTES);
-        mTotalDelayMs = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_TOTAL_DELAY_MS);
+        mTotalProcessMs = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_TOTAL_PROCESS_MS);
         mDiscardedItemsTotal = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_DISCARDED_ITEMS_TOTAL);
         mDiscardedItemSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_DISCARDED_ITEMS_SIZE_BYTES);
     }
@@ -70,7 +70,7 @@ public:
 
         auto before = std::chrono::system_clock::now();
         auto res = Serialize(std::move(p), output, errorMsg);
-        mTotalDelayMs->Add(
+        mTotalProcessMs->Add(
             std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - before).count());
 
         if (res) {
@@ -94,7 +94,7 @@ protected:
     CounterPtr mOutItemSizeBytes;
     CounterPtr mDiscardedItemsTotal;
     CounterPtr mDiscardedItemSizeBytes;
-    CounterPtr mTotalDelayMs;
+    CounterPtr mTotalProcessMs;
 
 private:
     virtual bool Serialize(T&& p, std::string& res, std::string& errorMsg) = 0;

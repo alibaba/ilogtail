@@ -2336,15 +2336,9 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventKeepUnmatch() {
     int count = 5;
     APSARA_TEST_EQUAL_FATAL(count, processor.GetContext().GetProcessProfile().parseFailures);
     APSARA_TEST_EQUAL_FATAL(uint64_t(count), processorInstance.mInEventsTotal->GetValue());
-    std::string expectValue = "value1";
-    APSARA_TEST_EQUAL_FATAL(uint64_t(expectValue.length() * count), processor.mInBufferSizeBytes->GetValue());
     APSARA_TEST_EQUAL_FATAL(uint64_t(count), processorInstance.mOutEventsTotal->GetValue());
-    expectValue = "rawLogvalue1";
-    APSARA_TEST_EQUAL_FATAL(uint64_t(expectValue.length() * count), processor.mOutBufferSizeBytes->GetValue());
-
-    APSARA_TEST_EQUAL_FATAL(uint64_t(0), processor.mDiscardEventsTotal->GetValue());
-
-    APSARA_TEST_EQUAL_FATAL(uint64_t(count), processor.mErrorTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(uint64_t(0), processor.mDiscardedEventsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(uint64_t(count), processor.mOutFailedEventsTotal->GetValue());
 }
 
 void ProcessorParseDelimiterNativeUnittest::TestProcessEventDiscardUnmatch() {
@@ -2430,13 +2424,12 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventDiscardUnmatch() {
     int count = 5;
     APSARA_TEST_EQUAL_FATAL(count, processor.GetContext().GetProcessProfile().parseFailures);
     APSARA_TEST_EQUAL_FATAL(uint64_t(count), processorInstance.mInEventsTotal->GetValue());
-    std::string expectValue = "value1";
-    APSARA_TEST_EQUAL_FATAL((expectValue.length()) * count, processor.mInBufferSizeBytes->GetValue());
     // discard unmatch, so output is 0
     APSARA_TEST_EQUAL_FATAL(uint64_t(0), processorInstance.mOutEventsTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(uint64_t(0), processor.mOutBufferSizeBytes->GetValue());
-    APSARA_TEST_EQUAL_FATAL(uint64_t(count), processor.mDiscardEventsTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(uint64_t(count), processor.mErrorTotal->GetValue());
+    // event group size is not 0
+    APSARA_TEST_NOT_EQUAL_FATAL(uint64_t(0), processorInstance.mOutEventGroupSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL(uint64_t(count), processor.mDiscardedEventsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(uint64_t(count), processor.mOutFailedEventsTotal->GetValue());
 }
 
 void ProcessorParseDelimiterNativeUnittest::TestEmpty() {

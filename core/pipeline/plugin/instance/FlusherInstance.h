@@ -47,7 +47,8 @@ private:
     std::unique_ptr<Flusher> mPlugin;
 
     CounterPtr mInEventsTotal;
-    CounterPtr mInGroupDataSizeBytes;
+    CounterPtr mInEventGroupsTotal;
+    CounterPtr mInEventGroupSizeBytes;
 };
 
 } // namespace logtail

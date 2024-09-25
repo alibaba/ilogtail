@@ -50,10 +50,10 @@ bool ProcessorParseJsonNative::Init(const Json::Value& config) {
     mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
     mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
 
-    mInBufferSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_IN_BUFFER_SIZE_BYTES);
-    mOutBufferSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_OUT_BUFFER_SIZE_BYTES);
-    mDiscardEventsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_DISCARD_EVENTS_TOTAL);
-    mErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_ERROR_TOTAL);
+    mDiscardedEventsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_DISCARDED_EVENTS_TOTAL);
+    mOutFailedEventsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_OUT_FAILED_EVENTS_TOTAL);
+    mOutKeyNotFoundEventsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_OUT_KEY_NOT_FOUND_EVENTS_TOTAL);
+    mOutSuccessfulEventsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_OUT_SUCCESSFUL_EVENTS_TOTAL);
 
     return true;
 }
@@ -80,10 +80,12 @@ void ProcessorParseJsonNative::Process(PipelineEventGroup& logGroup) {
 
 bool ProcessorParseJsonNative::ProcessEvent(const StringView& logPath, PipelineEventPtr& e) {
     if (!IsSupportedEvent(e)) {
+        mOutFailedEventsTotal->Add(1);
         return true;
     }
     auto& sourceEvent = e.Cast<LogEvent>();
     if (!sourceEvent.HasContent(mSourceKey)) {
+        mOutKeyNotFoundEventsTotal->Add(1);
         return true;
     }
 
@@ -102,9 +104,10 @@ bool ProcessorParseJsonNative::ProcessEvent(const StringView& logPath, PipelineE
         AddLog(mCommonParserOptions.legacyUnmatchedRawLogKey, rawContent, sourceEvent, false);
     }
     if (mCommonParserOptions.ShouldEraseEvent(parseSuccess, sourceEvent)) {
-        mDiscardEventsTotal->Add(1);
+        mDiscardedEventsTotal->Add(1);
         return false;
     }
+    mOutSuccessfulEventsTotal->Add(1);
     return true;
 }
 
@@ -116,8 +119,6 @@ bool ProcessorParseJsonNative::JsonLogLineParser(LogEvent& sourceEvent,
 
     if (buffer.empty())
         return false;
-
-    mInBufferSizeBytes->Add(buffer.size());
 
     bool parseSuccess = true;
     rapidjson::Document doc;
@@ -135,7 +136,7 @@ bool ProcessorParseJsonNative::JsonLogLineParser(LogEvent& sourceEvent,
                                                    GetContext().GetRegion());
         }
         ++(*mParseFailures);
-        mErrorTotal->Add(1);
+        mOutFailedEventsTotal->Add(1);
         parseSuccess = false;
     } else if (!doc.IsObject()) {
         if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
@@ -149,7 +150,7 @@ bool ProcessorParseJsonNative::JsonLogLineParser(LogEvent& sourceEvent,
                                                    GetContext().GetRegion());
         }
         ++(*mParseFailures);
-        mErrorTotal->Add(1);
+        mOutFailedEventsTotal->Add(1);
         parseSuccess = false;
     }
     if (!parseSuccess) {
@@ -209,7 +210,6 @@ void ProcessorParseJsonNative::AddLog(const StringView& key,
     }
     targetEvent.SetContentNoCopy(key, value);
     *mLogGroupSize += key.size() + value.size() + 5;
-    mOutBufferSizeBytes->Add(key.size() + value.size());
 }
 
 bool ProcessorParseJsonNative::IsSupportedEvent(const PipelineEventPtr& e) const {

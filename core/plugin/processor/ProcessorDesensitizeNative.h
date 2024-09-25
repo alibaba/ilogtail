@@ -56,7 +56,10 @@ private:
 
     std::shared_ptr<re2::RE2> mRegex;
 
-    CounterPtr mDesensitizeRecodesTotal;
+    CounterPtr mDiscardedEventsTotal;
+    CounterPtr mOutFailedEventsTotal;
+    CounterPtr mOutKeyNotFoundEventsTotal;
+    CounterPtr mOutSuccessfulEventsTotal;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorParseApsaraNativeUnittest;

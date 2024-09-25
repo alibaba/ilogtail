@@ -48,7 +48,7 @@ bool Serializer<vector<CompressedLogGroup>>::DoSerialize(vector<CompressedLogGro
 
     auto before = std::chrono::system_clock::now();
     auto res = Serialize(std::move(p), output, errorMsg);
-    mTotalDelayMs->Add(
+    mTotalProcessMs->Add(
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - before).count());
 
     if (res) {

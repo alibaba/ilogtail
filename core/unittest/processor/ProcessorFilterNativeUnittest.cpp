@@ -449,7 +449,7 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         })";
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
 
-        APSARA_TEST_EQUAL_FATAL(2, processor.mDiscardEventsTotal->GetValue());
+        APSARA_TEST_EQUAL_FATAL(2, processorInstance.mInEventsTotal->GetValue() -  processorInstance.mOutEventsTotal->GetValue());
     }
     {
         const char* jsonStr = "{\n"

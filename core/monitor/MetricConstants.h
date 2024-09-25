@@ -19,6 +19,10 @@
 
 namespace logtail {
 
+//////////////////////////////////////////////////////////////////////////
+// common
+//////////////////////////////////////////////////////////////////////////
+
 extern const std::string METRIC_FIELD_REGION;
 extern const std::string METRIC_REGION_DEFAULT;
 extern const std::string METRIC_SLS_LOGSTORE_NAME;
@@ -28,14 +32,14 @@ extern const std::string METRIC_TOPIC_FIELD_NAME;
 extern const std::string LABEL_PREFIX;
 extern const std::string VALUE_PREFIX;
 
-//////////////////////////////////////////////////////////////////////////
-// labels
-//////////////////////////////////////////////////////////////////////////
-
-// common
+// common label keys
 extern const std::string METRIC_LABEL_PROJECT;
 
+//////////////////////////////////////////////////////////////////////////
 // agent
+//////////////////////////////////////////////////////////////////////////
+
+// label keys
 extern const std::string METRIC_LABEL_ALIUIDS;
 extern const std::string METRIC_LABEL_INSTANCE_ID;
 extern const std::string METRIC_LABEL_IP;
@@ -45,96 +49,103 @@ extern const std::string METRIC_LABEL_USER_DEFINED_ID;
 extern const std::string METRIC_LABEL_UUID;
 extern const std::string METRIC_LABEL_VERSION;
 
-// pipeline
-extern const std::string METRIC_LABEL_LOGSTORE;
-extern const std::string METRIC_LABEL_REGION;
-extern const std::string METRIC_LABEL_PIPELINE_NAME;
+// metric keys
+extern const std::string METRIC_AGENT_CONSOLE_PIPELINE_CONFIG_TOTAL;
+extern const std::string METRIC_AGENT_CPU;
+extern const std::string METRIC_AGENT_CPU_GO;
+extern const std::string METRIC_AGENT_CRD_PIPELINE_CONFIG_TOTAL;
+extern const std::string METRIC_AGENT_ENV_PIPELINE_CONFIG_TOTAL;
+extern const std::string METRIC_AGENT_GO_ROUTINES_TOTAL;
+extern const std::string METRIC_AGENT_INSTANCE_CONFIG_TOTAL;
+extern const std::string METRIC_AGENT_MEMORY;
+extern const std::string METRIC_AGENT_MEMORY_GO;
+extern const std::string METRIC_AGENT_OPEN_FD_TOTAL;
+extern const std::string METRIC_AGENT_PIPELINE_CONFIG_TOTAL;
+extern const std::string METRIC_AGENT_PLUGIN_TOTAL;
 
+//////////////////////////////////////////////////////////////////////////
+// pipeline
+//////////////////////////////////////////////////////////////////////////
+
+// label keys
+extern const std::string METRIC_LABEL_LOGSTORE;
+extern const std::string METRIC_LABEL_PIPELINE_NAME;
+extern const std::string METRIC_LABEL_REGION;
+
+// metric keys
+extern const std::string METRIC_PIPELINE_PROCESSORS_IN_EVENTS_TOTAL;
+extern const std::string METRIC_PIPELINE_PROCESSORS_IN_EVENT_GROUPS_TOTAL;
+extern const std::string METRIC_PIPELINE_PROCESSORS_IN_EVENT_GROUP_SIZE_BYTES;
+extern const std::string METRIC_PIPELINE_PROCESSORS_TOTAL_DELAY_MS;
+extern const std::string METRIC_PIPELINE_START_TIME;
+
+//////////////////////////////////////////////////////////////////////////
 // plugin
-extern const std::string METRIC_LABEL_PLUGIN_TYPE;
-extern const std::string METRIC_LABEL_PLUGIN_ID;
-extern const std::string METRIC_LABEL_NODE_ID;
+//////////////////////////////////////////////////////////////////////////
+
+// label keys
 extern const std::string METRIC_LABEL_CHILD_NODE_ID;
-// input file plugin labels
+extern const std::string METRIC_LABEL_NODE_ID;
+extern const std::string METRIC_LABEL_PLUGIN_ID;
+extern const std::string METRIC_LABEL_PLUGIN_TYPE;
+
+// metric keys
+extern const std::string METRIC_PLUGIN_IN_EVENTS_TOTAL;
+extern const std::string METRIC_PLUGIN_IN_EVENT_GROUPS_TOTAL;
+extern const std::string METRIC_PLUGIN_IN_EVENT_GROUP_SIZE_BYTES;
+extern const std::string METRIC_PLUGIN_OUT_EVENTS_TOTAL;
+extern const std::string METRIC_PLUGIN_OUT_EVENT_GROUPS_TOTAL;
+extern const std::string METRIC_PLUGIN_OUT_EVENT_GROUP_SIZE_BYTES;
+extern const std::string METRIC_PLUGIN_TOTAL_PROCESS_TIME_MS;
+
+/**********************************************************
+*   input_file
+*   input_container_stdio
+**********************************************************/
 extern const std::string METRIC_LABEL_FILE_DEV;
 extern const std::string METRIC_LABEL_FILE_INODE;
 extern const std::string METRIC_LABEL_FILE_NAME;
 
-// component
-extern const std::string METRIC_LABEL_KEY_COMPONENT_NAME;
-extern const std::string METRIC_LABEL_KEY_QUEUE_TYPE;
-extern const std::string METRIC_LABEL_KEY_EXACTLY_ONCE_FLAG;
-extern const std::string METRIC_LABEL_KEY_FLUSHER_NODE_ID;
-
-// runner
-extern const std::string METRIC_LABEL_KEY_RUNNER_NAME;
-
-//////////////////////////////////////////////////////////////////////////
-// agent
-//////////////////////////////////////////////////////////////////////////
-
-extern const std::string METRIC_AGENT_CPU;
-extern const std::string METRIC_AGENT_CPU_GO;
-extern const std::string METRIC_AGENT_MEMORY;
-extern const std::string METRIC_AGENT_MEMORY_GO;
-extern const std::string METRIC_AGENT_GO_ROUTINES_TOTAL;
-extern const std::string METRIC_AGENT_OPEN_FD_TOTAL;
-extern const std::string METRIC_AGENT_INSTANCE_CONFIG_TOTAL;
-extern const std::string METRIC_AGENT_PIPELINE_CONFIG_TOTAL;
-extern const std::string METRIC_AGENT_ENV_PIPELINE_CONFIG_TOTAL;
-extern const std::string METRIC_AGENT_CRD_PIPELINE_CONFIG_TOTAL;
-extern const std::string METRIC_AGENT_CONSOLE_PIPELINE_CONFIG_TOTAL;
-extern const std::string METRIC_AGENT_PLUGIN_TOTAL;
-
-//////////////////////////////////////////////////////////////////////////
-// plugin
-//////////////////////////////////////////////////////////////////////////
-
-// common metrics
-extern const std::string METRIC_PLUGIN_COST_TIME_MS;
-extern const std::string METRIC_PLUGIN_IN_BUFFER_TOTAL;
-extern const std::string METRIC_PLUGIN_IN_BUFFER_SIZE_BYTES;
-extern const std::string METRIC_PLUGIN_OUT_BUFFER_TOTAL;
-extern const std::string METRIC_PLUGIN_OUT_BUFFER_SIZE_BYTES;
-extern const std::string METRIC_PLUGIN_IN_EVENTS_TOTAL;
-extern const std::string METRIC_PLUGIN_IN_EVENTS_SIZE_BYTES;
-extern const std::string METRIC_PLUGIN_OUT_EVENTS_TOTAL;
-extern const std::string METRIC_PLUGIN_OUT_EVENTS_SIZE_BYTES;
-extern const std::string METRIC_PLUGIN_IN_EVENT_GROUPS_TOTAL;
-extern const std::string METRIC_PLUGIN_IN_EVENT_GROUPS_SIZE_BYTES;
-extern const std::string METRIC_PLUGIN_OUT_EVENT_GROUPS_TOTAL;
-extern const std::string METRIC_PLUGIN_OUT_EVENT_GROUPS_SIZE_BYTES;
-extern const std::string METRIC_PLUGIN_DISCARD_EVENTS_TOTAL;
-extern const std::string METRIC_PLUGIN_ERROR_TOTAL;
-
-// input input_file/input_container_stdio cunstom metrics
-extern const std::string METRIC_PLUGIN_READ_FILE_SIZE_BYTES;
-extern const std::string METRIC_PLUGIN_READ_FILE_OFFSET_BYTES;
 extern const std::string METRIC_PLUGIN_MONITOR_FILE_TOTAL;
+extern const std::string METRIC_PLUGIN_SOURCE_READ_OFFSET_BYTES;
+extern const std::string METRIC_PLUGIN_SOURCE_SIZE_BYTES;
 
-// processor processor_parse_regex_native cunstom metrics
-extern const std::string METRIC_PLUGIN_KEY_COUNT_NOT_MATCH_ERROR_TOTAL;
+/**********************************************************
+*   all processor (parse type)
+**********************************************************/
+extern const std::string METRIC_PLUGIN_DISCARDED_EVENTS_TOTAL;
+extern const std::string METRIC_PLUGIN_OUT_FAILED_EVENTS_TOTAL;
+extern const std::string METRIC_PLUGIN_OUT_KEY_NOT_FOUND_EVENTS_TOTAL;
+extern const std::string METRIC_PLUGIN_OUT_SUCCESSFUL_EVENTS_TOTAL;
 
-// processor processor_parse_apsara_native/processor_parse_timestamp_native cunstom metrics
+/**********************************************************
+*   processor_parse_apsara_native
+*   processor_parse_timestamp_native
+**********************************************************/
 extern const std::string METRIC_PLUGIN_HISTORY_FAILURE_TOTAL;
 
-// processor  processor_split_multiline_log_string_native cunstom metrics
+/**********************************************************
+*   processor_split_multiline_log_string_native
+**********************************************************/
 extern const std::string METRIC_PLUGIN_SPLIT_MULTILINE_LOG_MATCHED_RECORDS_TOTAL;
 extern const std::string METRIC_PLUGIN_SPLIT_MULTILINE_LOG_MATCHED_LINES_TOTAL;
 extern const std::string METRIC_PLUGIN_SPLIT_MULTILINE_LOG_UNMATCHED_LINES_TOTAL;
 
-// processor processor_desensitize cunstom metrics
-extern const std::string METRIC_PLUGIN_DESENSITIZE_RECORDS_TOTAL;
-
-// processor processor_merge_multiline_log_native cunstom metrics
+/**********************************************************
+*   processor_merge_multiline_log_native
+**********************************************************/
 extern const std::string METRIC_PLUGIN_MERGE_MULTILINE_LOG_MERGED_RECORDS_TOTAL;
 extern const std::string METRIC_PLUGIN_MERGE_MULTILINE_LOG_UNMATCHED_RECORDS_TOTAL;
 
-// processor processor_parse_container_log_native cunstom metrics
-extern const std::string METRIC_PLUGIN_PARSE_STDOUT_TOTAL;
+/**********************************************************
+*   processor_parse_container_log_native
+**********************************************************/
 extern const std::string METRIC_PLUGIN_PARSE_STDERR_TOTAL;
+extern const std::string METRIC_PLUGIN_PARSE_STDOUT_TOTAL;
 
-// flusher flusher_sls cunstom metrics
+/**********************************************************
+*   flusher_sls
+**********************************************************/
 extern const std::string METRIC_PLUGIN_NETWORK_ERROR_TOTAL;
 extern const std::string METRIC_PLUGIN_QUOTA_ERROR_TOTAL;
 extern const std::string METRIC_PLUGIN_RETRIES_TOTAL;
@@ -143,67 +154,91 @@ extern const std::string METRIC_PLUGIN_RETRIES_TOTAL;
 // component
 //////////////////////////////////////////////////////////////////////////
 
-// common metrics
+// label keys
+extern const std::string METRIC_LABEL_KEY_COMPONENT_NAME;
+extern const std::string METRIC_LABEL_KEY_FLUSHER_NODE_ID;
+extern const std::string METRIC_LABEL_KEY_EXACTLY_ONCE_FLAG;
+extern const std::string METRIC_LABEL_KEY_QUEUE_TYPE;
+
+// label values
+extern const std::string METRIC_LABEL_VALUE_COMPONENT_NAME_BATCHER;
+extern const std::string METRIC_LABEL_VALUE_COMPONENT_NAME_COMPRESSOR;
+extern const std::string METRIC_LABEL_VALUE_COMPONENT_NAME_PROCESS_QUEUE;
+extern const std::string METRIC_LABEL_VALUE_COMPONENT_NAME_ROUTER;
+extern const std::string METRIC_LABEL_VALUE_COMPONENT_NAME_SENDER_QUEUE;
+extern const std::string METRIC_LABEL_VALUE_COMPONENT_NAME_SERIALIZER;
+
+// metric keys
 extern const std::string METRIC_COMPONENT_IN_EVENTS_TOTAL;
-extern const std::string METRIC_COMPONENT_IN_ITEMS_TOTAL;
 extern const std::string METRIC_COMPONENT_IN_EVENT_GROUP_SIZE_BYTES;
+extern const std::string METRIC_COMPONENT_IN_ITEMS_TOTAL;
 extern const std::string METRIC_COMPONENT_IN_ITEM_SIZE_BYTES;
 extern const std::string METRIC_COMPONENT_OUT_EVENTS_TOTAL;
 extern const std::string METRIC_COMPONENT_OUT_ITEMS_TOTAL;
 extern const std::string METRIC_COMPONENT_OUT_ITEM_SIZE_BYTES;
 extern const std::string METRIC_COMPONENT_TOTAL_DELAY_MS;
+extern const std::string METRIC_COMPONENT_TOTAL_PROCESS_MS;
 extern const std::string METRIC_COMPONENT_DISCARDED_ITEMS_TOTAL;
 extern const std::string METRIC_COMPONENT_DISCARDED_ITEMS_SIZE_BYTES;
 
-// batcher metrics
+/**********************************************************
+*   batcher
+**********************************************************/
 extern const std::string METRIC_COMPONENT_BATCHER_EVENT_BATCHES_TOTAL;
 extern const std::string METRIC_COMPONENT_BATCHER_BUFFERED_GROUPS_TOTAL;
 extern const std::string METRIC_COMPONENT_BATCHER_BUFFERED_EVENTS_TOTAL;
 extern const std::string METRIC_COMPONENT_BATCHER_BUFFERED_SIZE_BYTES;
 
-// queue metrics
+/**********************************************************
+*   queue
+**********************************************************/
 extern const std::string METRIC_COMPONENT_QUEUE_SIZE_TOTAL;
 extern const std::string METRIC_COMPONENT_QUEUE_SIZE_BYTES;
 extern const std::string METRIC_COMPONENT_QUEUE_VALID_TO_PUSH_FLAG;
-extern const std::string METRIC_COMPONENT_QUEUE_EXTRA_BUFFER_SIZE;
+extern const std::string METRIC_COMPONENT_QUEUE_EXTRA_BUFFER_SIZE_TOTAL;
 extern const std::string METRIC_COMPONENT_QUEUE_EXTRA_BUFFER_SIZE_BYTES;
 extern const std::string METRIC_COMPONENT_QUEUE_DISCARDED_EVENTS_TOTAL;
-
-//////////////////////////////////////////////////////////////////////////
-// pipeline
-//////////////////////////////////////////////////////////////////////////
-
-extern const std::string METRIC_PIPELINE_START_TIME;
-extern const std::string METRIC_PIPELINE_PROCESSORS_IN_EVENTS_TOTAL;
-extern const std::string METRIC_PIPELINE_PROCESSORS_IN_EVENT_GROUPS_TOTAL;
-extern const std::string METRIC_PIPELINE_PROCESSORS_IN_EVENT_GROUP_SIZE_BYTES;
-extern const std::string METRIC_PIPELINE_PROCESSORS_TOTAL_DELAY_MS;
 
 //////////////////////////////////////////////////////////////////////////
 // runner
 //////////////////////////////////////////////////////////////////////////
 
-// common metrics
+// label keys
+extern const std::string METRIC_LABEL_KEY_RUNNER_NAME;
+
+// label values
+extern const std::string METRIC_LABEL_VALUE_RUNNER_NAME_FILE_SERVER;
+extern const std::string METRIC_LABEL_VALUE_RUNNER_NAME_FLUSHER;
+extern const std::string METRIC_LABEL_VALUE_RUNNER_NAME_HTTP_SINK;
+extern const std::string METRIC_LABEL_VALUE_RUNNER_NAME_PROCESSOR;
+
+// metric keys
 extern const std::string METRIC_RUNNER_IN_EVENTS_TOTAL;
 extern const std::string METRIC_RUNNER_IN_EVENT_GROUPS_TOTAL;
-extern const std::string METRIC_RUNNER_IN_ITEMS_TOTAL;
 extern const std::string METRIC_RUNNER_IN_EVENT_GROUP_SIZE_BYTES;
+extern const std::string METRIC_RUNNER_IN_ITEMS_TOTAL;
 extern const std::string METRIC_RUNNER_IN_ITEM_SIZE_BYTES;
+extern const std::string METRIC_RUNNER_LAST_RUN_TIME;
 extern const std::string METRIC_RUNNER_OUT_ITEMS_TOTAL;
 extern const std::string METRIC_RUNNER_TOTAL_DELAY_MS;
-extern const std::string METRIC_RUNNER_LAST_RUN_TIME;
 
-// http sink metrics
+/**********************************************************
+*   http sink
+**********************************************************/
 extern const std::string METRIC_RUNNER_HTTP_SINK_OUT_SUCCESSFUL_ITEMS_TOTAL;
 extern const std::string METRIC_RUNNER_HTTP_SINK_OUT_FAILED_ITEMS_TOTAL;
 extern const std::string METRIC_RUNNER_HTTP_SINK_SENDING_ITEMS_TOTAL;
 extern const std::string METRIC_RUNNER_HTTP_SINK_SEND_CONCURRENCY;
 
-// flusher runner metrics
+/**********************************************************
+*   flusher runner
+**********************************************************/
 extern const std::string METRIC_RUNNER_FLUSHER_IN_ITEM_RAW_SIZE_BYTES;
 extern const std::string METRIC_RUNNER_FLUSHER_WAITING_ITEMS_TOTAL;
 
-// file server metrics
+/**********************************************************
+*   file server
+**********************************************************/
 extern const std::string METRIC_RUNNER_FILE_WATCHED_DIRS_TOTAL;
 extern const std::string METRIC_RUNNER_FILE_ACTIVE_READERS_TOTAL;
 extern const std::string METRIC_RUNNER_FILE_ENABLE_FILE_INCLUDED_BY_MULTI_CONFIGS_FLAG;

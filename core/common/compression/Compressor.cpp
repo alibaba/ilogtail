@@ -29,7 +29,7 @@ void Compressor::SetMetricRecordRef(MetricLabels&& labels, DynamicMetricLabels&&
     mInItemSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_IN_ITEM_SIZE_BYTES);
     mOutItemsTotal = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_OUT_ITEMS_TOTAL);
     mOutItemSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_OUT_ITEM_SIZE_BYTES);
-    mTotalDelayMs = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_TOTAL_DELAY_MS);
+    mTotalProcessMs = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_TOTAL_PROCESS_MS);
     mDiscardedItemsTotal = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_DISCARDED_ITEMS_TOTAL);
     mDiscardedItemSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_DISCARDED_ITEMS_SIZE_BYTES);
 }
@@ -44,7 +44,7 @@ bool Compressor::DoCompress(const string& input, string& output, string& errorMs
     auto res = Compress(input, output, errorMsg);
 
     if (mMetricsRecordRef != nullptr) {
-        mTotalDelayMs->Add(chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - before).count());
+        mTotalProcessMs->Add(chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - before).count());
         if (res) {
             mOutItemsTotal->Add(1);
             mOutItemSizeBytes->Add(output.size());

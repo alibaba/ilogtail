@@ -46,7 +46,7 @@ protected:
     CounterPtr mOutItemSizeBytes;
     CounterPtr mDiscardedItemsTotal;
     CounterPtr mDiscardedItemSizeBytes;
-    CounterPtr mTotalDelayMs;
+    CounterPtr mTotalProcessMs;
 
 private:
     virtual bool Compress(const std::string& input, std::string& output, std::string& errorMsg) = 0;

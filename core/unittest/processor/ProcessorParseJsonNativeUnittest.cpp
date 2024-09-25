@@ -620,17 +620,9 @@ void ProcessorParseJsonNativeUnittest::TestProcessEventKeepUnmatch() {
     APSARA_TEST_EQUAL_FATAL(count, processor.GetContext().GetProcessProfile().parseFailures);
 
     APSARA_TEST_EQUAL_FATAL(uint64_t(count), processorInstance.mInEventsTotal->GetValue());
-    std::string expectValue
-        = "{\"url\": \"POST /PutData?Category=YunOsAccountOpLog HTTP/1.1\",\"time\": \"07/Jul/2022:10:30:28\"";
-    APSARA_TEST_EQUAL_FATAL((expectValue.length()) * count, processor.mInBufferSizeBytes->GetValue());
     APSARA_TEST_EQUAL_FATAL(uint64_t(count), processorInstance.mOutEventsTotal->GetValue());
-    expectValue = "rawLog{\"url\": \"POST /PutData?Category=YunOsAccountOpLog HTTP/1.1\",\"time\": "
-                  "\"07/Jul/2022:10:30:28\"";
-    APSARA_TEST_EQUAL_FATAL(uint64_t(expectValue.length() * count), processor.mOutBufferSizeBytes->GetValue());
-
-    APSARA_TEST_EQUAL_FATAL(uint64_t(0), processor.mDiscardEventsTotal->GetValue());
-
-    APSARA_TEST_EQUAL_FATAL(uint64_t(count), processor.mErrorTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(uint64_t(0), processor.mDiscardedEventsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(uint64_t(count), processor.mOutFailedEventsTotal->GetValue());
 
     // judge result
     std::string expectJson = R"({
@@ -694,15 +686,12 @@ void ProcessorParseJsonNativeUnittest::TestProcessEventDiscardUnmatch() {
     APSARA_TEST_EQUAL_FATAL(count, processor.GetContext().GetProcessProfile().parseFailures);
 
     APSARA_TEST_EQUAL_FATAL(uint64_t(count), processorInstance.mInEventsTotal->GetValue());
-    std::string expectValue
-        = "{\"url\": \"POST /PutData?Category=YunOsAccountOpLog HTTP/1.1\",\"time\": \"07/Jul/2022:10:30:28\"";
-    APSARA_TEST_EQUAL_FATAL((expectValue.length()) * count, processor.mInBufferSizeBytes->GetValue());
     // discard unmatch, so output is 0
     APSARA_TEST_EQUAL_FATAL(uint64_t(0), processorInstance.mOutEventsTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(uint64_t(0), processor.mOutBufferSizeBytes->GetValue());
-    APSARA_TEST_EQUAL_FATAL(uint64_t(count), processor.mDiscardEventsTotal->GetValue());
-
-    APSARA_TEST_EQUAL_FATAL(uint64_t(count), processor.mErrorTotal->GetValue());
+    // event group size is not 0
+    APSARA_TEST_NOT_EQUAL_FATAL(uint64_t(0), processorInstance.mOutEventGroupSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL(uint64_t(count), processor.mDiscardedEventsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(uint64_t(count), processor.mOutFailedEventsTotal->GetValue());
 
     std::string outJson = eventGroupList[0].ToJsonString();
     APSARA_TEST_STREQ_FATAL("null", CompactJson(outJson).c_str());

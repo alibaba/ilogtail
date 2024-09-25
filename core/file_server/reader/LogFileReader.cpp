@@ -213,10 +213,11 @@ void LogFileReader::SetMetrics() {
         return;
     }
 
-    mOutBufferSizeBytesCounter = mMetricsRecordRef->GetCounter(METRIC_PLUGIN_OUT_BUFFER_SIZE_BYTES);
-    mOutBufferTotalCounter = mMetricsRecordRef->GetCounter(METRIC_PLUGIN_OUT_BUFFER_TOTAL);
-    mReadFileSizeBytesGauge = mMetricsRecordRef->GetIntGauge(METRIC_PLUGIN_READ_FILE_SIZE_BYTES);
-    mReadFileOffsetBytesGauge = mMetricsRecordRef->GetIntGauge(METRIC_PLUGIN_READ_FILE_OFFSET_BYTES);
+    mOutEventsTotal = mMetricsRecordRef->GetCounter(METRIC_PLUGIN_OUT_EVENTS_TOTAL);
+    mOutEventGroupsTotal = mMetricsRecordRef->GetCounter(METRIC_PLUGIN_OUT_EVENT_GROUPS_TOTAL);
+    mOutEventGroupSizeBytes = mMetricsRecordRef->GetCounter(METRIC_PLUGIN_OUT_EVENT_GROUP_SIZE_BYTES);
+    mSourceSizeBytes = mMetricsRecordRef->GetIntGauge(METRIC_PLUGIN_SOURCE_SIZE_BYTES);
+    mSourceReadOffsetBytes = mMetricsRecordRef->GetIntGauge(METRIC_PLUGIN_SOURCE_READ_OFFSET_BYTES);
     mMetricInited = true;
 }
 
@@ -2133,10 +2134,11 @@ std::unique_ptr<Event> LogFileReader::CreateFlushTimeoutEvent() {
 
 void LogFileReader::ReportMetrics(uint64_t readSize) {
     if (mMetricInited) {
-        mOutBufferTotalCounter->Add(1);
-        mOutBufferSizeBytesCounter->Add(readSize);
-        mReadFileOffsetBytesGauge->Set(GetLastFilePos());
-        mReadFileSizeBytesGauge->Set(GetFileSize());
+        mOutEventsTotal->Add(1);
+        mOutEventGroupsTotal->Add(1);
+        mOutEventGroupSizeBytes->Add(readSize);
+        mSourceReadOffsetBytes->Set(GetLastFilePos());
+        mSourceSizeBytes->Set(GetFileSize());
     }
 }
 

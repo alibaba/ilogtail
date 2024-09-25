@@ -102,7 +102,7 @@ public:
         std::vector<std::pair<std::string, std::string>> labels{
             {METRIC_LABEL_PROJECT, ctx.GetProjectName()},
             {METRIC_LABEL_PIPELINE_NAME, ctx.GetConfigName()},
-            {METRIC_LABEL_KEY_COMPONENT_NAME, "batcher"},
+            {METRIC_LABEL_KEY_COMPONENT_NAME, METRIC_LABEL_VALUE_COMPONENT_NAME_BATCHER},
             {METRIC_LABEL_KEY_FLUSHER_NODE_ID, flusher->GetNodeID()}};
         if (enableGroupBatch) {
             labels.emplace_back("enable_group_batch", "true");

@@ -789,8 +789,8 @@ void ProcessorParseApsaraNativeUnittest::TestProcessWholeLinePart() {
     APSARA_TEST_EQUAL_FATAL(uint64_t(3), processorInstance.mInEventsTotal->GetValue());
     // only timestamp failed, so output is 2
     APSARA_TEST_EQUAL_FATAL(uint64_t(2), processorInstance.mOutEventsTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(uint64_t(1), processor.mDiscardEventsTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(uint64_t(1), processor.mErrorTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(uint64_t(1), processor.mDiscardedEventsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(uint64_t(1), processor.mOutFailedEventsTotal->GetValue());
 }
 
 void ProcessorParseApsaraNativeUnittest::TestProcessKeyOverwritten() {
@@ -1082,15 +1082,9 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventKeepUnmatch() {
     int count = 5;
     APSARA_TEST_EQUAL_FATAL(count, processor.GetContext().GetProcessProfile().parseFailures);
     APSARA_TEST_EQUAL_FATAL(uint64_t(count), processorInstance.mInEventsTotal->GetValue());
-    std::string expectValue = "value1";
-    APSARA_TEST_EQUAL_FATAL((expectValue.length()) * count, processor.mInBufferSizeBytes->GetValue());
     APSARA_TEST_EQUAL_FATAL(uint64_t(count), processorInstance.mOutEventsTotal->GetValue());
-    expectValue = "rawLogvalue1";
-    APSARA_TEST_EQUAL_FATAL((expectValue.length()) * count, processor.mOutBufferSizeBytes->GetValue());
-
-    APSARA_TEST_EQUAL_FATAL(uint64_t(0), processor.mDiscardEventsTotal->GetValue());
-
-    APSARA_TEST_EQUAL_FATAL(uint64_t(count), processor.mErrorTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(uint64_t(0), processor.mDiscardedEventsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(uint64_t(count), processor.mOutFailedEventsTotal->GetValue());
 }
 
 void ProcessorParseApsaraNativeUnittest::TestProcessEventDiscardUnmatch() {
@@ -1165,13 +1159,12 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventDiscardUnmatch() {
     int count = 5;
     APSARA_TEST_EQUAL_FATAL(count, processor.GetContext().GetProcessProfile().parseFailures);
     APSARA_TEST_EQUAL_FATAL(uint64_t(count), processorInstance.mInEventsTotal->GetValue());
-    std::string expectValue = "value1";
-    APSARA_TEST_EQUAL_FATAL((expectValue.length()) * count, processor.mInBufferSizeBytes->GetValue());
     // discard unmatch, so output is 0
     APSARA_TEST_EQUAL_FATAL(uint64_t(0), processorInstance.mOutEventsTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(uint64_t(0), processor.mOutBufferSizeBytes->GetValue());
-    APSARA_TEST_EQUAL_FATAL(uint64_t(count), processor.mDiscardEventsTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(uint64_t(count), processor.mErrorTotal->GetValue());
+    // event group size is not 0
+    APSARA_TEST_NOT_EQUAL_FATAL(uint64_t(0), processorInstance.mOutEventGroupSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL(uint64_t(count), processor.mDiscardedEventsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(uint64_t(count), processor.mOutFailedEventsTotal->GetValue());
 }
 
 void ProcessorParseApsaraNativeUnittest::TestProcessEventMicrosecondUnmatch() {
@@ -1285,8 +1278,8 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventMicrosecondUnmatch() {
     APSARA_TEST_EQUAL_FATAL(1, processor.GetContext().GetProcessProfile().parseFailures);
     APSARA_TEST_EQUAL_FATAL(uint64_t(4), processorInstance.mInEventsTotal->GetValue());
     APSARA_TEST_EQUAL_FATAL(uint64_t(4), processorInstance.mOutEventsTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(uint64_t(0), processor.mDiscardEventsTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(uint64_t(1), processor.mErrorTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(uint64_t(0), processor.mDiscardedEventsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(uint64_t(1), processor.mOutFailedEventsTotal->GetValue());
 }
 
 } // namespace logtail

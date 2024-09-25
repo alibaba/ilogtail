@@ -26,13 +26,15 @@ bool FlusherInstance::Init(const Json::Value& config, PipelineContext& context, 
     }
 
     mInEventsTotal = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_IN_EVENTS_TOTAL);
-    mInGroupDataSizeBytes = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_IN_EVENT_GROUPS_SIZE_BYTES);
+    mInEventGroupsTotal = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_IN_EVENT_GROUPS_TOTAL);
+    mInEventGroupSizeBytes = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_IN_EVENT_GROUP_SIZE_BYTES);
     return true;
 }
 
 bool FlusherInstance::Send(PipelineEventGroup&& g) {
     mInEventsTotal->Add(g.GetEvents().size());
-    mInGroupDataSizeBytes->Add(g.DataSize());
+    mInEventGroupsTotal->Add(1);
+    mInEventGroupSizeBytes->Add(g.DataSize());
     return mPlugin->Send(std::move(g));
 }
 

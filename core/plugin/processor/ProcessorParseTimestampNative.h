@@ -55,10 +55,11 @@ private:
 
     int* mParseTimeFailures = nullptr;
     int* mHistoryFailures = nullptr;
-    CounterPtr mInBufferSizeBytes;
-    CounterPtr mOutBufferSizeBytes;
-    CounterPtr mDiscardEventsTotal;
-    CounterPtr mErrorTotal;
+
+    CounterPtr mDiscardedEventsTotal;
+    CounterPtr mOutFailedEventsTotal;
+    CounterPtr mOutKeyNotFoundEventsTotal;
+    CounterPtr mOutSuccessfulEventsTotal;
     CounterPtr mHistoryFailureTotal;
     
 #ifdef APSARA_UNIT_TEST_MAIN

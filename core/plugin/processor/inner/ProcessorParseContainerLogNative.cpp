@@ -115,9 +115,7 @@ bool ProcessorParseContainerLogNative::Init(const Json::Value& config) {
                               mContext->GetRegion());
     }
 
-    mInBufferSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_IN_BUFFER_SIZE_BYTES);
-    mOutBufferSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_OUT_BUFFER_SIZE_BYTES);
-    mErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_ERROR_TOTAL);
+    mOutFailedEventsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_OUT_FAILED_EVENTS_TOTAL);
     mParseStdoutTotal = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_PARSE_STDOUT_TOTAL);
     mParseStderrTotal = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_PARSE_STDERR_TOTAL);
 
@@ -152,7 +150,6 @@ bool ProcessorParseContainerLogNative::ProcessEvent(StringView containerType,
     if (!sourceEvent.HasContent(mSourceKey)) {
         return true;
     }
-    mInBufferSizeBytes->Add(mSourceKey.size() + sourceEvent.GetContent(mSourceKey).size());
 
     std::string errorMsg;
     bool shouldKeepEvent = true;
@@ -162,7 +159,7 @@ bool ProcessorParseContainerLogNative::ProcessEvent(StringView containerType,
         shouldKeepEvent = ParseDockerJsonLogLine(sourceEvent, errorMsg);
     }
     if (!errorMsg.empty()) {
-        mErrorTotal->Add(1);
+        mOutFailedEventsTotal->Add(1);
     }
 
     if (!mIgnoreParseWarning && !errorMsg.empty() && LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
@@ -513,18 +510,15 @@ bool ProcessorParseContainerLogNative::ParseDockerJsonLogLine(LogEvent& sourceEv
 
     // time
     sourceEvent.SetContent(containerTimeKey, timeValue);
-    mOutBufferSizeBytes->Add(containerTimeKey.size() + timeValue.size());
 
     // source
     sourceEvent.SetContent(containerSourceKey, sourceValue);
-    mOutBufferSizeBytes->Add(containerSourceKey.size() + sourceValue.size());
 
     // content
     if (!content.empty() && content.back() == '\n') {
         content = StringView(content.data(), content.size() - 1);
     }
     sourceEvent.SetContentNoCopy(containerLogKey, content);
-    mOutBufferSizeBytes->Add(containerLogKey.size() + content.size());
 
     return true;
 }
@@ -532,15 +526,11 @@ bool ProcessorParseContainerLogNative::ParseDockerJsonLogLine(LogEvent& sourceEv
 void ProcessorParseContainerLogNative::ResetContainerdTextLog(
     StringView time, StringView source, StringView content, bool isPartialLog, LogEvent& sourceEvent) {
     sourceEvent.SetContentNoCopy(containerTimeKey, time);
-    mOutBufferSizeBytes->Add(containerTimeKey.size() + time.size());
     sourceEvent.SetContentNoCopy(containerSourceKey, source);
-    mOutBufferSizeBytes->Add(containerSourceKey.size() + source.size());
     if (isPartialLog) {
         sourceEvent.SetContentNoCopy(ProcessorMergeMultilineLogNative::PartLogFlag, StringView());
-        mOutBufferSizeBytes->Add(ProcessorMergeMultilineLogNative::PartLogFlag.size());
     }
     sourceEvent.SetContentNoCopy(containerLogKey, content);
-    mOutBufferSizeBytes->Add(containerLogKey.size() + content.size());
 }
 
 bool ProcessorParseContainerLogNative::IsSupportedEvent(const PipelineEventPtr& e) const {

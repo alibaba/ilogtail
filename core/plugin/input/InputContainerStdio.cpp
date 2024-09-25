@@ -161,10 +161,11 @@ bool InputContainerStdio::Init(const Json::Value& config, Json::Value& optionalG
 
     // init PluginMetricManager
     static const std::unordered_map<std::string, MetricType> inputFileMetricKeys = {
-        {METRIC_PLUGIN_OUT_BUFFER_SIZE_BYTES, MetricType::METRIC_TYPE_COUNTER},
-        {METRIC_PLUGIN_OUT_BUFFER_TOTAL, MetricType::METRIC_TYPE_COUNTER},
-        {METRIC_PLUGIN_READ_FILE_SIZE_BYTES, MetricType::METRIC_TYPE_INT_GAUGE},
-        {METRIC_PLUGIN_READ_FILE_OFFSET_BYTES, MetricType::METRIC_TYPE_INT_GAUGE},
+        {METRIC_PLUGIN_OUT_EVENTS_TOTAL, MetricType::METRIC_TYPE_COUNTER},
+        {METRIC_PLUGIN_OUT_EVENT_GROUPS_TOTAL, MetricType::METRIC_TYPE_COUNTER},
+        {METRIC_PLUGIN_OUT_EVENT_GROUP_SIZE_BYTES, MetricType::METRIC_TYPE_COUNTER},
+        {METRIC_PLUGIN_SOURCE_SIZE_BYTES, MetricType::METRIC_TYPE_INT_GAUGE},
+        {METRIC_PLUGIN_SOURCE_READ_OFFSET_BYTES, MetricType::METRIC_TYPE_INT_GAUGE},
     };
     mPluginMetricManager
         = std::make_shared<PluginMetricManager>(GetMetricsRecordRef()->GetLabels(), inputFileMetricKeys);
