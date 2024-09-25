@@ -66,7 +66,7 @@ void Timer::Run() {
                     mCV.wait_for(threadLock, timeout);
                     break;
                 } else {
-                    auto e = std::move(const_cast<std::unique_ptr<TimerEvent>&>(mQueue.top()));
+                    auto e = std::move(const_cast<unique_ptr<TimerEvent>&>(mQueue.top()));
                     mQueue.pop();
                     queueLock.unlock();
                     if (!e->IsValid()) {
