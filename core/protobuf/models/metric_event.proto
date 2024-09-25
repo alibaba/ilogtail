@@ -1,0 +1,15 @@
+syntax = "proto3";
+package logtail.models;
+
+message UntypedSingleValue {
+    double Value = 1;
+}
+
+message MetricEvent {  
+    uint64 Timestamp = 1;
+    string Name = 2;  
+    oneof Value {
+        UntypedSingleValue UntypedSingleValue = 3;
+    }
+    map<string, string> Tags = 4;
+}

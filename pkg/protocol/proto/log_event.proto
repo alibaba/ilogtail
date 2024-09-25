@@ -1,0 +1,14 @@
+syntax = "proto3";
+package protocol;
+
+message LogEvent {  
+    uint64 Timestamp = 1;
+    message Content {      
+        bytes Key = 1;      
+        bytes Value = 2;  
+    }    
+    repeated Content Contents= 2;  
+    string Level = 3;
+    uint64 FileOffset = 4; 
+    uint64 RawSize = 5;
+}
