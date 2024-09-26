@@ -253,8 +253,7 @@ void AppConfig::LoadIncludeConfig(Json::Value& confJson) {
 }
 
 void AppConfig::LoadAppConfig(const std::string& ilogtailConfigFile) {
-    std::string processExecutionDir = GetProcessExecutionDir();
-    mDockerFilePathConfig = processExecutionDir + STRING_FLAG(ilogtail_docker_file_path_config);
+    mDockerFilePathConfig = STRING_FLAG(loongcollector_data_dir) + STRING_FLAG(ilogtail_docker_file_path_config);
 
     Json::Value confJson(Json::objectValue);
     std::string newSysConfDir;
