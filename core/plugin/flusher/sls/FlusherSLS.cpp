@@ -183,6 +183,13 @@ void FlusherSLS::ClearInvalidConcurrencyLimiters() {
             ++iter;
         }
     }
+    for (auto iter = sLogstoreConcurrencyLimiterMap.begin(); iter != sLogstoreConcurrencyLimiterMap.end();) {
+        if (iter->second.expired()) {
+            iter = sLogstoreConcurrencyLimiterMap.erase(iter);
+        } else {
+            ++iter;
+        }
+    }
 }
 
 mutex FlusherSLS::sDefaultRegionLock;
