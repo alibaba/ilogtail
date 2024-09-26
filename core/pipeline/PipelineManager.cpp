@@ -49,15 +49,15 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
 #ifndef APSARA_UNIT_TEST_MAIN
     // 过渡使用
     static bool isFileServerStarted = false;
-    bool isInputFileChanged = false;
+    bool isFileServerInputChanged = false;
     for (const auto& name : diff.mRemoved) {
-        isInputFileChanged = CheckIfFileServerUpdated(mPipelineNameEntityMap[name]->GetConfig()["inputs"][0]);
+        isFileServerInputChanged = CheckIfFileServerUpdated(mPipelineNameEntityMap[name]->GetConfig()["inputs"][0]);
     }
     for (const auto& config : diff.mModified) {
-        isInputFileChanged = CheckIfFileServerUpdated(*config.mInputs[0]);
+        isFileServerInputChanged = CheckIfFileServerUpdated(*config.mInputs[0]);
     }
     for (const auto& config : diff.mAdded) {
-        isInputFileChanged = CheckIfFileServerUpdated(*config.mInputs[0]);
+        isFileServerInputChanged = CheckIfFileServerUpdated(*config.mInputs[0]);
     }
 
 #if defined(__ENTERPRISE__) && defined(__linux__) && !defined(__ANDROID__)
@@ -65,7 +65,7 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
         ShennongManager::GetInstance()->Pause();
     }
 #endif
-    if (isFileServerStarted && isInputFileChanged) {
+    if (isFileServerStarted && isFileServerInputChanged) {
         FileServer::GetInstance()->Pause();
     }
 #endif
@@ -133,7 +133,7 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
     // 在Flusher改造完成前，先不执行如下步骤，不会造成太大影响
     // Sender::CleanUnusedAk();
 
-    if (isInputFileChanged) {
+    if (isFileServerInputChanged) {
         if (isFileServerStarted) {
             FileServer::GetInstance()->Resume();
         } else {
@@ -179,11 +179,6 @@ string PipelineManager::GetPluginStatistics() const {
 
 void PipelineManager::StopAllPipelines() {
     LOG_INFO(sLogger, ("stop all pipelines", "starts"));
-#if defined(__ENTERPRISE__) && defined(__linux__) && !defined(__ANDROID__)
-    if (AppConfig::GetInstance()->GetOpenStreamLog()) {
-        StreamLogManager::GetInstance()->Shutdown();
-    }
-#endif
     for (auto& item : mInputRunners) {
         if (item->HasRegisteredPlugins()) {
             item->Stop();
@@ -192,7 +187,6 @@ void PipelineManager::StopAllPipelines() {
     FileServer::GetInstance()->Stop();
 
     LogtailPlugin::GetInstance()->StopAll(true);
-    LogtailPlugin::GetInstance()->StopBuiltInModules();
 
     ProcessorRunner::GetInstance()->Stop();
 

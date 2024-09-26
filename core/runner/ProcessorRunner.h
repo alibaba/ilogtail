@@ -59,8 +59,11 @@ private:
     std::vector<std::future<void>> mThreadRes;
     std::atomic_bool mIsFlush = false;
 
-    IntGaugePtr mGlobalProcessQueueFullTotal;
-    IntGaugePtr mGlobalProcessQueueTotal;
+    thread_local static MetricsRecordRef sMetricsRecordRef;
+    thread_local static CounterPtr sInGroupsCnt;
+    thread_local static CounterPtr sInEventsCnt;
+    thread_local static CounterPtr sInGroupDataSizeBytes;
+    thread_local static IntGaugePtr sLastRunTime;
 };
 
 } // namespace logtail

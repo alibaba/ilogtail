@@ -41,6 +41,12 @@ DEFINE_FLAG_INT32(default_flush_merged_buffer_interval, "default flush merged bu
 
 namespace logtail {
 
+thread_local MetricsRecordRef ProcessorRunner::sMetricsRecordRef;
+thread_local CounterPtr ProcessorRunner::sInGroupsCnt;
+thread_local CounterPtr ProcessorRunner::sInEventsCnt;
+thread_local CounterPtr ProcessorRunner::sInGroupDataSizeBytes;
+thread_local IntGaugePtr ProcessorRunner::sLastRunTime;
+
 ProcessorRunner::ProcessorRunner()
     : mThreadCount(AppConfig::GetInstance()->GetProcessThreadCount()), mThreadRes(mThreadCount) {
 }
@@ -83,12 +89,16 @@ bool ProcessorRunner::PushQueue(QueueKey key, size_t inputIndex, PipelineEventGr
 
 void ProcessorRunner::Run(uint32_t threadNo) {
     LOG_INFO(sLogger, ("processor runner", "started")("threadNo", threadNo));
+
+    // thread local metrics should be initialized in each thread
+    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
+        sMetricsRecordRef, {{METRIC_LABEL_KEY_RUNNER_NAME, "processor_runner"}, {"thread_no", ToString(threadNo)}});
+    sInGroupsCnt = sMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_EVENT_GROUPS_CNT);
+    sInEventsCnt = sMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_EVENTS_CNT);
+    sInGroupDataSizeBytes = sMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_EVENT_GROUP_SIZE_BYTES);
+    sLastRunTime = sMetricsRecordRef.CreateIntGauge(METRIC_RUNNER_LAST_RUN_TIME);
+
     static int32_t lastMergeTime = 0;
-    static atomic_int s_processCount{0};
-    static atomic_long s_processBytes{0};
-    static atomic_int s_processLines{0};
-    // only thread 0 update metric
-    int32_t lastUpdateMetricTime = time(NULL);
     while (true) {
         int32_t curTime = time(NULL);
         if (threadNo == 0 && curTime - lastMergeTime >= INT32_FLAG(default_flush_merged_buffer_interval)) {
@@ -96,34 +106,8 @@ void ProcessorRunner::Run(uint32_t threadNo) {
             lastMergeTime = curTime;
         }
 
-        if (threadNo == 0 && curTime - lastUpdateMetricTime >= 40) {
-            static auto sMonitor = LogtailMonitor::GetInstance();
-
-            // atomic counter will be negative if process speed is too fast.
-            sMonitor->UpdateMetric("process_tps", 1.0 * s_processCount / (curTime - lastUpdateMetricTime));
-            sMonitor->UpdateMetric("process_bytes_ps", 1.0 * s_processBytes / (curTime - lastUpdateMetricTime));
-            sMonitor->UpdateMetric("process_lines_ps", 1.0 * s_processLines / (curTime - lastUpdateMetricTime));
-            lastUpdateMetricTime = curTime;
-            s_processCount = 0;
-            s_processBytes = 0;
-            s_processLines = 0;
-
-            // update process queue status
-            uint32_t InvalidProcessQueueTotal = ProcessQueueManager::GetInstance()->GetInvalidCnt();
-            sMonitor->UpdateMetric("process_queue_full", InvalidProcessQueueTotal);
-            mGlobalProcessQueueFullTotal->Set(InvalidProcessQueueTotal);
-            uint32_t ProcessQueueTotal = ProcessQueueManager::GetInstance()->GetCnt();
-            sMonitor->UpdateMetric("process_queue_total", ProcessQueueTotal);
-            mGlobalProcessQueueTotal->Set(ProcessQueueTotal);
-            if (ExactlyOnceQueueManager::GetInstance()->GetProcessQueueCnt() > 0) {
-                sMonitor->UpdateMetric("eo_process_queue_full",
-                                       ExactlyOnceQueueManager::GetInstance()->GetInvalidProcessQueueCnt());
-                sMonitor->UpdateMetric("eo_process_queue_total",
-                                       ExactlyOnceQueueManager::GetInstance()->GetProcessQueueCnt());
-            }
-        }
-
         {
+            sLastRunTime->Set(curTime);
             unique_ptr<ProcessQueueItem> item;
             string configName;
             if (!ProcessQueueManager::GetInstance()->PopItem(threadNo, item, configName)) {
@@ -133,6 +117,10 @@ void ProcessorRunner::Run(uint32_t threadNo) {
                 ProcessQueueManager::GetInstance()->Wait(100);
                 continue;
             }
+
+            sInEventsCnt->Add(item->mEventGroup.GetEvents().size());
+            sInGroupsCnt->Add(1);
+            sInGroupDataSizeBytes->Add(item->mEventGroup.DataSize());
 
             shared_ptr<Pipeline> pipeline = item->mPipeline;
             if (!pipeline) {
@@ -171,12 +159,6 @@ void ProcessorRunner::Run(uint32_t threadNo) {
                                                             pipeline->GetContext().GetProjectName(),
                                                             pipeline->GetContext().GetLogstoreName(),
                                                             pipeline->GetContext().GetRegion());
-            }
-
-            s_processCount++;
-            if (isLog) {
-                s_processBytes += profile.readBytes;
-                s_processLines += profile.splitLines;
             }
 
             if (pipeline->IsFlushingThroughGoPipeline()) {

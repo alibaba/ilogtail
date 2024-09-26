@@ -158,12 +158,11 @@ void ExactlyOnceSenderQueue::SetPipelineForItems(const std::shared_ptr<Pipeline>
         return;
     }
     for (size_t index = 0; index < mCapacity; ++index) {
-        SenderQueueItem* item = mQueue[index].get();
-        if (item == nullptr) {
+        if (!mQueue[index]) {
             continue;
         }
-        if (!item->mPipeline) {
-            item->mPipeline = p;
+        if (!mQueue[index]->mPipeline) {
+            mQueue[index]->mPipeline = p;
         }
     }
     for (auto& item : mExtraBuffer) {

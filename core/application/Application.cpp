@@ -376,6 +376,7 @@ void Application::Exit() {
     LogtailMonitor::GetInstance()->Stop();
     LoongCollectorMonitor::GetInstance()->Stop();
     LogtailAlarm::GetInstance()->Stop();
+    LogtailPlugin::GetInstance()->StopBuiltInModules();
     // from now on, alarm should not be used.
 
     FlusherRunner::GetInstance()->Stop();

@@ -147,12 +147,12 @@ void SenderQueue::SetPipelineForItems(const std::shared_ptr<Pipeline>& p) const 
         return;
     }
     for (auto index = mRead; index < mWrite; ++index) {
-        SenderQueueItem* item = mQueue[index % mCapacity].get();
-        if (item == nullptr) {
+        auto realIndex = index % mCapacity;
+        if (!mQueue[realIndex]) {
             continue;
         }
-        if (!item->mPipeline) {
-            item->mPipeline = p;
+        if (!mQueue[realIndex]->mPipeline) {
+            mQueue[realIndex]->mPipeline = p;
         }
     }
     for (auto& item : mExtraBuffer) {
