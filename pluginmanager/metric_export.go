@@ -17,7 +17,6 @@ func GetMetrics() []map[string]string {
 	metrics := make([]map[string]string, 0)
 	for _, config := range LogtailConfig {
 		metrics = append(metrics, config.Context.ExportMetricRecords()...)
-		metrics = append(metrics, config.Statistics.MetricRecord.ExportMetricRecords())
 	}
 	return metrics
 }
