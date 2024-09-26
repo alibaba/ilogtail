@@ -20,13 +20,16 @@
 #include <ctime>
 #include <mutex>
 
+
+using namespace std;
+
 namespace logtail {
 
 class ConcurrencyLimiter {
 public:
     ConcurrencyLimiter() {}
-    ConcurrencyLimiter(int maxCocurrency, int minCocurrency, int cocurrency, 
-        int maxRetryIntervalSeconds = 3600, int minRetryIntervalSeconds = 30, int retryIntervalSeconds = 60, 
+    ConcurrencyLimiter(uint32_t maxCocurrency, uint32_t minCocurrency, uint32_t cocurrency, 
+        uint32_t maxRetryIntervalSeconds = 3600, uint32_t minRetryIntervalSeconds = 30, uint32_t retryIntervalSeconds = 60, 
         double upRatio = 1.5, double downRatio = 0.5) : 
         mMaxCocurrency(maxCocurrency), mMinCocurrency(minCocurrency), mConcurrency(cocurrency),
         mMaxRetryIntervalSeconds(maxRetryIntervalSeconds), mMinRetryIntervalSeconds(minRetryIntervalSeconds), 
@@ -39,29 +42,43 @@ public:
     void OnSuccess();
     void OnFail(time_t curTime);
 
+    uint32_t GetLimit() const { 
+        lock_guard<mutex> lock(mConcurrencyMux);
+        return mConcurrency; 
+    }
+
+    uint32_t GetInterval() const { 
+        lock_guard<mutex> lock(mIntervalMux);
+        return mRetryIntervalSeconds; 
+    }
+
 #ifdef APSARA_UNIT_TEST_MAIN
-    void Reset() { mConcurrency.store(-1); }
-    void SetLimit(int limit) { mConcurrency.store(limit); }
-    int GetLimit() const { return mConcurrency.load(); }
-    int GetCount() const { return mInSendingCnt.load(); }
-    int GetInterval() const { return mRetryIntervalSeconds.load(); }
+    void SetLimit(int limit) { 
+        lock_guard<mutex> lock(mConcurrencyMux);
+        mConcurrency = limit;
+    }
+
+    void SetSendingCount(int count) {
+        mInSendingCnt.store(count);
+    }
+    int GetSendingCount() const { return mInSendingCnt.load(); }
 
 #endif
 
 private:
     std::atomic_int mInSendingCnt = 0;
 
-    int mMaxCocurrency = 0;
-    int mMinCocurrency = 0;
+    uint32_t mMaxCocurrency = 0;
+    uint32_t mMinCocurrency = 0;
 
     mutable std::mutex mConcurrencyMux;
-    std::atomic_int mConcurrency = 0;
+    uint32_t mConcurrency = 0;
 
-    int mMaxRetryIntervalSeconds = 0;
-    int mMinRetryIntervalSeconds = 0;
+    uint32_t mMaxRetryIntervalSeconds = 0;
+    uint32_t mMinRetryIntervalSeconds = 0;
 
     mutable std::mutex mIntervalMux;
-    std::atomic_int mRetryIntervalSeconds = 0;
+    uint32_t mRetryIntervalSeconds = 0;
 
     double mUpRatio = 0.0;
     double mDownRatio = 0.0;

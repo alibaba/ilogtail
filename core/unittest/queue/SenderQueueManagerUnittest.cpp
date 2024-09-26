@@ -62,7 +62,7 @@ protected:
         sManager->Clear();
         ExactlyOnceQueueManager::GetInstance()->Clear();
         QueueKeyManager::GetInstance()->Clear();
-        sConcurrencyLimiter->Reset();
+        sConcurrencyLimiter = make_shared<ConcurrencyLimiter>();
     }
 
 private:
@@ -221,10 +221,11 @@ void SenderQueueManagerUnittest::TestGetAllAvailableItems() {
     {
         // with limits, limited by concurrency limiter
         regionConcurrencyLimiter->SetLimit(3);
+        regionConcurrencyLimiter->SetSendingCount(2);
         vector<SenderQueueItem*> items;
         sManager->GetAllAvailableItems(items);
-        APSARA_TEST_EQUAL(3U, items.size());
-        APSARA_TEST_EQUAL(0, regionConcurrencyLimiter->GetLimit());
+        APSARA_TEST_EQUAL(1U, items.size());
+        APSARA_TEST_EQUAL(3U, regionConcurrencyLimiter->GetSendingCount());
     }
 }
 

@@ -16,19 +16,17 @@
 #include "app_config/AppConfig.h"
 #include "common/TimeUtil.h"
 
-using namespace std;
 
 namespace logtail {
-
 bool ConcurrencyLimiter::IsValidToPop() {
     if (mLastSendTime == 0) {
         mLastSendTime = time(nullptr);
     }
-    if (mConcurrency.load() > mInSendingCnt.load()) {
+    if (static_cast<int>(GetLimit()) > mInSendingCnt.load()) {
         return true;
     } else {
         time_t curTime = time(nullptr);
-        if (curTime -  mLastSendTime > mRetryIntervalSeconds) {
+        if (curTime -  mLastSendTime > GetInterval()) {
             mLastSendTime = curTime;
             return true;
         }
@@ -37,7 +35,7 @@ bool ConcurrencyLimiter::IsValidToPop() {
 }
 
 void ConcurrencyLimiter::PostPop() {
-    mInSendingCnt ++;
+    ++ mInSendingCnt;
 }
 
 void ConcurrencyLimiter::OnDone() {
@@ -48,14 +46,14 @@ void ConcurrencyLimiter::OnSuccess() {
     {
         lock_guard<mutex> lock(mConcurrencyMux);
         ++ mConcurrency;
-        if (mConcurrency.load() != mMaxCocurrency) {
-            mConcurrency = min(mMaxCocurrency, mConcurrency.load());
+        if (mConcurrency != mMaxCocurrency) {
+            mConcurrency = min(mMaxCocurrency, mConcurrency);
         }
     }
     {
         lock_guard<mutex> lock(mIntervalMux);
-        if (mRetryIntervalSeconds.load() != mMinRetryIntervalSeconds) {
-            mRetryIntervalSeconds = max(mMinRetryIntervalSeconds, static_cast<int>(mRetryIntervalSeconds.load() * mDownRatio));
+        if (mRetryIntervalSeconds != mMinRetryIntervalSeconds) {
+            mRetryIntervalSeconds = max(mMinRetryIntervalSeconds, static_cast<uint32_t>(mRetryIntervalSeconds * mDownRatio));
         }
     }
 }
@@ -63,14 +61,14 @@ void ConcurrencyLimiter::OnSuccess() {
 void ConcurrencyLimiter::OnFail(time_t curTime) {
     {
         lock_guard<mutex> lock(mConcurrencyMux);
-        if (mConcurrency.load() != mMinCocurrency) {
-            mConcurrency = max(mMinCocurrency, static_cast<int>(mConcurrency.load() * mDownRatio));
+        if (mConcurrency != mMinCocurrency) {
+            mConcurrency = max(mMinCocurrency, static_cast<uint32_t>(mConcurrency * mDownRatio));
         }
     }
     {
         lock_guard<mutex> lock(mIntervalMux);
-        if (mRetryIntervalSeconds.load() != mMaxRetryIntervalSeconds) {
-            mRetryIntervalSeconds = min(mMaxRetryIntervalSeconds, static_cast<int>(mRetryIntervalSeconds.load() * mUpRatio));
+        if (mRetryIntervalSeconds != mMaxRetryIntervalSeconds) {
+            mRetryIntervalSeconds = min(mMaxRetryIntervalSeconds, static_cast<uint32_t>(mRetryIntervalSeconds * mUpRatio));
         }
     }
 }
