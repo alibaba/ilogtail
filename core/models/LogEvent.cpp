@@ -78,6 +78,10 @@ void LogEvent::DelContent(StringView key) {
     }
 }
 
+StringView LogEvent::GetLevel() const {
+    return mLevel;
+}
+
 void LogEvent::SetLevel(const std::string& level) {
     SetLevelNoCopy(GetSourceBuffer()->CopyString(level));
 }

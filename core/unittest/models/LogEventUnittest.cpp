@@ -30,6 +30,7 @@ public:
     void TestMeta();
     void TestSize();
     void TestFromJsonToJson();
+    void TestLevel();
 
 protected:
     void SetUp() override {
@@ -200,6 +201,11 @@ void LogEventUnittest::TestFromJsonToJson() {
     }
     string outJson = mLogEvent->ToJsonString(true);
     APSARA_TEST_STREQ(CompactJson(inJson).c_str(), CompactJson(outJson).c_str());
+}
+
+void LogEventUnittest::TestLevel() {
+    mLogEvent->SetLevel("level");
+    APSARA_TEST_EQUAL("level", mLogEvent->GetLevel().to_string());
 }
 
 UNIT_TEST_CASE(LogEventUnittest, TestTimestampOp)
