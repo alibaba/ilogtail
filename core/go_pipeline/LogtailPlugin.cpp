@@ -16,6 +16,7 @@
 
 #include <json/json.h>
 
+#include "Flags.h"
 #include "app_config/AppConfig.h"
 #include "common/DynamicLibHelper.h"
 #include "common/HashUtil.h"
@@ -36,6 +37,7 @@ DEFINE_FLAG_BOOL(enable_sls_metrics_format, "if enable format metrics in SLS met
 DEFINE_FLAG_BOOL(enable_containerd_upper_dir_detect,
                  "if enable containerd upper dir detect when locating rootfs",
                  false);
+DECLARE_FLAG_STRING(loongcollector_lib_dir);
 
 using namespace std;
 using namespace logtail;
@@ -260,9 +262,11 @@ bool LogtailPlugin::LoadPluginBase() {
     if (mPluginAdapterPtr == NULL) {
         DynamicLibLoader loader;
         std::string error;
-        if (!loader.LoadDynLib("PluginAdapter", error, AppConfig::GetInstance()->GetWorkingDir())) {
-            LOG_ERROR(sLogger, ("open adapter lib error, Message", error));
-            return mPluginValid;
+        if (!loader.LoadDynLib("PluginAdapter", error, STRING_FLAG(loongcollector_lib_dir))) {
+            if (!loader.LoadDynLib("PluginAdapter", error, AppConfig::GetInstance()->GetWorkingDir())) {
+                LOG_ERROR(sLogger, ("open adapter lib error, Message", error));
+                return mPluginValid;
+            }
         }
 
         auto versionFun = (PluginAdapterVersion)loader.LoadMethod("PluginAdapterVersion", error);
@@ -304,9 +308,11 @@ bool LogtailPlugin::LoadPluginBase() {
     if (mPluginBasePtr == NULL) {
         DynamicLibLoader loader;
         std::string error;
-        if (!loader.LoadDynLib("PluginBase", error, AppConfig::GetInstance()->GetWorkingDir())) {
-            LOG_ERROR(sLogger, ("open plugin base dl error, Message", error));
-            return mPluginValid;
+        if (!loader.LoadDynLib("PluginBase", error, STRING_FLAG(loongcollector_lib_dir))) {
+            if (!loader.LoadDynLib("PluginBase", error, AppConfig::GetInstance()->GetWorkingDir())) {
+                LOG_ERROR(sLogger, ("open plugin base dl error, Message", error));
+                return mPluginValid;
+            }
         }
 
         // Try V2 -> V1.
