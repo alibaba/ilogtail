@@ -61,6 +61,7 @@ DEFINE_FLAG_BOOL(force_close_file_on_container_stopped,
                  false);
 
 DECLARE_FLAG_BOOL(send_prefer_real_ip);
+DECLARE_FLAG_STRING(loongcollector_config_dir);
 
 
 namespace logtail {
@@ -292,7 +293,7 @@ bool LogInput::ReadLocalEvents() {
 
 
     // after process event, clear the local file
-    FILE* pFile = fopen((GetProcessExecutionDir() + STRING_FLAG(local_event_data_file_name)).c_str(), "w");
+    FILE* pFile = fopen((STRING_FLAG(loongcollector_config_dir) + STRING_FLAG(local_event_data_file_name)).c_str(), "w");
     if (pFile != NULL) {
         fclose(pFile);
     }

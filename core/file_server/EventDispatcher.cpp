@@ -86,6 +86,8 @@ DEFINE_FLAG_INT32(max_watch_dir_count, "", 100 * 1000);
 DEFINE_FLAG_STRING(inotify_watcher_dirs_dump_filename, "", "inotify_watcher_dirs");
 DEFINE_FLAG_INT32(default_max_inotify_watch_num, "the max allowed inotify watch dir number", 3000);
 
+DECLARE_FLAG_STRING(loongcollector_log_dir);
+
 namespace logtail {
 
 EventDispatcher::EventDispatcher() : mWatchNum(0), mInotifyWatchNum(0) {
@@ -718,7 +720,7 @@ void EventDispatcher::RemoveOneToOneMapEntry(int wd) {
 }
 
 void EventDispatcher::DumpInotifyWatcherDirs() {
-    string filename = GetProcessExecutionDir() + STRING_FLAG(inotify_watcher_dirs_dump_filename);
+    string filename = STRING_FLAG(loongcollector_log_dir) + STRING_FLAG(inotify_watcher_dirs_dump_filename);
     FILE* pFile = fopen(filename.c_str(), "w");
     if (pFile == NULL) {
         LOG_WARNING(sLogger, ("open file (dump inotify watcher dirs) failed", filename)("errno", errno));

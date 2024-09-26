@@ -24,13 +24,14 @@
 #include "common/RuntimeUtil.h"
 #include "common/TimeUtil.h"
 #include "go_pipeline/LogtailPlugin.h"
-#include "protobuf/sls/sls_logs.pb.h"
 #include "pipeline/PipelineManager.h"
+#include "protobuf/sls/sls_logs.pb.h"
 
 using namespace sls_logs;
 using namespace std;
 
 DECLARE_FLAG_STRING(metrics_report_method);
+DECLARE_FLAG_STRING(loongcollector_log_dir);
 
 namespace logtail {
 
@@ -40,7 +41,7 @@ const std::string METRIC_EXPORT_TYPE_CPP = "cpp_provided";
 MetricExportor::MetricExportor() : mSendInterval(60), mLastSendTime(time(NULL) - (rand() % (mSendInterval / 10)) * 10) {
     // mAgentCpuGo = LoongCollectorMonitor::GetInstance()->GetDoubleGauge(METRIC_AGENT_CPU_GO);
     mAgentMemGo = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_AGENT_MEMORY_GO);
-    mAgentGoRoutines = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_AGENT_GO_ROUTINES_TOTAL); 
+    mAgentGoRoutines = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_AGENT_GO_ROUTINES_TOTAL);
 }
 
 void MetricExportor::PushMetrics(bool forceSend) {
@@ -90,8 +91,7 @@ void MetricExportor::SendToSLS(std::map<std::string, sls_logs::LogGroup*>& logGr
         logGroup->set_source(LogFileProfiler::mIpAddr);
         logGroup->set_topic(METRIC_TOPIC_TYPE);
         if (METRIC_REGION_DEFAULT == iter->first) {
-            GetProfileSender()->SendToProfileProject(GetProfileSender()->GetDefaultProfileRegion(),
-                                                               *logGroup);
+            GetProfileSender()->SendToProfileProject(GetProfileSender()->GetDefaultProfileRegion(), *logGroup);
         } else {
             GetProfileSender()->SendToProfileProject(iter->first, *logGroup);
         }
@@ -105,7 +105,7 @@ void MetricExportor::SendToLocalFile(std::string& metricsContent, const std::str
 
     if (!metricsContent.empty()) {
         // 创建输出目录（如果不存在）
-        std::string outputDirectory = GetProcessExecutionDir() + "/" + metricsDirName;
+        std::string outputDirectory = STRING_FLAG(loongcollector_log_dir) + metricsDirName;
         Mkdirs(outputDirectory);
 
         std::vector<std::filesystem::path> metricFiles;

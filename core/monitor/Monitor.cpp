@@ -58,6 +58,7 @@ using namespace sls_logs;
 DEFINE_FLAG_BOOL(logtail_dump_monitor_info, "enable to dump Logtail monitor info (CPU, mem)", false);
 DECLARE_FLAG_BOOL(send_prefer_real_ip);
 DECLARE_FLAG_BOOL(check_profile_region);
+DECLARE_FLAG_STRING(loongcollector_log_dir);
 
 namespace logtail {
 
@@ -490,7 +491,7 @@ void LogtailMonitor::DumpToLocal(const sls_logs::LogGroup& logGroup) {
 }
 
 bool LogtailMonitor::DumpMonitorInfo(time_t monitorTime) {
-    string path = GetProcessExecutionDir() + "logtail_monitor_info";
+    string path = STRING_FLAG(loongcollector_log_dir) + "logtail_monitor_info";
     ofstream outfile(path.c_str(), ofstream::app);
     if (!outfile)
         return false;

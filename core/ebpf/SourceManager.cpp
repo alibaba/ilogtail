@@ -24,6 +24,8 @@
 #include <memory>
 #include <gflags/gflags.h>
 
+DECLARE_FLAG_STRING(loongcollector_lib_dir);
+
 namespace logtail{
 namespace ebpf {
 
@@ -63,7 +65,7 @@ void SourceManager::Init() {
   mHostIp = GetHostIp();
   mHostName = GetHostName();
   mHostPathPrefix = STRING_FLAG(default_container_host_path);
-  mBinaryPath = GetProcessExecutionDir();
+  mBinaryPath = STRING_FLAG(loongcollector_lib_dir);
   mFullLibName = "lib" + m_lib_name_ + ".so";
   for (auto& x : mRunning) {
     x = false;

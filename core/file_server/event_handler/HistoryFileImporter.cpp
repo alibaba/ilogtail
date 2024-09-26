@@ -20,10 +20,12 @@
 #include "common/Thread.h"
 #include "common/TimeUtil.h"
 #include "file_server/ConfigManager.h"
-#include "logger/Logger.h"
-#include "runner/LogProcess.h"
-#include "pipeline/queue/ProcessQueueManager.h"
 #include "file_server/reader/LogFileReader.h"
+#include "logger/Logger.h"
+#include "pipeline/queue/ProcessQueueManager.h"
+#include "runner/LogProcess.h"
+
+DECLARE_FLAG_STRING(loongcollector_data_dir);
 
 namespace logtail {
 
@@ -51,7 +53,7 @@ void HistoryFileImporter::Run() {
 }
 
 void HistoryFileImporter::LoadCheckPoint() {
-    std::string historyDataPath = GetProcessExecutionDir() + "history_file_checkpoint";
+    std::string historyDataPath = STRING_FLAG(loongcollector_data_dir) + "history_file_checkpoint";
     FILE* readPtr = fopen(historyDataPath.c_str(), "r");
     if (readPtr != NULL) {
         fclose(readPtr);

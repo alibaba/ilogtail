@@ -61,7 +61,7 @@
 #include "plugin/processor/ProcessorSPL.h"
 #endif
 
-
+DECLARE_FLAG_STRING(loongcollector_lib_dir);
 DEFINE_FLAG_BOOL(enable_processor_spl, "", true);
 
 using namespace std;
@@ -165,7 +165,7 @@ void PluginRegistry::LoadDynamicPlugins(const set<string>& plugins) {
         return;
     }
     string error;
-    auto pluginDir = AppConfig::GetInstance()->GetProcessExecutionDir() + "/plugins";
+    auto pluginDir = STRING_FLAG(loongcollector_lib_dir) + "/plugins";
     for (auto& pluginType : plugins) {
         DynamicLibLoader loader;
         if (!loader.LoadDynLib(pluginType, error, pluginDir)) {

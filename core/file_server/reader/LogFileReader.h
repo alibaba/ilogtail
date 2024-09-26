@@ -31,16 +31,16 @@
 #include "common/StringTools.h"
 #include "common/TimeUtil.h"
 #include "common/memory/SourceBuffer.h"
-#include "file_server/event/Event.h"
 #include "file_server/FileDiscoveryOptions.h"
 #include "file_server/FileServer.h"
 #include "file_server/MultilineOptions.h"
-#include "protobuf/sls/sls_logs.pb.h"
+#include "file_server/event/Event.h"
+#include "file_server/reader/FileReaderOptions.h"
 #include "logger/Logger.h"
 #include "models/StringView.h"
 #include "pipeline/queue/QueueKey.h"
+#include "protobuf/sls/sls_logs.pb.h"
 #include "rapidjson/allocators.h"
-#include "file_server/reader/FileReaderOptions.h"
 
 namespace logtail {
 
@@ -622,7 +622,7 @@ private:
     // Validate if the primary checkpoint is ok to use by signature.
     //
     // Signature can be find in three place:
-    // 1. Checkpoint v1: /tmp/logtail_check_point.
+    // 1. Checkpoint v1: /var/lib/loongcollector/logtail_check_point.
     // 2. Checkpoint v2: checkpoint database.
     // 3. Read file data and calculate.
     //
