@@ -87,6 +87,7 @@ public:
     }
     std::pair<uint32_t, uint32_t> GetPosition() const { return {mFileOffset, mRawSize}; }
 
+    StringView GetLevel() const;
     void SetLevel(const std::string& level);
     void SetLevelNoCopy(const StringBuffer& level);
     void SetLevelNoCopy(StringView level);
