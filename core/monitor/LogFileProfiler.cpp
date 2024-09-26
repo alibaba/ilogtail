@@ -27,8 +27,8 @@
 #include "common/version.h"
 #include "file_server/ConfigManager.h"
 #include "logger/Logger.h"
-#include "pipeline/queue/QueueKeyManager.h"
 #include "provider/Provider.h"
+#include "pipeline/queue/QueueKeyManager.h"
 
 DEFINE_FLAG_INT32(profile_data_send_interval, "interval of send LogFile/DomainSocket profile data, seconds", 600);
 DEFINE_FLAG_STRING(logtail_profile_snapshot, "reader profile on local disk", "logtail_profile_snapshot");
@@ -460,7 +460,7 @@ void LogFileProfiler::DumpToLocal(int32_t curTime, bool forceSend, Json::Value& 
                      ("rename profile snapshot fail, file", mDumpFileName)("error", ErrnoToString(GetErrno())));
     }
 
-    static auto gProfileLogger = Logger::Instance().GetLogger("/apsara/sls/loongcollector/profile");
+    static auto gProfileLogger = Logger::Instance().GetLogger("/apsara/sls/ilogtail/profile");
     LOG_INFO(gProfileLogger, ("\n", styledRoot));
 }
 

@@ -75,7 +75,7 @@ DECLARE_FLAG_BOOL(enable_mock_send);
 DECLARE_FLAG_INT32(max_holded_data_size);
 DECLARE_FLAG_INT32(merge_log_count_limit);
 DECLARE_FLAG_INT32(first_read_endure_bytes);
-DECLARE_FLAG_STRING(loongcollector_config);
+DECLARE_FLAG_STRING(ilogtail_config);
 DECLARE_FLAG_STRING(user_log_config);
 DECLARE_FLAG_STRING(logtail_profile_snapshot);
 DECLARE_FLAG_INT32(buffer_check_period);
@@ -936,7 +936,7 @@ public:
         if (gEnableExactlyOnce) {
             clearGlobalResource();
         }
-        AppConfig::GetInstance()->LoadAppConfig(STRING_FLAG(loongcollector_config));
+        AppConfig::GetInstance()->LoadAppConfig(STRING_FLAG(ilogtail_config));
         bool ret = ConfigManager::GetInstance()->LoadConfig(STRING_FLAG(user_log_config));
         assert(ret);
         ret = Sender::Instance()->Init();
@@ -974,7 +974,7 @@ public:
         logtailConfig["working_hostname"] = Json::Value("sls-zc-test");
         logtailConfig["container_mount_path"] = Json::Value("./container_mount_test.json");
 
-        ofstream fout(STRING_FLAG(loongcollector_config).c_str());
+        ofstream fout(STRING_FLAG(ilogtail_config).c_str());
         fout << logtailConfig.toStyledString() << endl;
         fout.close();
 

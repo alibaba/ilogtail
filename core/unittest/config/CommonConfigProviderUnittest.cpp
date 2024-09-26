@@ -22,8 +22,8 @@
 #include "config/common_provider/CommonConfigProvider.h"
 #include "config/watcher/ConfigWatcher.h"
 #include "gmock/gmock.h"
-#include "pipeline/InstanceConfigManager.h"
 #include "pipeline/PipelineManager.h"
+#include "pipeline/InstanceConfigManager.h"
 #include "unittest/Unittest.h"
 
 using namespace testing;
@@ -69,8 +69,8 @@ public:
     void SetUp() override {
         mRootDir = GetProcessExecutionDir();
         bfs::create_directories(mRootDir);
-        ilogtailConfigPath = mRootDir + PS + STRING_FLAG(loongcollector_config);
-        subConfigPath = mRootDir + PS + STRING_FLAG(loongcollector_config) + ".d";
+        ilogtailConfigPath = mRootDir + PS + STRING_FLAG(ilogtail_config);
+        subConfigPath = mRootDir + PS + STRING_FLAG(ilogtail_config) + ".d";
         bfs::create_directories(subConfigPath);
         std::ofstream fout(ilogtailConfigPath.c_str());
         fout << "" << std::endl;

@@ -12,19 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <stdlib.h>
+#include "unittest/Unittest.h"
 #include <sys/stat.h>
 #include <sys/types.h>
-
-#include <memory>
+#include <stdlib.h>
 #include <string>
-
+#include <memory>
 #include "common/Flags.h"
 #include "file_server/event/Event.h"
-#include "unittest/Unittest.h"
 using namespace std;
 
-DECLARE_FLAG_STRING(loongcollector_config);
+DECLARE_FLAG_STRING(ilogtail_config);
 
 namespace logtail {
 class EventUnittest : public ::testing::Test {

@@ -51,7 +51,7 @@
 #include "logger/Logger.h"
 using namespace std;
 
-DECLARE_FLAG_STRING(loongcollector_config);
+DECLARE_FLAG_STRING(ilogtail_config);
 DECLARE_FLAG_STRING(user_log_config);
 DECLARE_FLAG_INT32(batch_send_interval);
 
@@ -82,7 +82,7 @@ public:
 
     void CaseSetUp() {
         bfs::remove("log_file_out");
-        AppConfig::GetInstance()->LoadAppConfig(STRING_FLAG(loongcollector_config));
+        AppConfig::GetInstance()->LoadAppConfig(STRING_FLAG(ilogtail_config));
         ConfigManager::GetInstance()->LoadConfig(STRING_FLAG(user_log_config));
         gDispatchThreadId.reset(new std::thread(RunningDispatcher));
         sleep(1);

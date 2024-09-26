@@ -90,10 +90,10 @@ bool RebuildExecutionDir(const std::string& ilogtailConfigJson,
     if (ilogtailConfigJson.empty())
         return true;
 
-    FILE* pFile = fopen((path + STRING_FLAG(loongcollector_config)).c_str(), "w");
+    FILE* pFile = fopen((path + STRING_FLAG(ilogtail_config)).c_str(), "w");
     if (pFile == NULL) {
         std::stringstream ss;
-        ss << "open " << STRING_FLAG(loongcollector_config) << " to write failed, errno is " << errno;
+        ss << "open " << STRING_FLAG(ilogtail_config) << " to write failed, errno is " << errno;
         errorMessage = ss.str();
         return false;
     }

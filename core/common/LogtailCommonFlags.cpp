@@ -62,7 +62,7 @@
 // DEFINE_FLAG_INT32(batch_send_interval, "batch sender interval (second)(default 3)", 3);
 // DEFINE_FLAG_INT32(default_max_inotify_watch_num, "the max allowed inotify watch dir number", 3000);
 // DEFINE_FLAG_STRING(app_info_file, "", "app_info.json");
-// DEFINE_FLAG_STRING(loongcollector_config_env_name, "config file path", "ALIYUN_LOGTAIL_CONFIG");
+// DEFINE_FLAG_STRING(ilogtail_config_env_name, "config file path", "ALIYUN_LOGTAIL_CONFIG");
 // DEFINE_FLAG_STRING(app_info_file, "", "app_info.json");
 
 // 废弃
@@ -79,7 +79,7 @@
 // DEFINE_FLAG_STRING(logtail_integrity_snapshot, "integrity file on local disk", "logtail_integrity_snapshot.json");
 
 // app config
-DEFINE_FLAG_STRING(loongcollector_config,
+DEFINE_FLAG_STRING(ilogtail_config,
                    "set dataserver & configserver address; (optional)set cpu,mem,bufflerfile,buffermap and etc.",
                    "loongcollector_config.json");
 DEFINE_FLAG_BOOL(enable_full_drain_mode, "", false);

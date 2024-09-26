@@ -52,7 +52,7 @@ DECLARE_FLAG_INT32(max_buffer_num);
 DECLARE_FLAG_BOOL(enable_mock_send);
 DECLARE_FLAG_STRING(check_point_filename);
 DECLARE_FLAG_STRING(user_log_config);
-DECLARE_FLAG_STRING(loongcollector_config);
+DECLARE_FLAG_STRING(ilogtail_config);
 DECLARE_FLAG_INT32(mem_check_point_time_out);
 DECLARE_FLAG_INT32(file_check_point_time_out);
 DECLARE_FLAG_INT32(check_point_check_interval);
@@ -310,7 +310,7 @@ void ConfigUpdatorUnittest::SetupContainerModeConfig() {
     logtailConfig["working_hostname"] = Json::Value("sls-zc-test");
     logtailConfig["container_mount_path"] = Json::Value("./container_mount_test.json");
 
-    ofstream fout(STRING_FLAG(loongcollector_config).c_str());
+    ofstream fout(STRING_FLAG(ilogtail_config).c_str());
     fout << logtailConfig.toStyledString() << endl;
     fout.close();
 
@@ -352,7 +352,7 @@ void ConfigUpdatorUnittest::ReplaceWithContainerModeConfig() {
     logtailConfig["working_hostname"] = Json::Value("sls-zc-test");
     logtailConfig["container_mount_path"] = Json::Value("./container_mount_test.json");
 
-    ofstream fout(STRING_FLAG(loongcollector_config).c_str());
+    ofstream fout(STRING_FLAG(ilogtail_config).c_str());
     fout << logtailConfig.toStyledString() << endl;
     fout.close();
 
@@ -742,7 +742,7 @@ void ConfigUpdatorUnittest::SetupGlobalFuseMode(bool globalFuseMode) {
     Json::Value logtailConfig;
     logtailConfig["global_fuse_mode"] = Json::Value(globalFuseMode);
 
-    ofstream fout(STRING_FLAG(loongcollector_config).c_str());
+    ofstream fout(STRING_FLAG(ilogtail_config).c_str());
     fout << logtailConfig.toStyledString() << endl;
     fout.close();
 }
@@ -792,7 +792,7 @@ void ConfigUpdatorUnittest::CaseSetup(bool replaceConfigAllowed) {
         cout << "replace with container config" << endl;
         ReplaceWithContainerModeConfig();
     }
-    AppConfig::GetInstance()->LoadAppConfig(STRING_FLAG(loongcollector_config));
+    AppConfig::GetInstance()->LoadAppConfig(STRING_FLAG(ilogtail_config));
 
     bool ret = ConfigManager::GetInstance()->LoadConfig(STRING_FLAG(user_log_config));
     ASSERT_TRUE(ret);
@@ -2150,8 +2150,8 @@ void ConfigUpdatorUnittest::TestLoadIlogtailConfig() {
     string check_point_filenametemp = AppConfig::GetInstance()->mCheckPointFilePath;
     LOG_INFO(sLogger, ("back up check_point_filenametemp", check_point_filenametemp));
     bfs::create_directories(mRootDir);
-    string ilogtailConfig = mRootDir + PS + STRING_FLAG(loongcollector_config);
-    string subConfigPath = mRootDir + PS + STRING_FLAG(loongcollector_config) + ".d";
+    string ilogtailConfig = mRootDir + PS + STRING_FLAG(ilogtail_config);
+    string subConfigPath = mRootDir + PS + STRING_FLAG(ilogtail_config) + ".d";
     bfs::create_directories(subConfigPath);
 
     LOG_INFO(sLogger, ("test default settings config (global flag)", ""));

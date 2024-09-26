@@ -22,12 +22,12 @@
 #include "app_config/AppConfig.h"
 #include "common/Flags.h"
 #include "file_server/ConfigManager.h"
-#include "file_server/FileServer.h"
 #include "file_server/event/Event.h"
+#include "file_server/FileServer.h"
 #include "unittest/Unittest.h"
 using namespace std;
 
-DECLARE_FLAG_STRING(loongcollector_config);
+DECLARE_FLAG_STRING(ilogtail_config);
 namespace logtail {
 class ConfigContainerUnittest : public ::testing::Test {
 public:

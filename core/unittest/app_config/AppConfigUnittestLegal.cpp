@@ -21,7 +21,7 @@
 #include "file_server/reader/LogFileReader.h"
 #include "unittest/Unittest.h"
 
-DECLARE_FLAG_STRING(loongcollector_config);
+DECLARE_FLAG_STRING(ilogtail_config);
 DECLARE_FLAG_INT32(logreader_filedeleted_remove_interval);
 DECLARE_FLAG_INT32(logreader_max_rotate_queue_size);
 DECLARE_FLAG_INT32(check_handler_timeout_interval);
@@ -59,7 +59,7 @@ public:
 private:
     void writeLogtailConfigJSON(const Json::Value& v) {
         LOG_INFO(sLogger, ("writeLogtailConfigJSON", v.toStyledString()));
-        OverwriteFile(STRING_FLAG(loongcollector_config), v.toStyledString());
+        OverwriteFile(STRING_FLAG(ilogtail_config), v.toStyledString());
     }
 
     template <typename T>
@@ -129,7 +129,7 @@ const int32_t kPollingIgnoreFileModifyTimeout = 100;
 
 void AppConfigUnittest::testParameters(const std::string& sysConfDir) {
     AppConfig* appConfig = AppConfig::GetInstance();
-    appConfig->LoadAppConfig(STRING_FLAG(loongcollector_config));
+    appConfig->LoadAppConfig(STRING_FLAG(ilogtail_config));
 
     APSARA_TEST_EQUAL(appConfig->GetLogtailSysConfDir(), sysConfDir);
     APSARA_TEST_EQUAL(appConfig->IsAcceptMultiConfig(), kAccessMultiConfig);

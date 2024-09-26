@@ -63,7 +63,7 @@
 #endif
 
 DEFINE_FLAG_BOOL(ilogtail_disable_core, "disable core in worker process", true);
-DEFINE_FLAG_STRING(loongcollector_config_env_name, "config file path", "ALIYUN_LOGTAIL_CONFIG");
+DEFINE_FLAG_STRING(ilogtail_config_env_name, "config file path", "ALIYUN_LOGTAIL_CONFIG");
 DEFINE_FLAG_STRING(app_info_file, "", "app_info.json");
 DEFINE_FLAG_INT32(file_tags_update_interval, "second", 1);
 DEFINE_FLAG_INT32(config_scan_interval, "seconds", 10);
@@ -121,9 +121,9 @@ void Application::Init() {
     }
 
     // load loongcollector_config.json
-    char* configEnv = getenv(STRING_FLAG(loongcollector_config_env_name).c_str());
+    char* configEnv = getenv(STRING_FLAG(ilogtail_config_env_name).c_str());
     if (configEnv == NULL || strlen(configEnv) == 0) {
-        AppConfig::GetInstance()->LoadAppConfig(STRING_FLAG(loongcollector_config));
+        AppConfig::GetInstance()->LoadAppConfig(STRING_FLAG(ilogtail_config));
     } else {
         AppConfig::GetInstance()->LoadAppConfig(configEnv);
     }
