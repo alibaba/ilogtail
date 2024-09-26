@@ -22,18 +22,19 @@
 #include "common/FileSystemUtil.h"
 #include "common/RuntimeUtil.h"
 #include "common/StringTools.h"
+#include "logger/Logger.h"
+#include "monitor/LogtailAlarm.h"
+#include "pipeline/limiter/RateLimiter.h"
+#include "pipeline/queue/QueueKeyManager.h"
+#include "pipeline/queue/SLSSenderQueueItem.h"
 #include "plugin/flusher/sls/FlusherSLS.h"
 #include "plugin/flusher/sls/SLSClientManager.h"
 #include "protobuf/sls/sls_logs.pb.h"
-#include "logger/Logger.h"
-#include "monitor/LogtailAlarm.h"
 #include "provider/Provider.h"
-#include "pipeline/queue/QueueKeyManager.h"
-#include "pipeline/queue/SLSSenderQueueItem.h"
 #include "sdk/Exception.h"
-#include "pipeline/limiter/RateLimiter.h"
 #include "sls_control/SLSControl.h"
 
+DECLARE_FLAG_STRING(loongcollector_data_dir);
 DEFINE_FLAG_INT32(write_secondary_wait_timeout, "interval of dump seconary buffer from memory to file, seconds", 2);
 DEFINE_FLAG_INT32(buffer_file_alive_interval, "the max alive time of a bufferfile, 5 minutes", 300);
 DEFINE_FLAG_INT32(log_expire_time, "log expire time", 24 * 3600);
@@ -207,7 +208,7 @@ void DiskBufferWriter::BufferSenderThread() {
 void DiskBufferWriter::SetBufferFilePath(const std::string& bufferfilepath) {
     lock_guard<mutex> lock(mBufferFileLock);
     if (bufferfilepath == "") {
-        mBufferFilePath = GetProcessExecutionDir();
+        mBufferFilePath = STRING_FLAG(loongcollector_data_dir);
     } else
         mBufferFilePath = bufferfilepath;
 
@@ -234,7 +235,7 @@ std::string DiskBufferWriter::GetBufferFileName() {
 bool DiskBufferWriter::LoadFileToSend(time_t timeLine, std::vector<std::string>& filesToSend) {
     string bufferFilePath = GetBufferFilePath();
     if (!CheckExistance(bufferFilePath)) {
-        if (GetProcessExecutionDir().find(bufferFilePath) != 0) {
+        if (STRING_FLAG(loongcollector_data_dir).find(bufferFilePath) != 0) {
             LOG_WARNING(sLogger,
                         ("buffer file path not exist", bufferFilePath)("logtail will not recreate external path",
                                                                        "local secondary does not work"));

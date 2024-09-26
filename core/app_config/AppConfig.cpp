@@ -48,8 +48,12 @@ DEFINE_FLAG_INT32(send_request_concurrency, "max count keep in mem when async se
 DEFINE_FLAG_BOOL(enable_send_tps_smoothing, "avoid web server load burst", true);
 DEFINE_FLAG_BOOL(enable_flow_control, "if enable flow control", true);
 DEFINE_FLAG_STRING(loongcollector_lib_dir, "loongcollector lib dir", "/usr/local/loongcollector/lib/");
-DEFINE_FLAG_STRING(default_buffer_file_path, "set current execution dir in default", "");
-DEFINE_FLAG_STRING(buffer_file_path, "set buffer dir", "");
+DEFINE_FLAG_STRING(loongcollector_config_dir, "loongcollector config dir", "/etc/loongcollector/");
+DEFINE_FLAG_STRING(loongcollector_log_dir, "loongcollector log dir", "/var/log/loongcollector/");
+DEFINE_FLAG_STRING(loongcollector_run_dir, "loongcollector run dir", "/var/run/loongcollector/");
+DEFINE_FLAG_STRING(loongcollector_data_dir, "loongcollector data dir", "/var/lib/loongcollector/");
+DEFINE_FLAG_STRING(default_buffer_file_path, "set current execution dir in default", "/var/lib/loongcollector/");
+DEFINE_FLAG_STRING(buffer_file_path, "set buffer dir", "/var/lib/loongcollector/");
 // DEFINE_FLAG_STRING(default_mapping_config_path, "", "mapping_config.json");
 DEFINE_FLAG_DOUBLE(default_machine_cpu_usage_threshold, "machine level", 0.4);
 DEFINE_FLAG_BOOL(default_resource_auto_scale, "", false);
