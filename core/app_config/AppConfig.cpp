@@ -1533,10 +1533,10 @@ Json::Value AppConfig::mergeAllConfigs() {
     return mergedConfig;
 }
 
-void AppConfig::LoadInstanceConfig(std::map<std::string, Json::Value>& remoteConfig) {
+void AppConfig::LoadInstanceConfig(std::map<std::string, Json::Value>& instanceConfig) {
     mRemoteConfig.clear();
     mLocalInstanceConfig.clear();
-    for (auto& config : remoteConfig) {
+    for (auto& config : instanceConfig) {
         if (config.first == AppConfig::sLocalConfigDir) {
             MergeJson(mLocalInstanceConfig, config.second);
         } else {
