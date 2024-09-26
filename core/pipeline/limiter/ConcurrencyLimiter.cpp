@@ -24,11 +24,11 @@ bool ConcurrencyLimiter::IsValidToPop() {
     if (mLastSendTime == 0) {
         mLastSendTime = time(nullptr);
     }
-    if (mCocurrency > mInSendingCnt) {
+    if (mConcurrency.load() > mInSendingCnt.load()) {
         return true;
     } else {
         time_t curTime = time(nullptr);
-        if (curTime -  mLastSendTime > mRetryIntervalSecond) {
+        if (curTime -  mLastSendTime > mRetryIntervalSeconds) {
             mLastSendTime = curTime;
             return true;
         }
@@ -45,38 +45,33 @@ void ConcurrencyLimiter::OnDone() {
 }
 
 void ConcurrencyLimiter::OnSuccess() {
-    ++ mCocurrency;
-    if (mCocurrency > mMaxCocurrency) {
-        mCocurrency = mMaxCocurrency;
+    {
+        lock_guard<mutex> lock(mConcurrencyMux);
+        ++ mConcurrency;
+        if (mConcurrency.load() != mMaxCocurrency) {
+            mConcurrency = min(mMaxCocurrency, mConcurrency.load());
+        }
     }
-    int oldValue;
-    int newValue;
-    do {
-        oldValue = mRetryIntervalSecond.load(); // 读取当前值
-        newValue = oldValue * mDownRatio;   // 计算新的值
-    } while (!mRetryIntervalSecond.compare_exchange_strong(oldValue, newValue)); // 进行比较和交换
-    if (mRetryIntervalSecond.load() < mMinRetryIntervalSeconds) {
-        mRetryIntervalSecond.store(mMinRetryIntervalSeconds);
+    {
+        lock_guard<mutex> lock(mIntervalMux);
+        if (mRetryIntervalSeconds.load() != mMinRetryIntervalSeconds) {
+            mRetryIntervalSeconds = max(mMinRetryIntervalSeconds, static_cast<int>(mRetryIntervalSeconds.load() * mDownRatio));
+        }
     }
 }
 
 void ConcurrencyLimiter::OnFail(time_t curTime) {
-    int oldValue;
-    int newValue;
-    do {
-        oldValue = mCocurrency.load(); // 读取当前值
-        newValue = oldValue * mDownRatio;   // 计算新的值
-    } while (!mCocurrency.compare_exchange_strong(oldValue, newValue)); // 进行比较和交换
-
-    if (mCocurrency.load() < mMinCocurrency) {
-        mCocurrency.store(mMinCocurrency);
-        do {
-            oldValue = mRetryIntervalSecond.load(); // 读取当前值
-            newValue = oldValue * mUpRatio;   // 计算新的值
-        } while (!mRetryIntervalSecond.compare_exchange_strong(oldValue, newValue)); // 进行比较和交换
+    {
+        lock_guard<mutex> lock(mConcurrencyMux);
+        if (mConcurrency.load() != mMinCocurrency) {
+            mConcurrency = max(mMinCocurrency, static_cast<int>(mConcurrency.load() * mDownRatio));
+        }
     }
-    if (mRetryIntervalSecond.load() > mMaxRetryIntervalSecond ) {
-        mRetryIntervalSecond.store(mMaxRetryIntervalSecond);
+    {
+        lock_guard<mutex> lock(mIntervalMux);
+        if (mRetryIntervalSeconds.load() != mMaxRetryIntervalSeconds) {
+            mRetryIntervalSeconds = min(mMaxRetryIntervalSeconds, static_cast<int>(mRetryIntervalSeconds.load() * mUpRatio));
+        }
     }
 }
 

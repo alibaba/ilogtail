@@ -41,7 +41,7 @@ void ConcurrencyLimiterUnittest::TestLimiter() const {
     APSARA_TEST_EQUAL(10U, sConcurrencyLimiter->GetLimit());
     APSARA_TEST_EQUAL(0U, sConcurrencyLimiter->GetCount());
     APSARA_TEST_EQUAL(10U, sConcurrencyLimiter->GetLimit());
-    APSARA_TEST_EQUAL(30U, sConcurrencyLimiter->GetInterval());
+    APSARA_TEST_EQUAL(90U, sConcurrencyLimiter->GetInterval());
 
     // count = 10, comcurrency = 10
     APSARA_TEST_EQUAL(true, sConcurrencyLimiter->IsValidToPop());
@@ -53,13 +53,14 @@ void ConcurrencyLimiterUnittest::TestLimiter() const {
     APSARA_TEST_EQUAL(10U, sConcurrencyLimiter->GetCount());
     for (int i = 0; i < num; i++) {
         sConcurrencyLimiter->OnSuccess();
+        sConcurrencyLimiter->OnDone();
     }
     APSARA_TEST_EQUAL(0U, sConcurrencyLimiter->GetCount());
     APSARA_TEST_EQUAL(20U, sConcurrencyLimiter->GetLimit());
     APSARA_TEST_EQUAL(30U, sConcurrencyLimiter->GetInterval());
 
 
-    // count = 7, comcurrency = 20/2/2/2/2, interval = 30
+    // interval = 30 * 1.5 * 1.5 * 1.5 = 67 * 1.5 * 1.5 = 100 * 1.5 = 150 
     num = 4;
     for (int i = 0; i < num; i++) {
         APSARA_TEST_EQUAL(true, sConcurrencyLimiter->IsValidToPop());
@@ -72,9 +73,9 @@ void ConcurrencyLimiterUnittest::TestLimiter() const {
     }
     APSARA_TEST_EQUAL(0U, sConcurrencyLimiter->GetCount());
     APSARA_TEST_EQUAL(1U, sConcurrencyLimiter->GetLimit());
-    APSARA_TEST_EQUAL(30U, sConcurrencyLimiter->GetInterval());
+    APSARA_TEST_EQUAL(150U, sConcurrencyLimiter->GetInterval());
 
-    // interval = 45 * 1.5 
+    // interval = 150 * 1.5
     num = 3;
     for (int i = 0; i < num; i++) {
         if (i >= 1) {
@@ -89,11 +90,11 @@ void ConcurrencyLimiterUnittest::TestLimiter() const {
     sConcurrencyLimiter->OnDone();
     APSARA_TEST_EQUAL(0U, sConcurrencyLimiter->GetCount());
     APSARA_TEST_EQUAL(1U, sConcurrencyLimiter->GetLimit());
-    APSARA_TEST_EQUAL(45U, sConcurrencyLimiter->GetInterval());
+    APSARA_TEST_EQUAL(225U, sConcurrencyLimiter->GetInterval());
 
 
     num = 10;
-    
+
 }
 
 

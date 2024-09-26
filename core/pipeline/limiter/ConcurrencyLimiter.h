@@ -18,13 +18,19 @@
 
 #include <atomic>
 #include <ctime>
+#include <mutex>
 
 namespace logtail {
 
 class ConcurrencyLimiter {
 public:
     ConcurrencyLimiter() {}
-    ConcurrencyLimiter(int maxCocurrency, int minCocurrency, int cocurrency) : mMaxCocurrency(maxCocurrency), mMinCocurrency(minCocurrency), mCocurrency(cocurrency) {}
+    ConcurrencyLimiter(int maxCocurrency, int minCocurrency, int cocurrency, 
+        int maxRetryIntervalSeconds = 3600, int minRetryIntervalSeconds = 30, int retryIntervalSeconds = 60, 
+        double upRatio = 1.5, double downRatio = 0.5) : 
+        mMaxCocurrency(maxCocurrency), mMinCocurrency(minCocurrency), mConcurrency(cocurrency),
+        mMaxRetryIntervalSeconds(maxRetryIntervalSeconds), mMinRetryIntervalSeconds(minRetryIntervalSeconds), 
+        mRetryIntervalSeconds(retryIntervalSeconds), mUpRatio(upRatio), mDownRatio(downRatio) {}
 
     bool IsValidToPop();
     void PostPop();
@@ -34,30 +40,33 @@ public:
     void OnFail(time_t curTime);
 
 #ifdef APSARA_UNIT_TEST_MAIN
-    void Reset() { mCocurrency.store(-1); }
-    void SetLimit(int limit) { mCocurrency.store(limit); }
-    int GetLimit() const { return mCocurrency.load(); }
+    void Reset() { mConcurrency.store(-1); }
+    void SetLimit(int limit) { mConcurrency.store(limit); }
+    int GetLimit() const { return mConcurrency.load(); }
     int GetCount() const { return mInSendingCnt.load(); }
-    int GetInterval() const { return mRetryIntervalSecond.load(); }
+    int GetInterval() const { return mRetryIntervalSeconds.load(); }
 
 #endif
 
 private:
-    double mUpRatio = 1.5;
-    double mDownRatio = 0.5;
-
     std::atomic_int mInSendingCnt = 0;
 
     int mMaxCocurrency = 0;
     int mMinCocurrency = 0;
-    std::atomic_int mCocurrency = 0;
 
-    int mMaxRetryIntervalSecond = 3600;
-    int mMinRetryIntervalSeconds = 30;
-    std::atomic_int mRetryIntervalSecond = 30;
+    mutable std::mutex mConcurrencyMux;
+    std::atomic_int mConcurrency = 0;
+
+    int mMaxRetryIntervalSeconds = 0;
+    int mMinRetryIntervalSeconds = 0;
+
+    mutable std::mutex mIntervalMux;
+    std::atomic_int mRetryIntervalSeconds = 0;
+
+    double mUpRatio = 0.0;
+    double mDownRatio = 0.0;
 
     time_t mLastSendTime = 0;
-
 };
 
 } // namespace logtail

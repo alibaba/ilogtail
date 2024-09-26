@@ -109,9 +109,11 @@ int SenderQueueManager::PushQueue(QueueKey key, unique_ptr<SenderQueueItem>&& it
 void SenderQueueManager::GetAllAvailableItems(vector<SenderQueueItem*>& items, bool withLimits) {
     {
         lock_guard<mutex> lock(mQueueMux);
+        if (mQueues.empty()) {
+            return;
+        }
         // must check index before moving iterator
         mSenderQueueBeginIndex = mSenderQueueBeginIndex % mQueues.size();
-
         // here we set sender queue begin index, let the sender order be different each time
         auto beginIter = mQueues.begin();
         std::advance(beginIter, mSenderQueueBeginIndex++);

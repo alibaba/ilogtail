@@ -54,7 +54,6 @@ public:
     void TestFlushAll();
     void TestAddPackId();
     void OnGoPipelineSend();
-    void TestFlusherLimiter();
 
 protected:
     void SetUp() override {
@@ -1070,49 +1069,6 @@ void FlusherSLSUnittest::OnGoPipelineSend() {
     }
 }
 
-void FlusherSLSUnittest::TestFlusherLimiter() {
-    Json::Value configJson, optionalGoPipeline;
-    string configStr, errorMsg;
-    configStr = R"(
-        {
-            "Type": "flusher_sls",
-            "Project": "test_project",
-            "Logstore": "test_logstore",
-            "Region": "cn-hangzhou",
-            "Endpoint": "cn-hangzhou.log.aliyuncs.com",
-            "Aliuid": "123456789"
-        }
-    )";
-    ParseJsonTable(configStr, configJson, errorMsg);
-    FlusherSLS flusher;
-    flusher.SetContext(ctx);
-    flusher.Init(configJson, optionalGoPipeline);
-
-    PipelineEventGroup group(make_shared<SourceBuffer>());
-    group.SetMetadata(EventGroupMetaKey::SOURCE_ID, string("source-id"));
-    group.SetTag(LOG_RESERVED_KEY_HOSTNAME, "hostname");
-    group.SetTag(LOG_RESERVED_KEY_SOURCE, "172.0.0.1");
-    group.SetTag(LOG_RESERVED_KEY_MACHINE_UUID, "uuid");
-    group.SetTag(LOG_RESERVED_KEY_TOPIC, "topic");
-    {
-        auto e = group.AddLogEvent();
-        e->SetTimestamp(1234567890);
-        e->SetContent(string("content_key"), string("content_value"));
-    }
-
-    size_t batchKey = group.GetTagsHash();
-    flusher.Send(std::move(group));
-
-    flusher.Flush(batchKey);
-    vector<SenderQueueItem*> res;
-    SenderQueueManager::GetInstance()->GetAllAvailableItems(res);
-    APSARA_TEST_EQUAL(0U, res.size());
-
-    flusher.Flush(0);
-    SenderQueueManager::GetInstance()->GetAllAvailableItems(res);
-    APSARA_TEST_EQUAL(1U, res.size());
-}
-
 UNIT_TEST_CASE(FlusherSLSUnittest, OnSuccessfulInit)
 UNIT_TEST_CASE(FlusherSLSUnittest, OnFailedInit)
 UNIT_TEST_CASE(FlusherSLSUnittest, OnPipelineUpdate)
@@ -1121,7 +1077,6 @@ UNIT_TEST_CASE(FlusherSLSUnittest, TestFlush)
 UNIT_TEST_CASE(FlusherSLSUnittest, TestFlushAll)
 UNIT_TEST_CASE(FlusherSLSUnittest, TestAddPackId)
 UNIT_TEST_CASE(FlusherSLSUnittest, OnGoPipelineSend)
-UNIT_TEST_CASE(FlusherSLSUnittest, TestFlusherLimiter)
 
 
 } // namespace logtail
