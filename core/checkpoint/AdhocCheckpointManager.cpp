@@ -15,21 +15,22 @@
  */
 
 #include "AdhocCheckpointManager.h"
+
 #include "common/FileSystemUtil.h"
 #include "common/Flags.h"
+#include "common/HashUtil.h"
+#include "common/Thread.h"
 #include "logger/Logger.h"
 #include "monitor/LogtailAlarm.h"
-#include "common/Thread.h"
-#include "common/HashUtil.h"
 
 DEFINE_FLAG_INT32(adhoc_checkpoint_dump_thread_wait_interval, "microseconds", 5 * 1000);
 
 // TODO: Change to AppConfig::GetInstance()->GetLogtailSysConfDir()
 // /etc/ilogtail + /checkpoint/logtail_adhoc_checkpoint/${jobName}
 #if defined(__linux__)
-DEFINE_FLAG_STRING(adhoc_check_point_file_dir, "", "/tmp/logtail_adhoc_checkpoint");
+DEFINE_FLAG_STRING(adhoc_check_point_file_dir, "", "/var/lib/loongcollector/logtail_adhoc_checkpoint");
 #elif defined(_MSC_VER)
-DEFINE_FLAG_STRING(adhoc_check_point_file_dir, "", "C:\\LogtailData\\logtail_adhoc_checkpoint");
+DEFINE_FLAG_STRING(adhoc_check_point_file_dir, "", "C:\\ProgramData\\loongcollector\\data\\logtail_adhoc_checkpoint");
 #endif
 
 namespace logtail {

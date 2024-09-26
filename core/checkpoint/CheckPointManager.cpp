@@ -32,9 +32,9 @@
 
 using namespace std;
 #if defined(__linux__)
-DEFINE_FLAG_STRING(check_point_filename, "", "/tmp/logtail_check_point");
+DEFINE_FLAG_STRING(check_point_filename, "", "/var/lib/loongcollector/logtail_check_point");
 #elif defined(_MSC_VER)
-DEFINE_FLAG_STRING(check_point_filename, "", "C:\\LogtailData\\logtail_check_point");
+DEFINE_FLAG_STRING(check_point_filename, "", "C:\\ProgramData\\loongcollector\\data\\logtail_check_point");
 #endif
 DEFINE_FLAG_INT32(file_check_point_time_out, "seconds", 300);
 DEFINE_FLAG_INT32(mem_check_point_time_out, "seconds", 7200);

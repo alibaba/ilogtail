@@ -13,15 +13,18 @@
 // limitations under the License.
 
 #include "CheckpointManagerV2.h"
+
 #include <leveldb/write_batch.h>
+
 #include <boost/filesystem.hpp>
+
+#include "app_config/AppConfig.h"
+#include "checkpoint/CheckPointManager.h"
 #include "common/Flags.h"
 #include "common/ScopeInvoker.h"
 #include "common/TimeUtil.h"
 #include "logger/Logger.h"
 #include "monitor/LogtailAlarm.h"
-#include "app_config/AppConfig.h"
-#include "checkpoint/CheckPointManager.h"
 
 DEFINE_FLAG_INT32(logtail_checkpoint_check_gc_interval_sec, "60 seconds", 60);
 DEFINE_FLAG_INT32(logtail_checkpoint_gc_threshold_sec, "30 minutes", 30 * 60);
@@ -30,13 +33,13 @@ DEFINE_FLAG_INT64(logtail_checkpoint_max_used_time_per_round_in_msec, "500ms", 5
 DEFINE_FLAG_INT32(logtail_checkpoint_expired_threshold_sec, "6 hours", 6 * 60 * 60);
 
 DECLARE_FLAG_INT32(max_exactly_once_concurrency);
-
+DECLARE_FLAG_STRING(loongcollector_data_dir);
 namespace logtail {
 
 namespace detail {
 
     std::string getDatabasePath() {
-        auto fp = boost::filesystem::path(AppConfig::GetInstance()->GetLogtailSysConfDir());
+        auto fp = boost::filesystem::path(STRING_FLAG(loongcollector_data_dir));
         return (fp / "checkpoint_v2").string();
     }
 
