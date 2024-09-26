@@ -81,11 +81,11 @@ public:
     void SetContentNoCopy(StringView key, StringView val);
     void DelContent(StringView key);
 
-    void SetPosition(uint32_t offset, uint32_t size) {
+    void SetPosition(uint64_t offset, uint64_t size) {
         mFileOffset = offset;
         mRawSize = size;
     }
-    std::pair<uint32_t, uint32_t> GetPosition() const { return {mFileOffset, mRawSize}; }
+    std::pair<uint64_t, uint64_t> GetPosition() const { return {mFileOffset, mRawSize}; }
 
     StringView GetLevel() const;
     void SetLevel(const std::string& level);
