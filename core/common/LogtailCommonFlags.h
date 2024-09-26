@@ -19,7 +19,7 @@
 #include "common/Flags.h"
 
 // app config
-DECLARE_FLAG_STRING(ilogtail_config);
+DECLARE_FLAG_STRING(loongcollector_config);
 DECLARE_FLAG_BOOL(enable_full_drain_mode);
 DECLARE_FLAG_INT32(cpu_limit_num);
 DECLARE_FLAG_INT32(mem_limit_num);

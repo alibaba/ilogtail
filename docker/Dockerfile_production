@@ -39,7 +39,7 @@ RUN chown -R $(whoami) /usr/local/ilogtail/ && \
     mkdir /usr/local/ilogtail/checkpoint
 
 WORKDIR /usr/local/ilogtail
-COPY example_config/start_with_docker/ilogtail_config.json /usr/local/ilogtail/
+COPY example_config/start_with_docker/loongcollector_config.json /usr/local/ilogtail/
 COPY scripts/ilogtail_control.sh /usr/local/ilogtail/
 
 ENV HTTP_PROBE_PORT=7953 \

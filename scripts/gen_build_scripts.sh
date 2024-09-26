@@ -118,7 +118,7 @@ function generateCopyScript() {
       echo 'rm -rf core/protobuf/sls && docker cp "$id":'${PATH_IN_DOCKER}'/core/protobuf/sls core/protobuf/sls' >>$COPY_SCRIPT_FILE
     fi
   fi
-  echo 'echo -e "{\n}" > $BINDIR/ilogtail_config.json' >>$COPY_SCRIPT_FILE
+  echo 'echo -e "{\n}" > $BINDIR/loongcollector_config.json' >>$COPY_SCRIPT_FILE
   echo 'mkdir -p $BINDIR/config/local' >>$COPY_SCRIPT_FILE
   echo 'docker rm -v "$id"' >>$COPY_SCRIPT_FILE
 }

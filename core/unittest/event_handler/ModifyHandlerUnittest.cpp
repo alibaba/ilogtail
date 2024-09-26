@@ -33,7 +33,7 @@
 
 using namespace std;
 
-DECLARE_FLAG_STRING(ilogtail_config);
+DECLARE_FLAG_STRING(loongcollector_config);
 DECLARE_FLAG_INT32(default_tail_limit_kb);
 
 namespace logtail {

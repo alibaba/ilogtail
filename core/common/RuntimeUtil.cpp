@@ -14,20 +14,22 @@
 
 #include "RuntimeUtil.h"
 #if defined(__linux__)
-#include <unistd.h>
+#include <dirent.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <dirent.h>
+#include <unistd.h>
 #elif defined(_MSC_VER)
-#include <Windows.h>
 #include <Psapi.h>
+#include <Windows.h>
 #endif
 #include <errno.h>
+
 #include <cstdio>
 #include <sstream>
-#include "logger/Logger.h"
-#include "LogtailCommonFlags.h"
+
 #include "FileSystemUtil.h"
+#include "LogtailCommonFlags.h"
+#include "logger/Logger.h"
 
 DECLARE_FLAG_STRING(logtail_sys_conf_dir);
 
@@ -71,7 +73,7 @@ std::string GetBinaryName(void) {
 #endif
 }
 
-// only ilogtail_config.json will be rebuild from memory
+// only loongcollector_config.json will be rebuild from memory
 bool RebuildExecutionDir(const std::string& ilogtailConfigJson,
                          std::string& errorMessage,
                          const std::string& executionDir) {
@@ -88,10 +90,10 @@ bool RebuildExecutionDir(const std::string& ilogtailConfigJson,
     if (ilogtailConfigJson.empty())
         return true;
 
-    FILE* pFile = fopen((path + STRING_FLAG(ilogtail_config)).c_str(), "w");
+    FILE* pFile = fopen((path + STRING_FLAG(loongcollector_config)).c_str(), "w");
     if (pFile == NULL) {
         std::stringstream ss;
-        ss << "open " << STRING_FLAG(ilogtail_config) << " to write failed, errno is " << errno;
+        ss << "open " << STRING_FLAG(loongcollector_config) << " to write failed, errno is " << errno;
         errorMessage = ss.str();
         return false;
     }

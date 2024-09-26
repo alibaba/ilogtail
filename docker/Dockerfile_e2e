@@ -30,7 +30,7 @@ RUN chown -R $(whoami) /ilogtail && \
     rm /tmp/download_ebpflib.sh
 
 COPY ./output/libPluginBase.so /ilogtail/
-COPY ./example_config/quick_start/ilogtail_config.json /ilogtail/
+COPY ./example_config/quick_start/loongcollector_config.json /ilogtail/
 COPY ./output/libPluginAdapter.so /ilogtail/
 
 ENV HOST_OS=$HOST_OS

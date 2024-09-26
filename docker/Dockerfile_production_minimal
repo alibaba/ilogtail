@@ -21,7 +21,7 @@ COPY dist/ilogtail-${VERSION}.linux-*.tar.gz .
 RUN tar -xzf ilogtail-${VERSION}.linux-${TARGETPLATFORM##*/}.tar.gz
 RUN mv /usr/local/ilogtail-${VERSION} /usr/local/ilogtail && \
     mkdir /usr/local/ilogtail/checkpoint && \
-    cp example_config/start_with_docker/ilogtail_config.json /usr/local/ilogtail/ && \
+    cp example_config/start_with_docker/loongcollector_config.json /usr/local/ilogtail/ && \
     chmod 755 /usr/local/ilogtail/ilogtail
 
 FROM gcr.lank8s.cn/distroless/cc-debian12:latest

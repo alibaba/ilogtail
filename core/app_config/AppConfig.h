@@ -49,7 +49,7 @@ private:
     Json::Value mConfJson;
     mutable SpinLock mAppConfigLock;
 
-    // ilogtail_config.json content for rebuild
+    // loongcollector_config.json content for rebuild
     std::string mIlogtailConfigJson;
 
     // syslog
@@ -240,7 +240,7 @@ private:
     void LoadEnvTags();
 
     // LoadEnvResourceLimit loads resource limit from env config.
-    // Read values will replace corresponding configs in ilogtail_config.json.
+    // Read values will replace corresponding configs in loongcollector_config.json.
     void LoadEnvResourceLimit();
 
     // logtail is in purage container mode when STRING_FLAG(ilogtail_user_defined_id_env_name) exist and /logtail_host

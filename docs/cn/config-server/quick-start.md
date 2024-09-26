@@ -59,7 +59,7 @@ Agent 侧需要配置 ConfigServer 信息，才能使用管控功能。
 
 #### iLogtail 配置 ConfigServer
 
-打开 iLogtail 目录下的 ilogtail_config.json 文件，配置 ConfigServer 相关参数 `ilogtail_configserver_address` 和 `ilogtail_tags`。
+打开 iLogtail 目录下的 loongcollector_config.json 文件，配置 ConfigServer 相关参数 `ilogtail_configserver_address` 和 `ilogtail_tags`。
 
 `ilogtail_configserver_address` 是 ConfigServer 部署的地址与端口号，可以配置多个 ConfigServer 地址， iLogtail 将自动切换选择可以链接的 ConfigServer。需要注意的是，目前的 ConfigServer 仅支持单机版，`ilogtail_configserver_address` 即使配置了多个地址，多个 ConfigServer 之间也并不支持数据同步。我们预留了 ConfigServer 支持分布式部署的扩展性，欢迎社区积极贡献开发。
 

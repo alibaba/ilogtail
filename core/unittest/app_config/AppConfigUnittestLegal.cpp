@@ -13,14 +13,15 @@
 // limitations under the License.
 
 #include <cstdlib>
-#include "unittest/Unittest.h"
-#include "common/StringTools.h"
+
+#include "app_config/AppConfig.h"
 #include "common/FileSystemUtil.h"
 #include "common/RuntimeUtil.h"
-#include "app_config/AppConfig.h"
+#include "common/StringTools.h"
 #include "file_server/reader/LogFileReader.h"
+#include "unittest/Unittest.h"
 
-DECLARE_FLAG_STRING(ilogtail_config);
+DECLARE_FLAG_STRING(loongcollector_config);
 DECLARE_FLAG_INT32(logreader_filedeleted_remove_interval);
 DECLARE_FLAG_INT32(logreader_max_rotate_queue_size);
 DECLARE_FLAG_INT32(check_handler_timeout_interval);
@@ -58,7 +59,7 @@ public:
 private:
     void writeLogtailConfigJSON(const Json::Value& v) {
         LOG_INFO(sLogger, ("writeLogtailConfigJSON", v.toStyledString()));
-        OverwriteFile(STRING_FLAG(ilogtail_config), v.toStyledString());
+        OverwriteFile(STRING_FLAG(loongcollector_config), v.toStyledString());
     }
 
     template <typename T>
@@ -128,7 +129,7 @@ const int32_t kPollingIgnoreFileModifyTimeout = 100;
 
 void AppConfigUnittest::testParameters(const std::string& sysConfDir) {
     AppConfig* appConfig = AppConfig::GetInstance();
-    appConfig->LoadAppConfig(STRING_FLAG(ilogtail_config));
+    appConfig->LoadAppConfig(STRING_FLAG(loongcollector_config));
 
     APSARA_TEST_EQUAL(appConfig->GetLogtailSysConfDir(), sysConfDir);
     APSARA_TEST_EQUAL(appConfig->IsAcceptMultiConfig(), kAccessMultiConfig);
@@ -215,7 +216,7 @@ void AppConfigUnittest::TestLoadEnvParameters() {
     unsetEnvKeys();
 }
 
-// ilogtail_config.json > gflag
+// loongcollector_config.json > gflag
 void AppConfigUnittest::TestLoadFileParameters() {
     const std::string kLogtailSysConfDir = GetProcessExecutionDir();
 
@@ -274,7 +275,7 @@ DEFINE_FLAG_INT64(test_param_int64_error, "test_param_int64", 64);
 DEFINE_FLAG_DOUBLE(test_param_double_error, "test_param_double", 1.1);
 DEFINE_FLAG_STRING(test_param_string_error, "test_param_string", "str");
 
-// ilogtail_config.json > gflag
+// loongcollector_config.json > gflag
 void AppConfigUnittest::TestLoadJsonAndEnvParameters() {
     Json::Value jsonconfig;
     setJSON(jsonconfig, "test_param_bool", false);

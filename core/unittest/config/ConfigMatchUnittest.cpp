@@ -12,43 +12,46 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "unittest/Unittest.h"
 #include <assert.h>
+
+#include "unittest/Unittest.h"
 #if defined(__linux__)
-#include <unistd.h>
+#include <fnmatch.h>
 #include <signal.h>
 #include <sys/inotify.h>
-#include <fnmatch.h>
+#include <unistd.h>
 #endif
+#include <errno.h>
+#include <fcntl.h>
+#include <json/json.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <string.h>
-#include <stdio.h>
-#include <string>
-#include <errno.h>
-#include <typeinfo>
-#include <iostream>
+
 #include <fstream>
+#include <iostream>
 #include <memory>
-#include <thread>
 #include <set>
-#include <json/json.h>
-#include "common/Flags.h"
-#include "common/FileSystemUtil.h"
-#include "file_server/event_handler/EventHandler.h"
-#include "file_server/polling/PollingEventQueue.h"
-#include "file_server/EventDispatcher.h"
+#include <string>
+#include <thread>
+#include <typeinfo>
+
 #include "app_config/AppConfig.h"
+#include "common/FileSystemUtil.h"
+#include "common/Flags.h"
 #include "file_server/ConfigManager.h"
-#include "file_server/reader/LogFileReader.h"
-#include "file_server/event_handler/LogInput.h"
+#include "file_server/EventDispatcher.h"
 #include "file_server/event/Event.h"
+#include "file_server/event_handler/EventHandler.h"
+#include "file_server/event_handler/LogInput.h"
+#include "file_server/polling/PollingEventQueue.h"
+#include "file_server/reader/LogFileReader.h"
 #include "logger/Logger.h"
 using namespace std;
 
-DECLARE_FLAG_STRING(ilogtail_config);
+DECLARE_FLAG_STRING(loongcollector_config);
 DECLARE_FLAG_STRING(user_log_config);
 DECLARE_FLAG_INT32(batch_send_interval);
 
@@ -79,7 +82,7 @@ public:
 
     void CaseSetUp() {
         bfs::remove("log_file_out");
-        AppConfig::GetInstance()->LoadAppConfig(STRING_FLAG(ilogtail_config));
+        AppConfig::GetInstance()->LoadAppConfig(STRING_FLAG(loongcollector_config));
         ConfigManager::GetInstance()->LoadConfig(STRING_FLAG(user_log_config));
         gDispatchThreadId.reset(new std::thread(RunningDispatcher));
         sleep(1);
@@ -90,7 +93,7 @@ public:
         gDispatchThreadId = nullptr;
         ConfigManager::GetInstance()->CleanEnviroments();
         bfs::remove("user_log_config.json");
-        bfs::remove("ilogtail_config.json");
+        bfs::remove("loongcollector_config.json");
         bfs::remove_all(gRootDir);
     }
 
@@ -569,7 +572,7 @@ private:
 
     void TestBlacklistControlCommon(const std::string& pathRoot, const std::string& logPath = "") {
         GenerateUserLogConfigForTestingBlacklistControl(pathRoot);
-        std::ofstream out("ilogtail_config.json");
+        std::ofstream out("loongcollector_config.json");
         out << std::string("{") << std::string("\"config_server_address\" : \"file\",")
             << std::string("\"data_server_address\" : \"file\",") << std::string("\"domain\" : \"\"")
             << std::string("}");
@@ -1043,7 +1046,8 @@ void ConfigMatchUnittest::TestChinesePathAndFilePattern() {
     filePattern = EncodingConverter::GetInstance()->FromACPToUTF8(filePattern);
 #endif
     {
-        PipelineConfig cfg(basePath, filePattern, LogType::REGEX_LOG, "log", ".*", "", "", "project", true, 3, 3, "logstore");
+        PipelineConfig cfg(
+            basePath, filePattern, LogType::REGEX_LOG, "log", ".*", "", "", "project", true, 3, 3, "logstore");
         fsutil::Dir dir(pathRoot);
         APSARA_TEST_TRUE(dir.Open());
         while (fsutil::Entry ent = dir.ReadNext()) {

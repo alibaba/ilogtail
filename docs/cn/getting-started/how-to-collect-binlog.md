@@ -91,7 +91,7 @@ drwxrwxr-x 5 505 505      4096 7月  10 18:00 example_config
 -rw-r--r-- 1 505 505 115963144 7月  11 00:00 libPluginBase.so
 -rw-rw-r-- 1 505 505     11356 7月  11 00:00 LICENSE
 -rw-rw-r-- 1 505 505      4834 7月  11 00:00 README.md
--rw-rw-r-- 1  505  505    118 7月  14 11:22 ilogtail_config.json
+-rw-rw-r-- 1  505  505    118 7月  14 11:22 loongcollector_config.json
 drwxr-xr-x 2 root root    4096 7月  12 09:55 config
 ```
 

@@ -32,13 +32,11 @@
 #include "common/version.h"
 #include "config/ConfigDiff.h"
 #include "config/watcher/ConfigWatcher.h"
-#include "file_server/EventDispatcher.h"
-#include "file_server/event_handler/LogInput.h"
 #include "file_server/ConfigManager.h"
+#include "file_server/EventDispatcher.h"
 #include "file_server/FileServer.h"
-#include "plugin/flusher/sls/DiskBufferWriter.h"
+#include "file_server/event_handler/LogInput.h"
 #include "go_pipeline/LogtailPlugin.h"
-#include "plugin/input/InputFeedbackInterfaceRegistry.h"
 #include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/MetricExportor.h"
@@ -46,10 +44,12 @@
 #include "pipeline/InstanceConfigManager.h"
 #include "pipeline/PipelineManager.h"
 #include "pipeline/plugin/PluginRegistry.h"
-#include "runner/LogProcess.h"
 #include "pipeline/queue/ExactlyOnceQueueManager.h"
 #include "pipeline/queue/SenderQueueManager.h"
+#include "plugin/flusher/sls/DiskBufferWriter.h"
+#include "plugin/input/InputFeedbackInterfaceRegistry.h"
 #include "runner/FlusherRunner.h"
+#include "runner/LogProcess.h"
 #include "runner/sink/http/HttpSink.h"
 #ifdef __ENTERPRISE__
 #include "config/provider/EnterpriseConfigProvider.h"
@@ -63,7 +63,7 @@
 #endif
 
 DEFINE_FLAG_BOOL(ilogtail_disable_core, "disable core in worker process", true);
-DEFINE_FLAG_STRING(ilogtail_config_env_name, "config file path", "ALIYUN_LOGTAIL_CONFIG");
+DEFINE_FLAG_STRING(loongcollector_config_env_name, "config file path", "ALIYUN_LOGTAIL_CONFIG");
 DEFINE_FLAG_STRING(app_info_file, "", "app_info.json");
 DEFINE_FLAG_INT32(file_tags_update_interval, "second", 1);
 DEFINE_FLAG_INT32(config_scan_interval, "seconds", 10);
@@ -120,10 +120,10 @@ void Application::Init() {
         AppConfig::GetInstance()->SetWorkingDir(GetProcessExecutionDir());
     }
 
-    // load ilogtail_config.json
-    char* configEnv = getenv(STRING_FLAG(ilogtail_config_env_name).c_str());
+    // load loongcollector_config.json
+    char* configEnv = getenv(STRING_FLAG(loongcollector_config_env_name).c_str());
     if (configEnv == NULL || strlen(configEnv) == 0) {
-        AppConfig::GetInstance()->LoadAppConfig(STRING_FLAG(ilogtail_config));
+        AppConfig::GetInstance()->LoadAppConfig(STRING_FLAG(loongcollector_config));
     } else {
         AppConfig::GetInstance()->LoadAppConfig(configEnv);
     }
