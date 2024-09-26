@@ -61,7 +61,6 @@ private:
     void CheckIfInputUpdated(const Json::Value& config,
                              bool& isInputObserverChanged,
                              bool& isInputFileChanged,
-                             bool& isInputStreamChanged,
                              bool& isInputContainerStdioChanged);
 
     std::unordered_map<std::string, std::shared_ptr<Pipeline>> mPipelineNameEntityMap;
@@ -71,6 +70,10 @@ private:
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class PipelineManagerMock;
     friend class PipelineManagerUnittest;
+    friend class ProcessQueueManagerUnittest;
+    friend class ExactlyOnceQueueManagerUnittest;
+    friend class BoundedProcessQueueUnittest;
+    friend class CircularProcessQueueUnittest;
     friend class CommonConfigProviderUnittest;
 #endif
 };

@@ -980,15 +980,6 @@ bool AppConfig::CheckAndResetProxyAddress(const char* envKey, string& address) {
  * 函数会根据配置项的存在与否来决定是否更新相应的成员变量或全局标志。
  */
 void AppConfig::LoadOtherConf(const Json::Value& confJson) {
-    // if (confJson.isMember("mapping_conf_path") && confJson["mapping_conf_path"].isString())
-    //     mMappingConfigPath = confJson["mapping_conf_path"].asString();
-    // else
-    //     mMappingConfigPath = STRING_FLAG(default_mapping_config_path);
-
-    if (confJson.isMember("streamlog_open") && confJson["streamlog_open"].isBool()) {
-        mOpenStreamLog = confJson["streamlog_open"].asBool();
-    }
-
     {
         int32_t oasConnectTimeout = 0;
         if (LoadInt32Parameter(

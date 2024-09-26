@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <future>
 
+#include "monitor/LogtailMetric.h"
 #include "pipeline/plugin/interface/Flusher.h"
 #include "pipeline/queue/SenderQueueItem.h"
 #include "runner/sink/SinkType.h"
@@ -68,6 +69,15 @@ private:
 
     bool mSendRandomSleep;
     bool mSendFlowControl;
+
+    mutable MetricsRecordRef mMetricsRecordRef;
+    CounterPtr mInItemsCnt;
+    CounterPtr mInItemDataSizeBytes;
+    CounterPtr mInItemRawDataSizeBytes;
+    CounterPtr mOutItemsCnt;
+    CounterPtr mTotalDelayMs;
+    IntGaugePtr mWaitingItemsCnt;
+    IntGaugePtr mLastRunTime;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class PluginRegistryUnittest;
