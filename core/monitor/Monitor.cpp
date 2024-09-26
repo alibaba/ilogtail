@@ -485,7 +485,7 @@ void LogtailMonitor::DumpToLocal(const sls_logs::LogGroup& logGroup) {
     }
     dumpStr += "####status     end####\n";
 
-    static auto gMonitorLogger = Logger::Instance().GetLogger("/apsara/sls/ilogtail/status");
+    static auto gMonitorLogger = Logger::Instance().GetLogger("/apsara/sls/loongcollector/status");
     LOG_INFO(gMonitorLogger, ("\n", dumpStr));
 }
 
