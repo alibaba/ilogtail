@@ -214,7 +214,7 @@ void SenderQueueManagerUnittest::TestGetAllAvailableItems() {
         sManager->GetAllAvailableItems(items, false);
         APSARA_TEST_EQUAL(4U, items.size());
         for (auto& item : items) {
-            item->mStatus = SendingStatus::IDLE;
+            item->mStatus.Set(SendingStatus::IDLE);
         }
     }
     auto regionConcurrencyLimiter = FlusherSLS::GetRegionConcurrencyLimiter(mFlusher.mRegion);

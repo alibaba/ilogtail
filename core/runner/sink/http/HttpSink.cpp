@@ -88,7 +88,7 @@ bool HttpSink::AddRequestToClient(std::unique_ptr<HttpSinkRequest>&& request) {
                                    AppConfig::GetInstance()->IsHostIPReplacePolicyEnabled(),
                                    AppConfig::GetInstance()->GetBindInterface());
     if (curl == nullptr) {
-        request->mItem->mStatus = SendingStatus::IDLE;
+        request->mItem->mStatus.Set(SendingStatus::IDLE);
         FlusherRunner::GetInstance()->DecreaseHttpSendingCnt();
         LOG_ERROR(sLogger,
                   ("failed to send request", "failed to init curl handler")(
@@ -103,7 +103,7 @@ bool HttpSink::AddRequestToClient(std::unique_ptr<HttpSinkRequest>&& request) {
 
     auto res = curl_multi_add_handle(mClient, curl);
     if (res != CURLM_OK) {
-        request->mItem->mStatus = SendingStatus::IDLE;
+        request->mItem->mStatus.Set(SendingStatus::IDLE);
         FlusherRunner::GetInstance()->DecreaseHttpSendingCnt();
         curl_easy_cleanup(curl);
         LOG_ERROR(sLogger,

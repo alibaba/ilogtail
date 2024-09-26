@@ -130,7 +130,7 @@ void SenderQueueUnittest::TestGetAllAvailableItems() {
         mQueue->GetAllAvailableItems(items, false);
         APSARA_TEST_EQUAL(2U, items.size());
         for (auto& item : items) {
-            item->mStatus = SendingStatus::IDLE;
+            item->mStatus.Set(SendingStatus::IDLE);
         }
     }
     {
@@ -144,7 +144,7 @@ void SenderQueueUnittest::TestGetAllAvailableItems() {
         APSARA_TEST_EQUAL(sDataSize, mQueue->mRateLimiter->mLastSecondTotalBytes);
         APSARA_TEST_EQUAL(1, sConcurrencyLimiter->GetSendingCount());
         for (auto& item : items) {
-            item->mStatus = SendingStatus::IDLE;
+            item->mStatus.Set(SendingStatus::IDLE);
         }
         mQueue->mRateLimiter->mLastSecondTotalBytes = 0;
     }

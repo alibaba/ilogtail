@@ -126,8 +126,8 @@ void SenderQueue::GetAllAvailableItems(vector<SenderQueueItem*>& items, bool wit
                 }
             }
         }
-        if (item->mStatus == SendingStatus::IDLE) {
-            item->mStatus = SendingStatus::SENDING;
+        if (item->mStatus.Get() == SendingStatus::IDLE) {
+            item->mStatus.Set(SendingStatus::SENDING);
             items.emplace_back(item);
             if (withLimits) {
                 for (auto& limiter : mConcurrencyLimiters) {
