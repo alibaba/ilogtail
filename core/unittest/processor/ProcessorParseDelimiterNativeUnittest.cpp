@@ -2427,7 +2427,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventDiscardUnmatch() {
     // discard unmatch, so output is 0
     APSARA_TEST_EQUAL_FATAL(uint64_t(0), processorInstance.mOutEventsTotal->GetValue());
     // event group size is not 0
-    APSARA_TEST_NOT_EQUAL_FATAL(uint64_t(0), processorInstance.mOutEventGroupSizeBytes->GetValue());
+    APSARA_TEST_NOT_EQUAL_FATAL(uint64_t(0), processorInstance.mOutSizeBytes->GetValue());
     APSARA_TEST_EQUAL_FATAL(uint64_t(count), processor.mDiscardedEventsTotal->GetValue());
     APSARA_TEST_EQUAL_FATAL(uint64_t(count), processor.mOutFailedEventsTotal->GetValue());
 }

@@ -40,7 +40,7 @@ type ProcessorPickKey struct {
 func (p *ProcessorPickKey) Init(context pipeline.Context) error {
 	p.context = context
 	metricsRecord := p.context.GetMetricRecord()
-	p.filterMetric = helper.NewCounterMetricAndRegister(metricsRecord, helper.MetricPluginDiscardEventsTotal)
+	p.filterMetric = helper.NewCounterMetricAndRegister(metricsRecord, helper.MetricPluginDiscardedEventsTotal)
 
 	if len(p.Include) > 0 {
 		p.includeMap = make(map[string]struct{})

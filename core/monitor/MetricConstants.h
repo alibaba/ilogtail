@@ -92,10 +92,11 @@ extern const std::string METRIC_LABEL_PLUGIN_TYPE;
 // metric keys
 extern const std::string METRIC_PLUGIN_IN_EVENTS_TOTAL;
 extern const std::string METRIC_PLUGIN_IN_EVENT_GROUPS_TOTAL;
-extern const std::string METRIC_PLUGIN_IN_EVENT_GROUP_SIZE_BYTES;
+extern const std::string METRIC_PLUGIN_IN_SIZE_BYTES;
 extern const std::string METRIC_PLUGIN_OUT_EVENTS_TOTAL;
 extern const std::string METRIC_PLUGIN_OUT_EVENT_GROUPS_TOTAL;
-extern const std::string METRIC_PLUGIN_OUT_EVENT_GROUP_SIZE_BYTES;
+extern const std::string METRIC_PLUGIN_OUT_SIZE_BYTES;
+extern const std::string METRIC_PLUGIN_TOTAL_DELAY_TIME_MS;
 extern const std::string METRIC_PLUGIN_TOTAL_PROCESS_TIME_MS;
 
 /**********************************************************
@@ -111,7 +112,7 @@ extern const std::string METRIC_PLUGIN_SOURCE_READ_OFFSET_BYTES;
 extern const std::string METRIC_PLUGIN_SOURCE_SIZE_BYTES;
 
 /**********************************************************
-*   all processor (parse type)
+*   all processor （所有解析类的处理插件通用指标。Todo：目前统计还不全、不准确）
 **********************************************************/
 extern const std::string METRIC_PLUGIN_DISCARDED_EVENTS_TOTAL;
 extern const std::string METRIC_PLUGIN_OUT_FAILED_EVENTS_TOTAL;

@@ -45,7 +45,7 @@ func (p *ProcessorRateLimit) Init(context pipeline.Context) error {
 	p.Algorithm = newTokenBucket(limit)
 
 	metricsRecord := p.context.GetMetricRecord()
-	p.limitMetric = helper.NewCounterMetricAndRegister(metricsRecord, helper.MetricPluginDiscardEventsTotal)
+	p.limitMetric = helper.NewCounterMetricAndRegister(metricsRecord, helper.MetricPluginDiscardedEventsTotal)
 	return nil
 }
 

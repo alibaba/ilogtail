@@ -19,33 +19,17 @@ import (
 )
 
 //////////////////////////////////////////////////////////////////////////
-// labels
+// common
 //////////////////////////////////////////////////////////////////////////
 
-// common
+// label keys
 const MetricLabelProject = "project"
-
-// pipeline
-const (
-	MetricLabelLogstore     = "logstore"
-	MetricLabelRegion       = "region"
-	MetricLabelPipelineName = "pipeline_name"
-)
-
-// plugin
-const (
-	MetricLabelPluginType  = "plugin_type"
-	MetricLabelPluginID    = "plugin_id"
-	MetricLabelNodeID      = "node_id"
-	MetricLabelChildNodeID = "child_node_id"
-	// label for service_mysql/
-	MetricLabelDriver = "driver"
-)
 
 //////////////////////////////////////////////////////////////////////////
 // agent
 //////////////////////////////////////////////////////////////////////////
 
+// metric keys
 const (
 	MetricAgentCPUGo           = "agent_go_cpu_percent"
 	MetricAgentMemoryGo        = "agent_go_memory_used_mb"
@@ -56,26 +40,32 @@ const (
 // plugin
 //////////////////////////////////////////////////////////////////////////
 
-// common metrics
+// label keys
 const (
-	MetricPluginCostTimeMs              = "plugin_cost_time_ms"
-	MetricPluginInBufferTotal           = "plugin_in_buffer_total"
-	MetricPluginInBufferSizeBytes       = "plugin_in_buffer_size_bytes"
-	MetricPluginOutBufferTotal          = "plugin_out_buffer_total"
-	MetricPluginOutBufferSizeBytes      = "plugin_out_buffer_size_bytes"
-	MetricPluginInEventsTotal           = "plugin_in_events_total"
-	MetricPluginInEventsSizeBytes       = "plugin_in_events_size_bytes"
-	MetricPluginOutEventsTotal          = "plugin_out_events_total"
-	MetricPluginOutEventsSizeBytes      = "plugin_out_events_size_bytes"
-	MetricPluginInEventGroupsTotal      = "plugin_in_event_groups_total"
-	MetricPluginInEventGroupsSizeBytes  = "plugin_in_event_groups_size_bytes"
-	MetricPluginOutEventGroupsTotal     = "plugin_in_event_groups_total"
-	MetricPluginOutEventGroupsSizeBytes = "plugin_out_event_groups_size_bytes"
-	MetricPluginDiscardEventsTotal      = "plugin_discard_events_total"
-	MetricPluginErrorTotal              = "plugin_error_total"
+	MetricLabelLogstore     = "logstore"
+	MetricLabelRegion       = "region"
+	MetricLabelPipelineName = "pipeline_name"
+	MetricLabelPluginType   = "plugin_type"
+	MetricLabelPluginID     = "plugin_id"
+	MetricLabelNodeID       = "node_id"
+	MetricLabelChildNodeID  = "child_node_id"
 )
 
-// input input_canal custom metrics
+// metric keys
+const (
+	MetricPluginInEventsTotal       = "plugin_in_events_total"
+	MetricPluginInEventGroupsTotal  = "plugin_in_event_groups_total"
+	MetricPluginInSizeBytes         = "plugin_in_size_bytes"
+	MetricPluginOutEventsTotal      = "plugin_out_events_total"
+	MetricPluginOutEventGroupsTotal = "plugin_out_event_groups_total"
+	MetricPluginOutSizeBytes        = "plugin_out_size_bytes"
+	MetricPluginTotalDelayTimeMs    = "plugin_total_delay_time_ms"
+	MetricPluginTotalProcessTimeMs  = "plugin_total_process_time_ms"
+)
+
+/**********************************************************
+*   input_canal
+**********************************************************/
 const (
 	MetricPluginBinlogRotate     = "plugin_binlog_rotate"
 	MetricPluginBinlogSync       = "plugin_binlog_sync"
@@ -87,7 +77,10 @@ const (
 	MetricPluginBinlogGtid       = "plugin_binlog_gtid"
 )
 
-// input metric_container_info/service_docker_stdout_v2 custom metrics
+/**********************************************************
+*   metric_container_info
+*	service_docker_stdout_v2
+**********************************************************/
 const (
 	MetricPluginContainerTotal       = "plugin_container_total"
 	MetricPluginAddContainerTotal    = "plugin_add_container_total"
@@ -95,13 +88,31 @@ const (
 	MetricPluginUpdateContainerTotal = "plugin_update_container_total"
 )
 
-// input service_mysql custom metrics
+/**********************************************************
+*   service_mysql
+**********************************************************/
 const (
+	MetricLabelDriver = "driver"
+
 	MetricPluginCollectAvgCostTimeMs = "plugin_collect_avg_cost_time_ms"
 	MetricPluginCollectTotal         = "plugin_collect_total"
 )
 
-// processor processor_anchor/processor_regex/processor_string_replace custom metrics
+/**********************************************************
+*   all processor（所有解析类的处理插件通用指标。Todo：目前统计还不全、不准确）
+**********************************************************/
+const (
+	MetricPluginDiscardedEventsTotal      = "plugin_discarded_events_total"
+	MetricPluginOutFailedEventsTotal      = "plugin_out_failed_events_total"
+	MetricPluginOutKeyNotFoundEventsTotal = "plugin_out_key_not_found_events_total"
+	MetricPluginOutSuccessfulEventsTotal  = "plugin_out_successful_events_total"
+)
+
+/**********************************************************
+*   processor_anchor
+*   processor_regex
+*   processor_string_replace
+**********************************************************/
 const (
 	PluginPairsPerLogTotal = "plugin_pairs_per_log_total"
 )

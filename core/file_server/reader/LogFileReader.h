@@ -539,7 +539,7 @@ protected:
     ReentrantMetricsRecordRef mMetricsRecordRef;
     CounterPtr mOutEventsTotal;
     CounterPtr mOutEventGroupsTotal;
-    CounterPtr mOutEventGroupSizeBytes;
+    CounterPtr mOutSizeBytes;
     IntGaugePtr mSourceSizeBytes;
     IntGaugePtr mSourceReadOffsetBytes;
 

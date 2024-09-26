@@ -34,10 +34,18 @@ func (wrapper *ProcessorWrapperV1) Init(pluginMeta *pipeline.PluginMeta) error {
 }
 
 func (wrapper *ProcessorWrapperV1) Process(logArray []*protocol.Log) []*protocol.Log {
-	wrapper.inEventsTotal.Add(int64(len(logArray)))
 	startTime := time.Now().UnixMilli()
+	wrapper.inEventsTotal.Add(int64(len(logArray)))
+	for _, log := range logArray {
+		wrapper.inSizeBytes.Add(int64(log.Size()))
+	}
+
 	result := wrapper.Processor.ProcessLogs(logArray)
-	wrapper.costTimeMs.Add(time.Now().UnixMilli() - startTime)
+
 	wrapper.outEventsTotal.Add(int64(len(result)))
+	for _, log := range result {
+		wrapper.outSizeBytes.Add(int64(log.Size()))
+	}
+	wrapper.totalProcessTimeMs.Add(time.Now().UnixMilli() - startTime)
 	return result
 }

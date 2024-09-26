@@ -609,7 +609,7 @@ void ProcessorParseTimestampNativeUnittest::TestProcessHistoryDiscard() {
     // discard history, so output is 0
     APSARA_TEST_EQUAL_FATAL(0UL, processorInstance.mOutEventsTotal->GetValue());
     // event group size is not 0
-    APSARA_TEST_NOT_EQUAL_FATAL(0UL, processorInstance.mOutEventGroupSizeBytes->GetValue());
+    APSARA_TEST_NOT_EQUAL_FATAL(0UL, processorInstance.mOutSizeBytes->GetValue());
     APSARA_TEST_EQUAL_FATAL(2UL, processor.mDiscardedEventsTotal->GetValue());
     APSARA_TEST_EQUAL_FATAL(0UL, processor.mOutFailedEventsTotal->GetValue());
 }

@@ -38,20 +38,15 @@ func (wrapper *FlusherWrapperV1) IsReady(projectName string, logstoreName string
 }
 
 func (wrapper *FlusherWrapperV1) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
-	var total, size int64
+	startTime := time.Now()
 	for _, logGroup := range logGroupList {
-		total += int64(len(logGroup.Logs))
-		size += int64(logGroup.Size())
+		wrapper.inEventsTotal.Add(int64(len(logGroup.Logs)))
+		wrapper.inEventGroupsTotal.Add(1)
+		wrapper.inSizeBytes.Add(int64(logGroup.Size()))
 	}
 
-	wrapper.inEventsTotal.Add(total)
-	wrapper.inEventsSizeBytes.Add(size)
-	startTime := time.Now()
 	err := wrapper.Flusher.Flush(projectName, logstoreName, configName, logGroupList)
-	if err != nil {
-		wrapper.errorTotal.Add(1)
-		wrapper.discardEventsTotal.Add(total)
-	}
-	wrapper.costTimeMs.Observe(float64(time.Since(startTime)))
+
+	wrapper.totalDelayTimeMs.Add(time.Since(startTime).Milliseconds())
 	return err
 }

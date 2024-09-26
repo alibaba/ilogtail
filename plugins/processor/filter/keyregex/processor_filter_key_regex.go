@@ -62,7 +62,7 @@ func (p *ProcessorKeyFilter) Init(context pipeline.Context) error {
 	}
 
 	metricsRecord := p.context.GetMetricRecord()
-	p.filterMetric = helper.NewCounterMetricAndRegister(metricsRecord, helper.MetricPluginDiscardEventsTotal)
+	p.filterMetric = helper.NewCounterMetricAndRegister(metricsRecord, helper.MetricPluginDiscardedEventsTotal)
 	return nil
 }
 

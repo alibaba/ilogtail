@@ -48,7 +48,7 @@ private:
 
     CounterPtr mInEventsTotal;
     CounterPtr mInEventGroupsTotal;
-    CounterPtr mInEventGroupSizeBytes;
+    CounterPtr mInSizeBytes;
 };
 
 } // namespace logtail

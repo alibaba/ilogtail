@@ -565,7 +565,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventDiscardUnmatch() {
     // discard unmatch, so output is 0
     APSARA_TEST_EQUAL_FATAL(0, processorInstance.mOutEventsTotal->GetValue());
     // event group size is not 0
-    APSARA_TEST_NOT_EQUAL_FATAL(0, processorInstance.mOutEventGroupSizeBytes->GetValue());
+    APSARA_TEST_NOT_EQUAL_FATAL(0, processorInstance.mOutSizeBytes->GetValue());
     APSARA_TEST_EQUAL_FATAL(count, processor.mDiscardedEventsTotal->GetValue());
     APSARA_TEST_EQUAL_FATAL(count, processor.mOutFailedEventsTotal->GetValue());
     APSARA_TEST_EQUAL_FATAL(0, processor.mOutKeyNotFoundEventsTotal->GetValue());
@@ -653,7 +653,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeyCountUnmatch() {
     // discard unmatch, so output is 0
     APSARA_TEST_EQUAL_FATAL(0, processorInstance.mOutEventsTotal->GetValue());
     // event group size is not 0
-    APSARA_TEST_NOT_EQUAL_FATAL(0, processorInstance.mOutEventGroupSizeBytes->GetValue());
+    APSARA_TEST_NOT_EQUAL_FATAL(0, processorInstance.mOutSizeBytes->GetValue());
     APSARA_TEST_EQUAL_FATAL(count, processor.mDiscardedEventsTotal->GetValue());
     // mKeyCountNotMatchErrorTotal should equal count
     APSARA_TEST_EQUAL_FATAL(0, processor.mOutFailedEventsTotal->GetValue());

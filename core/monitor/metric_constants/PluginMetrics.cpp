@@ -25,10 +25,11 @@ const std::string METRIC_LABEL_PLUGIN_TYPE = "plugin_type";
 // metric keys
 const std::string METRIC_PLUGIN_IN_EVENTS_TOTAL = "plugin_in_events_total";
 const std::string METRIC_PLUGIN_IN_EVENT_GROUPS_TOTAL = "plugin_in_event_groups_total";
-const std::string METRIC_PLUGIN_IN_EVENT_GROUP_SIZE_BYTES = "plugin_in_event_group_size_bytes";
+const std::string METRIC_PLUGIN_IN_SIZE_BYTES = "plugin_in_size_bytes";
 const std::string METRIC_PLUGIN_OUT_EVENTS_TOTAL = "plugin_out_events_total";
-const std::string METRIC_PLUGIN_OUT_EVENT_GROUPS_TOTAL = "plugin_in_event_groups_total";
-const std::string METRIC_PLUGIN_OUT_EVENT_GROUP_SIZE_BYTES = "plugin_out_event_group_size_bytes";
+const std::string METRIC_PLUGIN_OUT_EVENT_GROUPS_TOTAL = "plugin_out_event_groups_total";
+const std::string METRIC_PLUGIN_OUT_SIZE_BYTES = "plugin_out_size_bytes";
+const std::string METRIC_PLUGIN_TOTAL_DELAY_TIME_MS = "plugin_total_delay_time_ms";
 const std::string METRIC_PLUGIN_TOTAL_PROCESS_TIME_MS = "plugin_total_process_time_ms";
 
 /**********************************************************
@@ -44,7 +45,7 @@ const std::string METRIC_PLUGIN_SOURCE_READ_OFFSET_BYTES = "plugin_source_read_o
 const std::string METRIC_PLUGIN_SOURCE_SIZE_BYTES = "plugin_source_size_bytes";
 
 /**********************************************************
-*   all processor (parse type)
+*   all processor （所有解析类的处理插件通用指标。Todo：目前统计还不全、不准确）
 **********************************************************/
 const std::string METRIC_PLUGIN_DISCARDED_EVENTS_TOTAL = "plugin_discarded_events_total";
 const std::string METRIC_PLUGIN_OUT_FAILED_EVENTS_TOTAL = "plugin_out_failed_events_total";

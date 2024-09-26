@@ -44,8 +44,8 @@ private:
     CounterPtr mOutEventsTotal;
     CounterPtr mInEventGroupsTotal;
     CounterPtr mOutEventGroupsTotal;
-    CounterPtr mInEventGroupSizeBytes;
-    CounterPtr mOutEventGroupSizeBytes;
+    CounterPtr mInSizeBytes;
+    CounterPtr mOutSizeBytes;
     CounterPtr mCostTimeMS;
 
 #ifdef APSARA_UNIT_TEST_MAIN

@@ -215,7 +215,7 @@ void LogFileReader::SetMetrics() {
 
     mOutEventsTotal = mMetricsRecordRef->GetCounter(METRIC_PLUGIN_OUT_EVENTS_TOTAL);
     mOutEventGroupsTotal = mMetricsRecordRef->GetCounter(METRIC_PLUGIN_OUT_EVENT_GROUPS_TOTAL);
-    mOutEventGroupSizeBytes = mMetricsRecordRef->GetCounter(METRIC_PLUGIN_OUT_EVENT_GROUP_SIZE_BYTES);
+    mOutSizeBytes = mMetricsRecordRef->GetCounter(METRIC_PLUGIN_OUT_SIZE_BYTES);
     mSourceSizeBytes = mMetricsRecordRef->GetIntGauge(METRIC_PLUGIN_SOURCE_SIZE_BYTES);
     mSourceReadOffsetBytes = mMetricsRecordRef->GetIntGauge(METRIC_PLUGIN_SOURCE_READ_OFFSET_BYTES);
     mMetricInited = true;
@@ -2136,7 +2136,7 @@ void LogFileReader::ReportMetrics(uint64_t readSize) {
     if (mMetricInited) {
         mOutEventsTotal->Add(1);
         mOutEventGroupsTotal->Add(1);
-        mOutEventGroupSizeBytes->Add(readSize);
+        mOutSizeBytes->Add(readSize);
         mSourceReadOffsetBytes->Set(GetLastFilePos());
         mSourceSizeBytes->Set(GetFileSize());
     }
