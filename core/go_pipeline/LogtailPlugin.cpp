@@ -689,8 +689,8 @@ bool TransferPBToPipelineEventGroup(const logtail::models::PipelineEventGroup& s
 
 bool TransferPBToLogEvent(const logtail::models::LogEvent& src, logtail::LogEvent& dst, std::string& errMsg) {
     // timestamp
-    time_t ts = static_cast<time_t>(src.timestamp() >> 32);
-    time_t tns = static_cast<time_t>(src.timestamp() << 32 >> 32);
+    time_t ts = static_cast<time_t>(src.timestamp() / 1e9);
+    time_t tns = static_cast<time_t>(src.timestamp() - static_cast<uint64_t>(ts) * 1e9);
     dst.SetTimestamp(ts, tns);
     // contents
     for (auto& content_pair : src.contents()) {
@@ -705,8 +705,8 @@ bool TransferPBToLogEvent(const logtail::models::LogEvent& src, logtail::LogEven
 
 bool TransferPBToMetricEvent(const logtail::models::MetricEvent& src, logtail::MetricEvent& dst, std::string& errMsg) {
     // timestamp
-    time_t ts = static_cast<time_t>(src.timestamp() >> 32);
-    time_t tns = static_cast<time_t>(src.timestamp() << 32 >> 32);
+    time_t ts = static_cast<time_t>(src.timestamp() / 1e9);
+    time_t tns = static_cast<time_t>(src.timestamp() - static_cast<uint64_t>(ts) * 1e9);
     dst.SetTimestamp(ts, tns);
     // name
     dst.SetName(src.name());
@@ -726,8 +726,8 @@ bool TransferPBToMetricEvent(const logtail::models::MetricEvent& src, logtail::M
 
 bool TransferPBToSpanEvent(const logtail::models::SpanEvent& src, logtail::SpanEvent& dst, std::string& errMsg) {
     // timestamp
-    time_t ts = static_cast<time_t>(src.timestamp() >> 32);
-    time_t tns = static_cast<time_t>(src.timestamp() << 32 >> 32);
+    time_t ts = static_cast<time_t>(src.timestamp() / 1e9);
+    time_t tns = static_cast<time_t>(src.timestamp() - static_cast<uint64_t>(ts) * 1e9);
     dst.SetTimestamp(ts, tns);
 
     dst.SetTraceId(src.traceid());

@@ -216,6 +216,7 @@ UNIT_TEST_CASE(LogEventUnittest, TestIterateContent)
 UNIT_TEST_CASE(LogEventUnittest, TestMeta)
 UNIT_TEST_CASE(LogEventUnittest, TestSize)
 UNIT_TEST_CASE(LogEventUnittest, TestFromJsonToJson)
+UNIT_TEST_CASE(LogEventUnittest, TestLevel)
 
 } // namespace logtail
 
