@@ -107,7 +107,7 @@ func CreateMetricEventByRawMetricV2(metric *models.Metric) (*protocol.MetricEven
 	metricEvent.Timestamp = (ts << 32) | tns
 	metricEvent.Name = metric.Name
 	if metric.GetValue().IsSingleValue() {
-		metricEvent.Value = &protocol.MetricEvent_UntypedSingleValue{&protocol.UntypedSingleValue{metric.Value.GetSingleValue()}}
+		metricEvent.Value = &protocol.MetricEvent_UntypedSingleValue{UntypedSingleValue: &protocol.UntypedSingleValue{Value: metric.Value.GetSingleValue()}}
 	} else {
 		return nil, fmt.Errorf("unsupported metric value type")
 	}
@@ -166,7 +166,7 @@ func CreateSpanEventByRawSpanV2(span *models.Span) (*protocol.SpanEvent, error) 
 
 func CreatePipelineEventGroupV1(logEvents []*protocol.LogEvent, configTag map[string]string, logTags map[string]string, ctx map[string]interface{}) (*protocol.PipelineEventGroup, error) {
 	var pipelineEventGroup protocol.PipelineEventGroup
-	pipelineEventGroup.PipelineEvents = &protocol.PipelineEventGroup_Logs{&protocol.PipelineEventGroup_LogEvents{logEvents}}
+	pipelineEventGroup.PipelineEvents = &protocol.PipelineEventGroup_Logs{Logs: &protocol.PipelineEventGroup_LogEvents{Array: logEvents}}
 	pipelineEventGroup.Tags = make(map[string][]byte, len(configTag)+len(logTags))
 	for k, v := range configTag {
 		pipelineEventGroup.Tags[k] = util.ZeroCopyStringToBytes(v)
@@ -199,7 +199,7 @@ func CreatePipelineEventGroupV2(groupInfo *models.GroupInfo, events []models.Pip
 				logEvents = append(logEvents, logDst)
 			}
 		}
-		pipelineEventGroup.PipelineEvents = &protocol.PipelineEventGroup_Logs{&protocol.PipelineEventGroup_LogEvents{logEvents}}
+		pipelineEventGroup.PipelineEvents = &protocol.PipelineEventGroup_Logs{Logs: &protocol.PipelineEventGroup_LogEvents{Array: logEvents}}
 	case models.EventTypeMetric:
 		metricEvents := make([]*protocol.MetricEvent, 0, len(events))
 		for _, event := range events {
@@ -208,7 +208,7 @@ func CreatePipelineEventGroupV2(groupInfo *models.GroupInfo, events []models.Pip
 				metricEvents = append(metricEvents, metricDst)
 			}
 		}
-		pipelineEventGroup.PipelineEvents = &protocol.PipelineEventGroup_Metrics{&protocol.PipelineEventGroup_MetricEvents{metricEvents}}
+		pipelineEventGroup.PipelineEvents = &protocol.PipelineEventGroup_Metrics{Metrics: &protocol.PipelineEventGroup_MetricEvents{Array: metricEvents}}
 	case models.EventTypeSpan:
 		spanEvents := make([]*protocol.SpanEvent, 0, len(events))
 		for _, event := range events {
@@ -217,7 +217,7 @@ func CreatePipelineEventGroupV2(groupInfo *models.GroupInfo, events []models.Pip
 				spanEvents = append(spanEvents, spanDst)
 			}
 		}
-		pipelineEventGroup.PipelineEvents = &protocol.PipelineEventGroup_Spans{&protocol.PipelineEventGroup_SpanEvents{spanEvents}}
+		pipelineEventGroup.PipelineEvents = &protocol.PipelineEventGroup_Spans{Spans: &protocol.PipelineEventGroup_SpanEvents{Array: spanEvents}}
 	}
 
 	pipelineEventGroup.Tags = make(map[string][]byte, groupInfo.Tags.Len())
