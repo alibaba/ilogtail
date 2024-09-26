@@ -63,9 +63,11 @@ DEFINE_FLAG_INT32(max_multi_config_size, "max multi config size", 20);
 DEFINE_FLAG_BOOL(default_accept_multi_config, "", false);
 DEFINE_FLAG_STRING(default_env_tag_keys, "default env key to load tags", "ALIYUN_LOG_ENV_TAGS");
 #if defined(__linux__) || defined(__APPLE__)
-DEFINE_FLAG_STRING(logtail_sys_conf_dir, "store machine-unique-id, user-defined-id, aliuid", "/etc/ilogtail/");
+DEFINE_FLAG_STRING(logtail_sys_conf_dir, "store machine-unique-id, user-defined-id, aliuid", "/etc/loongcollector/");
 #elif defined(_MSC_VER)
-DEFINE_FLAG_STRING(logtail_sys_conf_dir, "store machine-unique-id, user-defined-id, aliuid", "C:\\LogtailData\\");
+DEFINE_FLAG_STRING(logtail_sys_conf_dir,
+                   "store machine-unique-id, user-defined-id, aliuid",
+                   "C:\\Program Files\\loongcollector\\conf\\");
 #endif
 // const char* DEFAULT_ILOGTAIL_LOCAL_CONFIG_FLAG_VALUE = "user_local_config.json";
 // DEFINE_FLAG_STRING(ilogtail_local_config, "local ilogtail config file", DEFAULT_ILOGTAIL_LOCAL_CONFIG_FLAG_VALUE);
@@ -1188,7 +1190,7 @@ void AppConfig::SetLogtailSysConfDir(const std::string& dirPath) {
         int savedErrno = errno;
         LOG_WARNING(sLogger, ("open sys conf dir error", dirPath)("error", strerror(errno)));
         if (savedErrno == EACCES || savedErrno == ENOTDIR || savedErrno == ENOENT) {
-            mLogtailSysConfDir = GetProcessExecutionDir();
+            mLogtailSysConfDir = STRING_FLAG(loongcollector_data_dir);
         }
     } else {
         closedir(dir);
@@ -1196,7 +1198,7 @@ void AppConfig::SetLogtailSysConfDir(const std::string& dirPath) {
 #elif defined(_MSC_VER)
     DWORD ret = GetFileAttributes(mLogtailSysConfDir.c_str());
     if (INVALID_FILE_ATTRIBUTES == ret) {
-        mLogtailSysConfDir = GetProcessExecutionDir();
+        mLogtailSysConfDir = STRING_FLAG(loongcollector_data_dir);
     }
 #endif
 
