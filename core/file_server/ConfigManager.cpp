@@ -933,7 +933,7 @@ bool ConfigManager::IsUpdateContainerPaths() {
     // return false if s_lastUpdateCount >= INT32_FLAG(max_docker_config_update_times) and last update time is in same
     // window
     return false;
-    /********************************************************************************/
+    /************************************************************************************************************************/
 }
 
 bool ConfigManager::UpdateContainerStopped(ConfigContainerInfoUpdateCmd* cmd) {

@@ -40,7 +40,7 @@ bool ProcessorInstance::Init(const Json::Value& config, PipelineContext& context
     mOutEventGroupsTotal = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_OUT_EVENT_GROUPS_TOTAL);
     mInSizeBytes = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_IN_SIZE_BYTES);
     mOutSizeBytes = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_OUT_SIZE_BYTES);
-    mCostTimeMS = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_TOTAL_PROCESS_TIME_MS);
+    mTotalProcessTimeMs = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_TOTAL_PROCESS_TIME_MS);
 
     return true;
 }
@@ -57,7 +57,7 @@ void ProcessorInstance::Process(vector<PipelineEventGroup>& logGroupList) {
 
     auto before = chrono::system_clock::now();
     mPlugin->Process(logGroupList);
-    mCostTimeMS->Add(chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - before).count());
+    mTotalProcessTimeMs->Add(chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - before).count());
 
     for (const auto& logGroup : logGroupList) {
         mOutEventsTotal->Add(logGroup.GetEvents().size());
