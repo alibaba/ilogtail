@@ -125,7 +125,7 @@ void FlusherSLSUnittest::OnSuccessfulInit() {
     auto que = SenderQueueManager::GetInstance()->GetQueue(flusher->GetQueueKey());
     APSARA_TEST_NOT_EQUAL(nullptr, que);
     APSARA_TEST_FALSE(que->GetRateLimiter().has_value());
-    APSARA_TEST_EQUAL(2U, que->GetConcurrencyLimiters().size());
+    APSARA_TEST_EQUAL(3U, que->GetConcurrencyLimiters().size());
 
     // valid optional param
     configStr = R"(
