@@ -18,7 +18,7 @@ var LogEventPool = sync.Pool{
 
 func CreateLogEvent(t time.Time, enableTimestampNano bool, fields map[string]string) (*protocol.LogEvent, error) {
 	logEvent := LogEventPool.Get().(*protocol.LogEvent)
-	logEvent.Timestamp = (uint64(t.Unix()) << 32) | uint64(t.Nanosecond())
+	logEvent.Timestamp = uint64(t.Unix())*1e9 + uint64(t.Nanosecond())
 	if len(logEvent.Contents) < len(fields) {
 		slice := make([]*protocol.LogEvent_Content, len(logEvent.Contents), len(fields))
 		copy(slice, logEvent.Contents)
@@ -44,7 +44,7 @@ func CreateLogEvent(t time.Time, enableTimestampNano bool, fields map[string]str
 
 func CreateLogEventByArray(t time.Time, enableTimestampNano bool, columns []string, values []string) (*protocol.LogEvent, error) {
 	logEvent := LogEventPool.Get().(*protocol.LogEvent)
-	logEvent.Timestamp = (uint64(t.Unix()) << 32) | uint64(t.Nanosecond())
+	logEvent.Timestamp = uint64(t.Unix())*1e9 + uint64(t.Nanosecond())
 	logEvent.Contents = make([]*protocol.LogEvent_Content, 0, len(columns))
 	if len(columns) != len(values) {
 		return nil, fmt.Errorf("columns and values not equal")
@@ -65,7 +65,7 @@ func CreateLogEventByArray(t time.Time, enableTimestampNano bool, columns []stri
 
 func CreateLogEventByRawLogV1(log *protocol.Log) (*protocol.LogEvent, error) {
 	logEvent := LogEventPool.Get().(*protocol.LogEvent)
-	logEvent.Timestamp = (uint64(log.GetTime()) << 32) | uint64(log.GetTimeNs())
+	logEvent.Timestamp = uint64(log.GetTime())*1e9 + uint64(log.GetTimeNs())
 	logEvent.Contents = make([]*protocol.LogEvent_Content, 0, len(log.Contents))
 	rawSize := 0
 	for i, logC := range log.Contents {
@@ -83,9 +83,7 @@ func CreateLogEventByRawLogV1(log *protocol.Log) (*protocol.LogEvent, error) {
 
 func CreateLogEventByRawLogV2(log *models.Log) (*protocol.LogEvent, error) {
 	logEvent := LogEventPool.Get().(*protocol.LogEvent)
-	ts := log.GetTimestamp() / 1e9
-	tns := log.GetTimestamp() % 1e9
-	logEvent.Timestamp = (ts << 32) | tns
+	logEvent.Timestamp = log.GetTimestamp()
 	logEvent.Contents = make([]*protocol.LogEvent_Content, 0, log.Contents.Len())
 	for k, v := range log.Contents.Iterator() {
 		cont := &protocol.LogEvent_Content{
@@ -94,7 +92,7 @@ func CreateLogEventByRawLogV2(log *models.Log) (*protocol.LogEvent, error) {
 		}
 		logEvent.Contents = append(logEvent.Contents, cont)
 	}
-	logEvent.Level = log.GetLevel()
+	logEvent.Level = util.ZeroCopyStringToBytes(log.GetLevel())
 	logEvent.FileOffset = log.GetOffset()
 	logEvent.RawSize = log.GetRawSize()
 	return logEvent, nil
@@ -102,10 +100,8 @@ func CreateLogEventByRawLogV2(log *models.Log) (*protocol.LogEvent, error) {
 
 func CreateMetricEventByRawMetricV2(metric *models.Metric) (*protocol.MetricEvent, error) {
 	var metricEvent protocol.MetricEvent
-	ts := metric.GetTimestamp() / 1e9
-	tns := metric.GetTimestamp() % 1e9
-	metricEvent.Timestamp = (ts << 32) | tns
-	metricEvent.Name = metric.Name
+	metricEvent.Timestamp = metric.GetTimestamp()
+	metricEvent.Name = util.ZeroCopyStringToBytes(metric.GetName())
 	if metric.GetValue().IsSingleValue() {
 		metricEvent.Value = &protocol.MetricEvent_UntypedSingleValue{UntypedSingleValue: &protocol.UntypedSingleValue{Value: metric.Value.GetSingleValue()}}
 	} else {
@@ -120,14 +116,12 @@ func CreateMetricEventByRawMetricV2(metric *models.Metric) (*protocol.MetricEven
 
 func CreateSpanEventByRawSpanV2(span *models.Span) (*protocol.SpanEvent, error) {
 	var spanEvent protocol.SpanEvent
-	ts := span.GetTimestamp() / 1e9
-	tns := span.GetTimestamp() % 1e9
-	spanEvent.Timestamp = (ts << 32) | tns
-	spanEvent.TraceID = span.GetTraceID()
-	spanEvent.SpanID = span.GetSpanID()
-	spanEvent.TraceState = span.GetTraceState()
-	spanEvent.ParentSpanID = span.GetParentSpanID()
-	spanEvent.Name = span.GetName()
+	spanEvent.Timestamp = span.GetTimestamp()
+	spanEvent.TraceID = util.ZeroCopyStringToBytes(span.GetTraceID())
+	spanEvent.SpanID = util.ZeroCopyStringToBytes(span.GetSpanID())
+	spanEvent.TraceState = util.ZeroCopyStringToBytes(span.GetTraceState())
+	spanEvent.ParentSpanID = util.ZeroCopyStringToBytes(span.GetParentSpanID())
+	spanEvent.Name = util.ZeroCopyStringToBytes(span.GetName())
 	spanEvent.Kind = protocol.SpanEvent_SpanKind(span.GetKind())
 	spanEvent.StartTimeNs = span.GetStartTime()
 	spanEvent.EndTimeNs = span.GetEndTime()
@@ -139,7 +133,7 @@ func CreateSpanEventByRawSpanV2(span *models.Span) (*protocol.SpanEvent, error) 
 	for _, srcEvent := range span.GetEvents() {
 		dstEvent := protocol.SpanEvent_InnerEvent{
 			TimestampNs: uint64(srcEvent.Timestamp),
-			Name:        srcEvent.Name,
+			Name:        util.ZeroCopyStringToBytes(srcEvent.Name),
 			Tags:        make(map[string][]byte, srcEvent.Tags.Len()),
 		}
 		for k, v := range srcEvent.Tags.Iterator() {
@@ -150,9 +144,9 @@ func CreateSpanEventByRawSpanV2(span *models.Span) (*protocol.SpanEvent, error) 
 	spanEvent.Links = make([]*protocol.SpanEvent_SpanLink, 0, len(span.GetLinks()))
 	for _, srcLink := range span.GetLinks() {
 		dstLink := protocol.SpanEvent_SpanLink{
-			TraceID:    srcLink.TraceID,
-			SpanID:     srcLink.SpanID,
-			TraceState: srcLink.TraceState,
+			TraceID:    util.ZeroCopyStringToBytes(srcLink.TraceID),
+			SpanID:     util.ZeroCopyStringToBytes(srcLink.SpanID),
+			TraceState: util.ZeroCopyStringToBytes(srcLink.TraceState),
 			Tags:       make(map[string][]byte, srcLink.Tags.Len()),
 		}
 		for k, v := range srcLink.Tags.Iterator() {

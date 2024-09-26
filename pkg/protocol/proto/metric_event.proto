@@ -7,7 +7,7 @@ message UntypedSingleValue {
 
 message MetricEvent {  
     uint64 Timestamp = 1;
-    string Name = 2;  
+    bytes Name = 2;  
     oneof Value {
         UntypedSingleValue UntypedSingleValue = 3;
     }

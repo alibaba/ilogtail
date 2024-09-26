@@ -3,11 +3,11 @@ package protocol;
 
 message SpanEvent {
     uint64 Timestamp = 1;
-    string TraceID = 2;
-    string SpanID = 3;
-    string TraceState = 4;
-    string ParentSpanID = 5;
-    string Name = 6;
+    bytes TraceID = 2;
+    bytes SpanID = 3;
+    bytes TraceState = 4;
+    bytes ParentSpanID = 5;
+    bytes Name = 6;
     enum SpanKind {
         UNSPECIFIED = 0;
         INTERVAL = 1;
@@ -22,14 +22,14 @@ message SpanEvent {
     map<string, bytes> Tags = 10;
     message InnerEvent {
         uint64 TimestampNs = 1;
-        string Name = 2;
+        bytes Name = 2;
         map<string, bytes> Tags = 3;
     }
     repeated InnerEvent Events = 11;
     message SpanLink {
-        string TraceID = 1;
-        string SpanID = 2;
-        string TraceState = 3;
+        bytes TraceID = 1;
+        bytes SpanID = 2;
+        bytes TraceState = 3;
         map<string, bytes> Tags = 4;
     }
     repeated SpanLink Links = 12;
