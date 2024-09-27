@@ -562,4 +562,12 @@ func Test_genPluginMeta(t *testing.T) {
 		assert.Equal(t, "testPlugin/customID", result.PluginTypeWithID)
 		assert.Equal(t, "customID", result.PluginID)
 	}
+	{
+		result := l.genPluginMeta("testPlugin/customID/123", true, true)
+		assert.Equal(t, "testPlugin", result.PluginType)
+		assert.Equal(t, "testPlugin/customID", result.PluginTypeWithID)
+		assert.Equal(t, "customID", result.PluginID)
+		assert.Regexp(t, `\d+`, result.NodeID)
+		assert.Regexp(t, `-1`, result.ChildNodeID)
+	}
 }
