@@ -42,7 +42,6 @@ extern const std::string METRIC_AGENT_MEMORY;
 extern const std::string METRIC_AGENT_MEMORY_GO;
 extern const std::string METRIC_AGENT_OPEN_FD_TOTAL;
 extern const std::string METRIC_AGENT_PIPELINE_CONFIG_TOTAL;
-extern const std::string METRIC_AGENT_PLUGIN_TOTAL;
 
 //////////////////////////////////////////////////////////////////////////
 // pipeline
@@ -131,7 +130,7 @@ extern const std::string METRIC_PLUGIN_PARSE_STDOUT_TOTAL;
 
 // label keys
 extern const std::string METRIC_LABEL_KEY_COMPONENT_NAME;
-extern const std::string METRIC_LABEL_KEY_FLUSHER_NODE_ID;
+extern const std::string METRIC_LABEL_KEY_FLUSHER_PLUGIN_ID;
 extern const std::string METRIC_LABEL_KEY_EXACTLY_ONCE_FLAG;
 extern const std::string METRIC_LABEL_KEY_QUEUE_TYPE;
 
@@ -166,10 +165,10 @@ extern const std::string METRIC_COMPONENT_BATCHER_BUFFERED_SIZE_BYTES;
 /**********************************************************
  *   queue
  **********************************************************/
-extern const std::string METRIC_COMPONENT_QUEUE_SIZE_TOTAL;
+extern const std::string METRIC_COMPONENT_QUEUE_SIZE_VALUE;
 extern const std::string METRIC_COMPONENT_QUEUE_SIZE_BYTES;
 extern const std::string METRIC_COMPONENT_QUEUE_VALID_TO_PUSH_FLAG;
-extern const std::string METRIC_COMPONENT_QUEUE_EXTRA_BUFFER_SIZE_TOTAL;
+extern const std::string METRIC_COMPONENT_QUEUE_EXTRA_BUFFER_SIZE_VALUE;
 extern const std::string METRIC_COMPONENT_QUEUE_EXTRA_BUFFER_SIZE_BYTES;
 extern const std::string METRIC_COMPONENT_QUEUE_DISCARDED_EVENTS_TOTAL;
 

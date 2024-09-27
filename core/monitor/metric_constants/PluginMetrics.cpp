@@ -19,8 +19,6 @@ using namespace std;
 namespace logtail {
 
 // label keys
-const string METRIC_LABEL_KEY_CHILD_NODE_ID = "child_node_id";
-const string METRIC_LABEL_KEY_NODE_ID = "node_id";
 const string METRIC_LABEL_KEY_PLUGIN_ID = "plugin_id";
 const string METRIC_LABEL_KEY_PLUGIN_TYPE = "plugin_type";
 

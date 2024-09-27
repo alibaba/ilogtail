@@ -52,7 +52,7 @@ public:
             {{METRIC_LABEL_KEY_PROJECT, f->GetContext().GetProjectName()},
              {METRIC_LABEL_KEY_PIPELINE_NAME, f->GetContext().GetConfigName()},
              {METRIC_LABEL_KEY_COMPONENT_NAME, METRIC_LABEL_VALUE_COMPONENT_NAME_SERIALIZER},
-             {METRIC_LABEL_KEY_FLUSHER_NODE_ID, f->GetNodeID()}});
+             {METRIC_LABEL_KEY_FLUSHER_PLUGIN_ID, f->GetPluginID()}});
         mInItemsTotal = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_IN_ITEMS_TOTAL);
         mInItemSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_IN_SIZE_BYTES);
         mOutItemsTotal = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_OUT_ITEMS_TOTAL);

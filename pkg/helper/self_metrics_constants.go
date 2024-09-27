@@ -39,8 +39,6 @@ const (
 	MetricLabelKeyPipelineName = "pipeline_name"
 	MetricLabelKeyPluginType   = "plugin_type"
 	MetricLabelKeyPluginID     = "plugin_id"
-	MetricLabelKeyNodeID       = "node_id"
-	MetricLabelKeyChildNodeID  = "child_node_id"
 )
 
 // metric keys
@@ -116,12 +114,6 @@ func GetCommonLabels(context pipeline.Context, pluginMeta *pipeline.PluginMeta) 
 
 	if len(pluginMeta.PluginID) > 0 {
 		labels = append(labels, pipeline.LabelPair{Key: MetricLabelKeyPluginID, Value: pluginMeta.PluginID})
-	}
-	if len(pluginMeta.NodeID) > 0 {
-		labels = append(labels, pipeline.LabelPair{Key: MetricLabelKeyNodeID, Value: pluginMeta.NodeID})
-	}
-	if len(pluginMeta.ChildNodeID) > 0 {
-		labels = append(labels, pipeline.LabelPair{Key: MetricLabelKeyChildNodeID, Value: pluginMeta.ChildNodeID})
 	}
 	if len(pluginMeta.PluginType) > 0 {
 		labels = append(labels, pipeline.LabelPair{Key: MetricLabelKeyPluginType, Value: pluginMeta.PluginType})

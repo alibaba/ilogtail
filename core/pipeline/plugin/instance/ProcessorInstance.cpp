@@ -28,7 +28,7 @@ namespace logtail {
 
 bool ProcessorInstance::Init(const Json::Value& config, PipelineContext& context) {
     mPlugin->SetContext(context);
-    mPlugin->SetMetricsRecordRef(Name(), PluginID(), NodeID(), ChildNodeID());
+    mPlugin->SetMetricsRecordRef(Name(), PluginID());
     if (!mPlugin->Init(config)) {
         return false;
     }

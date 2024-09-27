@@ -41,8 +41,8 @@ protected:
     void SetUp() override {
         mCtx.SetConfigName("test_config");
         sFlusher->SetContext(mCtx);
-        sFlusher->SetMetricsRecordRef(FlusherMock::sName, "1", "1", "1");
-        sFlusher->SetNodeID("1");
+        sFlusher->SetMetricsRecordRef(FlusherMock::sName, "1");
+        sFlusher->SetPluginID("1");
     }
 
     void TearDown() override { TimeoutFlushManager::GetInstance()->mTimeoutRecords.clear(); }
@@ -580,7 +580,7 @@ void BatcherUnittest::TestMetric() {
         APSARA_TEST_TRUE(batch.mMetricsRecordRef.HasLabel(METRIC_LABEL_KEY_PROJECT, ""));
         APSARA_TEST_TRUE(batch.mMetricsRecordRef.HasLabel(METRIC_LABEL_KEY_PIPELINE_NAME, "test_config"));
         APSARA_TEST_TRUE(batch.mMetricsRecordRef.HasLabel(METRIC_LABEL_KEY_COMPONENT_NAME, METRIC_LABEL_VALUE_COMPONENT_NAME_BATCHER));
-        APSARA_TEST_TRUE(batch.mMetricsRecordRef.HasLabel(METRIC_LABEL_KEY_FLUSHER_NODE_ID, "1"));
+        APSARA_TEST_TRUE(batch.mMetricsRecordRef.HasLabel(METRIC_LABEL_KEY_FLUSHER_PLUGIN_ID, "1"));
         APSARA_TEST_TRUE(batch.mMetricsRecordRef.HasLabel("enable_group_batch", "false"));
         APSARA_TEST_EQUAL(3U, batch.mInEventsTotal->GetValue());
         APSARA_TEST_EQUAL(groupSize, batch.mInGroupDataSizeBytes->GetValue());

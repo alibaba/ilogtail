@@ -525,14 +525,8 @@ std::string Pipeline::GetNowPluginID() {
 
 PluginInstance::PluginMeta Pipeline::GenNextPluginMeta(bool lastOne) {
     mPluginID.fetch_add(1);
-    int32_t childNodeID = mPluginID.load();
-    if (lastOne) {
-        childNodeID = -1;
-    } else {
-        childNodeID += 1;
-    }
     return PluginInstance::PluginMeta(
-        std::to_string(mPluginID.load()), std::to_string(mPluginID.load()), std::to_string(childNodeID));
+        std::to_string(mPluginID.load()));
 }
 
 } // namespace logtail

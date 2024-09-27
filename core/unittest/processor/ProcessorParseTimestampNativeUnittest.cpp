@@ -53,7 +53,7 @@ UNIT_TEST_CASE(ProcessorParseTimestampNativeUnittest, TestProcessEventPreciseTim
 UNIT_TEST_CASE(ProcessorParseTimestampNativeUnittest, TestCheckTime);
 
 PluginInstance::PluginMeta getPluginMeta(){
-    PluginInstance::PluginMeta pluginMeta{"testgetPluginID", "testNodeID", "testNodeChildID"};
+    PluginInstance::PluginMeta pluginMeta{"1"};
     return pluginMeta;
 }
 

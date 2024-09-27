@@ -46,7 +46,7 @@ protected:
     void SetUp() override {
         mCtx.SetConfigName("test_config");
         sFlusher->SetContext(mCtx);
-        sFlusher->SetMetricsRecordRef(FlusherMock::sName, "1", "1", "1");
+        sFlusher->SetMetricsRecordRef(FlusherMock::sName, "1");
     }
 
 private:

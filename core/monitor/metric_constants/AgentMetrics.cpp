@@ -37,6 +37,5 @@ const string METRIC_AGENT_MEMORY = "agent_memory_used_mb";
 const string METRIC_AGENT_MEMORY_GO = "agent_go_memory_used_mb";
 const string METRIC_AGENT_OPEN_FD_TOTAL = "agent_open_fd_total";
 const string METRIC_AGENT_PIPELINE_CONFIG_TOTAL = "agent_pipeline_config_total";
-const string METRIC_AGENT_PLUGIN_TOTAL = "agent_plugin_total"; // Not Implemented
 
 } // namespace logtail

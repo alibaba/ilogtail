@@ -36,17 +36,13 @@ public:
     bool HasContext() const { return mContext != nullptr; }
     void SetContext(PipelineContext& context) { mContext = &context; }
     MetricsRecordRef& GetMetricsRecordRef() const { return mMetricsRecordRef; }
-    void SetMetricsRecordRef(const std::string& name,
-                             const std::string& id,
-                             const std::string& nodeID,
-                             const std::string& childNodeID) {
-        WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef,
-                                                             {{METRIC_LABEL_KEY_PROJECT, mContext->GetProjectName()},
-                                                              {METRIC_LABEL_KEY_PIPELINE_NAME, mContext->GetConfigName()},
-                                                              {METRIC_LABEL_KEY_PLUGIN_TYPE, name},
-                                                              {METRIC_LABEL_KEY_PLUGIN_ID, id},
-                                                              {METRIC_LABEL_KEY_NODE_ID, nodeID},
-                                                              {METRIC_LABEL_KEY_CHILD_NODE_ID, childNodeID}});
+    void SetMetricsRecordRef(const std::string& name, const std::string& id) {
+        WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
+            mMetricsRecordRef,
+            {{METRIC_LABEL_KEY_PROJECT, mContext->GetProjectName()},
+             {METRIC_LABEL_KEY_PIPELINE_NAME, mContext->GetConfigName()},
+             {METRIC_LABEL_KEY_PLUGIN_TYPE, name},
+             {METRIC_LABEL_KEY_PLUGIN_ID, id}});
     }
 
 protected:

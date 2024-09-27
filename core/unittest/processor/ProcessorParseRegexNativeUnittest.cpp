@@ -44,7 +44,7 @@ private:
 };
 
 PluginInstance::PluginMeta getPluginMeta(){
-    PluginInstance::PluginMeta pluginMeta{"testgetPluginID", "testNodeID", "testNodeChildID"};
+    PluginInstance::PluginMeta pluginMeta{"1"};
     return pluginMeta;
 }
 
@@ -85,7 +85,7 @@ void ProcessorParseRegexNativeUnittest::OnSuccessfulInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     processor.reset(new ProcessorParseRegexNative());
     processor->SetContext(ctx);
-    processor->SetMetricsRecordRef(ProcessorParseRegexNative::sName, "1", "1", "1");
+    processor->SetMetricsRecordRef(ProcessorParseRegexNative::sName, "1");
     APSARA_TEST_TRUE(processor->Init(configJson));
     APSARA_TEST_EQUAL(2, processor->mKeys.size());
     APSARA_TEST_EQUAL("k1", processor->mKeys[0]);

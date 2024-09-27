@@ -20,8 +20,8 @@ namespace logtail {
 
 // label keys
 const string METRIC_LABEL_KEY_COMPONENT_NAME = "component_name";
-const string METRIC_LABEL_KEY_FLUSHER_NODE_ID = "flusher_node_id";
-const string METRIC_LABEL_KEY_EXACTLY_ONCE_FLAG = "is_exactly_once";
+const string METRIC_LABEL_KEY_FLUSHER_PLUGIN_ID = "flusher_plugin_id";
+const string METRIC_LABEL_KEY_EXACTLY_ONCE_FLAG = "exactly_once_enabled";
 const string METRIC_LABEL_KEY_QUEUE_TYPE = "queue_type";
 
 // label values
@@ -55,10 +55,10 @@ const string METRIC_COMPONENT_BATCHER_BUFFERED_SIZE_BYTES = "component_buffered_
 /**********************************************************
  *   queue
  **********************************************************/
-const string METRIC_COMPONENT_QUEUE_SIZE_TOTAL = "component_queue_size_total";
+const string METRIC_COMPONENT_QUEUE_SIZE_VALUE = "component_queue_size_value";
 const string METRIC_COMPONENT_QUEUE_SIZE_BYTES = "component_queue_size_bytes";
 const string METRIC_COMPONENT_QUEUE_VALID_TO_PUSH_FLAG = "component_valid_to_push";
-const string METRIC_COMPONENT_QUEUE_EXTRA_BUFFER_SIZE_TOTAL = "component_extra_buffer_size_total";
+const string METRIC_COMPONENT_QUEUE_EXTRA_BUFFER_SIZE_VALUE = "component_extra_buffer_size_value";
 const string METRIC_COMPONENT_QUEUE_EXTRA_BUFFER_SIZE_BYTES = "component_extra_buffer_size_bytes";
 const string METRIC_COMPONENT_QUEUE_DISCARDED_EVENTS_TOTAL = "component_discarded_events_total";
 

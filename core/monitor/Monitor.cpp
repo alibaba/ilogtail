@@ -731,7 +731,6 @@ void LoongCollectorMonitor::Init() {
     // mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_INSTANCE_CONFIG_TOTAL);
     mIntGauges[METRIC_AGENT_PIPELINE_CONFIG_TOTAL]
         = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_PIPELINE_CONFIG_TOTAL);
-    // mIntGauges[METRIC_AGENT_PLUGIN_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_PLUGIN_TOTAL);
     LOG_INFO(sLogger, ("LoongCollectorMonitor", "started"));
 }
 
