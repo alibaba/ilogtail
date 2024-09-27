@@ -155,11 +155,7 @@ func (p *pluginv2Runner) addMetricInput(pluginMeta *pipeline.PluginMeta, input p
 	}
 	p.MetricPlugins = append(p.MetricPlugins, &wrapper)
 	p.TimerRunner = append(p.TimerRunner, &timerRunner{
-<<<<<<< HEAD
-		state:         &wrapper,
-=======
 		state:         input,
->>>>>>> main
 		interval:      wrapper.Interval,
 		context:       p.LogstoreConfig.Context,
 		latencyMetric: p.LogstoreConfig.Statistics.CollecLatencytMetric,
@@ -245,12 +241,7 @@ func (p *pluginv2Runner) runInput() {
 
 func (p *pluginv2Runner) runMetricInput(control *pipeline.AsyncControl) {
 	for _, t := range p.TimerRunner {
-<<<<<<< HEAD
-		plugin, ok := t.state.(*MetricWrapperV2)
-		if ok {
-=======
 		if plugin, ok := t.state.(pipeline.MetricInputV2); ok {
->>>>>>> main
 			metric := plugin
 			timer := t
 			ctx := p.InputPipeContext
