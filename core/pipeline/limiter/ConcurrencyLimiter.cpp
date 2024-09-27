@@ -22,15 +22,18 @@ bool ConcurrencyLimiter::IsValidToPop() {
     if (mLastSendTime == 0) {
         mLastSendTime = time(nullptr);
     }
-    if (static_cast<int>(GetLimit()) > mInSendingCnt.load()) {
-        return true;
-    } else {
+    if (GetLimit() <= mMinCocurrency) {
         time_t curTime = time(nullptr);
         if (curTime -  mLastSendTime > GetInterval()) {
             mLastSendTime = curTime;
             return true;
+        } else {
+            return false;
         }
     }
+    if (static_cast<int>(GetLimit()) > mInSendingCnt.load()) {
+        return true;
+    } 
     return false;
 }
 
