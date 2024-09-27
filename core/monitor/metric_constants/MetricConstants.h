@@ -165,10 +165,10 @@ extern const std::string METRIC_COMPONENT_BATCHER_BUFFERED_SIZE_BYTES;
 /**********************************************************
  *   queue
  **********************************************************/
-extern const std::string METRIC_COMPONENT_QUEUE_SIZE_VALUE;
+extern const std::string METRIC_COMPONENT_QUEUE_SIZE;
 extern const std::string METRIC_COMPONENT_QUEUE_SIZE_BYTES;
 extern const std::string METRIC_COMPONENT_QUEUE_VALID_TO_PUSH_FLAG;
-extern const std::string METRIC_COMPONENT_QUEUE_EXTRA_BUFFER_SIZE_VALUE;
+extern const std::string METRIC_COMPONENT_QUEUE_EXTRA_BUFFER_SIZE;
 extern const std::string METRIC_COMPONENT_QUEUE_EXTRA_BUFFER_SIZE_BYTES;
 extern const std::string METRIC_COMPONENT_QUEUE_DISCARDED_EVENTS_TOTAL;
 

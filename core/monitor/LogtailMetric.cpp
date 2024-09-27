@@ -328,8 +328,8 @@ ReadMetrics::~ReadMetrics() {
     Clear();
 }
 
-void ReadMetrics::ReadAsLogGroup(std::string regionFieldName,
-                                 std::string defaultRegion,
+void ReadMetrics::ReadAsLogGroup(std::string& regionFieldName,
+                                 std::string& defaultRegion,
                                  std::map<std::string, sls_logs::LogGroup*>& logGroupMap) const {
     ReadLock lock(mReadWriteLock);
     MetricsRecord* tmp = mHead;

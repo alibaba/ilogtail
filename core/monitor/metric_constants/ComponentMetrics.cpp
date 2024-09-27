@@ -55,10 +55,10 @@ const string METRIC_COMPONENT_BATCHER_BUFFERED_SIZE_BYTES = "component_buffered_
 /**********************************************************
  *   queue
  **********************************************************/
-const string METRIC_COMPONENT_QUEUE_SIZE_VALUE = "component_queue_size_value";
+const string METRIC_COMPONENT_QUEUE_SIZE = "component_queue_size";
 const string METRIC_COMPONENT_QUEUE_SIZE_BYTES = "component_queue_size_bytes";
 const string METRIC_COMPONENT_QUEUE_VALID_TO_PUSH_FLAG = "component_valid_to_push";
-const string METRIC_COMPONENT_QUEUE_EXTRA_BUFFER_SIZE_VALUE = "component_extra_buffer_size_value";
+const string METRIC_COMPONENT_QUEUE_EXTRA_BUFFER_SIZE = "component_extra_buffer_size";
 const string METRIC_COMPONENT_QUEUE_EXTRA_BUFFER_SIZE_BYTES = "component_extra_buffer_size_bytes";
 const string METRIC_COMPONENT_QUEUE_DISCARDED_EVENTS_TOTAL = "component_discarded_events_total";
 
