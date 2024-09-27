@@ -169,10 +169,10 @@ func timeoutStop(config *LogstoreConfig, removedFlag bool) bool {
 	}
 }
 
-// StopAll stops all config instance so that it is ready
+// StopAllPipelines stops all pipelines so that it is ready
 // to quit.
 // For user-defined config, timeoutStop is used to avoid hanging.
-func StopAll(withInput bool) error {
+func StopAllPipelines(withInput bool) error {
 	defer panicRecover("Run plugin")
 
 	LogtailConfigLock.Lock()

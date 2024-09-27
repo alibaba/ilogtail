@@ -134,7 +134,7 @@ struct K8sContainerMeta {
 typedef GoInt (*LoadGlobalConfigFun)(GoString);
 typedef GoInt (*LoadPipelineFun)(GoString p, GoString l, GoString c, GoInt64 k, GoString p2);
 typedef GoInt (*UnloadPipelineFun)(GoString c);
-typedef void (*StopAllFun)(GoInt);
+typedef void (*StopAllPipelinesFun)(GoInt);
 typedef void (*StopFun)(GoString, GoInt);
 typedef void (*StopBuiltInModulesFun)();
 typedef void (*StartFun)(GoString);
@@ -214,7 +214,7 @@ public:
                       const std::string& region = "",
                       logtail::QueueKey logstoreKey = 0);
     bool UnloadPipeline(const std::string& pipelineName);
-    void StopAll(bool withInputFlag);
+    void StopAllPipelines(bool withInputFlag);
     void Stop(const std::string& configName, bool removingFlag);
     void StopBuiltInModules();
     void Start(const std::string& configName);
@@ -264,7 +264,7 @@ private:
     LoadGlobalConfigFun mLoadGlobalConfigFun;
     LoadPipelineFun mLoadPipelineFun;
     UnloadPipelineFun mUnloadPipelineFun;
-    StopAllFun mStopAllFun;
+    StopAllPipelinesFun mStopAllPipelinesFun;
     StopFun mStopFun;
     StopBuiltInModulesFun mStopBuiltInModulesFun;
     StartFun mStartFun;

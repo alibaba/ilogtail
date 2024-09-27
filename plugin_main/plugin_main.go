@@ -176,10 +176,8 @@ func main() {
 	if !*flags.FileIOFlag {
 		<-signals.SetupSignalHandler()
 	}
-	logger.Info(context.Background(), "########################## exit process begin ##########################")
-	StopAll(1)
-	StopAll(0)
-	logger.Info(context.Background(), "########################## exit process done ##########################")
+	StopAllPipelines(1)
+	StopAllPipelines(0)
 }
 
 func generatePluginDoc() {

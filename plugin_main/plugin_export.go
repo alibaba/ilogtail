@@ -186,16 +186,20 @@ func ProcessLogGroup(configName string, logBytes []byte, packID string) int {
 	return config.ProcessLogGroup(logBytes, util.StringDeepCopy(packID))
 }
 
-//export StopAll
-func StopAll(withInputFlag int) {
-	logger.Info(context.Background(), "Stop all", "start")
-	err := pluginmanager.StopAll(withInputFlag != 0)
+//export StopAllPipelines
+func StopAllPipelines(withInputFlag int) {
+	logger.Info(context.Background(), "Stop all", "start", "with input", withInputFlag)
+	err := pluginmanager.StopAllPipelines(withInputFlag != 0)
 	if err != nil {
 		logger.Error(context.Background(), "PLUGIN_ALARM", "stop all error", err)
 	}
-	logger.Info(context.Background(), "Stop all", "success")
-	logger.Info(context.Background(), "logger", "close and recover")
-	logger.Close()
+	logger.Info(context.Background(), "Stop all", "success", "with input", withInputFlag)
+	// Stop with input first, without input last.
+	if withInputFlag == 0 {
+		logger.Info(context.Background(), "logger", "close and recover")
+		logger.Flush()
+		logger.Close()
+	}
 }
 
 //export Stop

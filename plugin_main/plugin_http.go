@@ -123,10 +123,8 @@ func HandleLoadConfig(w http.ResponseWriter, r *http.Request) {
 func HandleHoldOn(w http.ResponseWriter, r *http.Request) {
 	controlLock.Lock()
 	defer controlLock.Unlock()
-	StopAll(1)
-	StopAll(0)
-	// flush async logs when hold on with exit flag.
-	logger.Flush()
+	StopAllPipelines(1)
+	StopAllPipelines(0)
 	w.WriteHeader(http.StatusOK)
 }
 

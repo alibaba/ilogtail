@@ -148,6 +148,12 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
     }
 #endif
 #endif
+
+    for (auto& item : mInputRunners) {
+        if (!item->HasRegisteredPlugins()) {
+            item->Stop();
+        }
+    }
 }
 
 shared_ptr<Pipeline> PipelineManager::FindConfigByName(const string& configName) const {
@@ -180,19 +186,17 @@ string PipelineManager::GetPluginStatistics() const {
 void PipelineManager::StopAllPipelines() {
     LOG_INFO(sLogger, ("stop all pipelines", "starts"));
     for (auto& item : mInputRunners) {
-        if (item->HasRegisteredPlugins()) {
-            item->Stop();
-        }
+        item->Stop();
     }
     FileServer::GetInstance()->Stop();
 
-    LogtailPlugin::GetInstance()->StopAll(true);
+    LogtailPlugin::GetInstance()->StopAllPipelines(true);
 
     ProcessorRunner::GetInstance()->Stop();
 
     FlushAllBatch();
 
-    LogtailPlugin::GetInstance()->StopAll(false);
+    LogtailPlugin::GetInstance()->StopAllPipelines(false);
 
     // TODO: make it common
     FlusherSLS::RecycleResourceIfNotUsed();

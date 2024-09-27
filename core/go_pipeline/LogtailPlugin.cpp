@@ -47,7 +47,7 @@ LogtailPlugin::LogtailPlugin() {
     mPluginBasePtr = NULL;
     mLoadPipelineFun = NULL;
     mUnloadPipelineFun = NULL;
-    mStopAllFun = NULL;
+    mStopAllPipelinesFun = NULL;
     mStopFun = NULL;
     mStartFun = NULL;
     mLoadGlobalConfigFun = NULL;
@@ -124,11 +124,11 @@ bool LogtailPlugin::UnloadPipeline(const std::string& pipelineName) {
     return false;
 }
 
-void LogtailPlugin::StopAll(bool withInputFlag) {
-    if (mPluginValid && mStopAllFun != NULL) {
+void LogtailPlugin::StopAllPipelines(bool withInputFlag) {
+    if (mPluginValid && mStopAllPipelinesFun != NULL) {
         LOG_INFO(sLogger, ("Go pipelines stop all", "starts"));
         auto stopAllStart = GetCurrentTimeInMilliSeconds();
-        mStopAllFun(withInputFlag ? 1 : 0);
+        mStopAllPipelinesFun(withInputFlag ? 1 : 0);
         auto stopAllCost = GetCurrentTimeInMilliSeconds() - stopAllStart;
         LOG_INFO(sLogger, ("Go pipelines stop all", "succeeded")("cost", ToString(stopAllCost) + "ms"));
         if (stopAllCost >= 10 * 1000) {
@@ -386,9 +386,9 @@ bool LogtailPlugin::LoadPluginBase() {
             return mPluginValid;
         }
         // 停止所有插件
-        mStopAllFun = (StopAllFun)loader.LoadMethod("StopAll", error);
+        mStopAllPipelinesFun = (StopAllPipelinesFun)loader.LoadMethod("StopAllPipelines", error);
         if (!error.empty()) {
-            LOG_ERROR(sLogger, ("load StopAll error, Message", error));
+            LOG_ERROR(sLogger, ("load StopAllPipelines error, Message", error));
             return mPluginValid;
         }
         // 停止单个插件

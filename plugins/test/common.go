@@ -70,10 +70,10 @@ func PluginStart() error {
 }
 
 func PluginStop() error {
-	if err := pluginmanager.StopAll(true); err != nil {
+	if err := pluginmanager.StopAllPipelines(true); err != nil {
 		return err
 	}
-	if err := pluginmanager.StopAll(false); err != nil {
+	if err := pluginmanager.StopAllPipelines(false); err != nil {
 		return err
 	}
 	return nil

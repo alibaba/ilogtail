@@ -162,8 +162,8 @@ func TestHangConfigWhenStop(t *testing.T) {
 
 	// Quit.
 	time.Sleep(time.Second)
-	StopAll(1)
-	StopAll(0)
+	StopAllPipelines(1)
+	StopAllPipelines(0)
 	pluginmanager.LogtailConfigLock.RLock()
 	require.Empty(t, pluginmanager.LogtailConfig)
 	pluginmanager.LogtailConfigLock.RUnlock()
@@ -225,8 +225,8 @@ func TestSlowConfigWhenStop(t *testing.T) {
 
 	// Quit.
 	time.Sleep(time.Second)
-	StopAll(1)
-	StopAll(0)
+	StopAllPipelines(1)
+	StopAllPipelines(0)
 	time.Sleep(time.Second * 6)
 	require.Empty(t, pluginmanager.DisabledLogtailConfig)
 }
