@@ -184,9 +184,6 @@ namespace sdk {
         httpMessage.statusCode = (int32_t)http_code;
         curl_easy_cleanup(curl);
         if (!httpMessage.IsLogServiceResponse()) {
-            if (url.find(METRICSTORES) != std::string::npos) {
-                throw LOGException(LOGE_REQUEST_ERROR, httpMessage.content);
-            }
             throw LOGException(LOGE_REQUEST_ERROR, "Get invalid response");
         }
     }
