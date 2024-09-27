@@ -37,12 +37,10 @@ class EnvManager {
 public:
     void InitEnvInfo();
     bool IsSupportedEnv(nami::PluginType type);
+    bool AbleToLoadDyLib();
 private:
     volatile bool mInited = false;
-    std::string mRelease;
-    int64_t mVersion = -1;
-    std::string mOs;
-    int64_t mOsVersion;
+
     std::atomic_bool mArchSupport = false;
     std::atomic_bool mBTFSupport = false;
     std::atomic_bool m310Support = false;

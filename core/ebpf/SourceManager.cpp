@@ -67,7 +67,7 @@ void SourceManager::Init() {
   // read host path prefix
   if (AppConfig::GetInstance()->IsPurageContainerMode()) {
     mHostPathPrefix = STRING_FLAG(default_container_host_path);
-    LOG_DEBUG(sLogger, ("running in container mode, would set host path prefix to", mHostPathPrefix));
+    LOG_DEBUG(sLogger, ("running in container mode, would set host path prefix to ", mHostPathPrefix));
   } else {
     LOG_DEBUG(sLogger, ("running in host mode", "would not set host path prefix ..."));
   }
