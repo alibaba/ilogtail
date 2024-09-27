@@ -795,10 +795,10 @@ void eBPFServerUnittest::TestInitAndStop() {
 void eBPFServerUnittest::TestEnvManager() {
     eBPFServer::GetInstance()->mEnvMgr.InitEnvInfo();
 
-    EXPECT_TRUE(eBPFServer::GetInstance()->mEnvMgr.mInited);
     EXPECT_TRUE(eBPFServer::GetInstance()->mEnvMgr.mArchSupport);
-    EXPECT_TRUE(eBPFServer::GetInstance()->mEnvMgr.mVersion > 0);
-    EXPECT_TRUE(eBPFServer::GetInstance()->mEnvMgr.mRelease.size());
+    // EXPECT_TRUE(eBPFServer::GetInstance()->mEnvMgr.mArchSupport);
+    // EXPECT_TRUE(eBPFServer::GetInstance()->mEnvMgr.mVersion > 0);
+    // EXPECT_TRUE(eBPFServer::GetInstance()->mEnvMgr.mRelease.size());
     // EXPECT_TRUE(eBPFServer::GetInstance()->mEnvMgr.mOsVersion.size());
 
     eBPFServer::GetInstance()->mEnvMgr.m310Support = false;

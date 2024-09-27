@@ -38,19 +38,34 @@ static const std::string KERNEL_NAME_CENTOS = "CentOS";
 static const uint16_t KERNEL_CENTOS_MIN_VERSION = 7006;
 
 bool EnvManager::IsSupportedEnv(nami::PluginType type) {
-    if (!mInited) InitEnvInfo();
+    if (!mInited) {
+        LOG_ERROR(sLogger, ("env manager not inited ...", ""));
+        return false;
+    }
+    bool status = false;
     switch (type)
     {
     case nami::PluginType::NETWORK_OBSERVE:
-        return mArchSupport && (mBTFSupport || m310Support);
+        status = mArchSupport && (mBTFSupport || m310Support);
+        break;
     case nami::PluginType::FILE_SECURITY:
     case nami::PluginType::NETWORK_SECURITY:
     case nami::PluginType::PROCESS_SECURITY: {
-        return mArchSupport && mBTFSupport;
+        status = mArchSupport && mBTFSupport;
+        break;
     }
     default:
-        return false;
+        status = false;
     }
+    if (!status) {
+        LOG_WARNING(sLogger, ("runtime env not supported, plugin type: ", int(type)) 
+            ("arch support is ", mArchSupport) ("btf support is ", mBTFSupport) ("310 support is ", m310Support));
+    }
+    return status;
+}
+
+bool EnvManager::AbleToLoadDyLib() {
+    return mArchSupport;
 }
 
 void EnvManager::InitEnvInfo() {
@@ -75,39 +90,44 @@ void EnvManager::InitEnvInfo() {
     return;
 #endif
     mArchSupport = true;
-    GetKernelInfo(mRelease, mVersion);
-    LOG_INFO(sLogger, ("ebpf kernel release", mRelease) ("kernel version", mVersion));
-    if (mRelease.empty()) {
+    std::string release;
+    int64_t version;
+    GetKernelInfo(release, version);
+    LOG_INFO(sLogger, ("ebpf kernel release", release) ("kernel version", version));
+    if (release.empty()) {
         LOG_WARNING(sLogger, ("cannot find kernel release", ""));
         mBTFSupport = false;
         return;
     }
-    if (mVersion >= INT64_FLAG(kernel_min_version_for_ebpf)) {
+    if (version >= INT64_FLAG(kernel_min_version_for_ebpf)) {
         mBTFSupport = true;
         return;
     }
-    if (mVersion / 1000000 != KERNEL_VERSION_310) {
+    if (version / 1000000 != KERNEL_VERSION_310) {
         LOG_WARNING(sLogger, 
-            ("unsupported kernel version, will not start eBPF plugin ... version", mVersion));
+            ("unsupported kernel version, will not start eBPF plugin ... version", version));
         m310Support = false;
         return;
     }
-    if (GetRedHatReleaseInfo(mOs, mOsVersion, STRING_FLAG(default_container_host_path))
-        || GetRedHatReleaseInfo(mOs, mOsVersion)) {
-        if(mOs == KERNEL_NAME_CENTOS && mOsVersion >= KERNEL_CENTOS_MIN_VERSION) {
-            m310Support = false;
+
+    std::string os;
+    int64_t osVersion;
+    if (GetRedHatReleaseInfo(os, osVersion, STRING_FLAG(default_container_host_path))
+        || GetRedHatReleaseInfo(os, osVersion)) {
+        if(os == KERNEL_NAME_CENTOS && osVersion >= KERNEL_CENTOS_MIN_VERSION) {
+            m310Support = true;
             return;
         } else {
             LOG_WARNING(sLogger, 
                 ("unsupported os for 310 kernel, will not start eBPF plugin ...", "") 
-                ("os", mOs)("version", mOsVersion));
+                ("os", os)("version", osVersion));
             m310Support = false;
             return;
         }
     }
     LOG_WARNING(sLogger, 
         ("not redhat release, will not start eBPF plugin ...", ""));
-    m310Support = true;
+    m310Support = false;
     return;
 }
 
@@ -119,8 +139,11 @@ void eBPFServer::Init() {
     if (mInited) {
         return;
     }
-    mInited = true;
     mEnvMgr.InitEnvInfo();
+    if (!mEnvMgr.AbleToLoadDyLib()) {
+        return;
+    }
+    mInited = true;
     mSourceManager = std::make_unique<SourceManager>();
     mSourceManager->Init();
     // ebpf config
@@ -259,7 +282,6 @@ bool eBPFServer::EnablePlugin(const std::string& pipeline_name, uint32_t plugin_
                         nami::PluginType type, 
                         const PipelineContext* ctx, 
                         const std::variant<SecurityOptions*, nami::ObserverNetworkOption*> options) {
-    Init();
     if (!IsSupportedEnv(type)) {
         return false;
     }

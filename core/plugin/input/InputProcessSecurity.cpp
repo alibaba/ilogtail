@@ -24,6 +24,7 @@ namespace logtail {
 const std::string InputProcessSecurity::sName = "input_process_security";
 
 bool InputProcessSecurity::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
+    ebpf::eBPFServer::GetInstance()->Init();
     if (!ebpf::eBPFServer::GetInstance()->IsSupportedEnv(nami::PluginType::PROCESS_SECURITY)) {
         return false;
     }
