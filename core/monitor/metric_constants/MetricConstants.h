@@ -64,8 +64,6 @@ extern const std::string METRIC_PIPELINE_START_TIME;
 //////////////////////////////////////////////////////////////////////////
 
 // label keys
-extern const std::string METRIC_LABEL_KEY_CHILD_NODE_ID;
-extern const std::string METRIC_LABEL_KEY_NODE_ID;
 extern const std::string METRIC_LABEL_KEY_PLUGIN_ID;
 extern const std::string METRIC_LABEL_KEY_PLUGIN_TYPE;
 
