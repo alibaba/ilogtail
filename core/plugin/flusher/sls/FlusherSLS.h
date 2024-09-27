@@ -31,7 +31,7 @@
 #include "pipeline/limiter/ConcurrencyLimiter.h"
 #include "pipeline/plugin/interface/HttpFlusher.h"
 #include "pipeline/serializer/SLSSerializer.h"
-#include "sls_logs.pb.h"
+#include "protobuf/sls/sls_logs.pb.h"
 
 namespace logtail {
 
