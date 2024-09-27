@@ -12,53 +12,54 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "../MetricConstants.h"
+#include "MetricConstants.h"
+
+using namespace std;
 
 namespace logtail {
 
 // label keys
-const std::string METRIC_LABEL_KEY_COMPONENT_NAME = "component_name";
-const std::string METRIC_LABEL_KEY_FLUSHER_NODE_ID = "flusher_node_id";
-const std::string METRIC_LABEL_KEY_EXACTLY_ONCE_FLAG = "is_exactly_once";
-const std::string METRIC_LABEL_KEY_QUEUE_TYPE = "queue_type";
+const string METRIC_LABEL_KEY_COMPONENT_NAME = "component_name";
+const string METRIC_LABEL_KEY_FLUSHER_NODE_ID = "flusher_node_id";
+const string METRIC_LABEL_KEY_EXACTLY_ONCE_FLAG = "is_exactly_once";
+const string METRIC_LABEL_KEY_QUEUE_TYPE = "queue_type";
 
 // label values
-const std::string METRIC_LABEL_VALUE_COMPONENT_NAME_BATCHER = "batcher";
-const std::string METRIC_LABEL_VALUE_COMPONENT_NAME_COMPRESSOR = "compressor";
-const std::string METRIC_LABEL_VALUE_COMPONENT_NAME_PROCESS_QUEUE = "process_queue";
-const std::string METRIC_LABEL_VALUE_COMPONENT_NAME_ROUTER = "router";
-const std::string METRIC_LABEL_VALUE_COMPONENT_NAME_SENDER_QUEUE = "sender_queue";
-const std::string METRIC_LABEL_VALUE_COMPONENT_NAME_SERIALIZER = "serializer";
+const string METRIC_LABEL_VALUE_COMPONENT_NAME_BATCHER = "batcher";
+const string METRIC_LABEL_VALUE_COMPONENT_NAME_COMPRESSOR = "compressor";
+const string METRIC_LABEL_VALUE_COMPONENT_NAME_PROCESS_QUEUE = "process_queue";
+const string METRIC_LABEL_VALUE_COMPONENT_NAME_ROUTER = "router";
+const string METRIC_LABEL_VALUE_COMPONENT_NAME_SENDER_QUEUE = "sender_queue";
+const string METRIC_LABEL_VALUE_COMPONENT_NAME_SERIALIZER = "serializer";
 
 // metric keys
-const std::string METRIC_COMPONENT_IN_EVENTS_TOTAL = "component_in_events_total";
-const std::string METRIC_COMPONENT_IN_EVENT_GROUP_SIZE_BYTES = "component_in_event_group_size_bytes";
-const std::string METRIC_COMPONENT_IN_ITEMS_TOTAL = "component_in_items_total";
-const std::string METRIC_COMPONENT_IN_ITEM_SIZE_BYTES = "component_in_item_size_bytes";
-const std::string METRIC_COMPONENT_OUT_EVENTS_TOTAL = "component_out_events_total";
-const std::string METRIC_COMPONENT_OUT_ITEMS_TOTAL = "component_out_items_total";
-const std::string METRIC_COMPONENT_OUT_ITEM_SIZE_BYTES = "component_out_item_size_bytes";
-const std::string METRIC_COMPONENT_TOTAL_DELAY_MS = "component_total_delay_ms";
-const std::string METRIC_COMPONENT_TOTAL_PROCESS_MS = "component_total_process_ms";
-const std::string METRIC_COMPONENT_DISCARDED_ITEMS_TOTAL = "component_discarded_items_total";
-const std::string METRIC_COMPONENT_DISCARDED_ITEMS_SIZE_BYTES = "component_discarded_item_size_bytes";
+const string METRIC_COMPONENT_IN_EVENTS_TOTAL = "component_in_events_total";
+const string METRIC_COMPONENT_IN_SIZE_BYTES = "component_in_size_bytes";
+const string METRIC_COMPONENT_IN_ITEMS_TOTAL = "component_in_items_total";
+const string METRIC_COMPONENT_OUT_EVENTS_TOTAL = "component_out_events_total";
+const string METRIC_COMPONENT_OUT_ITEMS_TOTAL = "component_out_items_total";
+const string METRIC_COMPONENT_OUT_SIZE_BYTES = "component_out_size_bytes";
+const string METRIC_COMPONENT_TOTAL_DELAY_MS = "component_total_delay_ms";
+const string METRIC_COMPONENT_TOTAL_PROCESS_TIME_MS = "component_total_process_time_ms";
+const string METRIC_COMPONENT_DISCARDED_ITEMS_TOTAL = "component_discarded_items_total";
+const string METRIC_COMPONENT_DISCARDED_ITEMS_SIZE_BYTES = "component_discarded_item_size_bytes";
 
 /**********************************************************
-*   batcher
-**********************************************************/
-const std::string METRIC_COMPONENT_BATCHER_EVENT_BATCHES_TOTAL = "component_event_batches_total";
-const std::string METRIC_COMPONENT_BATCHER_BUFFERED_GROUPS_TOTAL = "component_buffered_groups_total";
-const std::string METRIC_COMPONENT_BATCHER_BUFFERED_EVENTS_TOTAL = "component_buffered_events_total";
-const std::string METRIC_COMPONENT_BATCHER_BUFFERED_SIZE_BYTES = "component_buffered_size_bytes";
+ *   batcher
+ **********************************************************/
+const string METRIC_COMPONENT_BATCHER_EVENT_BATCHES_TOTAL = "component_event_batches_total";
+const string METRIC_COMPONENT_BATCHER_BUFFERED_GROUPS_TOTAL = "component_buffered_groups_total";
+const string METRIC_COMPONENT_BATCHER_BUFFERED_EVENTS_TOTAL = "component_buffered_events_total";
+const string METRIC_COMPONENT_BATCHER_BUFFERED_SIZE_BYTES = "component_buffered_size_bytes";
 
 /**********************************************************
-*   queue
-**********************************************************/
-const std::string METRIC_COMPONENT_QUEUE_SIZE_TOTAL = "component_queue_size_total";
-const std::string METRIC_COMPONENT_QUEUE_SIZE_BYTES = "component_queue_size_bytes";
-const std::string METRIC_COMPONENT_QUEUE_VALID_TO_PUSH_FLAG = "component_valid_to_push";
-const std::string METRIC_COMPONENT_QUEUE_EXTRA_BUFFER_SIZE_TOTAL = "component_extra_buffer_size_total";
-const std::string METRIC_COMPONENT_QUEUE_EXTRA_BUFFER_SIZE_BYTES = "component_extra_buffer_size_bytes";
-const std::string METRIC_COMPONENT_QUEUE_DISCARDED_EVENTS_TOTAL = "component_discarded_events_total";
+ *   queue
+ **********************************************************/
+const string METRIC_COMPONENT_QUEUE_SIZE_TOTAL = "component_queue_size_total";
+const string METRIC_COMPONENT_QUEUE_SIZE_BYTES = "component_queue_size_bytes";
+const string METRIC_COMPONENT_QUEUE_VALID_TO_PUSH_FLAG = "component_valid_to_push";
+const string METRIC_COMPONENT_QUEUE_EXTRA_BUFFER_SIZE_TOTAL = "component_extra_buffer_size_total";
+const string METRIC_COMPONENT_QUEUE_EXTRA_BUFFER_SIZE_BYTES = "component_extra_buffer_size_bytes";
+const string METRIC_COMPONENT_QUEUE_DISCARDED_EVENTS_TOTAL = "component_discarded_events_total";
 
-}
+} // namespace logtail

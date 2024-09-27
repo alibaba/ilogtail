@@ -12,28 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "../MetricConstants.h"
+#include "MetricConstants.h"
+
+using namespace std;
 
 namespace logtail {
 
 // label keys
-const std::string METRIC_LABEL_ALIUIDS = "aliuids";
-const std::string METRIC_LABEL_INSTANCE_ID = "instance_id";
-const std::string METRIC_LABEL_IP = "ip";
-const std::string METRIC_LABEL_OS = "os";
-const std::string METRIC_LABEL_OS_DETAIL = "os_detail";
-const std::string METRIC_LABEL_USER_DEFINED_ID = "user_defined_id";
-const std::string METRIC_LABEL_UUID = "uuid";
-const std::string METRIC_LABEL_VERSION = "version";
+const string METRIC_LABEL_KEY_ALIUIDS = "aliuids";
+const string METRIC_LABEL_KEY_INSTANCE_ID = "instance_id";
+const string METRIC_LABEL_KEY_IP = "ip";
+const string METRIC_LABEL_KEY_OS = "os";
+const string METRIC_LABEL_KEY_OS_DETAIL = "os_detail";
+const string METRIC_LABEL_KEY_PROJECT = "project";
+const string METRIC_LABEL_KEY_USER_DEFINED_ID = "user_defined_id";
+const string METRIC_LABEL_KEY_UUID = "uuid";
+const string METRIC_LABEL_KEY_VERSION = "version";
 
 // metric keys
-const std::string METRIC_AGENT_CPU = "agent_cpu_percent";
-const std::string METRIC_AGENT_GO_ROUTINES_TOTAL = "agent_go_routines_total";
-const std::string METRIC_AGENT_INSTANCE_CONFIG_TOTAL = "agent_instance_config_total"; // Not Implemented
-const std::string METRIC_AGENT_MEMORY = "agent_memory_used_mb";
-const std::string METRIC_AGENT_MEMORY_GO = "agent_go_memory_used_mb";
-const std::string METRIC_AGENT_OPEN_FD_TOTAL = "agent_open_fd_total";
-const std::string METRIC_AGENT_PIPELINE_CONFIG_TOTAL = "agent_pipeline_config_total";
-const std::string METRIC_AGENT_PLUGIN_TOTAL = "agent_plugin_total"; // Not Implemented
+const string METRIC_AGENT_CPU = "agent_cpu_percent";
+const string METRIC_AGENT_GO_ROUTINES_TOTAL = "agent_go_routines_total";
+const string METRIC_AGENT_INSTANCE_CONFIG_TOTAL = "agent_instance_config_total"; // Not Implemented
+const string METRIC_AGENT_MEMORY = "agent_memory_used_mb";
+const string METRIC_AGENT_MEMORY_GO = "agent_go_memory_used_mb";
+const string METRIC_AGENT_OPEN_FD_TOTAL = "agent_open_fd_total";
+const string METRIC_AGENT_PIPELINE_CONFIG_TOTAL = "agent_pipeline_config_total";
+const string METRIC_AGENT_PLUGIN_TOTAL = "agent_plugin_total"; // Not Implemented
 
-}
+} // namespace logtail

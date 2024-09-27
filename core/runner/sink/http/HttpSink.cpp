@@ -18,7 +18,7 @@
 #include "common/StringTools.h"
 #include "common/http/Curl.h"
 #include "logger/Logger.h"
-#include "monitor/MetricConstants.h"
+#include "monitor/metric_constants/MetricConstants.h"
 #include "pipeline/plugin/interface/HttpFlusher.h"
 #include "pipeline/queue/QueueKeyManager.h"
 #include "pipeline/queue/SenderQueueItem.h"

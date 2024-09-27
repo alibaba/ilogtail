@@ -21,7 +21,7 @@
 #include <vector>
 
 #include "monitor/LogtailMetric.h"
-#include "monitor/MetricConstants.h"
+#include "monitor/metric_constants/MetricConstants.h"
 #include "pipeline/PipelineContext.h"
 
 namespace logtail {
@@ -41,12 +41,12 @@ public:
                              const std::string& nodeID,
                              const std::string& childNodeID) {
         WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef,
-                                                             {{METRIC_LABEL_PROJECT, mContext->GetProjectName()},
-                                                              {METRIC_LABEL_PIPELINE_NAME, mContext->GetConfigName()},
-                                                              {METRIC_LABEL_PLUGIN_TYPE, name},
-                                                              {METRIC_LABEL_PLUGIN_ID, id},
-                                                              {METRIC_LABEL_NODE_ID, nodeID},
-                                                              {METRIC_LABEL_CHILD_NODE_ID, childNodeID}});
+                                                             {{METRIC_LABEL_KEY_PROJECT, mContext->GetProjectName()},
+                                                              {METRIC_LABEL_KEY_PIPELINE_NAME, mContext->GetConfigName()},
+                                                              {METRIC_LABEL_KEY_PLUGIN_TYPE, name},
+                                                              {METRIC_LABEL_KEY_PLUGIN_ID, id},
+                                                              {METRIC_LABEL_KEY_NODE_ID, nodeID},
+                                                              {METRIC_LABEL_KEY_CHILD_NODE_ID, childNodeID}});
     }
 
 protected:

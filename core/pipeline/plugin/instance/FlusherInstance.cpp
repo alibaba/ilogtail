@@ -14,7 +14,7 @@
 
 #include "pipeline/plugin/instance/FlusherInstance.h"
 
-#include "monitor/MetricConstants.h"
+#include "monitor/metric_constants/MetricConstants.h"
 
 namespace logtail {
 bool FlusherInstance::Init(const Json::Value& config, PipelineContext& context, Json::Value& optionalGoPipeline) {
@@ -26,14 +26,12 @@ bool FlusherInstance::Init(const Json::Value& config, PipelineContext& context, 
     }
 
     mInEventsTotal = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_IN_EVENTS_TOTAL);
-    mInEventGroupsTotal = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_IN_EVENT_GROUPS_TOTAL);
     mInSizeBytes = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_IN_SIZE_BYTES);
     return true;
 }
 
 bool FlusherInstance::Send(PipelineEventGroup&& g) {
     mInEventsTotal->Add(g.GetEvents().size());
-    mInEventGroupsTotal->Add(1);
     mInSizeBytes->Add(g.DataSize());
     return mPlugin->Send(std::move(g));
 }

@@ -23,7 +23,7 @@
 #include "common/ParamExtractor.h"
 #include "file_server/ConfigManager.h"
 #include "file_server/FileServer.h"
-#include "monitor/MetricConstants.h"
+#include "monitor/metric_constants/MetricConstants.h"
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineManager.h"
 #include "pipeline/plugin/PluginRegistry.h"

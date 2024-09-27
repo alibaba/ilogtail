@@ -26,7 +26,7 @@
 #include "common/JsonUtil.h"
 #include "common/ParamExtractor.h"
 #include "models/LogEvent.h"
-#include "monitor/MetricConstants.h"
+#include "monitor/metric_constants/MetricConstants.h"
 #include "plugin/processor/inner/ProcessorMergeMultilineLogNative.h"
 
 namespace logtail {

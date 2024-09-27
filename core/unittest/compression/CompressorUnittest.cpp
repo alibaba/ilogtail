@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #include "common/compression/LZ4Compressor.h"
-#include "monitor/MetricConstants.h"
+#include "monitor/metric_constants/MetricConstants.h"
 #include "unittest/Unittest.h"
 
 using namespace std;

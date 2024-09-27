@@ -136,5 +136,5 @@ func (wrapper *FlusherWrapper) InitMetricRecord(pluginMeta *pipeline.PluginMeta)
 	wrapper.inEventsTotal = helper.NewCounterMetricAndRegister(wrapper.MetricRecord, helper.MetricPluginInEventsTotal)
 	wrapper.inEventGroupsTotal = helper.NewCounterMetricAndRegister(wrapper.MetricRecord, helper.MetricPluginInEventGroupsTotal)
 	wrapper.inSizeBytes = helper.NewCounterMetricAndRegister(wrapper.MetricRecord, helper.MetricPluginInSizeBytes)
-	wrapper.totalDelayTimeMs = helper.NewCounterMetricAndRegister(wrapper.MetricRecord, helper.MetricPluginTotalDelayTimeMs)
+	wrapper.totalDelayTimeMs = helper.NewCounterMetricAndRegister(wrapper.MetricRecord, helper.MetricPluginTotalDelayMs)
 }

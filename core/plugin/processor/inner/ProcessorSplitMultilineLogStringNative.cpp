@@ -24,7 +24,7 @@
 #include "common/ParamExtractor.h"
 #include "logger/Logger.h"
 #include "models/LogEvent.h"
-#include "monitor/MetricConstants.h"
+#include "monitor/metric_constants/MetricConstants.h"
 #include "pipeline/plugin/instance/ProcessorInstance.h"
 
 namespace logtail {
@@ -64,9 +64,9 @@ bool ProcessorSplitMultilineLogStringNative::Init(const Json::Value& config) {
                               mContext->GetRegion());
     }
 
-    mMatchedEventsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_SPLIT_MULTILINE_LOG_MATCHED_RECORDS_TOTAL);
-    mMatchedLinesTotal = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_SPLIT_MULTILINE_LOG_MATCHED_LINES_TOTAL);
-    mUnmatchedLinesTotal = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_SPLIT_MULTILINE_LOG_UNMATCHED_LINES_TOTAL);
+    mMatchedEventsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_MATCHED_EVENTS_TOTAL);
+    mMatchedLinesTotal = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_MATCHED_LINES_TOTAL);
+    mUnmatchedLinesTotal = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_UNMATCHED_LINES_TOTAL);
 
     mSplitLines = &(mContext->GetProcessProfile().splitLines);
 

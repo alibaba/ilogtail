@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "monitor/MetricConstants.h"
+#include "monitor/metric_constants/MetricConstants.h"
 #include "pipeline/plugin/interface/Flusher.h"
 #include "pipeline/serializer/Serializer.h"
 #include "unittest/Unittest.h"

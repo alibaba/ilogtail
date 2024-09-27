@@ -12,21 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "../MetricConstants.h"
+#include "MetricConstants.h"
+
+using namespace std;
 
 namespace logtail {
 
 // label keys
-const std::string METRIC_LABEL_LOGSTORE = "logstore";
-const std::string METRIC_LABEL_PIPELINE_NAME = "pipeline_name";
-const std::string METRIC_LABEL_REGION = "region";
+const string METRIC_LABEL_KEY_LOGSTORE = "logstore";
+const string METRIC_LABEL_KEY_PIPELINE_NAME = "pipeline_name";
+const string METRIC_LABEL_KEY_REGION = "region";
 
 // metric keys
-const std::string METRIC_PIPELINE_PROCESSORS_IN_EVENTS_TOTAL = "pipeline_processors_in_events_total";
-const std::string METRIC_PIPELINE_PROCESSORS_IN_EVENT_GROUPS_TOTAL = "pipeline_processors_in_event_groups_total";
-const std::string METRIC_PIPELINE_PROCESSORS_IN_EVENT_GROUP_SIZE_BYTES
-    = "pipeline_processors_in_event_group_size_bytes";
-const std::string METRIC_PIPELINE_PROCESSORS_TOTAL_DELAY_MS = "pipeline_processors_total_delay_ms";
-const std::string METRIC_PIPELINE_START_TIME = "pipeline_start_time";
+const string METRIC_PIPELINE_PROCESSORS_IN_EVENTS_TOTAL = "pipeline_processors_in_events_total";
+const string METRIC_PIPELINE_PROCESSORS_IN_EVENT_GROUPS_TOTAL = "pipeline_processors_in_event_groups_total";
+const string METRIC_PIPELINE_PROCESSORS_IN_SIZE_BYTES = "pipeline_processors_in_size_bytes";
+const string METRIC_PIPELINE_PROCESSORS_TOTAL_PROCESS_TIME_MS = "pipeline_processors_total_process_time_ms";
+const string METRIC_PIPELINE_START_TIME = "pipeline_start_time";
 
-}
+} // namespace logtail

@@ -20,7 +20,7 @@
 
 #include "common/TimeUtil.h"
 #include "logger/Logger.h"
-#include "monitor/MetricConstants.h"
+#include "monitor/metric_constants/MetricConstants.h"
 
 using namespace std;
 
@@ -36,8 +36,6 @@ bool ProcessorInstance::Init(const Json::Value& config, PipelineContext& context
     // should init plugin first， then could GetMetricsRecordRef from plugin
     mInEventsTotal = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_IN_EVENTS_TOTAL);
     mOutEventsTotal = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_OUT_EVENTS_TOTAL);
-    mInEventGroupsTotal = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_IN_EVENT_GROUPS_TOTAL);
-    mOutEventGroupsTotal = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_OUT_EVENT_GROUPS_TOTAL);
     mInSizeBytes = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_IN_SIZE_BYTES);
     mOutSizeBytes = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_OUT_SIZE_BYTES);
     mTotalProcessTimeMs = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_TOTAL_PROCESS_TIME_MS);
@@ -45,24 +43,22 @@ bool ProcessorInstance::Init(const Json::Value& config, PipelineContext& context
     return true;
 }
 
-void ProcessorInstance::Process(vector<PipelineEventGroup>& logGroupList) {
-    if (logGroupList.empty()) {
+void ProcessorInstance::Process(vector<PipelineEventGroup>& eventGroupList) {
+    if (eventGroupList.empty()) {
         return;
     } 
-    for (const auto& logGroup : logGroupList) {
-        mInEventsTotal->Add(logGroup.GetEvents().size());
-        mInEventGroupsTotal->Add(1);
-        mInSizeBytes->Add(logGroup.DataSize());
+    for (const auto& eventGroup : eventGroupList) {
+        mInEventsTotal->Add(eventGroup.GetEvents().size());
+        mInSizeBytes->Add(eventGroup.DataSize());
     }
 
     auto before = chrono::system_clock::now();
-    mPlugin->Process(logGroupList);
+    mPlugin->Process(eventGroupList);
     mTotalProcessTimeMs->Add(chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - before).count());
 
-    for (const auto& logGroup : logGroupList) {
-        mOutEventsTotal->Add(logGroup.GetEvents().size());
-        mOutEventGroupsTotal->Add(1);
-        mOutSizeBytes->Add(logGroup.DataSize());
+    for (const auto& eventGroup : eventGroupList) {
+        mOutEventsTotal->Add(eventGroup.GetEvents().size());
+        mOutSizeBytes->Add(eventGroup.DataSize());
     }    
 }
 

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #include "common/JsonUtil.h"
-#include "monitor/MetricConstants.h"
+#include "monitor/metric_constants/MetricConstants.h"
 #include "pipeline/Pipeline.h"
 #include "pipeline/route/Router.h"
 #include "unittest/Unittest.h"
@@ -151,8 +151,8 @@ void RouterUnittest::TestMetric() {
     router.Init(configs, ctx);
 
     APSARA_TEST_EQUAL(3U, router.mMetricsRecordRef->GetLabels()->size());
-    APSARA_TEST_TRUE(router.mMetricsRecordRef.HasLabel(METRIC_LABEL_PROJECT, ""));
-    APSARA_TEST_TRUE(router.mMetricsRecordRef.HasLabel(METRIC_LABEL_PIPELINE_NAME, "test_config"));
+    APSARA_TEST_TRUE(router.mMetricsRecordRef.HasLabel(METRIC_LABEL_KEY_PROJECT, ""));
+    APSARA_TEST_TRUE(router.mMetricsRecordRef.HasLabel(METRIC_LABEL_KEY_PIPELINE_NAME, "test_config"));
     APSARA_TEST_TRUE(router.mMetricsRecordRef.HasLabel(METRIC_LABEL_KEY_COMPONENT_NAME, METRIC_LABEL_VALUE_COMPONENT_NAME_ROUTER));
 
     PipelineEventGroup g(make_shared<SourceBuffer>());

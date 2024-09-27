@@ -42,8 +42,6 @@ private:
 
     CounterPtr mInEventsTotal;
     CounterPtr mOutEventsTotal;
-    CounterPtr mInEventGroupsTotal;
-    CounterPtr mOutEventGroupsTotal;
     CounterPtr mInSizeBytes;
     CounterPtr mOutSizeBytes;
     CounterPtr mTotalProcessTimeMs;

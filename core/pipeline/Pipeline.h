@@ -89,8 +89,8 @@ private:
     IntGaugePtr mStartTime;
     CounterPtr mProcessorsInEventsTotal;
     CounterPtr mProcessorsInGroupsTotal;
-    CounterPtr mProcessorsInGroupDataSizeBytes;
-    CounterPtr mProcessorsTotalDelayMs;
+    CounterPtr mProcessorsInSizeBytes;
+    CounterPtr mProcessorsTotalProcessTimeMs;
 
 #ifdef APSARA_UNIT_TEST_MAIN
         friend class PipelineMock;

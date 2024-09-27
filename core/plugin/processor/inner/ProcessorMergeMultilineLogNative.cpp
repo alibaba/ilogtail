@@ -23,7 +23,7 @@
 #include "common/ParamExtractor.h"
 #include "logger/Logger.h"
 #include "models/LogEvent.h"
-#include "monitor/MetricConstants.h"
+#include "monitor/metric_constants/MetricConstants.h"
 
 namespace logtail {
 
@@ -75,9 +75,9 @@ bool ProcessorMergeMultilineLogNative::Init(const Json::Value& config) {
 
     mSplitLines = &(GetContext().GetProcessProfile().splitLines);
 
-    mMergedEventsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_MERGE_MULTILINE_LOG_MERGED_RECORDS_TOTAL);
+    mMergedEventsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_MERGED_EVENTS_TOTAL);
     mUnmatchedEventsTotal
-        = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_MERGE_MULTILINE_LOG_UNMATCHED_RECORDS_TOTAL);
+        = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_UNMATCHED_EVENTS_TOTAL);
 
     return true;
 }

@@ -704,18 +704,18 @@ LoongCollectorMonitor* LoongCollectorMonitor::GetInstance() {
 void LoongCollectorMonitor::Init() {
     // create metric record
     MetricLabels labels;
-    labels.emplace_back(METRIC_LABEL_INSTANCE_ID, Application::GetInstance()->GetInstanceId());
-    labels.emplace_back(METRIC_LABEL_IP, LogFileProfiler::mIpAddr);
-    labels.emplace_back(METRIC_LABEL_OS, OS_NAME);
-    labels.emplace_back(METRIC_LABEL_OS_DETAIL, LogFileProfiler::mOsDetail);
-    labels.emplace_back(METRIC_LABEL_UUID, Application::GetInstance()->GetUUID());
-    labels.emplace_back(METRIC_LABEL_VERSION, ILOGTAIL_VERSION);
+    labels.emplace_back(METRIC_LABEL_KEY_INSTANCE_ID, Application::GetInstance()->GetInstanceId());
+    labels.emplace_back(METRIC_LABEL_KEY_IP, LogFileProfiler::mIpAddr);
+    labels.emplace_back(METRIC_LABEL_KEY_OS, OS_NAME);
+    labels.emplace_back(METRIC_LABEL_KEY_OS_DETAIL, LogFileProfiler::mOsDetail);
+    labels.emplace_back(METRIC_LABEL_KEY_UUID, Application::GetInstance()->GetUUID());
+    labels.emplace_back(METRIC_LABEL_KEY_VERSION, ILOGTAIL_VERSION);
     DynamicMetricLabels dynamicLabels;
-    dynamicLabels.emplace_back(METRIC_LABEL_PROJECT, []() -> std::string { return FlusherSLS::GetAllProjects(); });
+    dynamicLabels.emplace_back(METRIC_LABEL_KEY_PROJECT, []() -> std::string { return FlusherSLS::GetAllProjects(); });
 #ifdef __ENTERPRISE__
-    dynamicLabels.emplace_back(METRIC_LABEL_ALIUIDS,
+    dynamicLabels.emplace_back(METRIC_LABEL_KEY_ALIUIDS,
                                []() -> std::string { return EnterpriseConfigProvider::GetInstance()->GetAliuidSet(); });
-    dynamicLabels.emplace_back(METRIC_LABEL_USER_DEFINED_ID, []() -> std::string {
+    dynamicLabels.emplace_back(METRIC_LABEL_KEY_USER_DEFINED_ID, []() -> std::string {
         return EnterpriseConfigProvider::GetInstance()->GetUserDefinedIdSet();
     });
 #endif

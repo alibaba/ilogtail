@@ -577,8 +577,8 @@ void BatcherUnittest::TestMetric() {
         vector<BatchedEventsList> res;
         batch.Add(std::move(g), res);
         APSARA_TEST_EQUAL(5U, batch.mMetricsRecordRef->GetLabels()->size());
-        APSARA_TEST_TRUE(batch.mMetricsRecordRef.HasLabel(METRIC_LABEL_PROJECT, ""));
-        APSARA_TEST_TRUE(batch.mMetricsRecordRef.HasLabel(METRIC_LABEL_PIPELINE_NAME, "test_config"));
+        APSARA_TEST_TRUE(batch.mMetricsRecordRef.HasLabel(METRIC_LABEL_KEY_PROJECT, ""));
+        APSARA_TEST_TRUE(batch.mMetricsRecordRef.HasLabel(METRIC_LABEL_KEY_PIPELINE_NAME, "test_config"));
         APSARA_TEST_TRUE(batch.mMetricsRecordRef.HasLabel(METRIC_LABEL_KEY_COMPONENT_NAME, METRIC_LABEL_VALUE_COMPONENT_NAME_BATCHER));
         APSARA_TEST_TRUE(batch.mMetricsRecordRef.HasLabel(METRIC_LABEL_KEY_FLUSHER_NODE_ID, "1"));
         APSARA_TEST_TRUE(batch.mMetricsRecordRef.HasLabel("enable_group_batch", "false"));

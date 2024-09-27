@@ -20,7 +20,7 @@
 #include <string>
 
 #include "models/PipelineEventPtr.h"
-#include "monitor/MetricConstants.h"
+#include "monitor/metric_constants/MetricConstants.h"
 #include "pipeline/batch/BatchedEvents.h"
 #include "pipeline/plugin/interface/Flusher.h"
 
@@ -49,15 +49,15 @@ public:
     Serializer(Flusher* f) : mFlusher(f) {
         WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
             mMetricsRecordRef,
-            {{METRIC_LABEL_PROJECT, f->GetContext().GetProjectName()},
-             {METRIC_LABEL_PIPELINE_NAME, f->GetContext().GetConfigName()},
+            {{METRIC_LABEL_KEY_PROJECT, f->GetContext().GetProjectName()},
+             {METRIC_LABEL_KEY_PIPELINE_NAME, f->GetContext().GetConfigName()},
              {METRIC_LABEL_KEY_COMPONENT_NAME, METRIC_LABEL_VALUE_COMPONENT_NAME_SERIALIZER},
              {METRIC_LABEL_KEY_FLUSHER_NODE_ID, f->GetNodeID()}});
         mInItemsTotal = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_IN_ITEMS_TOTAL);
-        mInItemSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_IN_ITEM_SIZE_BYTES);
+        mInItemSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_IN_SIZE_BYTES);
         mOutItemsTotal = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_OUT_ITEMS_TOTAL);
-        mOutItemSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_OUT_ITEM_SIZE_BYTES);
-        mTotalProcessMs = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_TOTAL_PROCESS_MS);
+        mOutItemSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_OUT_SIZE_BYTES);
+        mTotalProcessMs = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_TOTAL_PROCESS_TIME_MS);
         mDiscardedItemsTotal = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_DISCARDED_ITEMS_TOTAL);
         mDiscardedItemSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_DISCARDED_ITEMS_SIZE_BYTES);
     }

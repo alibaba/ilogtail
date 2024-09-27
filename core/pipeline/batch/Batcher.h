@@ -28,7 +28,7 @@
 #include "common/ParamExtractor.h"
 #include "models/PipelineEventGroup.h"
 #include "monitor/LogtailMetric.h"
-#include "monitor/MetricConstants.h"
+#include "monitor/metric_constants/MetricConstants.h"
 #include "pipeline/PipelineContext.h"
 #include "pipeline/batch/BatchItem.h"
 #include "pipeline/batch/BatchStatus.h"
@@ -100,8 +100,8 @@ public:
         mFlusher = flusher;
 
         std::vector<std::pair<std::string, std::string>> labels{
-            {METRIC_LABEL_PROJECT, ctx.GetProjectName()},
-            {METRIC_LABEL_PIPELINE_NAME, ctx.GetConfigName()},
+            {METRIC_LABEL_KEY_PROJECT, ctx.GetProjectName()},
+            {METRIC_LABEL_KEY_PIPELINE_NAME, ctx.GetConfigName()},
             {METRIC_LABEL_KEY_COMPONENT_NAME, METRIC_LABEL_VALUE_COMPONENT_NAME_BATCHER},
             {METRIC_LABEL_KEY_FLUSHER_NODE_ID, flusher->GetNodeID()}};
         if (enableGroupBatch) {
@@ -111,7 +111,7 @@ public:
         }
         WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, std::move(labels));
         mInEventsTotal = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_IN_EVENTS_TOTAL);
-        mInGroupDataSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_IN_EVENT_GROUP_SIZE_BYTES);
+        mInGroupDataSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_IN_SIZE_BYTES);
         mOutEventsTotal = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_OUT_EVENTS_TOTAL);
         mTotalDelayMs = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_TOTAL_DELAY_MS);
         mEventBatchItemsTotal = mMetricsRecordRef.CreateIntGauge(METRIC_COMPONENT_BATCHER_EVENT_BATCHES_TOTAL);

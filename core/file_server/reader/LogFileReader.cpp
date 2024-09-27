@@ -48,7 +48,7 @@
 #include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/LogtailAlarm.h"
-#include "monitor/MetricConstants.h"
+#include "monitor/metric_constants/MetricConstants.h"
 #include "pipeline/queue/ExactlyOnceQueueManager.h"
 #include "pipeline/queue/ProcessQueueManager.h"
 #include "pipeline/queue/QueueKeyManager.h"
@@ -203,9 +203,9 @@ LogFileReader::LogFileReader(const std::string& hostLogPathDir,
 
 void LogFileReader::SetMetrics() {
     mMetricInited = false;
-    mMetricLabels = {{METRIC_LABEL_FILE_NAME, GetConvertedPath()},
-                     {METRIC_LABEL_FILE_DEV, std::to_string(GetDevInode().dev)},
-                     {METRIC_LABEL_FILE_INODE, std::to_string(GetDevInode().inode)}};
+    mMetricLabels = {{METRIC_LABEL_KEY_FILE_NAME, GetConvertedPath()},
+                     {METRIC_LABEL_KEY_FILE_DEV, std::to_string(GetDevInode().dev)},
+                     {METRIC_LABEL_KEY_FILE_INODE, std::to_string(GetDevInode().inode)}};
     mMetricsRecordRef = FileServer::GetInstance()->GetOrCreateReentrantMetricsRecordRef(GetConfigName(), mMetricLabels);
     if (mMetricsRecordRef == nullptr) {
         LOG_ERROR(sLogger,

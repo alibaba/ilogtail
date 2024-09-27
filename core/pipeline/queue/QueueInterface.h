@@ -17,7 +17,7 @@
 #pragma once
 
 #include "monitor/LogtailMetric.h"
-#include "monitor/MetricConstants.h"
+#include "monitor/metric_constants/MetricConstants.h"
 #include "pipeline/PipelineContext.h"
 #include "pipeline/queue/QueueKey.h"
 
@@ -29,12 +29,12 @@ public:
     QueueInterface(QueueKey key, size_t cap, const PipelineContext& ctx) : mKey(key), mCapacity(cap) {
         WriteMetrics::GetInstance()->CreateMetricsRecordRef(mMetricsRecordRef,
                                                             {
-                                                                {METRIC_LABEL_PROJECT, ctx.GetProjectName()},
-                                                                {METRIC_LABEL_PIPELINE_NAME, ctx.GetConfigName()},
+                                                                {METRIC_LABEL_KEY_PROJECT, ctx.GetProjectName()},
+                                                                {METRIC_LABEL_KEY_PIPELINE_NAME, ctx.GetConfigName()},
                                                             });
 
         mInItemsTotal = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_IN_ITEMS_TOTAL);
-        mInItemDataSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_IN_ITEM_SIZE_BYTES);
+        mInItemDataSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_IN_SIZE_BYTES);
         mOutItemsTotal = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_OUT_ITEMS_TOTAL);
         mTotalDelayMs = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_TOTAL_DELAY_MS);
         mQueueSizeTotal = mMetricsRecordRef.CreateIntGauge(METRIC_COMPONENT_QUEUE_SIZE_TOTAL);

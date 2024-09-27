@@ -38,7 +38,7 @@ type AggregatorWrapperV2 struct {
 
 func (wrapper *AggregatorWrapperV2) Init(pluginMeta *pipeline.PluginMeta) error {
 	wrapper.InitMetricRecord(pluginMeta)
-	wrapper.totalDelayTimeMs = helper.NewCounterMetricAndRegister(wrapper.MetricRecord, helper.MetricPluginTotalDelayTimeMs)
+	wrapper.totalDelayTimeMs = helper.NewCounterMetricAndRegister(wrapper.MetricRecord, helper.MetricPluginTotalDelayMs)
 
 	interval, err := wrapper.Aggregator.Init(wrapper.Config.Context, wrapper)
 	if err != nil {

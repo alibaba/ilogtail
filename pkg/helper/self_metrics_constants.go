@@ -19,13 +19,6 @@ import (
 )
 
 //////////////////////////////////////////////////////////////////////////
-// common
-//////////////////////////////////////////////////////////////////////////
-
-// label keys
-const MetricLabelProject = "project"
-
-//////////////////////////////////////////////////////////////////////////
 // agent
 //////////////////////////////////////////////////////////////////////////
 
@@ -41,13 +34,13 @@ const (
 
 // label keys
 const (
-	MetricLabelLogstore     = "logstore"
-	MetricLabelRegion       = "region"
-	MetricLabelPipelineName = "pipeline_name"
-	MetricLabelPluginType   = "plugin_type"
-	MetricLabelPluginID     = "plugin_id"
-	MetricLabelNodeID       = "node_id"
-	MetricLabelChildNodeID  = "child_node_id"
+	MetricLabelKeyProject      = "project"
+	MetricLabelKeyLogstore     = "logstore"
+	MetricLabelKeyPipelineName = "pipeline_name"
+	MetricLabelKeyPluginType   = "plugin_type"
+	MetricLabelKeyPluginID     = "plugin_id"
+	MetricLabelKeyNodeID       = "node_id"
+	MetricLabelKeyChildNodeID  = "child_node_id"
 )
 
 // metric keys
@@ -58,7 +51,7 @@ const (
 	MetricPluginOutEventsTotal      = "plugin_out_events_total"
 	MetricPluginOutEventGroupsTotal = "plugin_out_event_groups_total"
 	MetricPluginOutSizeBytes        = "plugin_out_size_bytes"
-	MetricPluginTotalDelayTimeMs    = "plugin_total_delay_time_ms"
+	MetricPluginTotalDelayMs        = "plugin_total_delay_ms"
 	MetricPluginTotalProcessTimeMs  = "plugin_total_process_time_ms"
 )
 
@@ -117,21 +110,21 @@ const (
 
 func GetCommonLabels(context pipeline.Context, pluginMeta *pipeline.PluginMeta) []pipeline.LabelPair {
 	labels := make([]pipeline.LabelPair, 0)
-	labels = append(labels, pipeline.LabelPair{Key: MetricLabelProject, Value: context.GetProject()})
-	labels = append(labels, pipeline.LabelPair{Key: MetricLabelLogstore, Value: context.GetLogstore()})
-	labels = append(labels, pipeline.LabelPair{Key: MetricLabelPipelineName, Value: context.GetConfigName()})
+	labels = append(labels, pipeline.LabelPair{Key: MetricLabelKeyProject, Value: context.GetProject()})
+	labels = append(labels, pipeline.LabelPair{Key: MetricLabelKeyLogstore, Value: context.GetLogstore()})
+	labels = append(labels, pipeline.LabelPair{Key: MetricLabelKeyPipelineName, Value: context.GetConfigName()})
 
 	if len(pluginMeta.PluginID) > 0 {
-		labels = append(labels, pipeline.LabelPair{Key: MetricLabelPluginID, Value: pluginMeta.PluginID})
+		labels = append(labels, pipeline.LabelPair{Key: MetricLabelKeyPluginID, Value: pluginMeta.PluginID})
 	}
 	if len(pluginMeta.NodeID) > 0 {
-		labels = append(labels, pipeline.LabelPair{Key: MetricLabelNodeID, Value: pluginMeta.NodeID})
+		labels = append(labels, pipeline.LabelPair{Key: MetricLabelKeyNodeID, Value: pluginMeta.NodeID})
 	}
 	if len(pluginMeta.ChildNodeID) > 0 {
-		labels = append(labels, pipeline.LabelPair{Key: MetricLabelChildNodeID, Value: pluginMeta.ChildNodeID})
+		labels = append(labels, pipeline.LabelPair{Key: MetricLabelKeyChildNodeID, Value: pluginMeta.ChildNodeID})
 	}
 	if len(pluginMeta.PluginType) > 0 {
-		labels = append(labels, pipeline.LabelPair{Key: MetricLabelPluginType, Value: pluginMeta.PluginType})
+		labels = append(labels, pipeline.LabelPair{Key: MetricLabelKeyPluginType, Value: pluginMeta.PluginType})
 	}
 	return labels
 }

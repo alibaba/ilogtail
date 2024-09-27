@@ -19,7 +19,7 @@
 #include "common/LogtailCommonFlags.h"
 #include "common/ParamExtractor.h"
 #include "file_server/FileServer.h"
-#include "monitor/MetricConstants.h"
+#include "monitor/metric_constants/MetricConstants.h"
 #include "pipeline/Pipeline.h"
 #include "pipeline/plugin/PluginRegistry.h"
 #include "plugin/processor/inner/ProcessorMergeMultilineLogNative.h"
