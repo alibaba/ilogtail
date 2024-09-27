@@ -50,11 +50,7 @@ extern const std::string METRIC_LABEL_UUID;
 extern const std::string METRIC_LABEL_VERSION;
 
 // metric keys
-extern const std::string METRIC_AGENT_CONSOLE_PIPELINE_CONFIG_TOTAL;
 extern const std::string METRIC_AGENT_CPU;
-extern const std::string METRIC_AGENT_CPU_GO;
-extern const std::string METRIC_AGENT_CRD_PIPELINE_CONFIG_TOTAL;
-extern const std::string METRIC_AGENT_ENV_PIPELINE_CONFIG_TOTAL;
 extern const std::string METRIC_AGENT_GO_ROUTINES_TOTAL;
 extern const std::string METRIC_AGENT_INSTANCE_CONFIG_TOTAL;
 extern const std::string METRIC_AGENT_MEMORY;
@@ -143,13 +139,6 @@ extern const std::string METRIC_PLUGIN_MERGE_MULTILINE_LOG_UNMATCHED_RECORDS_TOT
 **********************************************************/
 extern const std::string METRIC_PLUGIN_PARSE_STDERR_TOTAL;
 extern const std::string METRIC_PLUGIN_PARSE_STDOUT_TOTAL;
-
-/**********************************************************
-*   flusher_sls
-**********************************************************/
-extern const std::string METRIC_PLUGIN_NETWORK_ERROR_TOTAL;
-extern const std::string METRIC_PLUGIN_QUOTA_ERROR_TOTAL;
-extern const std::string METRIC_PLUGIN_RETRIES_TOTAL;
 
 //////////////////////////////////////////////////////////////////////////
 // component

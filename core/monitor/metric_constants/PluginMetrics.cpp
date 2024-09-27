@@ -82,11 +82,4 @@ const std::string METRIC_PLUGIN_MERGE_MULTILINE_LOG_UNMATCHED_RECORDS_TOTAL
 const std::string METRIC_PLUGIN_PARSE_STDERR_TOTAL = "plugin_parse_stderr_total";
 const std::string METRIC_PLUGIN_PARSE_STDOUT_TOTAL = "plugin_parse_stdout_total";
 
-/**********************************************************
-*   flusher_sls
-**********************************************************/
-const std::string METRIC_PLUGIN_NETWORK_ERROR_TOTAL = "plugin_network_error_total";
-const std::string METRIC_PLUGIN_QUOTA_ERROR_TOTAL = "plugin_quota_error_total";
-const std::string METRIC_PLUGIN_RETRIES_TOTAL = "plugin_retries_total";
-
 }

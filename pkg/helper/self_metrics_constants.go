@@ -31,7 +31,6 @@ const MetricLabelProject = "project"
 
 // metric keys
 const (
-	MetricAgentCPUGo           = "agent_go_cpu_percent"
 	MetricAgentMemoryGo        = "agent_go_memory_used_mb"
 	MetricAgentGoRoutinesTotal = "agent_go_routines_total"
 )
@@ -90,10 +89,9 @@ const (
 
 /**********************************************************
 *   service_mysql
+*   service_rdb
 **********************************************************/
 const (
-	MetricLabelDriver = "driver"
-
 	MetricPluginCollectAvgCostTimeMs = "plugin_collect_avg_cost_time_ms"
 	MetricPluginCollectTotal         = "plugin_collect_total"
 )
