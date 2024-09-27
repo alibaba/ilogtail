@@ -33,6 +33,7 @@ public:
 
     bool Push(std::unique_ptr<ProcessQueueItem>&& item) override;
     bool Pop(std::unique_ptr<ProcessQueueItem>& item) override;
+    void SetPipelineForItems(const std::string& name) const override;
 
     void Reset(size_t cap);
 
@@ -42,7 +43,7 @@ private:
     std::deque<std::unique_ptr<ProcessQueueItem>> mQueue;
     size_t mEventCnt = 0;
 
-    CounterPtr mDroppedEventsCnt;
+    CounterPtr mDiscardedEventsCnt;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class CircularProcessQueueUnittest;
