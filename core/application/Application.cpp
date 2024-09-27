@@ -194,7 +194,7 @@ void Application::Init() {
     appInfoJson["os"] = Json::Value(LogFileProfiler::mOsDetail);
     appInfoJson["update_time"] = GetTimeStamp(time(NULL), "%Y-%m-%d %H:%M:%S");
     string appInfo = appInfoJson.toStyledString();
-    OverwriteFile(GetProcessExecutionDir() + STRING_FLAG(app_info_file), appInfo);
+    OverwriteFile(STRING_FLAG(loongcollector_log_dir) + STRING_FLAG(app_info_file), appInfo);
     LOG_INFO(sLogger, ("app info", appInfo));
 }
 
@@ -212,7 +212,7 @@ void Application::Start() { // GCOVR_EXCL_START
     {
         // add local config dir
         filesystem::path localConfigPath
-            = filesystem::path(AppConfig::GetInstance()->GetLogtailSysConfDir()) / "config" / "local";
+            = filesystem::path(STRING_FLAG(loongcollector_config_dir)) / "pipelineconfig" / "local";
         error_code ec;
         filesystem::create_directories(localConfigPath, ec);
         if (ec) {
@@ -225,7 +225,7 @@ void Application::Start() { // GCOVR_EXCL_START
     {
         // add local config dir
         filesystem::path localConfigPath
-            = filesystem::path(AppConfig::GetInstance()->GetLogtailSysConfDir()) / "instanceconfig" / "local";
+            = filesystem::path(STRING_FLAG(loongcollector_config_dir)) / "instanceconfig" / "local";
         error_code ec;
         filesystem::create_directories(localConfigPath, ec);
         if (ec) {
