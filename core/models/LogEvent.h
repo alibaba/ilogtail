@@ -89,8 +89,6 @@ public:
 
     StringView GetLevel() const { return mLevel; }
     void SetLevel(const std::string& level);
-    void SetLevelNoCopy(const StringBuffer& level);
-    void SetLevelNoCopy(StringView level);
 
     bool Empty() const { return mIndex.empty(); }
     size_t Size() const { return mIndex.size(); }
