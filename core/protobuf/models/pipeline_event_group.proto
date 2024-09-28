@@ -9,13 +9,13 @@ message PipelineEventGroup {
     map<string, bytes> Metadata = 1;  
     map<string, bytes> Tags = 2;  
     message LogEvents {
-        repeated LogEvent Array = 1;
+        repeated LogEvent Events = 1;
     }
     message MetricEvents {
-        repeated MetricEvent Array = 1;
+        repeated MetricEvent Events = 1;
     }
     message SpanEvents {
-        repeated SpanEvent Array = 1;
+        repeated SpanEvent Events = 1;
     }
     oneof PipelineEvents {
         LogEvents Logs = 3;
