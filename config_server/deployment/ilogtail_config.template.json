@@ -1,8 +1,0 @@
-{
-  "config_server_list" : [
-    {
-      "cluster":"community",
-      "endpoint_list":$CONFIG_SERVER_ADDRESSES
-    }
-  ]
-}
