@@ -24,6 +24,9 @@ target_link_libraries(common_simple_utils_unittest ${UT_BASE_TARGET})
 add_executable(common_logfileoperator_unittest LogFileOperatorUnittest.cpp)
 target_link_libraries(common_logfileoperator_unittest ${UT_BASE_TARGET})
 
+add_executable(common_k8slru_unittest LRUCacheUnittest.cpp)
+target_link_libraries(common_k8slru_unittest ${UT_BASE_TARGET})
+
 add_executable(common_sliding_window_counter_unittest SlidingWindowCounterUnittest.cpp)
 target_link_libraries(common_sliding_window_counter_unittest ${UT_BASE_TARGET})
 
@@ -60,6 +63,7 @@ gtest_discover_tests(common_logfileoperator_unittest)
 gtest_discover_tests(common_sliding_window_counter_unittest)
 gtest_discover_tests(common_string_tools_unittest)
 gtest_discover_tests(common_machine_info_util_unittest)
+gtest_discover_tests(common_k8slru_unittest)
 gtest_discover_tests(encoding_converter_unittest)
 gtest_discover_tests(yaml_util_unittest)
 gtest_discover_tests(safe_queue_unittest)
