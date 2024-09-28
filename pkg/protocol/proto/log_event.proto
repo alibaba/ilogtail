@@ -1,5 +1,5 @@
 syntax = "proto3";
-package protocol;
+package logtail.models;
 
 message LogEvent {  
     uint64 Timestamp = 1;

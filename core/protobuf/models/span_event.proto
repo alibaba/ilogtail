@@ -17,19 +17,19 @@ message SpanEvent {
         CONSUMER = 5;
     }
     SpanKind Kind = 7;
-    uint64 StartTimeNs = 8;
-    uint64 EndTimeNs = 9;
+    uint64 StartTime = 8;
+    uint64 EndTime = 9;
     map<string, bytes> Tags = 10;
     message InnerEvent {
-        uint64 TimestampNs = 1;
+        uint64 Timestamp = 1;
         bytes Name = 2;
         map<string, bytes> Tags = 3;
     }
     repeated InnerEvent Events = 11;
     message SpanLink {
-        string TraceID = 1;
-        string SpanID = 2;
-        string TraceState = 3;
+        bytes TraceID = 1;
+        bytes SpanID = 2;
+        bytes TraceState = 3;
         map<string, bytes> Tags = 4;
     }
     repeated SpanLink Links = 12;

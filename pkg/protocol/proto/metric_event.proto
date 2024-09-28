@@ -1,5 +1,5 @@
 syntax = "proto3";
-package protocol;
+package logtail.models;
 
 message UntypedSingleValue {
     double Value = 1;
