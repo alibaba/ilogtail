@@ -1,9 +1,0 @@
-{
-  "type": "mysql",
-  "userName": "root",
-  "password": "123456",
-  "host": "mysql",
-  "port": 3306,
-  "dbName": "test",
-  "autoMigrate": true
-}
