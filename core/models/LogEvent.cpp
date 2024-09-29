@@ -56,15 +56,15 @@ void LogEvent::SetContentNoCopy(const StringBuffer& key, const StringBuffer& val
 }
 
 void LogEvent::SetContentNoCopy(StringView key, StringView val) {
-    auto it = mIndex.find(key);
-    if (it != mIndex.end()) {
+    auto rst = mIndex.insert(make_pair(key, mContents.size()));
+    if (!rst.second) {
+        auto& it = rst.first;
         auto& field = mContents[it->second].first;
         mAllocatedContentSize += key.size() + val.size() - field.first.size() - field.second.size();
         field = make_pair(key, val);
     } else {
         mAllocatedContentSize += key.size() + val.size();
         mContents.emplace_back(make_pair(key, val), true);
-        mIndex[key] = mContents.size() - 1;
     }
 }
 
@@ -79,8 +79,8 @@ void LogEvent::DelContent(StringView key) {
 }
 
 void LogEvent::SetLevel(const std::string& level) {
-    StringBuffer strBuffer = GetSourceBuffer()->CopyString(level); 
-    mLevel = StringView(strBuffer.data, strBuffer.size);
+    const StringBuffer& b = GetSourceBuffer()->CopyString(level); 
+    mLevel = StringView(b.data, b.size);
 }
 
 LogEvent::ContentIterator LogEvent::FindContent(StringView key) {
