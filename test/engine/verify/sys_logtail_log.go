@@ -31,7 +31,7 @@ import (
 
 func LogtailPluginLog(ctx context.Context, expectCount int, expectStr string) (context.Context, error) {
 	dockercompose.CopyCoreLogs()
-	logtailPluginLog := config.LogDir + "/logtail_plugin.LOG"
+	logtailPluginLog := config.LogDir + "/loongcollector_plugin.LOG"
 	count, err := lineCounter(logtailPluginLog)
 	logger.Infof(context.Background(), "find %d lines of the logtail plugin log", count)
 	if err != nil {
