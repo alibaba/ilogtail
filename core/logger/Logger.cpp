@@ -13,21 +13,19 @@
 // limitations under the License.
 
 #include "Logger.h"
-
+#include <set>
 #include <json/json.h>
 #include <spdlog/async.h>
 #include <spdlog/sinks/rotating_file_sink.h>
 #include <spdlog/sinks/stdout_sinks.h>
-
-#include <boost/filesystem.hpp>
-#include <set>
-
-#include "common/ErrorUtil.h"
 #include "common/ExceptionBase.h"
-#include "common/FileSystemUtil.h"
-#include "common/Flags.h"
 #include "common/RuntimeUtil.h"
 #include "common/StringTools.h"
+#include "common/FileSystemUtil.h"
+#include "common/Flags.h"
+#include "common/ErrorUtil.h"
+#include "common/FileSystemUtil.h"
+#include <boost/filesystem.hpp>
 
 DEFINE_FLAG_STRING(logtail_snapshot_dir, "snapshot dir on local disk", "snapshot");
 DEFINE_FLAG_BOOL(logtail_async_logger_enable, "", true);

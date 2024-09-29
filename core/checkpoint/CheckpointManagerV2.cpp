@@ -13,18 +13,15 @@
 // limitations under the License.
 
 #include "CheckpointManagerV2.h"
-
 #include <leveldb/write_batch.h>
-
 #include <boost/filesystem.hpp>
-
-#include "app_config/AppConfig.h"
-#include "checkpoint/CheckPointManager.h"
 #include "common/Flags.h"
 #include "common/ScopeInvoker.h"
 #include "common/TimeUtil.h"
 #include "logger/Logger.h"
 #include "monitor/LogtailAlarm.h"
+#include "app_config/AppConfig.h"
+#include "checkpoint/CheckPointManager.h"
 
 DEFINE_FLAG_INT32(logtail_checkpoint_check_gc_interval_sec, "60 seconds", 60);
 DEFINE_FLAG_INT32(logtail_checkpoint_gc_threshold_sec, "30 minutes", 30 * 60);

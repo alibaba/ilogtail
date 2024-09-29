@@ -24,8 +24,8 @@
 #include "common/RuntimeUtil.h"
 #include "common/TimeUtil.h"
 #include "go_pipeline/LogtailPlugin.h"
-#include "pipeline/PipelineManager.h"
 #include "protobuf/sls/sls_logs.pb.h"
+#include "pipeline/PipelineManager.h"
 
 using namespace sls_logs;
 using namespace std;

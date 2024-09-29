@@ -12,59 +12,56 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <assert.h>
-#include <json/json.h>
-
-#include "app_config/AppConfig.h"
-#include "file_server/ConfigManager.h"
-#include "file_server/EventDispatcher.h"
-#include "file_server/event/Event.h"
-#include "file_server/event_handler/EventHandler.h"
-#include "file_server/reader/LogFileReader.h"
-#include "monitor/Monitor.h"
-#include "sender/Sender.h"
 #include "unittest/Unittest.h"
+#include <json/json.h>
+#include "file_server/EventDispatcher.h"
+#include "file_server/ConfigManager.h"
+#include "app_config/AppConfig.h"
+#include "file_server/reader/LogFileReader.h"
+#include "file_server/event_handler/EventHandler.h"
+#include "monitor/Monitor.h"
+#include "file_server/event/Event.h"
+#include "sender/Sender.h"
+#include <assert.h>
 #if defined(__linux__)
 #include <unistd.h>
 #endif
-#include <errno.h>
-#include <fcntl.h>
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-
-#include <boost/regex.hpp>
-#include <fstream>
-#include <iostream>
-#include <queue>
-#include <set>
+#include <stdlib.h>
+#include <signal.h>
+#include <fcntl.h>
+#include <string.h>
+#include <stdio.h>
 #include <string>
+#include <errno.h>
 #include <typeinfo>
-#include <vector>
-
-#include "checkpoint/CheckpointManagerV2.h"
-#include "common/Constants.h"
+#include <iostream>
+#include <fstream>
+#include <boost/regex.hpp>
+#include "protobuf/sls/metric.pb.h"
+#include "protobuf/sls/sls_logs.pb.h"
+#include "monitor/LogtailAlarm.h"
+#include "monitor/LogIntegrity.h"
+#include "file_server/event_handler/LogInput.h"
 #include "common/FileEncryption.h"
-#include "common/FileSystemUtil.h"
+#include "runner/LogProcess.h"
+#include "common/WaitObject.h"
 #include "common/Lock.h"
-#include "common/LogFileCollectOffsetIndicator.h"
 #include "common/MemoryBarrier.h"
 #include "common/StringTools.h"
 #include "common/Thread.h"
-#include "common/WaitObject.h"
-#include "file_server/event_handler/LogInput.h"
+#include "common/Constants.h"
+#include "common/FileSystemUtil.h"
+#include "checkpoint/CheckpointManagerV2.h"
 #include "logger/Logger.h"
-#include "monitor/LogIntegrity.h"
-#include "monitor/LogtailAlarm.h"
-#include "protobuf/sls/metric.pb.h"
-#include "protobuf/sls/sls_logs.pb.h"
-#include "runner/LogProcess.h"
 #include "sdk/Client.h"
 #include "sdk/Common.h"
 #include "sdk/Exception.h"
+#include "common/LogFileCollectOffsetIndicator.h"
+#include <set>
+#include <vector>
+#include <queue>
 
 using namespace std;
 using namespace sls_logs;

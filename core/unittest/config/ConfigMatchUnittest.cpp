@@ -12,42 +12,39 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <assert.h>
-
 #include "unittest/Unittest.h"
+#include <assert.h>
 #if defined(__linux__)
-#include <fnmatch.h>
+#include <unistd.h>
 #include <signal.h>
 #include <sys/inotify.h>
-#include <unistd.h>
+#include <fnmatch.h>
 #endif
-#include <errno.h>
-#include <fcntl.h>
-#include <json/json.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-
-#include <fstream>
-#include <iostream>
-#include <memory>
-#include <set>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <string.h>
+#include <stdio.h>
 #include <string>
-#include <thread>
+#include <errno.h>
 #include <typeinfo>
-
-#include "app_config/AppConfig.h"
-#include "common/FileSystemUtil.h"
+#include <iostream>
+#include <fstream>
+#include <memory>
+#include <thread>
+#include <set>
+#include <json/json.h>
 #include "common/Flags.h"
-#include "file_server/ConfigManager.h"
-#include "file_server/EventDispatcher.h"
-#include "file_server/event/Event.h"
+#include "common/FileSystemUtil.h"
 #include "file_server/event_handler/EventHandler.h"
-#include "file_server/event_handler/LogInput.h"
 #include "file_server/polling/PollingEventQueue.h"
+#include "file_server/EventDispatcher.h"
+#include "app_config/AppConfig.h"
+#include "file_server/ConfigManager.h"
 #include "file_server/reader/LogFileReader.h"
+#include "file_server/event_handler/LogInput.h"
+#include "file_server/event/Event.h"
 #include "logger/Logger.h"
 using namespace std;
 

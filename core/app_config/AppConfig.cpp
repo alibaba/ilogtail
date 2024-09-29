@@ -22,11 +22,11 @@
 #include "common/LogtailCommonFlags.h"
 #include "common/RuntimeUtil.h"
 #include "file_server/ConfigManager.h"
-#include "file_server/reader/LogFileReader.h"
 #include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/LogtailAlarm.h"
 #include "monitor/Monitor.h"
+#include "file_server/reader/LogFileReader.h"
 #ifdef __ENTERPRISE__
 #include "config/provider/EnterpriseConfigProvider.h"
 #endif

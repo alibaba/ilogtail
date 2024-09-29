@@ -17,31 +17,29 @@
 #include <unistd.h>
 #endif
 #include <fcntl.h>
-#include <json/json.h>
-#include <string.h>
-
 #include <cstdlib>
-#include <fstream>
-#include <memory>
+#include <string.h>
 #include <thread>
-
+#include <memory>
+#include <fstream>
+#include <json/json.h>
+#include "file_server/event_handler/EventHandler.h"
+#include "file_server/ConfigManager.h"
+#include "file_server/reader/LogFileReader.h"
 #include "AppConfig.h"
-#include "CheckPointManager.h"
-#include "EventDispatcher.h"
-#include "LogtailAlarm.h"
 #include "Monitor.h"
+#include "EventDispatcher.h"
+#include "CheckPointManager.h"
+#include "file_server/event_handler/LogInput.h"
 #include "Sender.h"
-#include "common/Constants.h"
-#include "common/FileSystemUtil.h"
+#include "sls_logs.pb.h"
+#include "LogtailAlarm.h"
 #include "common/Flags.h"
 #include "common/Lock.h"
-#include "file_server/ConfigManager.h"
-#include "file_server/event_handler/EventHandler.h"
-#include "file_server/event_handler/LogInput.h"
-#include "file_server/reader/LogFileReader.h"
+#include "common/Constants.h"
+#include "common/FileSystemUtil.h"
 #include "logger/Logger.h"
 #include "sdk/Common.h"
-#include "sls_logs.pb.h"
 
 using namespace std;
 using namespace logtail::sdk;

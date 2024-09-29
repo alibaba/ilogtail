@@ -27,8 +27,8 @@
 #include "common/version.h"
 #include "file_server/ConfigManager.h"
 #include "logger/Logger.h"
-#include "pipeline/queue/QueueKeyManager.h"
 #include "provider/Provider.h"
+#include "pipeline/queue/QueueKeyManager.h"
 
 DECLARE_FLAG_STRING(loongcollector_log_dir);
 DEFINE_FLAG_INT32(profile_data_send_interval, "interval of send LogFile/DomainSocket profile data, seconds", 600);

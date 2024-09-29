@@ -20,10 +20,10 @@
 #include "common/Thread.h"
 #include "common/TimeUtil.h"
 #include "file_server/ConfigManager.h"
-#include "file_server/reader/LogFileReader.h"
 #include "logger/Logger.h"
-#include "pipeline/queue/ProcessQueueManager.h"
 #include "runner/LogProcess.h"
+#include "pipeline/queue/ProcessQueueManager.h"
+#include "file_server/reader/LogFileReader.h"
 
 DECLARE_FLAG_STRING(loongcollector_data_dir);
 
