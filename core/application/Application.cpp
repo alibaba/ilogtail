@@ -92,37 +92,6 @@ Application::Application() : mStartTime(time(nullptr)) {
 }
 
 void Application::Init() {
-    if (Mkdirs(STRING_FLAG(loongcollector_lib_dir))) {
-        LOG_INFO(sLogger, (STRING_FLAG(loongcollector_lib_dir) + " dir is not existing, create", "done"));
-    } else {
-        LOG_ERROR(sLogger, (STRING_FLAG(loongcollector_lib_dir) + " dir is not existing, create", "failed"));
-        exit(0);
-    }
-    if (Mkdirs(STRING_FLAG(loongcollector_config_dir))) {
-        LOG_INFO(sLogger, (STRING_FLAG(loongcollector_config_dir) + " dir is not existing, create", "done"));
-    } else {
-        LOG_ERROR(sLogger, (STRING_FLAG(loongcollector_config_dir) + " dir is not existing, create", "failed"));
-        exit(0);
-    }
-    if (Mkdirs(STRING_FLAG(loongcollector_log_dir))) {
-        LOG_INFO(sLogger, (STRING_FLAG(loongcollector_log_dir) + " dir is not existing, create", "done"));
-    } else {
-        LOG_ERROR(sLogger, (STRING_FLAG(loongcollector_log_dir) + " dir is not existing, create", "failed"));
-        exit(0);
-    }
-    if (Mkdirs(STRING_FLAG(loongcollector_run_dir))) {
-        LOG_INFO(sLogger, (STRING_FLAG(loongcollector_run_dir) + " dir is not existing, create", "done"));
-    } else {
-        LOG_ERROR(sLogger, (STRING_FLAG(loongcollector_run_dir) + " dir is not existing, create", "failed"));
-        exit(0);
-    }
-    if (Mkdirs(STRING_FLAG(loongcollector_data_dir))) {
-        LOG_INFO(sLogger, (STRING_FLAG(loongcollector_data_dir) + " dir is not existing, create", "done"));
-    } else {
-        LOG_ERROR(sLogger, (STRING_FLAG(loongcollector_data_dir) + " dir is not existing, create", "failed"));
-        exit(0);
-    }
-
     // get last crash info
     string backTraceStr = GetCrashBackTrace();
     if (!backTraceStr.empty()) {
