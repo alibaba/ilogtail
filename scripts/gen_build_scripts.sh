@@ -102,7 +102,7 @@ function generateCopyScript() {
     echo 'docker cp "$id":'${PATH_IN_DOCKER}'/'${OUT_DIR}'/libPluginBase.so $BINDIR' >>$COPY_SCRIPT_FILE
   elif [ $CATEGORY = "core" ]; then
     if [ $BUILD_LOGTAIL = "ON" ]; then
-      echo 'docker cp "$id":'${PATH_IN_DOCKER}'/core/build/loongcollector $BINDIR' >>$COPY_SCRIPT_FILE
+      echo 'docker cp "$id":'${PATH_IN_DOCKER}'/core/build/ilogtail $BINDIR' >>$COPY_SCRIPT_FILE
       echo 'docker cp "$id":'${PATH_IN_DOCKER}'/core/build/go_pipeline/libPluginAdapter.so $BINDIR' >>$COPY_SCRIPT_FILE
     fi
     if [ $BUILD_LOGTAIL_UT = "ON" ]; then
@@ -111,7 +111,7 @@ function generateCopyScript() {
     fi
   else
     echo 'docker cp "$id":'${PATH_IN_DOCKER}'/'${OUT_DIR}'/libPluginBase.so $BINDIR' >>$COPY_SCRIPT_FILE
-    echo 'docker cp "$id":'${PATH_IN_DOCKER}'/core/build/loongcollector $BINDIR' >>$COPY_SCRIPT_FILE
+    echo 'docker cp "$id":'${PATH_IN_DOCKER}'/core/build/ilogtail $BINDIR' >>$COPY_SCRIPT_FILE
     echo 'docker cp "$id":'${PATH_IN_DOCKER}'/core/build/go_pipeline/libPluginAdapter.so $BINDIR' >>$COPY_SCRIPT_FILE
     if [ $BUILD_LOGTAIL_UT = "ON" ]; then
       echo 'docker cp "$id":'${PATH_IN_DOCKER}'/core/build core/build' >>$COPY_SCRIPT_FILE

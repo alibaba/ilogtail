@@ -32,7 +32,7 @@ import (
 
 	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
-	"github.com/alibaba/ilogtail/pkg/loongcollector"
+	"github.com/alibaba/ilogtail/pkg/logtail"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/util"
 )
@@ -204,7 +204,7 @@ func (idf *InputDockerFile) Init(context pipeline.Context) (int, error) {
 }
 
 func (idf *InputDockerFile) Description() string {
-	return "docker file plugin for loongcollector"
+	return "docker file plugin for logtail"
 }
 
 // addMappingToLogtail  添加容器信息到allCmd里面，allCmd不为nil时，只添加不执行，allCmd为nil时，添加并执行
@@ -240,7 +240,7 @@ func (idf *InputDockerFile) addMappingToLogtail(info *helper.DockerInfoDetail, c
 		allCmd.AllCmd = append(allCmd.AllCmd, cmd)
 		return
 	}
-	if err := loongcollector.ExecuteCMD(configName, PluginDockerUpdateFile, cmdBuf); err != nil {
+	if err := logtail.ExecuteCMD(configName, PluginDockerUpdateFile, cmdBuf); err != nil {
 		logger.Error(idf.context.GetRuntimeContext(), "DOCKER_FILE_MAPPING_ALARM", "cmdType", PluginDockerUpdateFile, "cmd", cmdBuf, "error", err)
 	}
 }
@@ -252,7 +252,7 @@ func (idf *InputDockerFile) deleteMappingFromLogtail(id string) {
 	logger.Info(idf.context.GetRuntimeContext(), "deleteMappingFromLogtail cmd", cmd)
 	cmdBuf, _ := json.Marshal(&cmd)
 	configName := idf.context.GetConfigName()
-	if err := loongcollector.ExecuteCMD(configName, PluginDockerDeleteFile, cmdBuf); err != nil {
+	if err := logtail.ExecuteCMD(configName, PluginDockerDeleteFile, cmdBuf); err != nil {
 		logger.Error(idf.context.GetRuntimeContext(), "DOCKER_FILE_MAPPING_ALARM", "cmdType", PluginDockerDeleteFile, "cmd", cmdBuf, "error", err)
 	}
 }
@@ -264,7 +264,7 @@ func (idf *InputDockerFile) notifyStopToLogtail(id string) {
 	logger.Info(idf.context.GetRuntimeContext(), "notifyStopToLogtail cmd", cmd)
 	cmdBuf, _ := json.Marshal(&cmd)
 	configName := idf.context.GetConfigName()
-	if err := loongcollector.ExecuteCMD(configName, PluginDockerStopFile, cmdBuf); err != nil {
+	if err := logtail.ExecuteCMD(configName, PluginDockerStopFile, cmdBuf); err != nil {
 		logger.Error(idf.context.GetRuntimeContext(), "DOCKER_FILE_MAPPING_ALARM", "cmdType", PluginDockerStopFile, "cmd", cmdBuf, "error", err)
 	}
 }
@@ -274,7 +274,7 @@ func (idf *InputDockerFile) updateAll(allCmd *DockerFileUpdateCmdAll) {
 	logger.Info(idf.context.GetRuntimeContext(), "update all", len(allCmd.AllCmd))
 	cmdBuf, _ := json.Marshal(allCmd)
 	configName := idf.context.GetConfigName()
-	if err := loongcollector.ExecuteCMD(configName, PluginDockerUpdateFileAll, cmdBuf); err != nil {
+	if err := logtail.ExecuteCMD(configName, PluginDockerUpdateFileAll, cmdBuf); err != nil {
 		logger.Error(idf.context.GetRuntimeContext(), "DOCKER_FILE_MAPPING_ALARM", "cmdType", PluginDockerUpdateFileAll, "cmd", cmdBuf, "error", err)
 	}
 }

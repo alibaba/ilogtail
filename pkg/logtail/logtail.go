@@ -15,7 +15,7 @@
 //go:build linux || windows
 // +build linux windows
 
-package loongcollector
+package logtail
 
 /*
 #cgo CFLAGS: -I./

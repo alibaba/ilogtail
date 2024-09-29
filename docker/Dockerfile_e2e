@@ -18,24 +18,24 @@ ARG HOST_OS=Linux
 ARG VERSION=2.0.0
 
 USER root
-WORKDIR /loongcollector
+WORKDIR /ilogtail
 
-COPY ./output/loongcollector /loongcollector/
+COPY ./output/ilogtail /ilogtail/
 COPY ./scripts/download_ebpflib.sh /tmp/
 
-RUN chown -R $(whoami) /loongcollector && \
-    chmod 755 /loongcollector/loongcollector && \
-    mkdir /loongcollector/checkpoint && \
-    if [ `uname -m` = "x86_64" ]; then /tmp/download_ebpflib.sh /loongcollector; fi && \
+RUN chown -R $(whoami) /ilogtail && \
+    chmod 755 /ilogtail/ilogtail && \
+    mkdir /ilogtail/checkpoint && \
+    if [ `uname -m` = "x86_64" ]; then /tmp/download_ebpflib.sh /ilogtail; fi && \
     rm /tmp/download_ebpflib.sh
 
-COPY ./output/libPluginBase.so /loongcollector/
-COPY ./example_config/quick_start/loongcollector_config.json /loongcollector/
-COPY ./output/libPluginAdapter.so /loongcollector/
+COPY ./output/libPluginBase.so /ilogtail/
+COPY ./example_config/quick_start/loongcollector_config.json /ilogtail/
+COPY ./output/libPluginAdapter.so /ilogtail/
 
 ENV HOST_OS=$HOST_OS
 ENV LOGTAIL_VERSION=$VERSION
 
 EXPOSE 18689
 
-ENTRYPOINT ["/loongcollector/loongcollector"]
+ENTRYPOINT ["/ilogtail/ilogtail"]

@@ -48,7 +48,7 @@
   "AsyncFileSink" :
   {
    "Compress" : "Gzip",
-   "LogFilePath" : "/var/log/loongcollector/loongcollector.LOG",
+   "LogFilePath" : "${loongcollector运行路径}/../log/ilogtail.LOG",
    "MaxDaysFromModify" : 300,
    "MaxLogFileNum" : 10,
    "MaxLogFileSize" : 20000000,
@@ -57,7 +57,7 @@
   "AsyncFileSinkProfile" :
   {
    "Compress" : "",
-   "LogFilePath" : "/var/log/loongcollector/snapshot/loongcollector_profile.LOG",
+   "LogFilePath" : "${loongcollector运行路径}/../log/snapshot/loongcollector_profile.LOG",
    "MaxDaysFromModify" : 1,
    "MaxLogFileNum" : 61,
    "MaxLogFileSize" : 1,
@@ -66,7 +66,7 @@
   "AsyncFileSinkStatus" :
   {
    "Compress" : "",
-   "LogFilePath" : "/var/log/loongcollector/snapshot/loongcollector_status.LOG",
+   "LogFilePath" : "${loongcollector运行路径}/../log/snapshot/loongcollector_status.LOG",
    "MaxDaysFromModify" : 1,
    "MaxLogFileNum" : 61,
    "MaxLogFileSize" : 1,
@@ -91,7 +91,7 @@
 ```xml
 <seelog type="asynctimer" asyncinterval="500000" minlevel="info" >
  <outputs formatid="common">
-  <rollingfile type="size" filename="/var/log/loongcollector/loongcollector_plugin.LOG" maxsize="2097152" maxrolls="10"/>
+  <rollingfile type="size" filename="${loongcollector运行路径}/../log/loongcollector_plugin.LOG" maxsize="2097152" maxrolls="10"/>
 
 
  </outputs>
