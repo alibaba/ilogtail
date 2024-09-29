@@ -20,7 +20,7 @@ package sls
 import (
 	"fmt"
 
-	logtail "github.com/alibaba/ilogtail/pkg/loongcollector"
+	loongcollector "github.com/alibaba/ilogtail/pkg/loongcollector"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
@@ -42,14 +42,14 @@ func (p *SlsFlusher) Init(context pipeline.Context) error {
 
 // Description ...
 func (p *SlsFlusher) Description() string {
-	return "logtail flusher for log service"
+	return "loongcollector flusher for log service"
 }
 
 // IsReady ...
 // There is a sending queue in Logtail, call LogtailIsValidToSend through cgo
 // to make sure if there is any space for coming data.
 func (p *SlsFlusher) IsReady(projectName string, logstoreName string, logstoreKey int64) bool {
-	return logtail.IsValidToSend(logstoreKey)
+	return loongcollector.IsValidToSend(logstoreKey)
 }
 
 // Flush ...
@@ -81,9 +81,9 @@ func (p *SlsFlusher) Flush(projectName string, logstoreName string, configName s
 
 		var rst int
 		if !p.EnableShardHash {
-			rst = logtail.SendPb(configName, logGroup.Category, buf, len(logGroup.Logs))
+			rst = loongcollector.SendPb(configName, logGroup.Category, buf, len(logGroup.Logs))
 		} else {
-			rst = logtail.SendPbV2(configName, logGroup.Category, buf, len(logGroup.Logs), shardHash)
+			rst = loongcollector.SendPbV2(configName, logGroup.Category, buf, len(logGroup.Logs), shardHash)
 		}
 		if rst < 0 {
 			return fmt.Errorf("send error %d", rst)
