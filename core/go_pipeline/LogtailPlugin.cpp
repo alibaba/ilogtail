@@ -266,10 +266,8 @@ bool LogtailPlugin::LoadPluginBase() {
         DynamicLibLoader loader;
         std::string error;
         if (!loader.LoadDynLib("PluginAdapter", error, STRING_FLAG(loongcollector_lib_dir))) {
-            if (!loader.LoadDynLib("PluginAdapter", error, AppConfig::GetInstance()->GetWorkingDir())) {
-                LOG_ERROR(sLogger, ("open adapter lib error, Message", error));
-                return mPluginValid;
-            }
+            LOG_ERROR(sLogger, ("open adapter lib error, Message", error));
+            return mPluginValid;
         }
 
         auto versionFun = (PluginAdapterVersion)loader.LoadMethod("PluginAdapterVersion", error);
@@ -312,10 +310,8 @@ bool LogtailPlugin::LoadPluginBase() {
         DynamicLibLoader loader;
         std::string error;
         if (!loader.LoadDynLib("PluginBase", error, STRING_FLAG(loongcollector_lib_dir))) {
-            if (!loader.LoadDynLib("PluginBase", error, AppConfig::GetInstance()->GetWorkingDir())) {
-                LOG_ERROR(sLogger, ("open plugin base dl error, Message", error));
-                return mPluginValid;
-            }
+            LOG_ERROR(sLogger, ("open plugin base dl error, Message", error));
+            return mPluginValid;
         }
 
         // Try V2 -> V1.

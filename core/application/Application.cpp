@@ -113,7 +113,6 @@ void Application::Init() {
 #endif
     if (chdirRst == 0) {
         LOG_INFO(sLogger, ("working dir", newWorkingDir));
-        AppConfig::GetInstance()->SetWorkingDir(newWorkingDir + "/");
     } else {
         // if change error, try change working dir to ./
 #ifdef _MSC_VER
@@ -122,7 +121,6 @@ void Application::Init() {
         chdir(GetProcessExecutionDir().c_str());
 #endif
         LOG_INFO(sLogger, ("working dir", GetProcessExecutionDir()));
-        AppConfig::GetInstance()->SetWorkingDir(GetProcessExecutionDir());
     }
 
     // load loongcollector_config.json
