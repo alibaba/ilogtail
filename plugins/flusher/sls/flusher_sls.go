@@ -21,7 +21,7 @@ import (
 	"fmt"
 
 	"github.com/alibaba/ilogtail/pkg/helper"
-	"github.com/alibaba/ilogtail/pkg/logtail"
+	"github.com/alibaba/ilogtail/pkg/loongcollector"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"

@@ -87,7 +87,7 @@
             "mode": "debug",
             "program": "${workspaceFolder}/plugin_main",
             "env": {
-                "LD_LIBRARY_PATH": "${workspaceFolder}/pkg/logtail"
+                "LD_LIBRARY_PATH": "${workspaceFolder}/pkg/loongcollector"
             }
         }
     ]
