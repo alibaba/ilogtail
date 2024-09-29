@@ -220,7 +220,7 @@ func (m *metaCollector) handleAddOrUpdate(event *k8smeta.K8sMetaEvent) {
 	if processor, ok := m.entityProcessor[event.Object.ResourceType]; ok {
 		logs := processor(event.Object, "Update")
 		for _, log := range logs {
-			m.send(log, !isEntity(event.Object.ResourceType))
+			m.send(log, isEntity(event.Object.ResourceType))
 			if isEntity(event.Object.ResourceType) {
 				link := m.generateEntityClusterLink(log)
 				m.send(link, true)
@@ -234,7 +234,7 @@ func (m *metaCollector) handleDelete(event *k8smeta.K8sMetaEvent) {
 		logs := processor(event.Object, "Expire")
 		for _, log := range logs {
 			m.send(log, isEntity(event.Object.ResourceType))
-			if !isEntity(event.Object.ResourceType) {
+			if isEntity(event.Object.ResourceType) {
 				link := m.generateEntityClusterLink(log)
 				m.send(link, true)
 			}
@@ -388,12 +388,8 @@ func (m *metaCollector) generateEntityClusterLink(entityEvent models.PipelineEve
 	log := &models.Log{}
 	log.Contents = models.NewLogContents()
 	log.Contents.Add(entityLinkSrcDomainFieldName, m.serviceK8sMeta.domain)
-	if content.Get(entityTypeFieldName) == nil || content.Get(entityIDFieldName) == nil {
-		logger.Warning(context.Background(), "PROCESS_ENTITY_FAIL", "generate link from entity failed, entity type or ID is nil", content)
-	} else {
-		log.Contents.Add(entityLinkSrcEntityTypeFieldName, content.Get(entityTypeFieldName))
-		log.Contents.Add(entityLinkSrcEntityIDFieldName, content.Get(entityIDFieldName))
-	}
+	log.Contents.Add(entityLinkSrcEntityTypeFieldName, content.Get(entityTypeFieldName))
+	log.Contents.Add(entityLinkSrcEntityIDFieldName, content.Get(entityIDFieldName))
 	log.Contents.Add(entityLinkDestDomainFieldName, m.serviceK8sMeta.domain)
 	log.Contents.Add(entityLinkDestEntityTypeFieldName, m.genEntityTypeKey(clusterTypeName))
 	log.Contents.Add(entityLinkDestEntityIDFieldName, m.genKey("", "", ""))
