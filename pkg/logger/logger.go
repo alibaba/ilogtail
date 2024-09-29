@@ -40,7 +40,7 @@ const (
 	asyncPattern = `
 <seelog type="asynctimer" asyncinterval="500000" minlevel="%s" >
  <outputs formatid="common">
-	 <rollingfile type="size" filename="%slogtail_plugin.LOG" maxsize="20000000" maxrolls="10"/>
+	 <rollingfile type="size" filename="%sloongcollector_plugin.LOG" maxsize="20000000" maxrolls="10"/>
 	 %s
      %s
  </outputs>
@@ -52,7 +52,7 @@ const (
 	syncPattern = `
 <seelog type="sync" minlevel="%s" >
  <outputs formatid="common">
-	 <rollingfile type="size" filename="%slogtail_plugin.LOG" maxsize="20000000" maxrolls="10"/>
+	 <rollingfile type="size" filename="%sloongcollector_plugin.LOG" maxsize="20000000" maxrolls="10"/>
 	 %s
 	 %s
  </outputs>
@@ -119,7 +119,7 @@ func initNormalLogger() {
 	for _, option := range defaultProductionOptions {
 		option()
 	}
-	setLogConf(util.GetCurrentBinaryPath() + "plugin_logger.xml")
+	setLogConf(util.GetCurrentBinaryPath() + "../log/plugin_logger.xml")
 }
 
 // initTestLogger extracted from Init method for unit test.
@@ -132,7 +132,7 @@ func initTestLogger(options ...ConfigOption) {
 	for _, option := range options {
 		option()
 	}
-	setLogConf(util.GetCurrentBinaryPath() + "plugin_logger.xml")
+	setLogConf(util.GetCurrentBinaryPath() + "../log/plugin_logger.xml")
 }
 
 func Debug(ctx context.Context, kvPairs ...interface{}) {
@@ -262,7 +262,7 @@ func Flush() {
 
 func setLogConf(logConfig string) {
 	if !retainFlag {
-		_ = os.Remove(util.GetCurrentBinaryPath() + "plugin_logger.xml")
+		_ = os.Remove(util.GetCurrentBinaryPath() + "../log/plugin_logger.xml")
 	}
 	debugFlag = 0
 	logtailLogger = seelog.Disabled
@@ -321,7 +321,7 @@ func generateDefaultConfig() string {
 	if memoryReceiverFlag {
 		memoryReceiverFlagStr = "<custom name=\"memory\" />"
 	}
-	return fmt.Sprintf(template, levelFlag, util.GetCurrentBinaryPath(), consoleStr, memoryReceiverFlagStr)
+	return fmt.Sprintf(template, levelFlag, util.GetCurrentBinaryPath()+"../log/", consoleStr, memoryReceiverFlagStr)
 }
 
 // Close the logger and recover the stdout and stderr

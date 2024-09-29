@@ -85,7 +85,7 @@ func (p *checkPointManager) Init() error {
 	if err == nil && pathExist {
 		dbPath = filepath.Join(logtailConfigDir, *CheckPointFile)
 	} else {
-		dbPath = util.GetCurrentBinaryPath() + *CheckPointFile
+		dbPath = util.GetCurrentBinaryPath() + "../data/" + *CheckPointFile
 	}
 
 	p.db, err = leveldb.OpenFile(dbPath, nil)
