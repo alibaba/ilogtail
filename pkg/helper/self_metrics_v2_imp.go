@@ -238,8 +238,7 @@ func (a *averageImp) Export() map[string]string {
 // if there is no value added in the last window, zero will be returned.
 type maxImp struct {
 	sync.RWMutex
-	value   float64
-	prevAvg float64
+	value float64
 	Series
 }
 
@@ -261,7 +260,7 @@ func (m *maxImp) Set(f float64) {
 func (m *maxImp) Collect() pipeline.MetricValue[float64] {
 	m.RLock()
 	defer m.RUnlock()
-	metric := pipeline.MetricValue[float64]{Name: m.Name(), Value: float64(m.value)}
+	metric := pipeline.MetricValue[float64]{Name: m.Name(), Value: m.value}
 	m.value = 0
 	return metric
 }
