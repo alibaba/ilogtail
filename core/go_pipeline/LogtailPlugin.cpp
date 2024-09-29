@@ -39,6 +39,7 @@ DEFINE_FLAG_BOOL(enable_containerd_upper_dir_detect,
                  false);
 DECLARE_FLAG_STRING(loongcollector_lib_dir);
 DECLARE_FLAG_STRING(loongcollector_data_dir);
+DECLARE_FLAG_STRING(loongcollector_log_dir);
 
 using namespace std;
 using namespace logtail;
@@ -65,6 +66,7 @@ LogtailPlugin::LogtailPlugin() {
     mPluginContainerConfig.mCompressor = CompressorFactory::GetInstance()->Create(CompressType::ZSTD);
 
     mPluginCfg["LogtailSysConfDir"] = STRING_FLAG(loongcollector_data_dir);
+    mPluginCfg["LogtailLogDir"] = STRING_FLAG(loongcollector_log_dir);
     mPluginCfg["HostIP"] = LogFileProfiler::mIpAddr;
     mPluginCfg["Hostname"] = LogFileProfiler::mHostname;
     mPluginCfg["EnableContainerdUpperDirDetect"] = BOOL_FLAG(enable_containerd_upper_dir_detect);

@@ -31,6 +31,7 @@ DEFINE_FLAG_INT32(logtail_checkpoint_expired_threshold_sec, "6 hours", 6 * 60 * 
 
 DECLARE_FLAG_INT32(max_exactly_once_concurrency);
 DECLARE_FLAG_STRING(loongcollector_data_dir);
+
 namespace logtail {
 
 namespace detail {

@@ -74,11 +74,11 @@ DEFINE_FLAG_INT32(queue_check_gc_interval_sec, "30s", 30);
 #if defined(__ENTERPRISE__) && defined(__linux__) && !defined(__ANDROID__)
 DEFINE_FLAG_BOOL(enable_cgroup, "", true);
 #endif
-DEFINE_FLAG_STRING(loongcollector_lib_dir, "loongcollector lib dir", "/usr/local/loongcollector/lib/");
-DEFINE_FLAG_STRING(loongcollector_config_dir, "loongcollector config dir", "/etc/loongcollector/");
-DEFINE_FLAG_STRING(loongcollector_log_dir, "loongcollector log dir", "/var/log/loongcollector/");
-DEFINE_FLAG_STRING(loongcollector_run_dir, "loongcollector run dir", "/var/run/loongcollector/");
-DEFINE_FLAG_STRING(loongcollector_data_dir, "loongcollector data dir", "/var/lib/loongcollector/");
+DEFINE_FLAG_STRING(loongcollector_lib_dir, "loongcollector lib dir", "");
+DEFINE_FLAG_STRING(loongcollector_config_dir, "loongcollector config dir", "");
+DEFINE_FLAG_STRING(loongcollector_log_dir, "loongcollector log dir", "");
+DEFINE_FLAG_STRING(loongcollector_run_dir, "loongcollector run dir", "");
+DEFINE_FLAG_STRING(loongcollector_data_dir, "loongcollector data dir", "");
 
 
 DECLARE_FLAG_BOOL(send_prefer_real_ip);

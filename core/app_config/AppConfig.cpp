@@ -47,8 +47,8 @@ DEFINE_FLAG_INT32(process_thread_count, "", 1);
 DEFINE_FLAG_INT32(send_request_concurrency, "max count keep in mem when async send", 10);
 DEFINE_FLAG_BOOL(enable_send_tps_smoothing, "avoid web server load burst", true);
 DEFINE_FLAG_BOOL(enable_flow_control, "if enable flow control", true);
-DEFINE_FLAG_STRING(default_buffer_file_path, "set current execution dir in default", "/var/lib/loongcollector/");
-DEFINE_FLAG_STRING(buffer_file_path, "set buffer dir", "/var/lib/loongcollector/");
+DEFINE_FLAG_STRING(default_buffer_file_path, "set current execution dir in default", "");
+DEFINE_FLAG_STRING(buffer_file_path, "set buffer dir", "");
 // DEFINE_FLAG_STRING(default_mapping_config_path, "", "mapping_config.json");
 DEFINE_FLAG_DOUBLE(default_machine_cpu_usage_threshold, "machine level", 0.4);
 DEFINE_FLAG_BOOL(default_resource_auto_scale, "", false);
@@ -58,11 +58,11 @@ DEFINE_FLAG_INT32(max_multi_config_size, "max multi config size", 20);
 DEFINE_FLAG_BOOL(default_accept_multi_config, "", false);
 DEFINE_FLAG_STRING(default_env_tag_keys, "default env key to load tags", "ALIYUN_LOG_ENV_TAGS");
 #if defined(__linux__) || defined(__APPLE__)
-DEFINE_FLAG_STRING(logtail_sys_conf_dir, "store machine-unique-id, user-defined-id, aliuid", "/etc/loongcollector/");
+DEFINE_FLAG_STRING(logtail_sys_conf_dir, "store machine-unique-id, user-defined-id, aliuid", "../etc/");
 #elif defined(_MSC_VER)
 DEFINE_FLAG_STRING(logtail_sys_conf_dir,
                    "store machine-unique-id, user-defined-id, aliuid",
-                   "C:\\Program Files\\loongcollector\\conf\\");
+                   "..\\conf\\");
 #endif
 // const char* DEFAULT_ILOGTAIL_LOCAL_CONFIG_FLAG_VALUE = "user_local_config.json";
 // DEFINE_FLAG_STRING(ilogtail_local_config, "local ilogtail config file", DEFAULT_ILOGTAIL_LOCAL_CONFIG_FLAG_VALUE);
@@ -99,10 +99,6 @@ DEFINE_FLAG_INT32(data_server_port, "", 80);
 // DEFINE_FLAG_STRING(alipay_app_zone, "", "ALIPAY_APP_ZONE");
 // DEFINE_FLAG_STRING(alipay_zone, "", "ALIPAY_ZONE");
 // DEFINE_FLAG_STRING(alipay_zone_env_name, "", "");
-DECLARE_FLAG_STRING(loongcollector_lib_dir);
-DECLARE_FLAG_STRING(loongcollector_config_dir);
-DECLARE_FLAG_STRING(loongcollector_log_dir);
-DECLARE_FLAG_STRING(loongcollector_run_dir);
 DECLARE_FLAG_STRING(loongcollector_data_dir);
 
 DECLARE_FLAG_STRING(check_point_filename);
