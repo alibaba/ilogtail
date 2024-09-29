@@ -7,7 +7,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"sync/atomic"
 	"time"
 
 	app "k8s.io/api/apps/v1"
@@ -22,11 +21,6 @@ type requestBody struct {
 
 type metadataHandler struct {
 	metaManager *MetaManager
-
-	// self metrics
-	requestCount atomic.Int64
-	totalLatency atomic.Int64
-	maxLatency   atomic.Int64
 }
 
 func newMetadataHandler(metaManager *MetaManager) *metadataHandler {
@@ -56,13 +50,6 @@ func (m *metadataHandler) K8sServerRun(stopCh <-chan struct{}) error {
 	mux.HandleFunc("/metadata/containerid", m.handler(m.handlePodMetaByUniqueID))
 	mux.HandleFunc("/metadata/host", m.handler(m.handlePodMetaByHostIP))
 	server.Handler = mux
-	for {
-		if m.metaManager.IsReady() {
-			break
-		}
-		time.Sleep(1 * time.Second)
-		logger.Warning(context.Background(), "K8S_META_SERVER_WAIT", "waiting for k8s meta manager to be ready")
-	}
 	logger.Info(context.Background(), "k8s meta server", "started", "port", port)
 	go func() {
 		defer panicRecover()
@@ -72,32 +59,18 @@ func (m *metadataHandler) K8sServerRun(stopCh <-chan struct{}) error {
 	return nil
 }
 
-func (m *metadataHandler) GetMetrics() map[string]string {
-	avgLatency := "0"
-	if m.requestCount.Load() != 0 {
-		avgLatency = strconv.FormatFloat(float64(m.totalLatency.Load())/float64(m.requestCount.Load()), 'f', -1, 64)
-	}
-	metrics := map[string]string{
-		"value.k8s_meta_http_request_count": strconv.FormatInt(m.requestCount.Load(), 10),
-		"value.k8s_meta_http_avg_latency":   avgLatency,
-		"value.k8s_meta_http_max_latency":   strconv.FormatInt(m.maxLatency.Load(), 10),
-	}
-	m.requestCount.Add(-m.requestCount.Load())
-	m.totalLatency.Add(-m.totalLatency.Load())
-	m.maxLatency.Store(0)
-	return metrics
-}
-
 func (m *metadataHandler) handler(handleFunc func(w http.ResponseWriter, r *http.Request)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if !m.metaManager.IsReady() {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
 		startTime := time.Now()
-		m.requestCount.Add(1)
+		m.metaManager.httpRequestCount.Add(1)
 		handleFunc(w, r)
 		latency := time.Since(startTime).Milliseconds()
-		m.totalLatency.Add(latency)
-		if latency > m.maxLatency.Load() {
-			m.maxLatency.Store(latency)
-		}
+		m.metaManager.httpAvgDelayMs.Add(latency)
+		m.metaManager.httpMaxDelayMs.Set(float64(latency))
 	}
 }
 

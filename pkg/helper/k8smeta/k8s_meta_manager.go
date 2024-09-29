@@ -13,7 +13,9 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	controllerConfig "sigs.k8s.io/controller-runtime/pkg/client/config"
 
+	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 )
 
 var metaManager *MetaManager
@@ -22,6 +24,8 @@ var onceManager sync.Once
 
 type MetaCache interface {
 	Get(key []string) map[string][]*ObjectWrapper
+	GetSize() int
+	GetQueueSize() int
 	List() []*ObjectWrapper
 	RegisterSendFunc(key string, sendFunc SendFunc, interval int)
 	UnRegisterSendFunc(key string)
@@ -47,10 +51,15 @@ type MetaManager struct {
 	linkRegisterLock sync.RWMutex
 
 	// self metrics
-	addEventCount      atomic.Int64
-	updateEventCount   atomic.Int64
-	deleteEventCount   atomic.Int64
-	cacheResourceCount atomic.Int64
+	metricRecord       pipeline.MetricsRecord
+	addEventCount      pipeline.CounterMetric
+	updateEventCount   pipeline.CounterMetric
+	deleteEventCount   pipeline.CounterMetric
+	cacheResourceGauge pipeline.GaugeMetric
+	queueSizeGauge     pipeline.GaugeMetric
+	httpRequestCount   pipeline.CounterMetric
+	httpAvgDelayMs     pipeline.CounterMetric
+	httpMaxDelayMs     pipeline.GaugeMetric
 }
 
 func GetMetaManagerInstance() *MetaManager {
@@ -86,6 +95,16 @@ func (m *MetaManager) Init(configPath string) (err error) {
 		return err
 	}
 	m.clientset = clientset
+
+	m.metricRecord = pipeline.MetricsRecord{}
+	m.addEventCount = helper.NewCounterMetricAndRegister(&m.metricRecord, helper.MetricComponentK8sMetaAddEventTotal)
+	m.updateEventCount = helper.NewCounterMetricAndRegister(&m.metricRecord, helper.MetricComponentK8sMetaUpdateEventTotal)
+	m.deleteEventCount = helper.NewCounterMetricAndRegister(&m.metricRecord, helper.MetricComponentK8sMetaDeleteEventTotal)
+	m.cacheResourceGauge = helper.NewGaugeMetricAndRegister(&m.metricRecord, helper.MetricComponentK8sMetaCacheResourceSize)
+	m.queueSizeGauge = helper.NewGaugeMetricAndRegister(&m.metricRecord, helper.MetricComponentK8sMetaQueueSize)
+	m.httpRequestCount = helper.NewCounterMetricAndRegister(&m.metricRecord, helper.MetricComponentK8sMetaHTTPRequestTotal)
+	m.httpAvgDelayMs = helper.NewAverageMetricAndRegister(&m.metricRecord, helper.MetricComponentK8sMetaHTTPAvgDelayMs)
+	m.httpMaxDelayMs = helper.NewMaxMetricAndRegister(&m.metricRecord, helper.MetricComponentK8sMetaHTTPMaxDelayMs)
 
 	go func() {
 		startTime := time.Now()
@@ -151,41 +170,19 @@ func GetMetaManagerMetrics() []map[string]string {
 	if manager == nil || !manager.IsReady() {
 		return nil
 	}
-	metrics := make([]map[string]string, 0)
 	// cache
-	queueLen := 0
+	queueSize := 0
+	cacheSize := 0
 	for _, cache := range manager.cacheMap {
-		queueLen += len(cache.(*k8sMetaCache).eventCh)
+		queueSize += cache.GetQueueSize()
+		cacheSize += cache.GetSize()
+
 	}
-	metrics = append(metrics, map[string]string{
-		"value.k8s_meta_add_event_count":       fmt.Sprintf("%d", manager.addEventCount.Load()),
-		"value.k8s_meta_update_event_count":    fmt.Sprintf("%d", manager.updateEventCount.Load()),
-		"value.k8s_meta_delete_event_count":    fmt.Sprintf("%d", manager.deleteEventCount.Load()),
-		"value.k8s_meta_cache_resource_count":  fmt.Sprintf("%d", manager.cacheResourceCount.Load()),
-		"value.k8s_meta_event_queue_len_total": fmt.Sprintf("%d", queueLen),
-	})
-	manager.addEventCount.Add(-manager.addEventCount.Load())
-	manager.updateEventCount.Add(-manager.updateEventCount.Load())
-	manager.deleteEventCount.Add(-manager.deleteEventCount.Load())
-
-	// http server
-	httpServerMetrics := manager.metadataHandler.GetMetrics()
-	metrics = append(metrics, httpServerMetrics)
-	return metrics
-}
-
-func (m *MetaManager) AddEventCount() {
-	m.addEventCount.Add(1)
-	m.cacheResourceCount.Add(1)
-}
-
-func (m *MetaManager) UpdateEventCount() {
-	m.updateEventCount.Add(1)
-}
-
-func (m *MetaManager) DeleteEventCount() {
-	m.deleteEventCount.Add(1)
-	m.cacheResourceCount.Add(-1)
+	manager.queueSizeGauge.Set(float64(queueSize))
+	manager.cacheResourceGauge.Set(float64(cacheSize))
+	return []map[string]string{
+		manager.metricRecord.ExportMetricRecords(),
+	}
 }
 
 func (m *MetaManager) runServer() {

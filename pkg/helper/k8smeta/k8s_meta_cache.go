@@ -57,6 +57,14 @@ func (m *k8sMetaCache) Get(key []string) map[string][]*ObjectWrapper {
 	return m.metaStore.Get(key)
 }
 
+func (m *k8sMetaCache) GetSize() int {
+	return len(m.metaStore.Items)
+}
+
+func (m *k8sMetaCache) GetQueueSize() int {
+	return len(m.eventCh)
+}
+
 func (m *k8sMetaCache) List() []*ObjectWrapper {
 	return m.metaStore.List()
 }
@@ -86,7 +94,7 @@ func (m *k8sMetaCache) watch(stopCh <-chan struct{}) {
 					LastObservedTime:  nowTime,
 				},
 			}
-			metaManager.AddEventCount()
+			metaManager.addEventCount.Add(1)
 		},
 		UpdateFunc: func(oldObj interface{}, obj interface{}) {
 			nowTime := time.Now().Unix()
@@ -99,7 +107,7 @@ func (m *k8sMetaCache) watch(stopCh <-chan struct{}) {
 					LastObservedTime:  nowTime,
 				},
 			}
-			metaManager.UpdateEventCount()
+			metaManager.updateEventCount.Add(1)
 		},
 		DeleteFunc: func(obj interface{}) {
 			m.eventCh <- &K8sMetaEvent{
@@ -110,7 +118,7 @@ func (m *k8sMetaCache) watch(stopCh <-chan struct{}) {
 					LastObservedTime: time.Now().Unix(),
 				},
 			}
-			metaManager.DeleteEventCount()
+			metaManager.deleteEventCount.Add(1)
 		},
 	})
 	go factory.Start(stopCh)

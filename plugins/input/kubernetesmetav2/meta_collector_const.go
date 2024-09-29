@@ -30,4 +30,11 @@ const (
 const (
 	acsDomain   = "acs"
 	infraDomain = "infra"
+
+	ackCluster = "ack"
+	oneCluster = "one"
+	asiCluster = "asi"
+
+	clusterTypeName   = "cluster"
+	containerTypeName = "container"
 )

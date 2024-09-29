@@ -29,6 +29,24 @@ const (
 )
 
 //////////////////////////////////////////////////////////////////////////
+// component
+//////////////////////////////////////////////////////////////////////////
+
+/**********************************************************
+*   k8s meta
+**********************************************************/
+const (
+	MetricComponentK8sMetaAddEventTotal     = "component_k8s_meta_add_event_total"
+	MetricComponentK8sMetaUpdateEventTotal  = "component_k8s_meta_update_event_total"
+	MetricComponentK8sMetaDeleteEventTotal  = "component_k8s_meta_delete_event_total"
+	MetricComponentK8sMetaCacheResourceSize = "component_k8s_meta_cache_resource_size"
+	MetricComponentK8sMetaQueueSize         = "component_k8s_meta_queue_size"
+	MetricComponentK8sMetaHTTPRequestTotal  = "component_k8s_meta_http_request_total"
+	MetricComponentK8sMetaHTTPAvgDelayMs    = "component_k8s_meta_avg_delay_ms"
+	MetricComponentK8sMetaHTTPMaxDelayMs    = "component_k8s_meta_max_delay_ms"
+)
+
+//////////////////////////////////////////////////////////////////////////
 // plugin
 //////////////////////////////////////////////////////////////////////////
 
@@ -85,6 +103,14 @@ const (
 const (
 	MetricPluginCollectAvgCostTimeMs = "plugin_collect_avg_cost_time_ms"
 	MetricPluginCollectTotal         = "plugin_collect_total"
+)
+
+/**********************************************************
+*   service_kubernetes_meta
+**********************************************************/
+const (
+	MetricPluginCollectEntityTotal = "plugin_collect_entity_total"
+	MetricPluginCollectLinkTotal   = "plugin_collect_link_total"
 )
 
 /**********************************************************
