@@ -345,10 +345,6 @@ public:
 
     bool IgnoreDirInodeChanged() const { return mIgnoreDirInodeChanged; }
 
-    void SetProcessExecutionDir(const std::string& dir) { mProcessExecutionDir = dir; }
-
-    const std::string& GetProcessExecutionDir() { return mProcessExecutionDir; }
-
     // const std::string& GetContainerMountConfigPath() const { return mContainerMountConfigPath; }
 
     const std::string& GetConfigIP() const { return mConfigIP; }
