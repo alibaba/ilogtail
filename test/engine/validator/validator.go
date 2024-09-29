@@ -213,7 +213,6 @@ func InitCounter() {
 		for group := range counterChan {
 			for _, log := range group.Logs {
 				for _, content := range log.Contents {
-					fmt.Print("InitCounter", content.Key, content.Value)
 					switch content.Key {
 					case "raw_log":
 						RawLogCounter += getValue(content.Value)
