@@ -165,6 +165,7 @@ bool TransferPipelineEventGroupToPB(const logtail::PipelineEventGroup& src, logt
 
     switch (src.GetEvents()[0]->GetType()) {
     case logtail::PipelineEvent::Type::LOG:
+        dst.mutable_logs()->mutable_events()->Reserve(src.GetEvents().size());
         for (const auto& event : src.GetEvents()) {
             if (!event.Is<logtail::LogEvent>()) {
                 errMsg = "error transfer PipelineEventGroup to PB: unsupport pipelineEventGroup with multi types of events";
@@ -180,6 +181,7 @@ bool TransferPipelineEventGroupToPB(const logtail::PipelineEventGroup& src, logt
         }
         break;
     case logtail::PipelineEvent::Type::METRIC:
+        dst.mutable_metrics()->mutable_events()->Reserve(src.GetEvents().size());
         for (const auto& event : src.GetEvents()) {
             if (!event.Is<logtail::MetricEvent>()) {
                 errMsg = "error transfer PipelineEventGroup to PB: unsupport pipelineEventGroup with multi types of events";
@@ -193,6 +195,7 @@ bool TransferPipelineEventGroupToPB(const logtail::PipelineEventGroup& src, logt
         }
         break;
     case logtail::PipelineEvent::Type::SPAN:
+        dst.mutable_spans()->mutable_events()->Reserve(src.GetEvents().size());
         for (const auto& event : src.GetEvents()) {
             if (!event.Is<logtail::SpanEvent>()) {
                 errMsg = "error transfer PipelineEventGroup to PB: unsupport pipelineEventGroup with multi types of events";
@@ -233,6 +236,7 @@ bool TransferLogEventToPB(const logtail::LogEvent& src, logtail::models::LogEven
     dst.set_timestamp(tns.count());
 
     // contents
+    dst.mutable_contents()->Reserve(src.Size());
     for (auto iter = src.begin(); iter != src.end(); iter++) {
         auto* content = dst.add_contents();
         content->set_key(iter->first.to_string());
@@ -322,6 +326,7 @@ bool TransferSpanEventToPB(const logtail::SpanEvent& src, logtail::models::SpanE
         }
     }
 
+    // status
     dst.set_status(static_cast<logtail::models::SpanEvent::StatusCode>(src.GetStatus()));
 
     // scope tags

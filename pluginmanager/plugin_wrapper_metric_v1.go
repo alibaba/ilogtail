@@ -159,7 +159,7 @@ func (p *MetricWrapperV1) AddRawLogWithContext(log *protocol.Log, ctx map[string
 	p.inputRecordsTotal.Add(1)
 	p.inputRecordsSizeBytes.Add(int64(log.Size()))
 	if p.Config.GlobalConfig.GoInputToNativeProcessor {
-		logEvent, _ := helper.CreateLogEventByRawLogV1(log)
+		logEvent, _ := helper.CreateLogEventByRawLogLegacyRawLog(log)
 		p.LogsCachedChan <- &pipeline.LogEventWithContext{LogEvent: logEvent, Context: ctx}
 		return
 	}
@@ -175,6 +175,7 @@ func (p *MetricWrapperV1) runPushNativeProcessQueueInternal() {
 			select {
 			case <-p.timer.C:
 				isValidToPushNativeProcessQueue = p.pushNativeProcessQueue(5)
+				p.timer.Reset(p.PushNativeTimeout)
 			case event = <-p.LogsCachedChan:
 				p.eventCached = append(p.eventCached, event.LogEvent)
 				p.tagCached = append(p.tagCached, event.Tags)
@@ -182,6 +183,10 @@ func (p *MetricWrapperV1) runPushNativeProcessQueueInternal() {
 				if len(p.eventCached) >= p.MaxCachedSize {
 					isValidToPushNativeProcessQueue = p.pushNativeProcessQueue(5)
 				}
+				if !p.timer.Stop() {
+					<-p.timer.C
+				}
+				p.timer.Reset(p.PushNativeTimeout)
 			case <-p.ShutdownCachedChan:
 				for event = range p.LogsCachedChan {
 					p.eventCached = append(p.eventCached, event.LogEvent)
@@ -202,6 +207,7 @@ func (p *MetricWrapperV1) runPushNativeProcessQueueInternal() {
 			select {
 			case <-p.timer.C:
 				isValidToPushNativeProcessQueue = p.pushNativeProcessQueue(5)
+				p.timer.Reset(p.PushNativeTimeout)
 			case <-p.ShutdownCachedChan:
 				for event = range p.LogsCachedChan {
 					p.eventCached = append(p.eventCached, event.LogEvent)
@@ -244,7 +250,7 @@ func (p *MetricWrapperV1) pushNativeProcessQueue(retryCnt int) bool {
 				break
 			}
 		}
-		group, _ := helper.CreatePipelineEventGroupV1(p.eventCached[:pushSize], p.Tags, tag, ctx)
+		group, _ := helper.CreatePipelineEventGroupLegacyRawLog(p.eventCached[:pushSize], p.Tags, tag, ctx)
 		pbSize := group.Size()
 		if cap(p.pbBuffer) < pbSize {
 			if cap(p.pbBuffer)*2 >= pbSize {
@@ -292,14 +298,7 @@ func (p *MetricWrapperV1) pushNativeProcessQueue(retryCnt int) bool {
 	default:
 	}
 
-	// clear pbBuffer and reset timer
-	if !p.timer.Stop() {
-		select {
-		case <-p.timer.C:
-		default:
-		}
-	}
-	p.timer.Reset(p.PushNativeTimeout)
+	// clear pbBuffer
 	if rst != 0 {
 		return false
 	}
