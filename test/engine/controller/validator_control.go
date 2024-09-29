@@ -36,15 +36,11 @@ type ValidatorController struct {
 }
 
 type Report struct {
-	Pass               bool                                 `json:"pass"`
-	RowLogCount        int                                  `json:"row_log_count"`
-	ProcessedLogCount  int                                  `json:"processed_log_count"`
-	FlushLogCount      int                                  `json:"flush_log_count"`
-	FlushLogGroupCount int                                  `json:"flush_log_group"`
-	AlarmLogs          map[string]map[string]map[string]int `json:"alarm_logs"`
-	LogReports         map[string]*Reason                   `json:"log_reports"`
-	TagReports         map[string]*Reason                   `json:"tag_reports"`
-	TotalReports       map[string]*Reason                   `json:"total_reports"`
+	Pass         bool                                 `json:"pass"`
+	AlarmLogs    map[string]map[string]map[string]int `json:"alarm_logs"`
+	LogReports   map[string]*Reason                   `json:"log_reports"`
+	TagReports   map[string]*Reason                   `json:"tag_reports"`
+	TotalReports map[string]*Reason                   `json:"total_reports"`
 }
 
 type Reason struct {
@@ -169,10 +165,6 @@ func (c *ValidatorController) CancelChain() *CancelChain {
 
 // flushSummaryReport write the whole validator report to the `report/{case_home}.json`.
 func (c *ValidatorController) flushSummaryReport() {
-	c.report.RowLogCount = validator.RawLogCounter
-	c.report.ProcessedLogCount = validator.ProcessedLogCounter
-	c.report.FlushLogCount = validator.FlushLogCounter
-	c.report.FlushLogGroupCount = validator.FlushLogGroupCounter
 	c.report.AlarmLogs = validator.AlarmLogs
 	for _, sysValidator := range c.sysValidators {
 		result := sysValidator.FetchResult()
