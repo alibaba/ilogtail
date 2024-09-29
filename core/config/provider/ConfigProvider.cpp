@@ -15,9 +15,12 @@
 #include "config/provider/ConfigProvider.h"
 
 #include "app_config/AppConfig.h"
+#include "common/Flags.h"
 #include "config/watcher/ConfigWatcher.h"
 
 using namespace std;
+
+DECLARE_FLAG_STRING(loongcollector_config_dir);
 
 namespace logtail {
 

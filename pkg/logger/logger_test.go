@@ -47,11 +47,11 @@ func init() {
 
 func clean() {
 	_ = os.Remove(util.GetCurrentBinaryPath() + "plugin_logger.xml")
-	_ = os.Remove(util.GetCurrentBinaryPath() + "logtail_plugin.LOG")
+	_ = os.Remove(util.GetCurrentBinaryPath() + "loongcollector_plugin.LOG")
 }
 
 func readLog(index int) string {
-	bytes, _ := os.ReadFile(util.GetCurrentBinaryPath() + "logtail_plugin.LOG")
+	bytes, _ := os.ReadFile(util.GetCurrentBinaryPath() + "loongcollector_plugin.LOG")
 	logs := strings.Split(string(bytes), "\n")
 	if index > len(logs)-1 {
 		return ""

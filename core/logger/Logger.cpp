@@ -110,7 +110,7 @@ void Logger::LogMsg(const std::string& msg) {
 
 void Logger::InitGlobalLoggers() {
     if (!sLogger)
-        sLogger = GetLogger("/apsara/sls/ilogtail");
+        sLogger = GetLogger("/apsara/sls/loongcollector");
 }
 
 Logger::logger Logger::CreateLogger(const std::string& loggerName,
@@ -174,7 +174,7 @@ Logger::logger Logger::GetLogger(const std::string& loggerName) {
 //          // Attributes for the logger, (sink_name, log_level).
 //          "AsyncFileSink": "WARNING"
 //     },
-//     "/apsara/sls/ilogtail": { // Another logger.
+//     "/apsara/sls/loongcollector": { // Another logger.
 //          // ....
 //     }
 // },
@@ -326,7 +326,7 @@ void Logger::LoadConfig(const std::string& filePath) {
 
         spdlog::register_logger(logger);
         logger->set_pattern(DEFAULT_PATTERN);
-        if (name == "/apsara/sls/ilogtail" && !aliyun_logtail_log_level.empty()) {
+        if (name == "/apsara/sls/loongcollector" && !aliyun_logtail_log_level.empty()) {
             logger->set_level(envLogLevel);
             logger->flush_on(envLogLevel);
         } else {
@@ -408,25 +408,25 @@ void Logger::LoadDefaultConfig(std::map<std::string, LoggerConfig>& loggerCfgs,
         return;
     sinkCfgs.insert(
         {"AsyncFileSink",
-         SinkConfig{"AsyncFile", 10, 20000000, 300, STRING_FLAG(loongcollector_log_dir) + "ilogtail.LOG", "Gzip"}});
+         SinkConfig{"AsyncFile", 10, 20000000, 300, STRING_FLAG(loongcollector_log_dir) + "loongcollector.LOG", "Gzip"}});
 }
 
 void Logger::LoadAllDefaultConfigs(std::map<std::string, LoggerConfig>& loggerCfgs,
                                    std::map<std::string, SinkConfig>& sinkCfgs) {
     LoadDefaultConfig(loggerCfgs, sinkCfgs);
 
-    loggerCfgs.insert({"/apsara/sls/ilogtail", LoggerConfig{"AsyncFileSink", level::info}});
-    loggerCfgs.insert({"/apsara/sls/ilogtail/profile", LoggerConfig{"AsyncFileSinkProfile", level::info}});
-    loggerCfgs.insert({"/apsara/sls/ilogtail/status", LoggerConfig{"AsyncFileSinkStatus", level::info}});
+    loggerCfgs.insert({"/apsara/sls/loongcollector", LoggerConfig{"AsyncFileSink", level::info}});
+    loggerCfgs.insert({"/apsara/sls/loongcollector/profile", LoggerConfig{"AsyncFileSinkProfile", level::info}});
+    loggerCfgs.insert({"/apsara/sls/loongcollector/status", LoggerConfig{"AsyncFileSinkStatus", level::info}});
 
     std::string dirPath = STRING_FLAG(loongcollector_log_dir) + STRING_FLAG(logtail_snapshot_dir);
     if (!Mkdir(dirPath)) {
         LogMsg(std::string("Create snapshot dir error ") + dirPath + ", error" + ErrnoToString(GetErrno()));
     }
     sinkCfgs.insert(
-        {"AsyncFileSinkProfile", SinkConfig{"AsyncFile", 61, 1, 1, dirPath + PATH_SEPARATOR + "ilogtail_profile.LOG"}});
+        {"AsyncFileSinkProfile", SinkConfig{"AsyncFile", 61, 1, 1, dirPath + PATH_SEPARATOR + "loongcollector_profile.LOG"}});
     sinkCfgs.insert(
-        {"AsyncFileSinkStatus", SinkConfig{"AsyncFile", 61, 1, 1, dirPath + PATH_SEPARATOR + "ilogtail_status.LOG"}});
+        {"AsyncFileSinkStatus", SinkConfig{"AsyncFile", 61, 1, 1, dirPath + PATH_SEPARATOR + "loongcollector_status.LOG"}});
 }
 
 void Logger::EnsureSnapshotDirExist(std::map<std::string, SinkConfig>& sinkCfgs) {

@@ -47,11 +47,6 @@ DEFINE_FLAG_INT32(process_thread_count, "", 1);
 DEFINE_FLAG_INT32(send_request_concurrency, "max count keep in mem when async send", 10);
 DEFINE_FLAG_BOOL(enable_send_tps_smoothing, "avoid web server load burst", true);
 DEFINE_FLAG_BOOL(enable_flow_control, "if enable flow control", true);
-DEFINE_FLAG_STRING(loongcollector_lib_dir, "loongcollector lib dir", "/usr/local/loongcollector/lib/");
-DEFINE_FLAG_STRING(loongcollector_config_dir, "loongcollector config dir", "/etc/loongcollector/");
-DEFINE_FLAG_STRING(loongcollector_log_dir, "loongcollector log dir", "/var/log/loongcollector/");
-DEFINE_FLAG_STRING(loongcollector_run_dir, "loongcollector run dir", "/var/run/loongcollector/");
-DEFINE_FLAG_STRING(loongcollector_data_dir, "loongcollector data dir", "/var/lib/loongcollector/");
 DEFINE_FLAG_STRING(default_buffer_file_path, "set current execution dir in default", "/var/lib/loongcollector/");
 DEFINE_FLAG_STRING(buffer_file_path, "set buffer dir", "/var/lib/loongcollector/");
 // DEFINE_FLAG_STRING(default_mapping_config_path, "", "mapping_config.json");
@@ -104,6 +99,11 @@ DEFINE_FLAG_INT32(data_server_port, "", 80);
 // DEFINE_FLAG_STRING(alipay_app_zone, "", "ALIPAY_APP_ZONE");
 // DEFINE_FLAG_STRING(alipay_zone, "", "ALIPAY_ZONE");
 // DEFINE_FLAG_STRING(alipay_zone_env_name, "", "");
+DECLARE_FLAG_STRING(loongcollector_lib_dir);
+DECLARE_FLAG_STRING(loongcollector_config_dir);
+DECLARE_FLAG_STRING(loongcollector_log_dir);
+DECLARE_FLAG_STRING(loongcollector_run_dir);
+DECLARE_FLAG_STRING(loongcollector_data_dir);
 
 DECLARE_FLAG_STRING(check_point_filename);
 
@@ -197,32 +197,6 @@ AppConfig::AppConfig() {
     mForceQuitReadTimeout = 7200;
     LoadEnvTags();
     CheckPurageContainerMode();
-
-    if (Mkdir(STRING_FLAG(loongcollector_lib_dir))) {
-        LOG_INFO(sLogger, (STRING_FLAG(loongcollector_lib_dir) + " dir is not existing, create", "done"));
-    } else {
-        LOG_ERROR(sLogger, (STRING_FLAG(loongcollector_lib_dir) + " dir is not existing, create", "failed"));
-    }
-    if (Mkdir(STRING_FLAG(loongcollector_config_dir))) {
-        LOG_INFO(sLogger, (STRING_FLAG(loongcollector_config_dir) + " dir is not existing, create", "done"));
-    } else {
-        LOG_ERROR(sLogger, (STRING_FLAG(loongcollector_config_dir) + " dir is not existing, create", "failed"));
-    }
-    if (Mkdir(STRING_FLAG(loongcollector_log_dir))) {
-        LOG_INFO(sLogger, (STRING_FLAG(loongcollector_log_dir) + " dir is not existing, create", "done"));
-    } else {
-        LOG_ERROR(sLogger, (STRING_FLAG(loongcollector_log_dir) + " dir is not existing, create", "failed"));
-    }
-    if (Mkdir(STRING_FLAG(loongcollector_run_dir))) {
-        LOG_INFO(sLogger, (STRING_FLAG(loongcollector_run_dir) + " dir is not existing, create", "done"));
-    } else {
-        LOG_ERROR(sLogger, (STRING_FLAG(loongcollector_run_dir) + " dir is not existing, create", "failed"));
-    }
-    if (Mkdir(STRING_FLAG(loongcollector_data_dir))) {
-        LOG_INFO(sLogger, (STRING_FLAG(loongcollector_data_dir) + " dir is not existing, create", "done"));
-    } else {
-        LOG_ERROR(sLogger, (STRING_FLAG(loongcollector_data_dir) + " dir is not existing, create", "failed"));
-    }
 }
 
 void AppConfig::MergeJson(Json::Value& mainConfJson, const Json::Value& subConfJson) {

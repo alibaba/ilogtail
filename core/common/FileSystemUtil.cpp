@@ -26,6 +26,7 @@
 #include "RuntimeUtil.h"
 #include "StringTools.h"
 #include "logger/Logger.h"
+#include <iostream>
 
 using namespace std;
 
