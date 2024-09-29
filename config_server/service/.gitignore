@@ -1,4 +1,4 @@
-DB
+internal/router/cmd
 ConfigServer
-license.sh
-config-server
+cmd/config/dev/*
+.idea
