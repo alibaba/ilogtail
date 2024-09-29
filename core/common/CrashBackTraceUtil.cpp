@@ -13,9 +13,8 @@
 // limitations under the License.
 
 #include "CrashBackTraceUtil.h"
-
-#include <cstdio>
 #include <cstdlib>
+#include <cstdio>
 #if defined(__ANDROID__)
 #elif defined(__linux__)
 #define UNW_LOCAL_ONLY
@@ -25,9 +24,9 @@
 #include <breakpad/client/windows/handler/exception_handler.h>
 #include <direct.h>
 #endif
-#include "Flags.h"
-#include "RuntimeUtil.h"
 #include "logger/Logger.h"
+#include "RuntimeUtil.h"
+#include "Flags.h"
 
 DEFINE_FLAG_STRING(crash_stack_file_name, "crash stack back trace file name", "backtrace.dat");
 DECLARE_FLAG_STRING(loongcollector_data_dir);

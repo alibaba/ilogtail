@@ -14,22 +14,20 @@
 
 #include "RuntimeUtil.h"
 #if defined(__linux__)
-#include <dirent.h>
+#include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <unistd.h>
+#include <dirent.h>
 #elif defined(_MSC_VER)
-#include <Psapi.h>
 #include <Windows.h>
+#include <Psapi.h>
 #endif
 #include <errno.h>
-
 #include <cstdio>
 #include <sstream>
-
-#include "FileSystemUtil.h"
-#include "LogtailCommonFlags.h"
 #include "logger/Logger.h"
+#include "LogtailCommonFlags.h"
+#include "FileSystemUtil.h"
 
 DECLARE_FLAG_STRING(logtail_sys_conf_dir);
 

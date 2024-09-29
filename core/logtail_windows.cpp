@@ -16,6 +16,8 @@
 #include <Winsock2.h>
 #include <direct.h>
 
+#include <iostream>
+
 #include "RuntimeUtil.h"
 #include "application/Application.h"
 #include "common/FileSystemUtil.h"
@@ -27,12 +29,11 @@
 
 using namespace logtail;
 
-DEFINE_FLAG_STRING(loongcollector_lib_dir, "loongcollector lib dir", "lib/");
-DEFINE_FLAG_STRING(loongcollector_config_dir, "loongcollector config dir", "etc/");
-DEFINE_FLAG_STRING(loongcollector_log_dir, "loongcollector log dir", "log/");
-DEFINE_FLAG_STRING(loongcollector_run_dir, "loongcollector run dir", "run/");
-DEFINE_FLAG_STRING(loongcollector_data_dir, "loongcollector data dir", "data/");
-
+DECLARE_FLAG_STRING(loongcollector_lib_dir);
+DECLARE_FLAG_STRING(loongcollector_config_dir);
+DECLARE_FLAG_STRING(loongcollector_log_dir);
+DECLARE_FLAG_STRING(loongcollector_run_dir);
+DECLARE_FLAG_STRING(loongcollector_data_dir);
 DECLARE_FLAG_STRING(logtail_sys_conf_dir);
 DECLARE_FLAG_STRING(check_point_filename);
 DECLARE_FLAG_STRING(default_buffer_file_path);
@@ -60,27 +61,29 @@ void do_worker_process() {
     std::string dir = GetProcessExecutionDir();
 
     Json::Value confJson(Json::objectValue);
-    LoadConfigDetailFromFile(dir + "/loongcollector_config.json", confJson);
+    LoadConfigDetailFromFile(dir + "loongcollector_config.json", confJson, true);
 
 #define PROCESSDIRFLAG(flag_name, env_name, dir_name) \
     LoadStringParameter(STRING_FLAG(flag_name), confJson, #flag_name, env_name); \
     if (STRING_FLAG(flag_name).empty()) { \
-        STRING_FLAG(flag_name) = dir + "../" #dir_name "/"; \
+        STRING_FLAG(flag_name) = dir + "../" + #dir_name + "/"; \
     } else if (STRING_FLAG(flag_name).at(0) != '/') { \
-        STRING_FLAG(flag_name) = dir + "../" + STRING_FLAG(flag_name); \
+        STRING_FLAG(flag_name) = dir + "../" + STRING_FLAG(flag_name) + "/"; \
     } \
-    if (Mkdirs(STRING_FLAG(flag_name))) { \
-        LOG_INFO(sLogger, (STRING_FLAG(flag_name) + " dir is not existing, create", "done")); \
-    } else { \
-        LOG_ERROR(sLogger, (STRING_FLAG(flag_name) + " dir is not existing, create", "failed")); \
-        exit(0); \
+    if (!CheckExistance(STRING_FLAG(flag_name))) { \
+        if (Mkdirs(STRING_FLAG(flag_name))) { \
+            std::cout << STRING_FLAG(flag_name) + " dir is not existing, create done" << std::endl; \
+        } else { \
+            std::cout << STRING_FLAG(flag_name) + " dir is not existing, create failed" << std::endl; \
+            exit(0); \
+        } \
     }
 
-    PROCESSDIRFLAG(loongcollector_lib_dir, "ALIYUN_LOONGCOLLECTOR_LIB_DIR", "lib");
-    PROCESSDIRFLAG(loongcollector_config_dir, "ALIYUN_LOONGCOLLECTOR_CONFIG_DIR", "etc");
-    PROCESSDIRFLAG(loongcollector_log_dir, "ALIYUN_LOONGCOLLECTOR_LOG_DIR", "log");
-    PROCESSDIRFLAG(loongcollector_run_dir, "ALIYUN_LOONGCOLLECTOR_RUN_DIR", "run");
-    PROCESSDIRFLAG(loongcollector_data_dir, "ALIYUN_LOONGCOLLECTOR_DATA_DIR", "data");
+    PROCESSDIRFLAG(loongcollector_lib_dir, "ALIYUN_LOONGCOLLECTOR_LIB_DIR", lib);
+    PROCESSDIRFLAG(loongcollector_config_dir, "ALIYUN_LOONGCOLLECTOR_CONFIG_DIR", etc);
+    PROCESSDIRFLAG(loongcollector_log_dir, "ALIYUN_LOONGCOLLECTOR_LOG_DIR", log);
+    PROCESSDIRFLAG(loongcollector_run_dir, "ALIYUN_LOONGCOLLECTOR_RUN_DIR", run);
+    PROCESSDIRFLAG(loongcollector_data_dir, "ALIYUN_LOONGCOLLECTOR_DATA_DIR", data);
 
     Logger::Instance().InitGlobalLoggers();
 

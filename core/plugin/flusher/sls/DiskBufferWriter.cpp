@@ -22,19 +22,18 @@
 #include "common/FileSystemUtil.h"
 #include "common/RuntimeUtil.h"
 #include "common/StringTools.h"
-#include "logger/Logger.h"
-#include "monitor/LogtailAlarm.h"
-#include "pipeline/limiter/RateLimiter.h"
-#include "pipeline/queue/QueueKeyManager.h"
-#include "pipeline/queue/SLSSenderQueueItem.h"
 #include "plugin/flusher/sls/FlusherSLS.h"
 #include "plugin/flusher/sls/SLSClientManager.h"
 #include "protobuf/sls/sls_logs.pb.h"
+#include "logger/Logger.h"
+#include "monitor/LogtailAlarm.h"
 #include "provider/Provider.h"
+#include "pipeline/queue/QueueKeyManager.h"
+#include "pipeline/queue/SLSSenderQueueItem.h"
 #include "sdk/Exception.h"
+#include "pipeline/limiter/RateLimiter.h"
 #include "sls_control/SLSControl.h"
 
-DECLARE_FLAG_STRING(loongcollector_data_dir);
 DEFINE_FLAG_INT32(write_secondary_wait_timeout, "interval of dump seconary buffer from memory to file, seconds", 2);
 DEFINE_FLAG_INT32(buffer_file_alive_interval, "the max alive time of a bufferfile, 5 minutes", 300);
 DEFINE_FLAG_INT32(log_expire_time, "log expire time", 24 * 3600);
@@ -42,6 +41,8 @@ DEFINE_FLAG_INT32(quota_exceed_wait_interval, "when daemon buffer thread get quo
 DEFINE_FLAG_INT32(secondary_buffer_count_limit, "data ready for write buffer file", 20);
 DEFINE_FLAG_INT32(send_retry_sleep_interval, "sleep microseconds when sync send fail, 50ms", 50000);
 DEFINE_FLAG_INT32(buffer_check_period, "check logtail local storage buffer period", 60);
+
+DECLARE_FLAG_STRING(loongcollector_data_dir);
 
 using namespace std;
 
