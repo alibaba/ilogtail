@@ -3,8 +3,9 @@ package kubernetesmetav2
 import (
 	"testing"
 
-	"github.com/alibaba/ilogtail/pkg/flags"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/alibaba/ilogtail/pkg/flags"
 )
 
 func TestGenEntityTypeKeyAcs(t *testing.T) {
