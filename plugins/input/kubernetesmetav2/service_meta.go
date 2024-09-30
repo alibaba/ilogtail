@@ -1,6 +1,8 @@
 package kubernetesmetav2
 
 import (
+	"fmt"
+
 	"github.com/alibaba/ilogtail/pkg/flags"
 	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/helper/k8smeta"
@@ -87,7 +89,7 @@ func (s *ServiceK8sMeta) initDomain() {
 	switch *flags.ClusterMode {
 	case ackCluster, oneCluster, asiCluster:
 		s.domain = acsDomain
-		s.domainWithClusterMode = acsDomain + *flags.ClusterMode
+		s.domainWithClusterMode = fmt.Sprintf("%s.%s", acsDomain, *flags.ClusterMode)
 	default:
 		s.domain = infraDomain
 		s.domainWithClusterMode = infraDomain + ".k8s"
