@@ -203,16 +203,3 @@ func InitCounter() {
 func CloseCounter() {
 	close(counterChan)
 }
-
-func getValue(sValue string) int {
-	num := 0
-	if sValue == "" {
-		return num
-	}
-	if value, err := strconv.ParseInt(sValue, 10, 64); err == nil {
-		num = int(value)
-	} else if valueF, err := strconv.ParseFloat(sValue, 64); err == nil {
-		num = int(valueF)
-	}
-	return num
-}
