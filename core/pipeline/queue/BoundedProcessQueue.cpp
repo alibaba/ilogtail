@@ -40,9 +40,9 @@ bool BoundedProcessQueue::Push(unique_ptr<ProcessQueueItem>&& item) {
     mQueue.push_back(std::move(item));
     ChangeStateIfNeededAfterPush();
 
-    mInItemsCnt->Add(1);
+    mInItemsTotal->Add(1);
     mInItemDataSizeBytes->Add(size);
-    mQueueSize->Set(Size());
+    mQueueSizeTotal->Set(Size());
     mQueueDataSizeByte->Add(size);
     mValidToPushFlag->Set(IsValidToPush());
     return true;
@@ -59,10 +59,10 @@ bool BoundedProcessQueue::Pop(unique_ptr<ProcessQueueItem>& item) {
         GiveFeedback();
     }
 
-    mOutItemsCnt->Add(1);
+    mOutItemsTotal->Add(1);
     mTotalDelayMs->Add(
         chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - item->mEnqueTime).count());
-    mQueueSize->Set(Size());
+    mQueueSizeTotal->Set(Size());
     mQueueDataSizeByte->Sub(item->mEventGroup.DataSize());
     mValidToPushFlag->Set(IsValidToPush());
     return true;
