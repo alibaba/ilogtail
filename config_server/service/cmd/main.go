@@ -1,8 +1,8 @@
 package main
 
 import (
-	"config-server/internal/config"
-	"config-server/internal/router"
+	"config-server/config"
+	"config-server/router"
 	"github.com/gin-gonic/gin"
 )
 

@@ -1,4 +1,4 @@
-internal/router/cmd
+router/cmd
 ConfigServer
 cmd/config/dev/*
 .idea
