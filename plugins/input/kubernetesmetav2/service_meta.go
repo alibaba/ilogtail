@@ -1,13 +1,12 @@
 package kubernetesmetav2
 
 import (
-	"fmt"
-
 	"github.com/alibaba/ilogtail/pkg/flags"
 	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/helper/k8smeta"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
+	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
 type ProcessFunc func(data *k8smeta.ObjectWrapper, method string) []models.PipelineEvent
@@ -35,14 +34,13 @@ type ServiceK8sMeta struct {
 	Ingress               bool
 	Container             bool
 	// other
-	context               pipeline.Context
-	metaManager           *k8smeta.MetaManager
-	collector             pipeline.Collector
-	metaCollector         *metaCollector
-	configName            string
-	clusterID             string
-	domain                string
-	domainWithClusterMode string
+	context       pipeline.Context
+	metaManager   *k8smeta.MetaManager
+	collector     pipeline.Collector
+	metaCollector *metaCollector
+	configName    string
+	clusterID     string
+	domain        string
 	// self metric
 	entityCount pipeline.CounterMetric
 	linkCount   pipeline.CounterMetric
@@ -57,8 +55,14 @@ func (s *ServiceK8sMeta) Init(context pipeline.Context) (int, error) {
 	s.initDomain()
 
 	metricRecord := s.context.GetMetricRecord()
-	s.entityCount = helper.NewCounterMetricAndRegister(metricRecord, helper.MetricPluginCollectEntityTotal)
-	s.linkCount = helper.NewCounterMetricAndRegister(metricRecord, helper.MetricPluginCollectLinkTotal)
+	s.entityCount = helper.NewCounterMetricAndRegister(metricRecord, helper.MetricPluginCollectTotal, &protocol.Log_Content{
+		Key:   "category",
+		Value: "entity",
+	})
+	s.linkCount = helper.NewCounterMetricAndRegister(metricRecord, helper.MetricPluginCollectTotal, &protocol.Log_Content{
+		Key:   "category",
+		Value: "link",
+	})
 	return 0, nil
 }
 
@@ -86,13 +90,11 @@ func (s *ServiceK8sMeta) Start(collector pipeline.Collector) error {
 }
 
 func (s *ServiceK8sMeta) initDomain() {
-	switch *flags.ClusterMode {
+	switch *flags.ClusterType {
 	case ackCluster, oneCluster, asiCluster:
 		s.domain = acsDomain
-		s.domainWithClusterMode = fmt.Sprintf("%s.%s", acsDomain, *flags.ClusterMode)
 	default:
 		s.domain = infraDomain
-		s.domainWithClusterMode = infraDomain + ".k8s"
 	}
 }
 

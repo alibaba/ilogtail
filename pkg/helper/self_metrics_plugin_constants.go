@@ -14,38 +14,6 @@
 
 package helper
 
-import (
-	"github.com/alibaba/ilogtail/pkg/pipeline"
-)
-
-//////////////////////////////////////////////////////////////////////////
-// agent
-//////////////////////////////////////////////////////////////////////////
-
-// metric keys
-const (
-	MetricAgentMemoryGo        = "agent_go_memory_used_mb"
-	MetricAgentGoRoutinesTotal = "agent_go_routines_total"
-)
-
-//////////////////////////////////////////////////////////////////////////
-// component
-//////////////////////////////////////////////////////////////////////////
-
-/**********************************************************
-*   k8s meta
-**********************************************************/
-const (
-	MetricComponentK8sMetaAddEventTotal     = "component_k8s_meta_add_event_total"
-	MetricComponentK8sMetaUpdateEventTotal  = "component_k8s_meta_update_event_total"
-	MetricComponentK8sMetaDeleteEventTotal  = "component_k8s_meta_delete_event_total"
-	MetricComponentK8sMetaCacheResourceSize = "component_k8s_meta_cache_resource_size"
-	MetricComponentK8sMetaQueueSize         = "component_k8s_meta_queue_size"
-	MetricComponentK8sMetaHTTPRequestTotal  = "component_k8s_meta_http_request_total"
-	MetricComponentK8sMetaHTTPAvgDelayMs    = "component_k8s_meta_avg_delay_ms"
-	MetricComponentK8sMetaHTTPMaxDelayMs    = "component_k8s_meta_max_delay_ms"
-)
-
 //////////////////////////////////////////////////////////////////////////
 // plugin
 //////////////////////////////////////////////////////////////////////////
@@ -99,18 +67,11 @@ const (
 /**********************************************************
 *   service_mysql
 *   service_rdb
+*   service_kubernetes_meta
 **********************************************************/
 const (
 	MetricPluginCollectAvgCostTimeMs = "plugin_collect_avg_cost_time_ms"
 	MetricPluginCollectTotal         = "plugin_collect_total"
-)
-
-/**********************************************************
-*   service_kubernetes_meta
-**********************************************************/
-const (
-	MetricPluginCollectEntityTotal = "plugin_collect_entity_total"
-	MetricPluginCollectLinkTotal   = "plugin_collect_link_total"
 )
 
 /**********************************************************
@@ -131,18 +92,3 @@ const (
 const (
 	PluginPairsPerLogTotal = "plugin_pairs_per_log_total"
 )
-
-func GetCommonLabels(context pipeline.Context, pluginMeta *pipeline.PluginMeta) []pipeline.LabelPair {
-	labels := make([]pipeline.LabelPair, 0)
-	labels = append(labels, pipeline.LabelPair{Key: MetricLabelKeyProject, Value: context.GetProject()})
-	labels = append(labels, pipeline.LabelPair{Key: MetricLabelKeyLogstore, Value: context.GetLogstore()})
-	labels = append(labels, pipeline.LabelPair{Key: MetricLabelKeyPipelineName, Value: context.GetConfigName()})
-
-	if len(pluginMeta.PluginID) > 0 {
-		labels = append(labels, pipeline.LabelPair{Key: MetricLabelKeyPluginID, Value: pluginMeta.PluginID})
-	}
-	if len(pluginMeta.PluginType) > 0 {
-		labels = append(labels, pipeline.LabelPair{Key: MetricLabelKeyPluginType, Value: pluginMeta.PluginType})
-	}
-	return labels
-}

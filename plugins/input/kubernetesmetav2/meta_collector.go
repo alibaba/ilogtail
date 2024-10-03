@@ -13,6 +13,7 @@ import (
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/alibaba/ilogtail/pkg/flags"
 	"github.com/alibaba/ilogtail/pkg/helper/k8smeta"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/models"
@@ -329,23 +330,23 @@ func (m *metaCollector) sendInBackground() {
 		case e := <-m.entityBuffer:
 			entityGroup.Events = append(entityGroup.Events, e)
 			if len(entityGroup.Events) >= 100 {
-				sendFunc(entityGroup)
 				m.serviceK8sMeta.entityCount.Add(int64(len(entityGroup.Events)))
+				sendFunc(entityGroup)
 			}
 		case e := <-m.entityLinkBuffer:
 			entityLinkGroup.Events = append(entityLinkGroup.Events, e)
 			if len(entityLinkGroup.Events) >= 100 {
-				sendFunc(entityLinkGroup)
 				m.serviceK8sMeta.linkCount.Add(int64(len(entityLinkGroup.Events)))
+				sendFunc(entityLinkGroup)
 			}
 		case <-time.After(3 * time.Second):
 			if len(entityGroup.Events) > 0 {
-				sendFunc(entityGroup)
 				m.serviceK8sMeta.entityCount.Add(int64(len(entityGroup.Events)))
+				sendFunc(entityGroup)
 			}
 			if len(entityLinkGroup.Events) > 0 {
-				sendFunc(entityLinkGroup)
 				m.serviceK8sMeta.linkCount.Add(int64(len(entityLinkGroup.Events)))
+				sendFunc(entityLinkGroup)
 			}
 		case <-m.stopCh:
 			return
@@ -406,16 +407,14 @@ func (m *metaCollector) generateEntityClusterLink(entityEvent models.PipelineEve
 }
 
 func (m *metaCollector) genEntityTypeKey(kind string) string {
-	var prefix string
-	switch {
-	case kind == "":
-		prefix = m.serviceK8sMeta.domain + ".k8s"
-	case kind == clusterTypeName && m.serviceK8sMeta.domain == acsDomain:
-		prefix = m.serviceK8sMeta.domainWithClusterMode + "."
-	default:
-		prefix = m.serviceK8sMeta.domain + ".k8s."
+	// assert domain is initialized
+	if kind == "" {
+		return m.serviceK8sMeta.domain + ".k8s"
 	}
-	return fmt.Sprintf("%s%s", prefix, strings.ToLower(kind))
+	if kind == clusterTypeName && m.serviceK8sMeta.domain == acsDomain {
+		return m.serviceK8sMeta.domain + "." + *flags.ClusterType + "." + clusterTypeName
+	}
+	return m.serviceK8sMeta.domain + ".k8s." + strings.ToLower(kind)
 }
 
 func convertPipelineEvent2Log(event models.PipelineEvent) *protocol.Log {
