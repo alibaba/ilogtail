@@ -182,11 +182,11 @@ func (p *MetricWrapperV1) runPushNativeProcessQueueInternal() {
 				p.ctxCached = append(p.ctxCached, event.Context)
 				if len(p.eventCached) >= p.MaxCachedSize {
 					isValidToPushNativeProcessQueue = p.pushNativeProcessQueue(5)
+					if !p.timer.Stop() {
+						<-p.timer.C
+					}
+					p.timer.Reset(p.PushNativeTimeout)
 				}
-				if !p.timer.Stop() {
-					<-p.timer.C
-				}
-				p.timer.Reset(p.PushNativeTimeout)
 			case <-p.ShutdownCachedChan:
 				for event = range p.LogsCachedChan {
 					p.eventCached = append(p.eventCached, event.LogEvent)
