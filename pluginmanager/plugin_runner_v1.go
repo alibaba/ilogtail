@@ -66,7 +66,7 @@ func (p *pluginv1Runner) Init(inputQueueSize int, flushQueueSize int) error {
 
 func (p *pluginv1Runner) AddDefaultAggregatorIfEmpty() error {
 	if len(p.AggregatorPlugins) == 0 {
-		pluginMeta := p.LogstoreConfig.genPluginMeta("aggregator_default", true, false)
+		pluginMeta := p.LogstoreConfig.genPluginMeta("aggregator_default")
 		logger.Debug(p.LogstoreConfig.Context.GetRuntimeContext(), "add default aggregator")
 		if err := loadAggregator(pluginMeta, p.LogstoreConfig, nil); err != nil {
 			return err
@@ -79,7 +79,7 @@ func (p *pluginv1Runner) AddDefaultFlusherIfEmpty() error {
 	if len(p.FlusherPlugins) == 0 {
 		logger.Debug(p.LogstoreConfig.Context.GetRuntimeContext(), "add default flusher")
 		category, options := flags.GetFlusherConfiguration()
-		pluginMeta := p.LogstoreConfig.genPluginMeta(category, true, true)
+		pluginMeta := p.LogstoreConfig.genPluginMeta(category)
 		if err := loadFlusher(pluginMeta, p.LogstoreConfig, options); err != nil {
 			return err
 		}

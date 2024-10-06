@@ -43,69 +43,69 @@ type ServiceWrapperV1 struct {
 	pbBuffer    []byte
 }
 
-func (p *ServiceWrapperV1) Init(pluginMeta *pipeline.PluginMeta) error {
-	p.InitMetricRecord(pluginMeta)
+func (wrapper *ServiceWrapperV1) Init(pluginMeta *pipeline.PluginMeta) error {
+	wrapper.InitMetricRecord(pluginMeta)
 
-	_, err := p.Input.Init(p.Config.Context)
+	_, err := wrapper.Input.Init(wrapper.Config.Context)
 	return err
 }
 
-func (p *ServiceWrapperV1) Run(cc *pipeline.AsyncControl) {
-	logger.Info(p.Config.Context.GetRuntimeContext(), "start run service", p.Input)
+func (wrapper *ServiceWrapperV1) Run(cc *pipeline.AsyncControl) {
+	logger.Info(wrapper.Config.Context.GetRuntimeContext(), "start run service", wrapper.Input)
 
-	if p.Config.GlobalConfig.GoInputToNativeProcessor {
-		p.LogsCachedChan = make(chan *pipeline.LogEventWithContext, 10)
-		p.ShutdownCachedChan = make(chan struct{})
-		p.eventCached = make([]*protocol.LogEvent, 0, p.MaxCachedSize+10)
-		p.tagCached = make([]map[string]string, 0, p.MaxCachedSize+10)
-		p.ctxCached = make([]map[string]interface{}, 0, p.MaxCachedSize+10)
-		p.timer = time.NewTimer(p.PushNativeTimeout)
-		go p.runPushNativeProcessQueueInternal()
+	if wrapper.Config.GlobalConfig.GoInputToNativeProcessor {
+		wrapper.LogsCachedChan = make(chan *pipeline.LogEventWithContext, 10)
+		wrapper.ShutdownCachedChan = make(chan struct{})
+		wrapper.eventCached = make([]*protocol.LogEvent, 0, wrapper.MaxCachedSize+10)
+		wrapper.tagCached = make([]map[string]string, 0, wrapper.MaxCachedSize+10)
+		wrapper.ctxCached = make([]map[string]interface{}, 0, wrapper.MaxCachedSize+10)
+		wrapper.timer = time.NewTimer(wrapper.PushNativeTimeout)
+		go wrapper.runPushNativeProcessQueueInternal()
 	}
 
 	go func() {
-		defer panicRecover(p.Input.Description())
-		err := p.Input.Start(p)
+		defer panicRecover(wrapper.Input.Description())
+		err := wrapper.Input.Start(wrapper)
 		if err != nil {
-			logger.Error(p.Config.Context.GetRuntimeContext(), "PLUGIN_ALARM", "start service error, err", err)
+			logger.Error(wrapper.Config.Context.GetRuntimeContext(), "PLUGIN_ALARM", "start service error, err", err)
 		}
-		logger.Info(p.Config.Context.GetRuntimeContext(), "service done", p.Input.Description())
+		logger.Info(wrapper.Config.Context.GetRuntimeContext(), "service done", wrapper.Input.Description())
 	}()
 
 }
 
-func (p *ServiceWrapperV1) Stop() error {
-	if p.Config.GlobalConfig.GoInputToNativeProcessor {
-		p.ShutdownCachedChan <- struct{}{}
+func (wrapper *ServiceWrapperV1) Stop() error {
+	if wrapper.Config.GlobalConfig.GoInputToNativeProcessor {
+		wrapper.ShutdownCachedChan <- struct{}{}
 	}
-	err := p.Input.Stop()
+	err := wrapper.Input.Stop()
 	if err != nil {
-		logger.Error(p.Config.Context.GetRuntimeContext(), "PLUGIN_ALARM", "stop service error, err", err)
+		logger.Error(wrapper.Config.Context.GetRuntimeContext(), "PLUGIN_ALARM", "stop service error, err", err)
 	}
-	if p.Config.GlobalConfig.GoInputToNativeProcessor {
-		p.timer.Stop()
-		close(p.LogsCachedChan)
-		close(p.ShutdownCachedChan)
+	if wrapper.Config.GlobalConfig.GoInputToNativeProcessor {
+		wrapper.timer.Stop()
+		close(wrapper.LogsCachedChan)
+		close(wrapper.ShutdownCachedChan)
 	}
 	return err
 }
 
-func (p *ServiceWrapperV1) AddData(tags map[string]string, fields map[string]string, t ...time.Time) {
-	p.AddDataWithContext(tags, fields, nil, t...)
+func (wrapper *ServiceWrapperV1) AddData(tags map[string]string, fields map[string]string, t ...time.Time) {
+	wrapper.AddDataWithContext(tags, fields, nil, t...)
 }
 
-func (p *ServiceWrapperV1) AddDataArray(tags map[string]string,
+func (wrapper *ServiceWrapperV1) AddDataArray(tags map[string]string,
 	columns []string,
 	values []string,
 	t ...time.Time) {
-	p.AddDataArrayWithContext(tags, columns, values, nil, t...)
+	wrapper.AddDataArrayWithContext(tags, columns, values, nil, t...)
 }
 
-func (p *ServiceWrapperV1) AddRawLog(log *protocol.Log) {
-	p.AddRawLogWithContext(log, nil)
+func (wrapper *ServiceWrapperV1) AddRawLog(log *protocol.Log) {
+	wrapper.AddRawLogWithContext(log, nil)
 }
 
-func (p *ServiceWrapperV1) AddDataWithContext(tags map[string]string, fields map[string]string, ctx map[string]interface{}, t ...time.Time) {
+func (wrapper *ServiceWrapperV1) AddDataWithContext(tags map[string]string, fields map[string]string, ctx map[string]interface{}, t ...time.Time) {
 	var logTime time.Time
 	if len(t) == 0 {
 		logTime = time.Now()
@@ -113,20 +113,22 @@ func (p *ServiceWrapperV1) AddDataWithContext(tags map[string]string, fields map
 		logTime = t[0]
 	}
 	// need push to native processor
-	if p.Config.GlobalConfig.GoInputToNativeProcessor {
-		logEvent, _ := helper.CreateLogEvent(logTime, p.Config.GlobalConfig.EnableTimestampNanosecond, fields)
-		p.LogsCachedChan <- &pipeline.LogEventWithContext{LogEvent: logEvent, Tags: tags, Context: ctx}
-		p.inputRecordsTotal.Add(1)
-		p.inputRecordsSizeBytes.Add(int64(logEvent.Size()))
+	if wrapper.Config.GlobalConfig.GoInputToNativeProcessor {
+		logEvent, _ := helper.CreateLogEvent(logTime, wrapper.Config.GlobalConfig.EnableTimestampNanosecond, fields)
+		wrapper.LogsCachedChan <- &pipeline.LogEventWithContext{LogEvent: logEvent, Tags: tags, Context: ctx}
+		wrapper.outEventsTotal.Add(1)
+		wrapper.outEventGroupsTotal.Add(1)
+		wrapper.outSizeBytes.Add(int64(logEvent.Size()))
 		return
 	}
-	slsLog, _ := helper.CreateLog(logTime, len(t) != 0, p.Tags, tags, fields)
-	p.inputRecordsTotal.Add(1)
-	p.inputRecordsSizeBytes.Add(int64(slsLog.Size()))
-	p.LogsChan <- &pipeline.LogWithContext{Log: slsLog, Context: ctx}
+	slsLog, _ := helper.CreateLog(logTime, len(t) != 0, wrapper.Tags, tags, fields)
+	wrapper.outEventsTotal.Add(1)
+	wrapper.outEventGroupsTotal.Add(1)
+	wrapper.outSizeBytes.Add(int64(slsLog.Size()))
+	wrapper.LogsChan <- &pipeline.LogWithContext{Log: slsLog, Context: ctx}
 }
 
-func (p *ServiceWrapperV1) AddDataArrayWithContext(tags map[string]string,
+func (wrapper *ServiceWrapperV1) AddDataArrayWithContext(tags map[string]string,
 	columns []string,
 	values []string,
 	ctx map[string]interface{},
@@ -138,84 +140,87 @@ func (p *ServiceWrapperV1) AddDataArrayWithContext(tags map[string]string,
 		logTime = t[0]
 	}
 	// need push to native processor
-	if p.Config.GlobalConfig.GoInputToNativeProcessor {
-		logEvent, _ := helper.CreateLogEventByArray(logTime, p.Config.GlobalConfig.EnableTimestampNanosecond, columns, values)
-		p.LogsCachedChan <- &pipeline.LogEventWithContext{LogEvent: logEvent, Tags: tags, Context: ctx}
-		p.inputRecordsTotal.Add(1)
-		p.inputRecordsSizeBytes.Add(int64(logEvent.Size()))
+	if wrapper.Config.GlobalConfig.GoInputToNativeProcessor {
+		logEvent, _ := helper.CreateLogEventByArray(logTime, wrapper.Config.GlobalConfig.EnableTimestampNanosecond, columns, values)
+		wrapper.LogsCachedChan <- &pipeline.LogEventWithContext{LogEvent: logEvent, Tags: tags, Context: ctx}
+		wrapper.outEventsTotal.Add(1)
+		wrapper.outEventGroupsTotal.Add(1)
+		wrapper.outSizeBytes.Add(int64(logEvent.Size()))
 		return
 	}
-	slsLog, _ := helper.CreateLogByArray(logTime, len(t) != 0, p.Tags, tags, columns, values)
-	p.inputRecordsTotal.Add(1)
-	p.inputRecordsSizeBytes.Add(int64(slsLog.Size()))
-	p.LogsChan <- &pipeline.LogWithContext{Log: slsLog, Context: ctx}
+	slsLog, _ := helper.CreateLogByArray(logTime, len(t) != 0, wrapper.Tags, tags, columns, values)
+	wrapper.outEventsTotal.Add(1)
+	wrapper.outEventGroupsTotal.Add(1)
+	wrapper.outSizeBytes.Add(int64(slsLog.Size()))
+	wrapper.LogsChan <- &pipeline.LogWithContext{Log: slsLog, Context: ctx}
 }
 
-func (p *ServiceWrapperV1) AddRawLogWithContext(log *protocol.Log, ctx map[string]interface{}) {
-	p.inputRecordsTotal.Add(1)
-	p.inputRecordsSizeBytes.Add(int64(log.Size()))
-	if p.Config.GlobalConfig.GoInputToNativeProcessor {
+func (wrapper *ServiceWrapperV1) AddRawLogWithContext(log *protocol.Log, ctx map[string]interface{}) {
+	wrapper.outEventsTotal.Add(1)
+	wrapper.outEventGroupsTotal.Add(1)
+	wrapper.outSizeBytes.Add(int64(log.Size()))
+	if wrapper.Config.GlobalConfig.GoInputToNativeProcessor {
 		logEvent, _ := helper.CreateLogEventByRawLogLegacyRawLog(log)
-		p.LogsCachedChan <- &pipeline.LogEventWithContext{LogEvent: logEvent, Context: ctx}
+		wrapper.LogsCachedChan <- &pipeline.LogEventWithContext{LogEvent: logEvent, Context: ctx}
 		return
 	}
-	p.LogsChan <- &pipeline.LogWithContext{Log: log, Context: ctx}
+	wrapper.LogsChan <- &pipeline.LogWithContext{Log: log, Context: ctx}
 }
 
-func (p *ServiceWrapperV1) runPushNativeProcessQueueInternal() {
+func (wrapper *ServiceWrapperV1) runPushNativeProcessQueueInternal() {
 	var event *pipeline.LogEventWithContext
 	isValidToPushNativeProcessQueue := true
 
 	for {
 		if isValidToPushNativeProcessQueue {
 			select {
-			case <-p.timer.C:
-				isValidToPushNativeProcessQueue = p.pushNativeProcessQueue(5)
-				p.timer.Reset(p.PushNativeTimeout)
-			case event = <-p.LogsCachedChan:
-				p.eventCached = append(p.eventCached, event.LogEvent)
-				p.tagCached = append(p.tagCached, event.Tags)
-				p.ctxCached = append(p.ctxCached, event.Context)
-				if len(p.eventCached) >= p.MaxCachedSize {
-					isValidToPushNativeProcessQueue = p.pushNativeProcessQueue(5)
-					if !p.timer.Stop() {
-						<-p.timer.C
+			case <-wrapper.timer.C:
+				isValidToPushNativeProcessQueue = wrapper.pushNativeProcessQueue(5)
+				wrapper.timer.Reset(wrapper.PushNativeTimeout)
+			case event = <-wrapper.LogsCachedChan:
+				wrapper.eventCached = append(wrapper.eventCached, event.LogEvent)
+				wrapper.tagCached = append(wrapper.tagCached, event.Tags)
+				wrapper.ctxCached = append(wrapper.ctxCached, event.Context)
+				if len(wrapper.eventCached) >= wrapper.MaxCachedSize {
+					isValidToPushNativeProcessQueue = wrapper.pushNativeProcessQueue(5)
+					if !wrapper.timer.Stop() {
+						<-wrapper.timer.C
 					}
-					p.timer.Reset(p.PushNativeTimeout)
+					wrapper.timer.Reset(wrapper.PushNativeTimeout)
 				}
-			case <-p.ShutdownCachedChan:
-				for event = range p.LogsCachedChan {
-					p.eventCached = append(p.eventCached, event.LogEvent)
-					p.tagCached = append(p.tagCached, event.Tags)
-					p.ctxCached = append(p.ctxCached, event.Context)
+			case <-wrapper.ShutdownCachedChan:
+				for event = range wrapper.LogsCachedChan {
+					wrapper.eventCached = append(wrapper.eventCached, event.LogEvent)
+					wrapper.tagCached = append(wrapper.tagCached, event.Tags)
+					wrapper.ctxCached = append(wrapper.ctxCached, event.Context)
 				}
 				endTime := time.Now().Add(time.Duration(30) * time.Second)
 				for {
-					if time.Now().After(endTime) || (len(p.eventCached) == 0 && len(p.pbBuffer) == 0) {
+					if time.Now().After(endTime) || (len(wrapper.eventCached) == 0 && len(wrapper.pbBuffer) == 0) {
 						break
 					}
-					p.pushNativeProcessQueue(1)
+					wrapper.pushNativeProcessQueue(1)
 					time.Sleep(time.Duration(10) * time.Millisecond)
 				}
 				return
 			}
 		} else {
 			select {
-			case <-p.timer.C:
-				isValidToPushNativeProcessQueue = p.pushNativeProcessQueue(5)
-				p.timer.Reset(p.PushNativeTimeout)
-			case <-p.ShutdownCachedChan:
-				for event = range p.LogsCachedChan {
-					p.eventCached = append(p.eventCached, event.LogEvent)
-					p.tagCached = append(p.tagCached, event.Tags)
-					p.ctxCached = append(p.ctxCached, event.Context)
+			case <-wrapper.timer.C:
+				isValidToPushNativeProcessQueue = wrapper.pushNativeProcessQueue(5)
+				wrapper.timer.Reset(wrapper.PushNativeTimeout)
+			case <-wrapper.ShutdownCachedChan:
+				for event = range wrapper.LogsCachedChan {
+					wrapper.eventCached = append(wrapper.eventCached, event.LogEvent)
+					wrapper.tagCached = append(wrapper.tagCached, event.Tags)
+					wrapper.ctxCached = append(wrapper.ctxCached, event.Context)
 				}
 				endTime := time.Now().Add(time.Duration(30) * time.Second)
 				for {
-					if time.Now().After(endTime) || (len(p.eventCached) == 0 && len(p.pbBuffer) == 0) {
+					if time.Now().After(endTime) || (len(wrapper.eventCached) == 0 && len(wrapper.pbBuffer) == 0) {
 						break
 					}
-					p.pushNativeProcessQueue(1)
+					wrapper.pushNativeProcessQueue(1)
 					time.Sleep(time.Duration(10) * time.Millisecond)
 				}
 				return
@@ -224,72 +229,72 @@ func (p *ServiceWrapperV1) runPushNativeProcessQueueInternal() {
 	}
 }
 
-func (p *ServiceWrapperV1) pushNativeProcessQueue(retryCnt int) bool {
-	if len(p.pbBuffer) == 0 && len(p.eventCached) == 0 {
+func (wrapper *ServiceWrapperV1) pushNativeProcessQueue(retryCnt int) bool {
+	if len(wrapper.pbBuffer) == 0 && len(wrapper.eventCached) == 0 {
 		return true
 	}
 
-	if len(p.pbBuffer) == 0 {
+	if len(wrapper.pbBuffer) == 0 {
 		// create pipelineEventGroup and marshal to pbBuffer
-		tag := p.tagCached[0]
-		ctx := p.ctxCached[0]
+		tag := wrapper.tagCached[0]
+		ctx := wrapper.ctxCached[0]
 		pushSize := 1
-		for ; pushSize < len(p.eventCached); pushSize++ {
+		for ; pushSize < len(wrapper.eventCached); pushSize++ {
 			same := true
-			for k, v := range p.tagCached[pushSize] {
+			for k, v := range wrapper.tagCached[pushSize] {
 				if tag[k] != v {
 					same = false
 					break
 				}
 			}
-			if !same || !reflect.DeepEqual(ctx, p.ctxCached[pushSize]) {
+			if !same || !reflect.DeepEqual(ctx, wrapper.ctxCached[pushSize]) {
 				break
 			}
 		}
-		group, _ := helper.CreatePipelineEventGroupLegacyRawLog(p.eventCached[:pushSize], p.Tags, tag, ctx)
+		group, _ := helper.CreatePipelineEventGroupLegacyRawLog(wrapper.eventCached[:pushSize], wrapper.Tags, tag, ctx)
 		pbSize := group.Size()
-		if cap(p.pbBuffer) < pbSize {
-			if cap(p.pbBuffer)*2 >= pbSize {
-				p.pbBuffer = make([]byte, cap(p.pbBuffer)*2)
+		if cap(wrapper.pbBuffer) < pbSize {
+			if cap(wrapper.pbBuffer)*2 >= pbSize {
+				wrapper.pbBuffer = make([]byte, cap(wrapper.pbBuffer)*2)
 			} else {
-				p.pbBuffer = make([]byte, pbSize)
+				wrapper.pbBuffer = make([]byte, pbSize)
 			}
 		}
-		n, _ := group.MarshalTo(p.pbBuffer)
-		p.pbBuffer = p.pbBuffer[:n]
+		n, _ := group.MarshalTo(wrapper.pbBuffer)
+		wrapper.pbBuffer = wrapper.pbBuffer[:n]
 
 		// clear eventCached, tagCached and ctxCached
 		for i := 0; i < pushSize; i++ {
-			helper.LogEventPool.Put(p.eventCached[i])
+			helper.LogEventPool.Put(wrapper.eventCached[i])
 		}
-		for i := pushSize; i < len(p.eventCached); i++ {
-			p.eventCached[i-pushSize] = p.eventCached[i]
-			p.tagCached[i-pushSize] = p.tagCached[i]
-			p.ctxCached[i-pushSize] = p.ctxCached[i]
+		for i := pushSize; i < len(wrapper.eventCached); i++ {
+			wrapper.eventCached[i-pushSize] = wrapper.eventCached[i]
+			wrapper.tagCached[i-pushSize] = wrapper.tagCached[i]
+			wrapper.ctxCached[i-pushSize] = wrapper.ctxCached[i]
 		}
-		p.eventCached = p.eventCached[:len(p.eventCached)-pushSize]
-		p.tagCached = p.tagCached[:len(p.tagCached)-pushSize]
-		p.ctxCached = p.ctxCached[:len(p.ctxCached)-pushSize]
+		wrapper.eventCached = wrapper.eventCached[:len(wrapper.eventCached)-pushSize]
+		wrapper.tagCached = wrapper.tagCached[:len(wrapper.tagCached)-pushSize]
+		wrapper.ctxCached = wrapper.ctxCached[:len(wrapper.ctxCached)-pushSize]
 	}
 
 	// try to pushNativeProcessQueue
 	rst := -1
-	switch p.Input.GetMode() {
+	switch wrapper.Input.GetMode() {
 	case pipeline.PUSH:
 		i := 0
 		for {
 			if retryCnt > 0 && i >= retryCnt {
 				break
 			}
-			if logtail.IsValidToProcess(p.Config.ConfigName) {
-				if rst = logtail.PushQueue(p.Config.ConfigName, p.pbBuffer); rst == 0 {
+			if logtail.IsValidToProcess(wrapper.Config.ConfigName) {
+				if rst = logtail.PushQueue(wrapper.Config.ConfigName, wrapper.pbBuffer); rst == 0 {
 					break
 				}
 			}
 			time.Sleep(time.Duration(10) * time.Millisecond)
 		}
 	case pipeline.PULL:
-		logtail.PushQueue(p.Config.ConfigName, p.pbBuffer)
+		logtail.PushQueue(wrapper.Config.ConfigName, wrapper.pbBuffer)
 		rst = 0
 	default:
 	}
@@ -298,6 +303,6 @@ func (p *ServiceWrapperV1) pushNativeProcessQueue(retryCnt int) bool {
 	if rst != 0 {
 		return false
 	}
-	p.pbBuffer = p.pbBuffer[:0]
+	wrapper.pbBuffer = wrapper.pbBuffer[:0]
 	return true
 }
