@@ -22,8 +22,8 @@ set -o pipefail
 
 caller_dir="$PWD"
 ilogtail_dir=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
-bin_file="$ilogtail_dir/ilogtail"
-pid_file="$ilogtail_dir/ilogtail.pid"
+bin_file="$ilogtail_dir/bin/ilogtail"
+pid_file="$ilogtail_dir/log/ilogtail.pid"
 kill_timeout=10
 port=${HTTP_PROBE_PORT:-7953}
 port_initial_delay_sec=${PORT_INITIAL_DELAY_SEC:-3}

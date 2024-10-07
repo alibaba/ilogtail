@@ -35,11 +35,11 @@ ARG TARGETPLATFORM
 
 COPY --from=build /usr/local/ilogtail-${VERSION} /usr/local/ilogtail
 RUN chown -R $(whoami) /usr/local/ilogtail/ && \
-    chmod 755 /usr/local/ilogtail/ilogtail && \
-    mkdir /usr/local/ilogtail/checkpoint
+    chmod 755 /usr/local/ilogtail/bin/ilogtail && \
+    mkdir -p /usr/local/ilogtail/data/checkpoint
 
 WORKDIR /usr/local/ilogtail
-COPY example_config/start_with_docker/loongcollector_config.json /usr/local/ilogtail/
+COPY example_config/start_with_docker/loongcollector_config.json /usr/local/ilogtail/bin/
 COPY scripts/ilogtail_control.sh /usr/local/ilogtail/
 
 ENV HTTP_PROBE_PORT=7953 \

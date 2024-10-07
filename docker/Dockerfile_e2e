@@ -20,18 +20,24 @@ ARG VERSION=2.0.0
 USER root
 WORKDIR /ilogtail
 
-COPY ./output/ilogtail /ilogtail/
+RUN mkdir -p /ilogtail/bin
+RUN mkdir -p /ilogtail/lib
+RUN mkdir -p /ilogtail/etc
+RUN mkdir -p /ilogtail/log
+RUN mkdir -p /ilogtail/data
+
+COPY ./output/ilogtail /ilogtail/bin/ilogtail
 COPY ./scripts/download_ebpflib.sh /tmp/
 
 RUN chown -R $(whoami) /ilogtail && \
-    chmod 755 /ilogtail/ilogtail && \
-    mkdir /ilogtail/checkpoint && \
-    if [ `uname -m` = "x86_64" ]; then /tmp/download_ebpflib.sh /ilogtail; fi && \
+    chmod 755 /ilogtail/bin/ilogtail && \
+    mkdir /ilogtail/data/checkpoint && \
+    if [ `uname -m` = "x86_64" ]; then /tmp/download_ebpflib.sh /ilogtail/lib; fi && \
     rm /tmp/download_ebpflib.sh
 
-COPY ./output/libPluginBase.so /ilogtail/
-COPY ./example_config/quick_start/loongcollector_config.json /ilogtail/
-COPY ./output/libPluginAdapter.so /ilogtail/
+COPY ./output/libPluginBase.so /ilogtail/lib/
+COPY ./example_config/quick_start/loongcollector_config.json /ilogtail/bin/
+COPY ./output/libPluginAdapter.so /ilogtail/lib/
 
 ENV HOST_OS=$HOST_OS
 ENV LOGTAIL_VERSION=$VERSION
