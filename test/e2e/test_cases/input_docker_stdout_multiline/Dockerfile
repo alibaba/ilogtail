@@ -12,6 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM anolis-registry.cn-zhangjiakou.cr.aliyuncs.com/openanolis/anolisos:23-busybox
+FROM busybox
 
 CMD ["sh", "-c","echo \"today\nhello\" && sleep 90"]

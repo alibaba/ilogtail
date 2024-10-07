@@ -20,14 +20,14 @@ ARG VERSION=2.0.0
 USER root
 WORKDIR /ilogtail
 
-COPY --from=build /src/core/build/ilogtail /ilogtail/bin/ilogtail
-COPY ./scripts/download_ebpflib.sh /tmp/
-
 RUN mkdir -p /ilogtail/bin
 RUN mkdir -p /ilogtail/lib
 RUN mkdir -p /ilogtail/etc
 RUN mkdir -p /ilogtail/log
 RUN mkdir -p /ilogtail/data
+
+COPY --from=build /src/core/build/ilogtail /ilogtail/bin/ilogtail
+COPY ./scripts/download_ebpflib.sh /tmp/
 
 RUN chown -R $(whoami) /ilogtail && \
     chmod 755 /ilogtail/bin/ilogtail && \
