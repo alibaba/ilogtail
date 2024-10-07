@@ -83,10 +83,10 @@ void enable_core(void) {
 
 static void overwrite_community_edition_flags() {
     // support run in installation dir on default
-    STRING_FLAG(logtail_sys_conf_dir) = ".";
-    STRING_FLAG(check_point_filename) = "checkpoint/logtail_check_point";
-    STRING_FLAG(default_buffer_file_path) = "checkpoint";
-    STRING_FLAG(ilogtail_docker_file_path_config) = "checkpoint/docker_path_config.json";
+    STRING_FLAG(logtail_sys_conf_dir) = "../etc/";
+    STRING_FLAG(check_point_filename) = "../data/checkpoint/logtail_check_point";
+    STRING_FLAG(default_buffer_file_path) = "../data/checkpoint";
+    STRING_FLAG(ilogtail_docker_file_path_config) = "../data/docker_path_config.json";
     STRING_FLAG(metrics_report_method) = "";
     INT32_FLAG(data_server_port) = 443;
     BOOL_FLAG(enable_env_ref_in_config) = true;
