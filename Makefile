@@ -15,8 +15,8 @@
 .DEFAULT_GOAL := all
 VERSION ?= 2.0.0
 DOCKER_PUSH ?= false
-DOCKER_REPOSITORY ?= aliyun/ilogtail
-BUILD_REPOSITORY ?= aliyun/ilogtail_build
+DOCKER_REPOSITORY ?= aliyun/loongcollector
+BUILD_REPOSITORY ?= aliyun/loongcollector_build
 GENERATED_HOME ?= generated_files
 PLUGINS_CONFIG_FILE ?= plugins.yml,external_plugins.yml
 GO_MOD_FILE ?= go.mod

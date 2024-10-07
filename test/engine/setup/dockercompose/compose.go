@@ -56,13 +56,13 @@ services:
       interval: 1s
       retries: 10
   ilogtailC:
-    image: aliyun/ilogtail:2.0.0
+    image: aliyun/loongcollector:2.0.0
     hostname: ilogtail
     privileged: true
     pid: host
     volumes:
-      - %s:/ilogtail/default_flusher.json
-      - %s:/ilogtail/config/local
+      - %s:/loongcollector/etc/default_flusher.json
+      - %s:/loongcollector/etc/config/local
       - /:/logtail_host
       - /var/run/docker.sock:/var/run/docker.sock
       - /sys/:/sys/

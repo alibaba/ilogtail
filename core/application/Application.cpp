@@ -124,7 +124,8 @@ void Application::Init() {
     // load loongcollector_config.json
     char* configEnv = getenv(STRING_FLAG(ilogtail_config_env_name).c_str());
     if (configEnv == NULL || strlen(configEnv) == 0) {
-        AppConfig::GetInstance()->LoadAppConfig(STRING_FLAG(ilogtail_config));
+        std::string dir = GetProcessExecutionDir();
+        AppConfig::GetInstance()->LoadAppConfig(dir + STRING_FLAG(ilogtail_config));
     } else {
         AppConfig::GetInstance()->LoadAppConfig(configEnv);
     }
