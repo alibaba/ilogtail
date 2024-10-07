@@ -18,30 +18,30 @@ ARG HOST_OS=Linux
 ARG VERSION=2.0.0
 
 USER root
-WORKDIR /ilogtail
+WORKDIR /loongcollector
 
-RUN mkdir -p /ilogtail/bin
-RUN mkdir -p /ilogtail/lib
-RUN mkdir -p /ilogtail/etc
-RUN mkdir -p /ilogtail/log
-RUN mkdir -p /ilogtail/data
+RUN mkdir -p /loongcollector/bin
+RUN mkdir -p /loongcollector/lib
+RUN mkdir -p /loongcollector/etc
+RUN mkdir -p /loongcollector/log
+RUN mkdir -p /loongcollector/data
 
-COPY --from=build /src/core/build/ilogtail /ilogtail/bin/ilogtail
+COPY --from=build /src/core/build/loongcollector /loongcollector/bin/loongcollector
 COPY ./scripts/download_ebpflib.sh /tmp/
 
-RUN chown -R $(whoami) /ilogtail && \
-    chmod 755 /ilogtail/bin/ilogtail && \
-    mkdir /ilogtail/data/checkpoint && \
-    if [ `uname -m` = "x86_64" ]; then /tmp/download_ebpflib.sh /ilogtail/lib; fi && \
+RUN chown -R $(whoami) /loongcollector && \
+    chmod 755 /loongcollector/bin/loongcollector && \
+    mkdir /loongcollector/data/checkpoint && \
+    if [ `uname -m` = "x86_64" ]; then /tmp/download_ebpflib.sh /loongcollector/lib; fi && \
     rm /tmp/download_ebpflib.sh
 
-COPY --from=build /src/output/libPluginBase.so /ilogtail/lib/
-COPY --from=build /src/example_config/quick_start/loongcollector_config.json /ilogtail/bin/
-COPY --from=build /src/core/build/go_pipeline/libPluginAdapter.so /ilogtail/lib/
+COPY --from=build /src/output/libPluginBase.so /loongcollector/lib/
+COPY --from=build /src/example_config/quick_start/loongcollector_config.json /loongcollector/bin/
+COPY --from=build /src/core/build/go_pipeline/libPluginAdapter.so /loongcollector/lib/
 
 ENV HOST_OS=$HOST_OS
 ENV LOGTAIL_VERSION=$VERSION
 
 EXPOSE 18689
 
-ENTRYPOINT ["/ilogtail/ilogtail"]
+ENTRYPOINT ["/loongcollector/bin/loongcollector"]

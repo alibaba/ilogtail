@@ -92,7 +92,7 @@ echo Build plugins success
 REM Copy artifacts
 xcopy /Y %ILOGTAIL_CORE_BUILD_PATH%\Release\ilogtail.exe %OUTPUT_DIR%
 xcopy /Y %ILOGTAIL_CORE_BUILD_PATH%\plugin\Release\PluginAdapter.dll %OUTPUT_DIR%
-echo { >  %OUTPUT_DIR%\loongcollector_config.json & echo } >> %OUTPUT_DIR%\loongcollector_config.json
+echo { >  %OUTPUT_DIR%\ilogtail_config.json & echo } >> %OUTPUT_DIR%\ilogtail_config.json
 mkdir %OUTPUT_DIR%\config\local
 cd %OUTPUT_DIR%
 dir

@@ -43,7 +43,6 @@ void* __wrap_memcpy(void* dest, const void* src, size_t n) {
 DECLARE_FLAG_STRING(loongcollector_lib_dir);
 DECLARE_FLAG_STRING(loongcollector_config_dir);
 DECLARE_FLAG_STRING(loongcollector_log_dir);
-DECLARE_FLAG_STRING(loongcollector_run_dir);
 DECLARE_FLAG_STRING(loongcollector_data_dir);
 DECLARE_FLAG_BOOL(ilogtail_disable_core);
 DECLARE_FLAG_INT32(max_open_files_limit);
@@ -121,7 +120,6 @@ void do_worker_process() {
     PROCESSDIRFLAG(loongcollector_lib_dir, "ALIYUN_LOONGCOLLECTOR_LIB_DIR", lib);
     PROCESSDIRFLAG(loongcollector_config_dir, "ALIYUN_LOONGCOLLECTOR_CONFIG_DIR", etc);
     PROCESSDIRFLAG(loongcollector_log_dir, "ALIYUN_LOONGCOLLECTOR_LOG_DIR", log);
-    PROCESSDIRFLAG(loongcollector_run_dir, "ALIYUN_LOONGCOLLECTOR_RUN_DIR", run);
     PROCESSDIRFLAG(loongcollector_data_dir, "ALIYUN_LOONGCOLLECTOR_DATA_DIR", data);
 
     Logger::Instance().InitGlobalLoggers();

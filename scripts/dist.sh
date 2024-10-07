@@ -30,7 +30,7 @@ function arch() {
 # intialize variables
 OUT_DIR=${1:-output}
 DIST_DIR=${2:-dist}
-PACKAGE_DIR=${3:-ilogtail-1.2.1}
+PACKAGE_DIR=${3:-loongcollector-1.2.1}
 ROOTDIR=$(cd $(dirname "${BASH_SOURCE[0]}") && cd .. && pwd)
 ARCH=$(arch)
 
@@ -38,16 +38,16 @@ ARCH=$(arch)
 mkdir -p "${ROOTDIR}/${DIST_DIR}/${PACKAGE_DIR}/bin"
 mkdir -p "${ROOTDIR}/${DIST_DIR}/${PACKAGE_DIR}/lib"
 cp LICENSE README.md "${ROOTDIR}/${DIST_DIR}/${PACKAGE_DIR}"
-cp "${ROOTDIR}/${OUT_DIR}/ilogtail" "${ROOTDIR}/${DIST_DIR}/${PACKAGE_DIR}/bin"
+cp "${ROOTDIR}/${OUT_DIR}/loongcollector" "${ROOTDIR}/${DIST_DIR}/${PACKAGE_DIR}/bin"
 cp "${ROOTDIR}/${OUT_DIR}/libPluginAdapter.so" "${ROOTDIR}/${DIST_DIR}/${PACKAGE_DIR}/lib"
 cp "${ROOTDIR}/${OUT_DIR}/libPluginBase.so" "${ROOTDIR}/${DIST_DIR}/${PACKAGE_DIR}/lib"
 cp "${ROOTDIR}/${OUT_DIR}/loongcollector_config.json" "${ROOTDIR}/${DIST_DIR}/${PACKAGE_DIR}/bin"
 cp -a "${ROOTDIR}/${OUT_DIR}/config/local" "${ROOTDIR}/${DIST_DIR}/${PACKAGE_DIR}/etc"
-if file "${ROOTDIR}/${DIST_DIR}/${PACKAGE_DIR}/bin/ilogtail" | grep x86-64; then ./scripts/download_ebpflib.sh "${ROOTDIR}/${DIST_DIR}/${PACKAGE_DIR}/lib"; fi
+if file "${ROOTDIR}/${DIST_DIR}/${PACKAGE_DIR}/bin/loongcollector" | grep x86-64; then ./scripts/download_ebpflib.sh "${ROOTDIR}/${DIST_DIR}/${PACKAGE_DIR}/lib"; fi
 
 # Splitting debug info at build time with -gsplit-dwarf does not work with current gcc version
 # Strip binary to reduce size here
-strip "${ROOTDIR}/${DIST_DIR}/${PACKAGE_DIR}/bin/ilogtail"
+strip "${ROOTDIR}/${DIST_DIR}/${PACKAGE_DIR}/bin/loongcollector"
 strip "${ROOTDIR}/${DIST_DIR}/${PACKAGE_DIR}/lib/libPluginAdapter.so"
 strip "${ROOTDIR}/${DIST_DIR}/${PACKAGE_DIR}/lib/libPluginBase.so"
 

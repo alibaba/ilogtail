@@ -77,7 +77,6 @@ DEFINE_FLAG_BOOL(enable_cgroup, "", true);
 DEFINE_FLAG_STRING(loongcollector_lib_dir, "loongcollector lib dir", "");
 DEFINE_FLAG_STRING(loongcollector_config_dir, "loongcollector config dir", "");
 DEFINE_FLAG_STRING(loongcollector_log_dir, "loongcollector log dir", "");
-DEFINE_FLAG_STRING(loongcollector_run_dir, "loongcollector run dir", "");
 DEFINE_FLAG_STRING(loongcollector_data_dir, "loongcollector data dir", "");
 
 

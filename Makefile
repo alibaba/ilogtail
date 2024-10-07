@@ -68,9 +68,9 @@ GO_BUILD_FLAGS = -v
 LICENSE_COVERAGE_FILE=license_coverage.txt
 OUT_DIR = output
 DIST_DIR = dist
-PACKAGE_DIR = ilogtail-$(VERSION)
+PACKAGE_DIR = loongcollector-$(VERSION)
 EXTERNAL_DIR = external
-DIST_FILE = $(DIST_DIR)/ilogtail-$(VERSION).linux-$(ARCH).tar.gz
+DIST_FILE = $(DIST_DIR)/loongcollector-$(VERSION).linux-$(ARCH).tar.gz
 
 .PHONY: tools
 tools:
@@ -221,7 +221,7 @@ dist: all
 	./scripts/dist.sh "$(OUT_DIR)" "$(DIST_DIR)" "$(PACKAGE_DIR)"
 
 $(DIST_FILE):
-	@echo 'ilogtail-$(VERSION) dist does not exist! Please download or run `make dist` first!'
+	@echo 'loongcollector-$(VERSION) dist does not exist! Please download or run `make dist` first!'
 	@false
 
 .PHONY: docker
