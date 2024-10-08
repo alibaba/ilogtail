@@ -26,6 +26,7 @@ const string METRIC_LABEL_VALUE_RUNNER_NAME_FILE_SERVER = "file_server";
 const string METRIC_LABEL_VALUE_RUNNER_NAME_FLUSHER = "flusher_runner";
 const string METRIC_LABEL_VALUE_RUNNER_NAME_HTTP_SINK = "http_sink";
 const string METRIC_LABEL_VALUE_RUNNER_NAME_PROCESSOR = "processor_runner";
+const string METRIC_LABEL_VALUE_RUNNER_NAME_PROMETHEUS = "prometheus_runner";
 
 // metric keys
 const string METRIC_RUNNER_IN_EVENTS_TOTAL = "runner_in_events_total";
@@ -60,5 +61,12 @@ const string METRIC_RUNNER_FILE_ENABLE_FILE_INCLUDED_BY_MULTI_CONFIGS_FLAG
 const string METRIC_RUNNER_FILE_POLLING_MODIFY_CACHE_SIZE = "runner_polling_modify_cache_size";
 const string METRIC_RUNNER_FILE_POLLING_DIR_CACHE_SIZE = "runner_polling_dir_cache_size";
 const string METRIC_RUNNER_FILE_POLLING_FILE_CACHE_SIZE = "runner_polling_file_cache_size";
+
+/**********************************************************
+ *   prometheus server
+ **********************************************************/
+const std::string METRIC_RUNNER_PROM_REGISTER_STATE = "runner_prom_register_state";
+const std::string METRIC_RUNNER_PROM_REGISTER_RETRY_TOTAL = "runner_prom_register_retry_total";
+const std::string METRIC_RUNNER_PROM_JOB_NUM = "runner_prom_job_num";
 
 } // namespace logtail

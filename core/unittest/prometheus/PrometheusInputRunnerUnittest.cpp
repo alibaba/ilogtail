@@ -63,8 +63,9 @@ void PrometheusInputRunnerUnittest::OnSuccessfulStartAndStop() {
     std::unique_ptr<TargetSubscriberScheduler> scrapeJobPtr = make_unique<TargetSubscriberScheduler>();
     APSARA_TEST_TRUE(scrapeJobPtr->Init(config));
 
+    auto defaultLabels = MetricLabels();
     // update scrapeJob
-    PrometheusInputRunner::GetInstance()->UpdateScrapeInput(std::move(scrapeJobPtr));
+    PrometheusInputRunner::GetInstance()->UpdateScrapeInput(std::move(scrapeJobPtr), defaultLabels);
 
     PrometheusInputRunner::GetInstance()->Init();
     APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.find("test_job")
@@ -104,7 +105,8 @@ void PrometheusInputRunnerUnittest::TestHasRegisteredPlugins() {
 
     std::unique_ptr<TargetSubscriberScheduler> scrapeJobPtr = make_unique<TargetSubscriberScheduler>();
     APSARA_TEST_TRUE(scrapeJobPtr->Init(config));
-    PrometheusInputRunner::GetInstance()->UpdateScrapeInput(std::move(scrapeJobPtr));
+    auto defaultLabels = MetricLabels();
+    PrometheusInputRunner::GetInstance()->UpdateScrapeInput(std::move(scrapeJobPtr), defaultLabels);
     APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->HasRegisteredPlugins());
     PrometheusInputRunner::GetInstance()->Stop();
 }
