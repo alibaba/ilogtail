@@ -54,17 +54,24 @@ DEFINE_FLAG_INT32(check_handler_timeout_interval, "seconds", 180);
 DEFINE_FLAG_INT32(dump_inotify_watcher_interval, "seconds", 180);
 DEFINE_FLAG_INT32(clear_config_match_interval, "seconds", 600);
 DEFINE_FLAG_INT32(check_block_event_interval, "seconds", 1);
-DEFINE_FLAG_STRING(local_event_data_file_name, "local event data file name", "local_event.json");
+DEFINE_FLAG_STRING(local_event_data_file_name, "local event data file name", "");
 DEFINE_FLAG_INT32(read_local_event_interval, "seconds", 60);
 DEFINE_FLAG_BOOL(force_close_file_on_container_stopped,
                  "whether close file handler immediately when associate container stopped",
                  false);
 
 DECLARE_FLAG_BOOL(send_prefer_real_ip);
-DECLARE_FLAG_STRING(loongcollector_config_dir);
 
 
 namespace logtail {
+
+static std::string GetLocalEventDataFileName() {
+    if (STRING_FLAG(local_event_data_file_name).empty()) {
+        return GetAgentConfDir() + "local_event.json";
+    }
+    return STRING_FLAG(local_event_data_file_name);
+}
+
 LogInput::LogInput() : mAccessMainThreadRWL(ReadWriteLock::PREFER_WRITER) {
     mCheckBaseDirInterval = INT32_FLAG(check_base_dir_interval);
     mCheckSymbolicLinkInterval = INT32_FLAG(check_symbolic_link_interval);
@@ -202,15 +209,15 @@ void LogInput::FlowControl() {
 
 bool LogInput::ReadLocalEvents() {
     Json::Value localEventJson; // will contains the root value after parsing.
-    ParseConfResult loadRes = ParseConfig(STRING_FLAG(local_event_data_file_name), localEventJson);
-    LOG_DEBUG(sLogger, ("load local events", STRING_FLAG(local_event_data_file_name))("result", loadRes));
+    ParseConfResult loadRes = ParseConfig(GetLocalEventDataFileName(), localEventJson);
+    LOG_DEBUG(sLogger, ("load local events", GetLocalEventDataFileName())("result", loadRes));
     if (loadRes != CONFIG_OK || !localEventJson.isArray()) {
         return false;
     }
     // set discard old data flag, so that history data will not be dropped.
     BOOL_FLAG(ilogtail_discard_old_data) = false;
     LOG_INFO(sLogger,
-             ("load local events", STRING_FLAG(local_event_data_file_name))("event count", localEventJson.size()));
+             ("load local events", GetLocalEventDataFileName())("event count", localEventJson.size()));
     for (Json::ValueIterator iter = localEventJson.begin(); iter != localEventJson.end(); ++iter) {
         const Json::Value& eventItem = *iter;
         if (!eventItem.isObject()) {
@@ -293,7 +300,7 @@ bool LogInput::ReadLocalEvents() {
 
 
     // after process event, clear the local file
-    FILE* pFile = fopen((STRING_FLAG(loongcollector_config_dir) + STRING_FLAG(local_event_data_file_name)).c_str(), "w");
+    FILE* pFile = fopen((GetLocalEventDataFileName()).c_str(), "w");
     if (pFile != NULL) {
         fclose(pFile);
     }

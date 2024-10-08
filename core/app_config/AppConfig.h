@@ -28,6 +28,11 @@
 
 namespace logtail {
 
+std::string GetAgentLogDir();
+std::string GetAgentDataDir();
+std::string GetAgentConfDir();
+std::string GetAgentRuntimeDir();
+
 template <class T>
 class DoubleBuffer {
 public:
@@ -102,6 +107,7 @@ private:
     // std::string mUserRemoteYamlConfigDirPath;
     bool mLogParseAlarmFlag;
     std::string mProcessExecutionDir;
+    std::string mWorkingDir;
 
     // std::string mContainerMountConfigPath;
     std::string mConfigIP;
@@ -344,6 +350,14 @@ public:
     // const std::string& GetRemoteUserYamlConfigDirPath() const { return mUserRemoteYamlConfigDirPath; }
 
     bool IgnoreDirInodeChanged() const { return mIgnoreDirInodeChanged; }
+
+    void SetProcessExecutionDir(const std::string& dir) { mProcessExecutionDir = dir; }
+
+    const std::string& GetProcessExecutionDir() { return mProcessExecutionDir; }
+
+    void SetWorkingDir(const std::string& dir) { mWorkingDir = dir; }
+
+    const std::string& GetWorkingDir() const { return mWorkingDir; }
 
     // const std::string& GetContainerMountConfigPath() const { return mContainerMountConfigPath; }
 

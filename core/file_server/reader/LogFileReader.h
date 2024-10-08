@@ -623,7 +623,7 @@ private:
     // Validate if the primary checkpoint is ok to use by signature.
     //
     // Signature can be find in three place:
-    // 1. Checkpoint v1: /usr/local/loongcollector/data/logtail_check_point.
+    // 1. Checkpoint v1: /usr/local/loongcollector/data/file_check_point.
     // 2. Checkpoint v2: checkpoint database.
     // 3. Read file data and calculate.
     //

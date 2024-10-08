@@ -58,11 +58,9 @@ DEFINE_FLAG_INT32(max_multi_config_size, "max multi config size", 20);
 DEFINE_FLAG_BOOL(default_accept_multi_config, "", false);
 DEFINE_FLAG_STRING(default_env_tag_keys, "default env key to load tags", "ALIYUN_LOG_ENV_TAGS");
 #if defined(__linux__) || defined(__APPLE__)
-DEFINE_FLAG_STRING(logtail_sys_conf_dir, "store machine-unique-id, user-defined-id, aliuid", "../etc/");
+DEFINE_FLAG_STRING(logtail_sys_conf_dir, "store machine-unique-id, user-defined-id, aliuid", "/etc/ilogtail/");
 #elif defined(_MSC_VER)
-DEFINE_FLAG_STRING(logtail_sys_conf_dir,
-                   "store machine-unique-id, user-defined-id, aliuid",
-                   "..\\conf\\");
+DEFINE_FLAG_STRING(logtail_sys_conf_dir, "store machine-unique-id, user-defined-id, aliuid", "C:\\LogtailData\\");
 #endif
 // const char* DEFAULT_ILOGTAIL_LOCAL_CONFIG_FLAG_VALUE = "user_local_config.json";
 // DEFINE_FLAG_STRING(ilogtail_local_config, "local ilogtail config file", DEFAULT_ILOGTAIL_LOCAL_CONFIG_FLAG_VALUE);
@@ -99,7 +97,6 @@ DEFINE_FLAG_INT32(data_server_port, "", 80);
 // DEFINE_FLAG_STRING(alipay_app_zone, "", "ALIPAY_APP_ZONE");
 // DEFINE_FLAG_STRING(alipay_zone, "", "ALIPAY_ZONE");
 // DEFINE_FLAG_STRING(alipay_zone_env_name, "", "");
-DECLARE_FLAG_STRING(loongcollector_data_dir);
 
 DECLARE_FLAG_STRING(check_point_filename);
 
@@ -161,6 +158,59 @@ DEFINE_FLAG_INT32(loong_collector_operator_service_port, "loong collector operat
 DEFINE_FLAG_STRING(_pod_name_, "agent pod name", "");
 
 namespace logtail {
+
+std::string GetAgentLogDir() {
+    static std::string dir;
+    if (!dir.empty()) {
+        return dir;
+    }
+#if defined(__RUN_LOGTAIL__)
+    dir = GetProcessExecutionDir();
+#else
+    dir = STRING_FLAG(loongcollector_log_dir) + PATH_SEPARATOR;
+#endif
+    return dir;
+}
+
+std::string GetAgentDataDir() {
+    static std::string dir;
+    if (!dir.empty()) {
+        return dir;
+    }
+#if defined(__RUN_LOGTAIL__)
+    dir = GetProcessExecutionDir();
+#else
+    dir = STRING_FLAG(loongcollector_data_dir) + PATH_SEPARATOR;
+#endif
+    return dir;
+}
+
+std::string GetAgentConfDir() {
+    static std::string dir;
+    if (!dir.empty()) {
+        return dir;
+    }
+#if defined(__RUN_LOGTAIL__)
+    dir = GetProcessExecutionDir();
+#else
+    dir = STRING_FLAG(loongcollector_conf_dir) + PATH_SEPARATOR;
+#endif
+    return dir;
+}
+
+std::string GetAgentRuntimeDir() {
+    static std::string dir;
+    if (!dir.empty()) {
+        return dir;
+    }
+#if defined(__RUN_LOGTAIL__)
+    dir = GetProcessExecutionDir();
+#else
+    dir = STRING_FLAG(loongcollector_run_dir) + PATH_SEPARATOR;
+#endif
+    return dir;
+}
+
 AppConfig::AppConfig() {
     LOG_INFO(sLogger, ("AppConfig AppConfig", "success"));
     mSendRandomSleep = BOOL_FLAG(enable_send_tps_smoothing);
@@ -251,7 +301,7 @@ void AppConfig::LoadIncludeConfig(Json::Value& confJson) {
 }
 
 void AppConfig::LoadAppConfig(const std::string& ilogtailConfigFile) {
-    mDockerFilePathConfig = STRING_FLAG(loongcollector_data_dir) + STRING_FLAG(ilogtail_docker_file_path_config);
+    mDockerFilePathConfig = GetAgentDataDir() + STRING_FLAG(ilogtail_docker_file_path_config);
 
     Json::Value confJson(Json::objectValue);
     std::string newSysConfDir;
@@ -287,7 +337,12 @@ void AppConfig::LoadAppConfig(const std::string& ilogtailConfigFile) {
     }
 
     if (newSysConfDir.empty()) {
+#if defined(__RUN_LOGTAIL__)
         newSysConfDir = STRING_FLAG(logtail_sys_conf_dir);
+#else
+        // 说明用户没有配置老的这个自定目录参数， 就使用loongcollector_conf_dir
+        newSysConfDir = STRING_FLAG(loongcollector_conf_dir);
+#endif
     }
     SetLogtailSysConfDir(AbsolutePath(newSysConfDir, mProcessExecutionDir));
 
@@ -598,12 +653,6 @@ void AppConfig::LoadResourceConf(const Json::Value& confJson) {
 
     LoadBooleanParameter(
         BOOL_FLAG(ilogtail_discard_old_data), confJson, "discard_old_data", "ALIYUN_LOGTAIL_DISCARD_OLD_DATA");
-
-    // if (confJson.isMember("container_mount_path") && confJson["container_mount_path"].isString()) {
-    //     mContainerMountConfigPath = confJson["container_mount_path"].asString();
-    // } else {
-    //     mContainerMountConfigPath = GetProcessExecutionDir() + STRING_FLAG(default_container_mount_path);
-    // }
 
     LoadStringParameter(mConfigIP, confJson, "working_ip", "ALIYUN_LOGTAIL_WORKING_IP");
 
@@ -1186,7 +1235,8 @@ void AppConfig::SetLogtailSysConfDir(const std::string& dirPath) {
         int savedErrno = errno;
         LOG_WARNING(sLogger, ("open sys conf dir error", dirPath)("error", strerror(errno)));
         if (savedErrno == EACCES || savedErrno == ENOTDIR || savedErrno == ENOENT) {
-            mLogtailSysConfDir = STRING_FLAG(loongcollector_data_dir);
+            // 如果conf目录获取失败，此处需要直接退出agent吗？
+            mLogtailSysConfDir = GetAgentConfDir();
         }
     } else {
         closedir(dir);
@@ -1194,7 +1244,8 @@ void AppConfig::SetLogtailSysConfDir(const std::string& dirPath) {
 #elif defined(_MSC_VER)
     DWORD ret = GetFileAttributes(mLogtailSysConfDir.c_str());
     if (INVALID_FILE_ATTRIBUTES == ret) {
-        mLogtailSysConfDir = STRING_FLAG(loongcollector_data_dir);
+        // 如果conf目录获取失败，此处需要直接退出agent吗？
+        mLogtailSysConfDir = GetAgentConfDir();
     }
 #endif
 

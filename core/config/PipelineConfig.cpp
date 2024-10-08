@@ -682,43 +682,25 @@ bool PipelineConfig::ReplaceEnvVar() {
     return res;
 }
 
-bool LoadConfigDetailFromFile(const filesystem::path& filepath, Json::Value& detail, bool printLog) {
+bool LoadConfigDetailFromFile(const filesystem::path& filepath, Json::Value& detail) {
     const string& ext = filepath.extension().string();
     if (ext != ".yaml" && ext != ".yml" && ext != ".json") {
-        if (!printLog) {
-            LOG_WARNING(sLogger, ("unsupported config file format", "skip current object")("filepath", filepath));
-        } else {
-            std::cout << "unsupported config file format, skip current object, filepath:" + filepath.string()
-                      << std::endl;
-        }
+        LOG_WARNING(sLogger, ("unsupported config file format", "skip current object")("filepath", filepath));
         return false;
     }
     string content;
     if (!ReadFile(filepath.string(), content)) {
-        if (!printLog) {
-            LOG_WARNING(sLogger, ("failed to open config file", "skip current object")("filepath", filepath));
-        } else {
-            std::cout << "failed to open config file, skip current object, filepath:" + filepath.string() << std::endl;
-        }
+        LOG_WARNING(sLogger, ("failed to open config file", "skip current object")("filepath", filepath));
         return false;
     }
     if (content.empty()) {
-        if (!printLog) {
-            LOG_WARNING(sLogger, ("empty config file", "skip current object")("filepath", filepath));
-        } else {
-            std::cout << "empty config file, skip current object, filepath:" + filepath.string() << std::endl;
-        }
+        LOG_WARNING(sLogger, ("empty config file", "skip current object")("filepath", filepath));
         return false;
     }
     string errorMsg;
     if (!ParseConfigDetail(content, ext, detail, errorMsg)) {
-        if (!printLog) {
-            LOG_WARNING(
-                sLogger,
-                ("config file format error", "skip current object")("error msg", errorMsg)("filepath", filepath));
-        } else {
-            std::cout << "config file format error, skip current object, error msg:" + errorMsg + ", filepath:" + filepath.string() << std::endl;
-        }
+        LOG_WARNING(sLogger,
+                    ("config file format error", "skip current object")("error msg", errorMsg)("filepath", filepath));
         return false;
     }
     return true;

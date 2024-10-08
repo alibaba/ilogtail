@@ -84,7 +84,7 @@ inline bool operator!=(const PipelineConfig& lhs, const PipelineConfig& rhs) {
     return !(lhs == rhs);
 }
 
-bool LoadConfigDetailFromFile(const std::filesystem::path& filepath, Json::Value& detail, bool printLog = false);
+bool LoadConfigDetailFromFile(const std::filesystem::path& filepath, Json::Value& detail);
 bool ParseConfigDetail(const std::string& content,
                        const std::string& extenstion,
                        Json::Value& detail,

@@ -30,15 +30,18 @@ DEFINE_FLAG_INT64(logtail_checkpoint_max_used_time_per_round_in_msec, "500ms", 5
 DEFINE_FLAG_INT32(logtail_checkpoint_expired_threshold_sec, "6 hours", 6 * 60 * 60);
 
 DECLARE_FLAG_INT32(max_exactly_once_concurrency);
-DECLARE_FLAG_STRING(loongcollector_data_dir);
 
 namespace logtail {
 
 namespace detail {
 
     std::string getDatabasePath() {
-        auto fp = boost::filesystem::path(STRING_FLAG(loongcollector_data_dir));
-        return (fp / "checkpoint_v2").string();
+#if defined(__RUN_LOGTAIL__)
+        auto fp = boost::filesystem::path(AppConfig::GetInstance()->GetLogtailSysConfDir());
+#else
+        auto fp = boost::filesystem::path(GetAgentConfDir());
+#endif
+        return (fp / "exactly_once_checkpoint").string();
     }
 
     // Log error locally and send alarm.

@@ -25,8 +25,6 @@
 #include "pipeline/queue/ProcessQueueManager.h"
 #include "file_server/reader/LogFileReader.h"
 
-DECLARE_FLAG_STRING(loongcollector_data_dir);
-
 namespace logtail {
 
 HistoryFileImporter::HistoryFileImporter() {
@@ -53,7 +51,7 @@ void HistoryFileImporter::Run() {
 }
 
 void HistoryFileImporter::LoadCheckPoint() {
-    std::string historyDataPath = STRING_FLAG(loongcollector_data_dir) + "history_file_checkpoint";
+    std::string historyDataPath = GetAgentDataDir() + "history_file_checkpoint";
     FILE* readPtr = fopen(historyDataPath.c_str(), "r");
     if (readPtr != NULL) {
         fclose(readPtr);

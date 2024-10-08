@@ -74,10 +74,6 @@ DEFINE_FLAG_INT32(queue_check_gc_interval_sec, "30s", 30);
 #if defined(__ENTERPRISE__) && defined(__linux__) && !defined(__ANDROID__)
 DEFINE_FLAG_BOOL(enable_cgroup, "", true);
 #endif
-DEFINE_FLAG_STRING(loongcollector_lib_dir, "loongcollector lib dir", "");
-DEFINE_FLAG_STRING(loongcollector_config_dir, "loongcollector config dir", "");
-DEFINE_FLAG_STRING(loongcollector_log_dir, "loongcollector log dir", "");
-DEFINE_FLAG_STRING(loongcollector_data_dir, "loongcollector data dir", "");
 
 
 DECLARE_FLAG_BOOL(send_prefer_real_ip);
@@ -103,6 +99,7 @@ void Application::Init() {
 
     // change working dir to ./${ILOGTAIL_VERSION}/
     string processExecutionDir = GetProcessExecutionDir();
+    AppConfig::GetInstance()->SetProcessExecutionDir(processExecutionDir);
     string newWorkingDir = processExecutionDir + ILOGTAIL_VERSION;
 #ifdef _MSC_VER
     int chdirRst = _chdir(newWorkingDir.c_str());
@@ -111,6 +108,7 @@ void Application::Init() {
 #endif
     if (chdirRst == 0) {
         LOG_INFO(sLogger, ("working dir", newWorkingDir));
+        AppConfig::GetInstance()->SetWorkingDir(newWorkingDir + "/");
     } else {
         // if change error, try change working dir to ./
 #ifdef _MSC_VER
@@ -119,13 +117,17 @@ void Application::Init() {
         chdir(GetProcessExecutionDir().c_str());
 #endif
         LOG_INFO(sLogger, ("working dir", GetProcessExecutionDir()));
+        AppConfig::GetInstance()->SetWorkingDir(GetProcessExecutionDir());
     }
 
     // load loongcollector_config.json
     char* configEnv = getenv(STRING_FLAG(ilogtail_config_env_name).c_str());
     if (configEnv == NULL || strlen(configEnv) == 0) {
-        std::string dir = GetProcessExecutionDir();
-        AppConfig::GetInstance()->LoadAppConfig(dir + STRING_FLAG(ilogtail_config));
+#if defined(__RUN_LOGTAIL__)
+        AppConfig::GetInstance()->LoadAppConfig(STRING_FLAG(ilogtail_config));
+#else
+        AppConfig::GetInstance()->LoadAppConfig(LOONGCOLLECTOR_CONFIG);
+#endif
     } else {
         AppConfig::GetInstance()->LoadAppConfig(configEnv);
     }
@@ -196,7 +198,7 @@ void Application::Init() {
     appInfoJson["os"] = Json::Value(LogFileProfiler::mOsDetail);
     appInfoJson["update_time"] = GetTimeStamp(time(NULL), "%Y-%m-%d %H:%M:%S");
     string appInfo = appInfoJson.toStyledString();
-    OverwriteFile(STRING_FLAG(loongcollector_log_dir) + STRING_FLAG(app_info_file), appInfo);
+    OverwriteFile(GetAgentRuntimeDir() + STRING_FLAG(app_info_file), appInfo);
     LOG_INFO(sLogger, ("app info", appInfo));
 }
 
@@ -214,7 +216,7 @@ void Application::Start() { // GCOVR_EXCL_START
     {
         // add local config dir
         filesystem::path localConfigPath
-            = filesystem::path(STRING_FLAG(loongcollector_config_dir)) / "pipelineconfig" / "local";
+            = filesystem::path(AppConfig::GetInstance()->GetLogtailSysConfDir()) / "pipelineconfig" / "local";
         error_code ec;
         filesystem::create_directories(localConfigPath, ec);
         if (ec) {
@@ -227,7 +229,7 @@ void Application::Start() { // GCOVR_EXCL_START
     {
         // add local config dir
         filesystem::path localConfigPath
-            = filesystem::path(STRING_FLAG(loongcollector_config_dir)) / "instanceconfig" / "local";
+            = filesystem::path(AppConfig::GetInstance()->GetLogtailSysConfDir()) / "instanceconfig" / "local";
         error_code ec;
         filesystem::create_directories(localConfigPath, ec);
         if (ec) {

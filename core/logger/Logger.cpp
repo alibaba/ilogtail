@@ -92,7 +92,7 @@ Logger::Logger() {
                                  INT32_FLAG(logtail_async_logger_thread_num));
     }
 
-    auto execDir = GetLogDir();
+    auto execDir = GetAgentLogDir();
     mInnerLogger.open(execDir + "logger_initialization.log");
     LoadConfig(execDir + "apsara_log_conf.json");
     mInnerLogger.close();
@@ -127,7 +127,7 @@ Logger::logger Logger::CreateLogger(const std::string& loggerName,
     if (!absoluteFilePath.empty() && absoluteFilePath[0] != '/')
 #endif
     {
-        absoluteFilePath = GetLogDir() + absoluteFilePath;
+        absoluteFilePath = GetAgentLogDir() + absoluteFilePath;
     }
     LogMsg("Path of logger named " + loggerName + ": " + absoluteFilePath);
 
@@ -406,9 +406,8 @@ void Logger::LoadDefaultConfig(std::map<std::string, LoggerConfig>& loggerCfgs,
     loggerCfgs.insert({DEFAULT_LOGGER_NAME, LoggerConfig{"AsyncFileSink", level::warn}});
     if (sinkCfgs.find("AsyncFileSink") != sinkCfgs.end())
         return;
-    sinkCfgs.insert(
-        {"AsyncFileSink",
-         SinkConfig{"AsyncFile", 10, 20000000, 300, GetLogDir() + "loongcollector.LOG", "Gzip"}});
+    sinkCfgs.insert({"AsyncFileSink",
+                     SinkConfig{"AsyncFile", 10, 20000000, 300, GetAgentLogDir() + "loongcollector.LOG", "Gzip"}});
 }
 
 void Logger::LoadAllDefaultConfigs(std::map<std::string, LoggerConfig>& loggerCfgs,
@@ -419,7 +418,7 @@ void Logger::LoadAllDefaultConfigs(std::map<std::string, LoggerConfig>& loggerCf
     loggerCfgs.insert({"/apsara/sls/loongcollector/profile", LoggerConfig{"AsyncFileSinkProfile", level::info}});
     loggerCfgs.insert({"/apsara/sls/loongcollector/status", LoggerConfig{"AsyncFileSinkStatus", level::info}});
 
-    std::string dirPath = GetLogDir() + STRING_FLAG(logtail_snapshot_dir);
+    std::string dirPath = GetAgentLogDir() + "snapshot";
     if (!Mkdir(dirPath)) {
         LogMsg(std::string("Create snapshot dir error ") + dirPath + ", error" + ErrnoToString(GetErrno()));
     }

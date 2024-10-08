@@ -103,7 +103,7 @@ bool MinidumpCallbackFunc(const wchar_t* dump_path,
                           MDRawAssertionInfo* assertion,
                           bool succeeded) {
     printf("MinidumpCallbackFunc is called\n");
-    auto trgFilePath = GetDateDir() + STRING_FLAG(crash_stack_file_name);
+    auto trgFilePath = GetAgentDataDir() + STRING_FLAG(crash_stack_file_name);
     if (0 == _access(trgFilePath.c_str(), 0)) {
         if (remove(trgFilePath.c_str()) != 0) {
             printf("Remove existing target file %s failed: %d", trgFilePath.c_str(), errno);
@@ -128,7 +128,7 @@ bool MinidumpCallbackFunc(const wchar_t* dump_path,
 void InitCrashBackTrace() {
 #if defined(__ANDROID__)
 #elif defined(__linux__)
-    g_crashBackTraceFilePtr = fopen((GetDateDir() + STRING_FLAG(crash_stack_file_name)).c_str(), "w");
+    g_crashBackTraceFilePtr = fopen((GetAgentDataDir() + STRING_FLAG(crash_stack_file_name)).c_str(), "w");
     if (g_crashBackTraceFilePtr == NULL) {
         APSARA_LOG_ERROR(sLogger, ("unable to open stack back trace file", strerror(errno)));
         return;
@@ -145,7 +145,7 @@ void InitCrashBackTrace() {
 }
 
 std::string GetCrashBackTrace() {
-    auto stackFilePath = GetDateDir() + STRING_FLAG(crash_stack_file_name);
+    auto stackFilePath = GetAgentDataDir() + STRING_FLAG(crash_stack_file_name);
     FILE* pStackFile = fopen(stackFilePath.c_str(), "rb");
     if (pStackFile == NULL) {
         return "";

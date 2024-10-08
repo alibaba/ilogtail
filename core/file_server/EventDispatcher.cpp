@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "EventDispatcher.h"
+#include "Flags.h"
 #if defined(__linux__)
 #include <fnmatch.h>
 #include <sys/epoll.h>
@@ -85,8 +86,6 @@ DEFINE_FLAG_INT32(checkpoint_find_max_cache_size, "", 100000);
 DEFINE_FLAG_INT32(max_watch_dir_count, "", 100 * 1000);
 DEFINE_FLAG_STRING(inotify_watcher_dirs_dump_filename, "", "inotify_watcher_dirs");
 DEFINE_FLAG_INT32(default_max_inotify_watch_num, "the max allowed inotify watch dir number", 3000);
-
-DECLARE_FLAG_STRING(loongcollector_log_dir);
 
 namespace logtail {
 
@@ -720,7 +719,11 @@ void EventDispatcher::RemoveOneToOneMapEntry(int wd) {
 }
 
 void EventDispatcher::DumpInotifyWatcherDirs() {
-    string filename = STRING_FLAG(loongcollector_log_dir) + STRING_FLAG(inotify_watcher_dirs_dump_filename);
+#if defined(__RUN_LOGTAIL__)
+    string filename = GetAgentRuntimeDir() + STRING_FLAG(inotify_watcher_dirs_dump_filename);
+#else
+    string filename = GetAgentRuntimeDir() + "inotify_watcher_dirs";
+#endif
     FILE* pFile = fopen(filename.c_str(), "w");
     if (pFile == NULL) {
         LOG_WARNING(sLogger, ("open file (dump inotify watcher dirs) failed", filename)("errno", errno));

@@ -98,15 +98,15 @@ DEFINE_FLAG_INT32(multi_config_alarm_interval, "second", 600);
 DEFINE_FLAG_STRING(ilogtail_docker_path_version, "ilogtail docker path config file", "0.1.0");
 DEFINE_FLAG_INT32(max_docker_config_update_times, "max times docker config update in 3 minutes", 10);
 DEFINE_FLAG_INT32(docker_config_update_interval, "interval between docker config updates, seconds", 3);
-DECLARE_FLAG_STRING(loongcollector_config_dir);
 
 namespace logtail {
 
+// 
 ParseConfResult ParseConfig(const std::string& configName, Json::Value& jsonRoot) {
     // Get full path, if it is a relative path, prepend process execution dir.
     std::string fullPath = configName;
     if (IsRelativePath(fullPath)) {
-        fullPath = STRING_FLAG(loongcollector_config_dir) + configName;
+        fullPath = GetProcessExecutionDir() + configName;
     }
 
     ifstream is;

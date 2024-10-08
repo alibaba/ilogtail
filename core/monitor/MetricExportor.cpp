@@ -109,7 +109,7 @@ void MetricExportor::SendToLocalFile(std::string& metricsContent, const std::str
 
     if (!metricsContent.empty()) {
         // 创建输出目录（如果不存在）
-        std::string outputDirectory = GetLogDir() + metricsDirName;
+        std::string outputDirectory = GetAgentLogDir() + metricsDirName;
         Mkdirs(outputDirectory);
 
         std::vector<std::filesystem::path> metricFiles;

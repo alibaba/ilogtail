@@ -15,22 +15,19 @@
 #include "config/provider/ConfigProvider.h"
 
 #include "app_config/AppConfig.h"
-#include "common/Flags.h"
 #include "config/watcher/ConfigWatcher.h"
 
 using namespace std;
-
-DECLARE_FLAG_STRING(loongcollector_config_dir);
 
 namespace logtail {
 
 void ConfigProvider::Init(const string& dir) {
     // default path: /etc/ilogtail/config/${dir}
-    mPipelineSourceDir.assign(STRING_FLAG(loongcollector_config_dir));
+    mPipelineSourceDir.assign(AppConfig::GetInstance()->GetLogtailSysConfDir());
     mPipelineSourceDir /= "pipelineconfig";
     mPipelineSourceDir /= dir;
 
-    mInstanceSourceDir.assign(STRING_FLAG(loongcollector_config_dir));
+    mInstanceSourceDir.assign(AppConfig::GetInstance()->GetLogtailSysConfDir());
     mInstanceSourceDir /= "instanceconfig";
     mInstanceSourceDir /= dir;
 
