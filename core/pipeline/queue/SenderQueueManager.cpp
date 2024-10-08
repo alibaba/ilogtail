@@ -106,14 +106,14 @@ int SenderQueueManager::PushQueue(QueueKey key, unique_ptr<SenderQueueItem>&& it
     return 0;
 }
 
-void SenderQueueManager::GetAllAvailableItems(vector<SenderQueueItem*>& items, bool withLimits) {
+void SenderQueueManager::GetAllAvailableItems(vector<SenderQueueItem*>& items, int32_t itemsCntLimit, bool withLimits) {
     {
         lock_guard<mutex> lock(mQueueMux);
         if (mQueues.empty()) {
             return;
         }
         if (withLimits) {
-            int cntLimitPerQueue = mQueueParam.GetCapacity() * 0.3;
+            int cntLimitPerQueue = std::max((int)(mQueueParam.GetCapacity() * 0.3), (int)(itemsCntLimit/mQueues.size()));
             // must check index before moving iterator
             mSenderQueueBeginIndex = mSenderQueueBeginIndex % mQueues.size();
             // here we set sender queue begin index, let the sender order be different each time
@@ -146,14 +146,11 @@ bool SenderQueueManager::RemoveItem(QueueKey key, SenderQueueItem* item) {
     return ExactlyOnceQueueManager::GetInstance()->RemoveSenderQueueItem(key, item);
 }
 
-void SenderQueueManager::OnSendDone(QueueKey key, bool success) {
+void SenderQueueManager::DecreaseConcurrencyLimiterInSendingCnt(QueueKey key) {
     lock_guard<mutex> lock(mQueueMux);
     auto iter = mQueues.find(key);
     if (iter != mQueues.end()) {
         iter->second.DecreaseSendingCnt();
-        if (success) {
-            iter->second.OnSendingSuccess();
-        }
     }
 }
 

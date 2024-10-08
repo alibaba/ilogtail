@@ -22,9 +22,11 @@
 
 namespace logtail {
 
+enum class LimiterLabel { REGION, PROJECT, LOGSTORE };
+
 class ConcurrencyLimiter {
 public:
-    ConcurrencyLimiter(uint32_t maxConcurrency, uint32_t minConcurrency = 1,  
+    ConcurrencyLimiter(LimiterLabel limiterLabel, uint32_t maxConcurrency, uint32_t minConcurrency = 1,  
         uint32_t maxRetryIntervalSecs = 3600, uint32_t minRetryIntervalSecs = 30, 
         double upRatio = 1.5, double downRatio = 0.5) : 
         mMaxConcurrency(maxConcurrency), mMinConcurrency(minConcurrency), mCurrenctConcurrency(maxConcurrency),
@@ -34,13 +36,16 @@ public:
     bool IsValidToPop();
     void PostPop();
     void OnSendDone();
+    LimiterLabel GetLimiterLabel() {
+        return mLimiterLabel;
+    }
 
     void OnSuccess();
     void OnFail(time_t curTime);
 
-    uint32_t GetLimit() const;
+    uint32_t GetCurrentLimit() const;
 
-    uint32_t GetInterval() const;
+    uint32_t GetCurrentInterval() const;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     void SetLimit(int limit);
@@ -51,7 +56,9 @@ public:
 #endif
 
 private:
-    std::atomic_int mInSendingCnt = 0;
+    std::atomic<uint32_t> mInSendingCnt = 0;
+
+    LimiterLabel mLimiterLabel;
 
     uint32_t mMaxConcurrency = 0;
     uint32_t mMinConcurrency = 0;

@@ -20,13 +20,12 @@ using namespace std;
 
 namespace logtail {
 
-
-uint32_t ConcurrencyLimiter::GetLimit() const { 
+uint32_t ConcurrencyLimiter::GetCurrentLimit() const { 
     lock_guard<mutex> lock(mCurrenctConcurrencyMux);
     return mCurrenctConcurrency; 
 }
 
-uint32_t ConcurrencyLimiter::GetInterval() const { 
+uint32_t ConcurrencyLimiter::GetCurrentInterval() const { 
     lock_guard<mutex> lock(mIntervalMux);
     return mRetryIntervalSecs; 
 }
@@ -49,42 +48,40 @@ bool ConcurrencyLimiter::IsValidToPop() {
     if (mLastSendTime == 0) {
         mLastSendTime = time(nullptr);
     }
-    if (GetLimit() <= mMinConcurrency) {
+    if (GetCurrentLimit() <= mMinConcurrency) {
         time_t curTime = time(nullptr);
-        if (curTime -  mLastSendTime > GetInterval()) {
+        if (curTime -  mLastSendTime > GetCurrentInterval()) {
             mLastSendTime = curTime;
             return true;
         } else {
             return false;
         }
     }
-    if (static_cast<int>(GetLimit()) > mInSendingCnt.load()) {
+    if (GetCurrentLimit() > mInSendingCnt.load()) {
         return true;
     } 
     return false;
 }
 
 void ConcurrencyLimiter::PostPop() {
-    ++ mInSendingCnt;
+    ++mInSendingCnt;
 }
 
 void ConcurrencyLimiter::OnSendDone() {
-    -- mInSendingCnt;
+    --mInSendingCnt;
 }
 
 void ConcurrencyLimiter::OnSuccess() {
     {
-        lock_guard<mutex> lock(mCurrenctConcurrencyMux);
-        ++ mCurrenctConcurrency;
+        lock_guard<mutex> lock(mCurrenctConcurrencyMux);        
         if (mCurrenctConcurrency != mMaxConcurrency) {
-            mCurrenctConcurrency = min(mMaxConcurrency, mCurrenctConcurrency);
+            ++mCurrenctConcurrency;
         }
     }
     {
+        // 只要成功，interval就设置成最小值
         lock_guard<mutex> lock(mIntervalMux);
-        if (mRetryIntervalSecs != mMinRetryIntervalSecs) {
-            mRetryIntervalSecs = max(mMinRetryIntervalSecs, static_cast<uint32_t>(mRetryIntervalSecs * mDownRatio));
-        }
+        mRetryIntervalSecs = mMinRetryIntervalSecs;
     }
 }
 
@@ -97,8 +94,10 @@ void ConcurrencyLimiter::OnFail(time_t curTime) {
     }
     {
         lock_guard<mutex> lock(mIntervalMux);
-        if (mRetryIntervalSecs != mMaxRetryIntervalSecs) {
-            mRetryIntervalSecs = min(mMaxRetryIntervalSecs, static_cast<uint32_t>(mRetryIntervalSecs * mUpRatio));
+        if (GetCurrentLimit() <= mMinConcurrency) {
+            if (mRetryIntervalSecs != mMaxRetryIntervalSecs) {
+                mRetryIntervalSecs = min(mMaxRetryIntervalSecs, static_cast<uint32_t>(mRetryIntervalSecs * mUpRatio));
+            }
         }
     }
 }

@@ -185,6 +185,7 @@ void ExactlyOnceQueueManager::GetAllAvailableSenderQueueItems(std::vector<Sender
     lock_guard<mutex> lock(mSenderQueueMux);
     for (auto iter = mSenderQueues.begin(); iter != mSenderQueues.end(); ++iter) {
         if (withLimits) {
+            // TODO:: taiye
             int cntLimitPerQueue = mProcessQueueParam.GetCapacity() * 0.3;
             iter->second.GetLimitAvailableItems(item, cntLimitPerQueue);
         } else {

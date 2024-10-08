@@ -101,7 +101,7 @@ void FlusherRunner::Run() {
         auto curTime = chrono::system_clock::now();
 
         vector<SenderQueueItem*> items;
-        SenderQueueManager::GetInstance()->GetAllAvailableItems(items, !Application::GetInstance()->IsExiting());
+        SenderQueueManager::GetInstance()->GetAllAvailableItems(items,  AppConfig::GetInstance()->GetSendRequestConcurrency(), !Application::GetInstance()->IsExiting());
         if (items.empty()) {
             SenderQueueManager::GetInstance()->Wait(1000);
         } else {

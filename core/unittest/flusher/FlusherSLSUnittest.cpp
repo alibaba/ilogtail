@@ -720,7 +720,7 @@ void FlusherSLSUnittest::TestSend() {
             PipelineEventGroup group(make_shared<SourceBuffer>());
             APSARA_TEST_TRUE(flusher.Send(std::move(group)));
             vector<SenderQueueItem*> res;
-            SenderQueueManager::GetInstance()->GetAllAvailableItems(res);
+            SenderQueueManager::GetInstance()->GetAllAvailableItems(res, 80);
             APSARA_TEST_TRUE(res.empty());
         }
         {
@@ -739,7 +739,7 @@ void FlusherSLSUnittest::TestSend() {
 
             APSARA_TEST_TRUE(flusher.Send(std::move(group)));
             vector<SenderQueueItem*> res;
-            SenderQueueManager::GetInstance()->GetAllAvailableItems(res);
+            SenderQueueManager::GetInstance()->GetAllAvailableItems(res, 80);
             APSARA_TEST_EQUAL(1U, res.size());
             auto item = static_cast<SLSSenderQueueItem*>(res[0]);
             APSARA_TEST_EQUAL(RawDataType::EVENT_GROUP, item->mType);
@@ -833,7 +833,7 @@ void FlusherSLSUnittest::TestSend() {
 
         APSARA_TEST_TRUE(flusher.Send(std::move(group)));
         vector<SenderQueueItem*> res;
-        SenderQueueManager::GetInstance()->GetAllAvailableItems(res);
+        SenderQueueManager::GetInstance()->GetAllAvailableItems(res, 80);
         APSARA_TEST_EQUAL(1U, res.size());
         auto item = static_cast<SLSSenderQueueItem*>(res[0]);
         APSARA_TEST_EQUAL(RawDataType::EVENT_GROUP_LIST, item->mType);
@@ -882,7 +882,7 @@ void FlusherSLSUnittest::TestSend() {
         SenderQueueManager::GetInstance()->RemoveItem(item->mQueueKey, item);
         flusher.FlushAll();
         res.clear();
-        SenderQueueManager::GetInstance()->GetAllAvailableItems(res);
+        SenderQueueManager::GetInstance()->GetAllAvailableItems(res, 80);
         for (auto& tmp : res) {
             SenderQueueManager::GetInstance()->RemoveItem(tmp->mQueueKey, tmp);
         }
@@ -925,11 +925,11 @@ void FlusherSLSUnittest::TestFlush() {
 
     flusher.Flush(batchKey);
     vector<SenderQueueItem*> res;
-    SenderQueueManager::GetInstance()->GetAllAvailableItems(res);
+    SenderQueueManager::GetInstance()->GetAllAvailableItems(res, 80);
     APSARA_TEST_EQUAL(0U, res.size());
 
     flusher.Flush(0);
-    SenderQueueManager::GetInstance()->GetAllAvailableItems(res);
+    SenderQueueManager::GetInstance()->GetAllAvailableItems(res, 80);
     APSARA_TEST_EQUAL(1U, res.size());
 }
 
@@ -967,7 +967,7 @@ void FlusherSLSUnittest::TestFlushAll() {
 
     flusher.FlushAll();
     vector<SenderQueueItem*> res;
-    SenderQueueManager::GetInstance()->GetAllAvailableItems(res);
+    SenderQueueManager::GetInstance()->GetAllAvailableItems(res, 80);
     APSARA_TEST_EQUAL(1U, res.size());
 }
 
@@ -1005,7 +1005,7 @@ void FlusherSLSUnittest::OnGoPipelineSend() {
             APSARA_TEST_TRUE(flusher.Send("content", "shardhash_key", "other_logstore"));
 
             vector<SenderQueueItem*> res;
-            SenderQueueManager::GetInstance()->GetAllAvailableItems(res);
+            SenderQueueManager::GetInstance()->GetAllAvailableItems(res, 80);
 
             APSARA_TEST_EQUAL(1U, res.size());
             auto item = static_cast<SLSSenderQueueItem*>(res[0]);
@@ -1027,7 +1027,7 @@ void FlusherSLSUnittest::OnGoPipelineSend() {
             APSARA_TEST_TRUE(flusher.Send("content", "shardhash_key", ""));
 
             vector<SenderQueueItem*> res;
-            SenderQueueManager::GetInstance()->GetAllAvailableItems(res);
+            SenderQueueManager::GetInstance()->GetAllAvailableItems(res, 80);
 
             APSARA_TEST_EQUAL(1U, res.size());
             auto item = static_cast<SLSSenderQueueItem*>(res[0]);
@@ -1049,7 +1049,7 @@ void FlusherSLSUnittest::OnGoPipelineSend() {
         APSARA_TEST_NOT_EQUAL(nullptr, SenderQueueManager::GetInstance()->GetQueue(key));
 
         vector<SenderQueueItem*> res;
-        SenderQueueManager::GetInstance()->GetAllAvailableItems(res);
+        SenderQueueManager::GetInstance()->GetAllAvailableItems(res, 80);
 
         APSARA_TEST_EQUAL(1U, res.size());
         auto item = static_cast<SLSSenderQueueItem*>(res[0]);

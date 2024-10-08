@@ -46,6 +46,14 @@ private:
     size_t mRead = 0;
     size_t mSize = 0;
 
+
+    CounterPtr mGetTimesCnt;
+    CounterPtr mGetItemsCnt;
+    CounterPtr mLimitByRegionLimiterCnt;
+    CounterPtr mLimitByProjectLimiterCnt;
+    CounterPtr mLimitByLogstoreLimiterCnt;
+    CounterPtr mLimitByReteLimiterCnt;
+
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class SenderQueueUnittest;
     friend class SenderQueueManagerUnittest;

@@ -39,7 +39,7 @@ public:
 protected:
     static void SetUpTestCase() {
         sManager = SenderQueueManager::GetInstance();
-        sConcurrencyLimiter = make_shared<ConcurrencyLimiter>(80);
+        sConcurrencyLimiter = make_shared<ConcurrencyLimiter>(LimiterLabel::REGION, 80);
         sManager->mQueueParam.mCapacity = 2;
         sManager->mQueueParam.mLowWatermark = 1;
         sManager->mQueueParam.mHighWatermark = 3;
@@ -62,7 +62,7 @@ protected:
         sManager->Clear();
         ExactlyOnceQueueManager::GetInstance()->Clear();
         QueueKeyManager::GetInstance()->Clear();
-        sConcurrencyLimiter = make_shared<ConcurrencyLimiter>(80);
+        sConcurrencyLimiter = make_shared<ConcurrencyLimiter>(LimiterLabel::REGION, 80);
     }
 
 private:
@@ -106,7 +106,7 @@ void SenderQueueManagerUnittest::TestCreateQueue() {
     }
     {
         // resued queue
-        shared_ptr<ConcurrencyLimiter> newLimiter = make_shared<ConcurrencyLimiter>(80);
+        shared_ptr<ConcurrencyLimiter> newLimiter = make_shared<ConcurrencyLimiter>(LimiterLabel::REGION, 80);
         uint32_t maxRate = 10U;
         APSARA_TEST_TRUE(
             sManager->CreateQueue(0, sFlusherId, sCtx, vector<shared_ptr<ConcurrencyLimiter>>{newLimiter}, maxRate));
@@ -211,7 +211,7 @@ void SenderQueueManagerUnittest::TestGetAllAvailableItems() {
     {
         // no limits
         vector<SenderQueueItem*> items;
-        sManager->GetAllAvailableItems(items, false);
+        sManager->GetAllAvailableItems(items, 80, false);
         APSARA_TEST_EQUAL(4U, items.size());
         for (auto& item : items) {
             item->mStatus.Set(SendingStatus::IDLE);
@@ -223,7 +223,7 @@ void SenderQueueManagerUnittest::TestGetAllAvailableItems() {
         regionConcurrencyLimiter->SetLimit(3);
         regionConcurrencyLimiter->SetSendingCount(2);
         vector<SenderQueueItem*> items;
-        sManager->GetAllAvailableItems(items);
+        sManager->GetAllAvailableItems(items, 80);
         APSARA_TEST_EQUAL(1U, items.size());
         APSARA_TEST_EQUAL(3U, regionConcurrencyLimiter->GetSendingCount());
     }

@@ -113,8 +113,8 @@ unordered_map<string, weak_ptr<ConcurrencyLimiter>> FlusherSLS::sRegionConcurren
 unordered_map<string, weak_ptr<ConcurrencyLimiter>> FlusherSLS::sLogstoreConcurrencyLimiterMap;
 
 
-shared_ptr<ConcurrencyLimiter> GetConcurrencyLimiter() {
-    return make_shared<ConcurrencyLimiter>(AppConfig::GetInstance()->GetSendRequestConcurrency(), 1, AppConfig::GetInstance()->GetSendRequestConcurrency());
+shared_ptr<ConcurrencyLimiter> GetConcurrencyLimiter(LimiterLabel limiterLabel) {
+    return make_shared<ConcurrencyLimiter>(limiterLabel, AppConfig::GetInstance()->GetSendRequestConcurrency(), 1, AppConfig::GetInstance()->GetSendRequestConcurrency());
 }
 
 shared_ptr<ConcurrencyLimiter> FlusherSLS::GetLogstoreConcurrencyLimiter(const std::string& project, const std::string& logstore) {
@@ -123,12 +123,12 @@ shared_ptr<ConcurrencyLimiter> FlusherSLS::GetLogstoreConcurrencyLimiter(const s
 
     auto iter = sLogstoreConcurrencyLimiterMap.find(key);
     if (iter == sLogstoreConcurrencyLimiterMap.end()) {
-        auto limiter = GetConcurrencyLimiter();
+        auto limiter = GetConcurrencyLimiter(LimiterLabel::LOGSTORE);
         sLogstoreConcurrencyLimiterMap.try_emplace(key, limiter);
         return limiter;
     }
     if (iter->second.expired()) {
-        auto limiter = GetConcurrencyLimiter();
+        auto limiter = GetConcurrencyLimiter(LimiterLabel::LOGSTORE);
         iter->second = limiter;
         return limiter;
     }
@@ -139,12 +139,12 @@ shared_ptr<ConcurrencyLimiter> FlusherSLS::GetProjectConcurrencyLimiter(const st
     lock_guard<mutex> lock(sMux);
     auto iter = sProjectConcurrencyLimiterMap.find(project);
     if (iter == sProjectConcurrencyLimiterMap.end()) {
-        auto limiter = GetConcurrencyLimiter();
+        auto limiter = GetConcurrencyLimiter(LimiterLabel::PROJECT);
         sProjectConcurrencyLimiterMap.try_emplace(project, limiter);
         return limiter;
     }
     if (iter->second.expired()) {
-        auto limiter = GetConcurrencyLimiter();
+        auto limiter = GetConcurrencyLimiter(LimiterLabel::PROJECT);
         iter->second = limiter;
         return limiter;
     }
@@ -155,12 +155,12 @@ shared_ptr<ConcurrencyLimiter> FlusherSLS::GetRegionConcurrencyLimiter(const str
     lock_guard<mutex> lock(sMux);
     auto iter = sRegionConcurrencyLimiterMap.find(region);
     if (iter == sRegionConcurrencyLimiterMap.end()) {
-        auto limiter = GetConcurrencyLimiter();
+        auto limiter = GetConcurrencyLimiter(LimiterLabel::REGION);
         sRegionConcurrencyLimiterMap.try_emplace(region, limiter);
         return limiter;
     }
     if (iter->second.expired()) {
-        auto limiter = GetConcurrencyLimiter();
+        auto limiter = GetConcurrencyLimiter(LimiterLabel::REGION);
         iter->second = limiter;
         return limiter;
     }
@@ -659,7 +659,10 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
                       ToString(chrono::duration_cast<chrono::milliseconds>(curSystemTime - item->mEnqueTime).count())
                           + "ms")("try cnt", data->mTryCnt)("endpoint", data->mCurrentEndpoint)("is profile data",
                                                                                                 isProfileData));
-        SenderQueueManager::GetInstance()->OnSendDone(item->mQueueKey, true);
+        GetRegionConcurrencyLimiter(mRegion)->OnSuccess();
+        GetLogstoreConcurrencyLimiter(mProject, mLogstore)->OnSuccess();
+        GetLogstoreConcurrencyLimiter(mProject, mLogstore)->OnSuccess();                                                                                       
+        SenderQueueManager::GetInstance()->DecreaseConcurrencyLimiterInSendingCnt(item->mQueueKey);
         DealSenderQueueItemAfterSend(item, false);
     } else {
         OperationOnFail operation;
@@ -817,7 +820,7 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
                     LOG_WARNING(sLogger, LOG_PATTERN);
                     data->mLastLogWarningTime = curTime;
                 }
-                SenderQueueManager::GetInstance()->OnSendDone(item->mQueueKey, false);
+                SenderQueueManager::GetInstance()->DecreaseConcurrencyLimiterInSendingCnt(item->mQueueKey);
                 DealSenderQueueItemAfterSend(item, true);
                 break;
             case OperationOnFail::DISCARD:
@@ -835,7 +838,7 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
                         data->mLogstore,
                         mRegion);
                 }
-                SenderQueueManager::GetInstance()->OnSendDone(item->mQueueKey, false);
+                SenderQueueManager::GetInstance()->DecreaseConcurrencyLimiterInSendingCnt(item->mQueueKey);
                 DealSenderQueueItemAfterSend(item, false);
                 break;
         }

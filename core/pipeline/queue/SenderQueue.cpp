@@ -24,6 +24,13 @@ SenderQueue::SenderQueue(
     size_t cap, size_t low, size_t high, QueueKey key, const string& flusherId, const PipelineContext& ctx)
     : QueueInterface(key, cap, ctx), BoundedSenderQueueInterface(cap, low, high, key, flusherId, ctx) {
     mQueue.resize(cap);
+    // TODO:: taiye
+    mGetTimesCnt = mMetricsRecordRef.CreateCounter("");
+    mGetItemsCnt = mMetricsRecordRef.CreateCounter("");
+    mLimitByRegionLimiterCnt = mMetricsRecordRef.CreateCounter("");
+    mLimitByProjectLimiterCnt = mMetricsRecordRef.CreateCounter("");
+    mLimitByLogstoreLimiterCnt = mMetricsRecordRef.CreateCounter("");
+    mLimitByReteLimiterCnt = mMetricsRecordRef.CreateCounter(""); 
     WriteMetrics::GetInstance()->CommitMetricsRecordRef(mMetricsRecordRef);
 }
 
@@ -109,6 +116,7 @@ bool SenderQueue::Remove(SenderQueueItem* item) {
 
 
 void SenderQueue::GetLimitAvailableItems(vector<SenderQueueItem*>& items, int32_t limit) {
+    mGetTimesCnt->Add(1);
     if (Empty()) {
         return;
     }
@@ -118,11 +126,26 @@ void SenderQueue::GetLimitAvailableItems(vector<SenderQueueItem*>& items, int32_
         if (item == nullptr) {
             continue;
         }
+        mGetItemsCnt->Add(1);
         if (mRateLimiter && !mRateLimiter->IsValidToPop()) {
+            mLimitByReteLimiterCnt->Add(1);
             return;
         }
         for (auto& limiter : mConcurrencyLimiters) {
             if (!limiter->IsValidToPop()) {
+                switch (limiter->GetLimiterLabel()) {
+                    case LimiterLabel::REGION:
+                        mLimitByRegionLimiterCnt->Add(1);
+                        break;
+                    case LimiterLabel::PROJECT:
+                        mLimitByProjectLimiterCnt->Add(1);
+                        break;
+                    case LimiterLabel::LOGSTORE:
+                        mLimitByLogstoreLimiterCnt->Add(1);
+                        break;
+                    default:
+                        break;
+                }
                 return;
             }
         }
@@ -138,9 +161,8 @@ void SenderQueue::GetLimitAvailableItems(vector<SenderQueueItem*>& items, int32_
             if (mRateLimiter) {
                 mRateLimiter->PostPop(item->mRawSize);
             }
-            
         }
-        ++ itemsCnt;
+        ++itemsCnt;
         if (itemsCnt >= limit) {
             return;
         }
