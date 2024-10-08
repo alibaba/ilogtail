@@ -61,7 +61,7 @@ func CreateLogEventByArray(t time.Time, enableTimestampNano bool, columns []stri
 	return logEvent, nil
 }
 
-func CreateLogEventByRawLogLegacyRawLog(log *protocol.Log) (*protocol.LogEvent, error) {
+func CreateLogEventByLegacyRawLog(log *protocol.Log) (*protocol.LogEvent, error) {
 	logEvent := LogEventPool.Get().(*protocol.LogEvent)
 	logEvent.Timestamp = uint64(log.GetTime())*1e9 + uint64(log.GetTimeNs())
 	logEvent.Contents = make([]*protocol.LogEvent_Content, 0, len(log.Contents))
@@ -78,7 +78,7 @@ func CreateLogEventByRawLogLegacyRawLog(log *protocol.Log) (*protocol.LogEvent, 
 	return logEvent, nil
 }
 
-func CreateLogEventByRawLog(log *models.Log) (*protocol.LogEvent, error) {
+func TransferLogEventToPB(log *models.Log) (*protocol.LogEvent, error) {
 	logEvent := LogEventPool.Get().(*protocol.LogEvent)
 	logEvent.Timestamp = log.GetTimestamp()
 	logEvent.Contents = make([]*protocol.LogEvent_Content, 0, log.Contents.Len())
@@ -95,7 +95,7 @@ func CreateLogEventByRawLog(log *models.Log) (*protocol.LogEvent, error) {
 	return logEvent, nil
 }
 
-func CreateMetricEventByRawMetric(metric *models.Metric) (*protocol.MetricEvent, error) {
+func TransferMetricEventToPB(metric *models.Metric) (*protocol.MetricEvent, error) {
 	var metricEvent protocol.MetricEvent
 	metricEvent.Timestamp = metric.GetTimestamp()
 	metricEvent.Name = util.ZeroCopyStringToBytes(metric.GetName())
@@ -111,7 +111,7 @@ func CreateMetricEventByRawMetric(metric *models.Metric) (*protocol.MetricEvent,
 	return &metricEvent, nil
 }
 
-func CreateSpanEventByRawSpan(span *models.Span) (*protocol.SpanEvent, error) {
+func TransferSpanEventToPB(span *models.Span) (*protocol.SpanEvent, error) {
 	var spanEvent protocol.SpanEvent
 	spanEvent.Timestamp = span.GetTimestamp()
 	spanEvent.TraceID = util.ZeroCopyStringToBytes(span.GetTraceID())
@@ -155,7 +155,7 @@ func CreateSpanEventByRawSpan(span *models.Span) (*protocol.SpanEvent, error) {
 	return &spanEvent, nil
 }
 
-func CreatePipelineEventGroupLegacyRawLog(logEvents []*protocol.LogEvent, configTag map[string]string, logTags map[string]string, ctx map[string]interface{}) (*protocol.PipelineEventGroup, error) {
+func CreatePipelineEventGroupByLegacyRawLog(logEvents []*protocol.LogEvent, configTag map[string]string, logTags map[string]string, ctx map[string]interface{}) (*protocol.PipelineEventGroup, error) {
 	var pipelineEventGroup protocol.PipelineEventGroup
 	pipelineEventGroup.PipelineEvents = &protocol.PipelineEventGroup_Logs{Logs: &protocol.PipelineEventGroup_LogEvents{Events: logEvents}}
 	pipelineEventGroup.Tags = make(map[string][]byte, len(configTag)+len(logTags))
@@ -174,7 +174,7 @@ func CreatePipelineEventGroupLegacyRawLog(logEvents []*protocol.LogEvent, config
 	return &pipelineEventGroup, nil
 }
 
-func CreatePipelineEventGroup(groupInfo *models.GroupInfo, events []models.PipelineEvent) (*protocol.PipelineEventGroup, error) {
+func TransferPipelineEventGroupToPB(groupInfo *models.GroupInfo, events []models.PipelineEvent) (*protocol.PipelineEventGroup, error) {
 	var pipelineEventGroup protocol.PipelineEventGroup
 	if len(events) == 0 {
 		return nil, fmt.Errorf("events is empty")
@@ -186,7 +186,7 @@ func CreatePipelineEventGroup(groupInfo *models.GroupInfo, events []models.Pipel
 		logEvents := make([]*protocol.LogEvent, 0, len(events))
 		for _, event := range events {
 			if logSrc, ok := event.(*models.Log); ok {
-				logDst, _ := CreateLogEventByRawLog(logSrc)
+				logDst, _ := TransferLogEventToPB(logSrc)
 				logEvents = append(logEvents, logDst)
 			}
 		}
@@ -195,7 +195,7 @@ func CreatePipelineEventGroup(groupInfo *models.GroupInfo, events []models.Pipel
 		metricEvents := make([]*protocol.MetricEvent, 0, len(events))
 		for _, event := range events {
 			if metricSrc, ok := event.(*models.Metric); ok {
-				metricDst, _ := CreateMetricEventByRawMetric(metricSrc)
+				metricDst, _ := TransferMetricEventToPB(metricSrc)
 				metricEvents = append(metricEvents, metricDst)
 			}
 		}
@@ -204,7 +204,7 @@ func CreatePipelineEventGroup(groupInfo *models.GroupInfo, events []models.Pipel
 		spanEvents := make([]*protocol.SpanEvent, 0, len(events))
 		for _, event := range events {
 			if spanSrc, ok := event.(*models.Span); ok {
-				spanDst, _ := CreateSpanEventByRawSpan(spanSrc)
+				spanDst, _ := TransferSpanEventToPB(spanSrc)
 				spanEvents = append(spanEvents, spanDst)
 			}
 		}
