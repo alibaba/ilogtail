@@ -609,7 +609,7 @@ void FlusherSLSUnittest::TestSend() {
 
             APSARA_TEST_TRUE(flusher.Send(std::move(group)));
             vector<SenderQueueItem*> res;
-            ExactlyOnceQueueManager::GetInstance()->GetAllAvailableSenderQueueItems(res);
+            ExactlyOnceQueueManager::GetInstance()->GetAllAvailableSenderQueueItems(res, 80);
             APSARA_TEST_EQUAL(1U, res.size());
             auto item = static_cast<SLSSenderQueueItem*>(res[0]);
             APSARA_TEST_EQUAL(RawDataType::EVENT_GROUP, item->mType);
@@ -663,7 +663,7 @@ void FlusherSLSUnittest::TestSend() {
 
             APSARA_TEST_TRUE(flusher.Send(std::move(group)));
             vector<SenderQueueItem*> res;
-            ExactlyOnceQueueManager::GetInstance()->GetAllAvailableSenderQueueItems(res);
+            ExactlyOnceQueueManager::GetInstance()->GetAllAvailableSenderQueueItems(res, 80);
             APSARA_TEST_EQUAL(1U, res.size());
             auto item = static_cast<SLSSenderQueueItem*>(res[0]);
             APSARA_TEST_EQUAL(RawDataType::EVENT_GROUP, item->mType);

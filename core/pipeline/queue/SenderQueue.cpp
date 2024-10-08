@@ -25,13 +25,13 @@ SenderQueue::SenderQueue(
     : QueueInterface(key, cap, ctx), BoundedSenderQueueInterface(cap, low, high, key, flusherId, ctx) {
     mQueue.resize(cap);
     // TODO:: taiye
-    mGetTimesCnt = mMetricsRecordRef.CreateCounter("");
-    mGetItemsCnt = mMetricsRecordRef.CreateCounter("");
-    mLimitByRegionLimiterCnt = mMetricsRecordRef.CreateCounter("");
-    mLimitByProjectLimiterCnt = mMetricsRecordRef.CreateCounter("");
-    mLimitByLogstoreLimiterCnt = mMetricsRecordRef.CreateCounter("");
-    mLimitByReteLimiterCnt = mMetricsRecordRef.CreateCounter(""); 
-    WriteMetrics::GetInstance()->CommitMetricsRecordRef(mMetricsRecordRef);
+    mGetTimesCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_QUEUE_GET_ITEMS_TIMES_TOTAL);
+    mGetItemsCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_QUEUE_GET_ITEMS_TOTAL);
+    mLimitByRegionLimiterCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_QUEUE_LIMIT_BY_REGION_LIMITER_TOTAL);
+    mLimitByProjectLimiterCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_QUEUE_LIMIT_BY_PROJECT_LIMITER_TOTAL);
+    mLimitByLogstoreLimiterCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_QUEUE_LIMIT_BY_LOGTORE_LIMITER_TOTAL);
+    mLimitByReteLimiterCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_QUEUE_LIMIT_BY_RATE_LIMITER_TOTAL); 
+    WriteMetrics::GetInstance()->CommitMetricsRecordRef(mMetricsRecordRef);    
 }
 
 bool SenderQueue::Push(unique_ptr<SenderQueueItem>&& item) {

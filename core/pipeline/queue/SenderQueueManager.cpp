@@ -132,7 +132,7 @@ void SenderQueueManager::GetAllAvailableItems(vector<SenderQueueItem*>& items, i
             }
         }
     }
-    ExactlyOnceQueueManager::GetInstance()->GetAllAvailableSenderQueueItems(items, withLimits);
+    ExactlyOnceQueueManager::GetInstance()->GetAllAvailableSenderQueueItems(items, itemsCntLimit, withLimits);
 }
 
 bool SenderQueueManager::RemoveItem(QueueKey key, SenderQueueItem* item) {

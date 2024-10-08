@@ -122,9 +122,17 @@ extern const std::string METRIC_PLUGIN_UNMATCHED_EVENTS_TOTAL;
 extern const std::string METRIC_PLUGIN_PARSE_STDERR_TOTAL;
 extern const std::string METRIC_PLUGIN_PARSE_STDOUT_TOTAL;
 
+/**********************************************************
+ *   flusher_sls
+ **********************************************************/
+extern const std::string METRIC_PLUGIN_PUSH_HTTP_TOTAL;
+extern const std::string METRIC_PLUGIN_HTTP_SUCCESS_TOTAL;
+extern const std::string METRIC_PLUGIN_HTTP_FAIL_TOTAL;
+
 //////////////////////////////////////////////////////////////////////////
 // component
 //////////////////////////////////////////////////////////////////////////
+
 
 // label keys
 extern const std::string METRIC_LABEL_KEY_COMPONENT_NAME;
@@ -169,6 +177,14 @@ extern const std::string METRIC_COMPONENT_QUEUE_VALID_TO_PUSH_FLAG;
 extern const std::string METRIC_COMPONENT_QUEUE_EXTRA_BUFFER_SIZE;
 extern const std::string METRIC_COMPONENT_QUEUE_EXTRA_BUFFER_SIZE_BYTES;
 extern const std::string METRIC_COMPONENT_QUEUE_DISCARDED_EVENTS_TOTAL;
+
+extern const std::string METRIC_COMPONENT_QUEUE_GET_ITEMS_TIMES_TOTAL;
+extern const std::string METRIC_COMPONENT_QUEUE_GET_ITEMS_TOTAL;
+extern const std::string METRIC_COMPONENT_QUEUE_LIMIT_BY_REGION_LIMITER_TOTAL;
+extern const std::string METRIC_COMPONENT_QUEUE_LIMIT_BY_PROJECT_LIMITER_TOTAL;
+extern const std::string METRIC_COMPONENT_QUEUE_LIMIT_BY_LOGTORE_LIMITER_TOTAL;
+extern const std::string METRIC_COMPONENT_QUEUE_LIMIT_BY_RATE_LIMITER_TOTAL;
+
 
 //////////////////////////////////////////////////////////////////////////
 // runner

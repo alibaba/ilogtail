@@ -77,4 +77,11 @@ const string METRIC_PLUGIN_UNMATCHED_EVENTS_TOTAL = "plugin_unmatched_events_tot
 const string METRIC_PLUGIN_PARSE_STDERR_TOTAL = "plugin_parse_stderr_total";
 const string METRIC_PLUGIN_PARSE_STDOUT_TOTAL = "plugin_parse_stdout_total";
 
+/**********************************************************
+ *   flusher_sls
+ **********************************************************/
+const string METRIC_PLUGIN_PUSH_HTTP_TOTAL = "plugin_push_http_total";
+const string METRIC_PLUGIN_HTTP_SUCCESS_TOTAL = "plugin_http_success_total";
+const string METRIC_PLUGIN_HTTP_FAIL_TOTAL = "plugin_http_fail_total";
+
 } // namespace logtail

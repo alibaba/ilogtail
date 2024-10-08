@@ -529,11 +529,9 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
 
     GenerateGoPlugin(config, optionalGoPipeline);
 
-
-    // TODO:taiye
-    mPushHttpCnt = GetMetricsRecordRef().CreateCounter("");
-    mSuccessCnt = GetMetricsRecordRef().CreateCounter("");
-    mFailCnt = GetMetricsRecordRef().CreateCounter("");
+    mPushHttpCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_PUSH_HTTP_TOTAL);
+    mSuccessCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_HTTP_SUCCESS_TOTAL);
+    mFailCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_HTTP_FAIL_TOTAL);
 
     return true;
 }
