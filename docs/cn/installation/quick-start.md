@@ -12,7 +12,7 @@
 
 2. 对iLogtail进行配置
 
-    部署目录中`loongcollector_config.json`是iLogtail的系统参数配置文件，`config/local`是iLogtail的本地采集配置目录。
+    部署目录中`ilogtail_config.json`是iLogtail的系统参数配置文件，`config/local`是iLogtail的本地采集配置目录。
 
     这里我们在采集配置目录中创建`file_simple.yaml`文件，配置采集当前目录simple.log文件并输出到标准输出：
 

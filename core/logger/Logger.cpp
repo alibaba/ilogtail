@@ -13,25 +13,27 @@
 // limitations under the License.
 
 #include "Logger.h"
-#include <set>
+
 #include <json/json.h>
 #include <spdlog/async.h>
 #include <spdlog/sinks/rotating_file_sink.h>
 #include <spdlog/sinks/stdout_sinks.h>
+
+#include <boost/filesystem.hpp>
+#include <set>
+
+#include "app_config/AppConfig.h"
+#include "common/ErrorUtil.h"
 #include "common/ExceptionBase.h"
-#include "common/RuntimeUtil.h"
-#include "common/StringTools.h"
 #include "common/FileSystemUtil.h"
 #include "common/Flags.h"
-#include "common/ErrorUtil.h"
-#include "common/FileSystemUtil.h"
-#include <boost/filesystem.hpp>
+#include "common/RuntimeUtil.h"
+#include "common/StringTools.h"
 
 DEFINE_FLAG_STRING(logtail_snapshot_dir, "snapshot dir on local disk", "snapshot");
 DEFINE_FLAG_BOOL(logtail_async_logger_enable, "", true);
 DEFINE_FLAG_INT32(logtail_async_logger_queue_size, "", 1024);
 DEFINE_FLAG_INT32(logtail_async_logger_thread_num, "", 1);
-DECLARE_FLAG_STRING(loongcollector_log_dir);
 
 // Global loggers, set in InitGlobalLoggers.
 logtail::Logger::logger sLogger;
@@ -90,7 +92,7 @@ Logger::Logger() {
                                  INT32_FLAG(logtail_async_logger_thread_num));
     }
 
-    auto execDir = STRING_FLAG(loongcollector_log_dir);
+    auto execDir = GetLogDir();
     mInnerLogger.open(execDir + "logger_initialization.log");
     LoadConfig(execDir + "apsara_log_conf.json");
     mInnerLogger.close();
@@ -125,7 +127,7 @@ Logger::logger Logger::CreateLogger(const std::string& loggerName,
     if (!absoluteFilePath.empty() && absoluteFilePath[0] != '/')
 #endif
     {
-        absoluteFilePath = STRING_FLAG(loongcollector_log_dir) + absoluteFilePath;
+        absoluteFilePath = GetLogDir() + absoluteFilePath;
     }
     LogMsg("Path of logger named " + loggerName + ": " + absoluteFilePath);
 
@@ -406,7 +408,7 @@ void Logger::LoadDefaultConfig(std::map<std::string, LoggerConfig>& loggerCfgs,
         return;
     sinkCfgs.insert(
         {"AsyncFileSink",
-         SinkConfig{"AsyncFile", 10, 20000000, 300, STRING_FLAG(loongcollector_log_dir) + "loongcollector.LOG", "Gzip"}});
+         SinkConfig{"AsyncFile", 10, 20000000, 300, GetLogDir() + "loongcollector.LOG", "Gzip"}});
 }
 
 void Logger::LoadAllDefaultConfigs(std::map<std::string, LoggerConfig>& loggerCfgs,
@@ -417,7 +419,7 @@ void Logger::LoadAllDefaultConfigs(std::map<std::string, LoggerConfig>& loggerCf
     loggerCfgs.insert({"/apsara/sls/loongcollector/profile", LoggerConfig{"AsyncFileSinkProfile", level::info}});
     loggerCfgs.insert({"/apsara/sls/loongcollector/status", LoggerConfig{"AsyncFileSinkStatus", level::info}});
 
-    std::string dirPath = STRING_FLAG(loongcollector_log_dir) + STRING_FLAG(logtail_snapshot_dir);
+    std::string dirPath = GetLogDir() + STRING_FLAG(logtail_snapshot_dir);
     if (!Mkdir(dirPath)) {
         LogMsg(std::string("Create snapshot dir error ") + dirPath + ", error" + ErrnoToString(GetErrno()));
     }

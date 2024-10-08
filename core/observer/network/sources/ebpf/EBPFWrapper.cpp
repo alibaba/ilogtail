@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "app_config/AppConfig.h"
 #include "logger/Logger.h"
 #include "EBPFWrapper.h"
 #include "RuntimeUtil.h"
@@ -25,7 +26,6 @@
 #include <netinet/in.h>
 #include "interface/layerfour.h"
 
-DECLARE_FLAG_STRING(loongcollector_lib_dir);
 DECLARE_FLAG_STRING(default_container_host_path);
 DEFINE_FLAG_INT64(sls_observer_ebpf_min_kernel_version,
                   "the minimum kernel version that supported eBPF normal running, 4.19.0.0 -> 4019000000",
@@ -225,7 +225,8 @@ static std::string GetValidBTFPath(const int64_t& kernelVersion, const std::stri
     if (configedBTFPath != nullptr) {
         return {configedBTFPath};
     }
-    std::string execDir = STRING_FLAG(loongcollector_lib_dir);
+    // ebpf lib load
+    std::string execDir = GetProcessExecutionDir();
     fsutil::Dir dir(execDir);
     if (!dir.Open()) {
         return "";
@@ -285,7 +286,8 @@ bool EBPFWrapper::loadEbpfLib(int64_t kernelVersion, std::string& soPath) {
         return true;
     }
     LOG_INFO(sLogger, ("load ebpf dynamic library", "begin"));
-    std::string dlPrefix = STRING_FLAG(loongcollector_lib_dir);
+    // load ebpf lib
+    std::string dlPrefix = GetProcessExecutionDir();
     soPath = dlPrefix + "libebpf.so";
     if (kernelVersion < INT64_FLAG(sls_observer_ebpf_min_kernel_version)) {
         fsutil::PathStat buf;

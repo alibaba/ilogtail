@@ -30,7 +30,6 @@
 #include "provider/Provider.h"
 #include "pipeline/queue/QueueKeyManager.h"
 
-DECLARE_FLAG_STRING(loongcollector_log_dir);
 DEFINE_FLAG_INT32(profile_data_send_interval, "interval of send LogFile/DomainSocket profile data, seconds", 600);
 DEFINE_FLAG_STRING(logtail_profile_snapshot, "reader profile on local disk", "logtail_profile_snapshot");
 
@@ -52,9 +51,13 @@ LogFileProfiler::LogFileProfiler() {
     srand(time(NULL));
     mSendInterval = INT32_FLAG(profile_data_send_interval);
     mLastSendTime = time(NULL) - (rand() % (mSendInterval / 10)) * 10;
-    mDumpFileName = STRING_FLAG(loongcollector_log_dir) + STRING_FLAG(logtail_profile_snapshot);
-    mBakDumpFileName = STRING_FLAG(loongcollector_log_dir) + STRING_FLAG(logtail_profile_snapshot) + "_bak";
-
+#if defined(__RUN_LOGTAIL__)
+    mDumpFileName = GetProcessExecutionDir() + STRING_FLAG(logtail_profile_snapshot);
+    mBakDumpFileName = GetProcessExecutionDir() + STRING_FLAG(logtail_profile_snapshot) + "_bak";
+#else
+    mDumpFileName = STRING_FLAG(loongcollector_log_dir) + "logtail_profile_snapshot";
+    mBakDumpFileName = STRING_FLAG(loongcollector_log_dir) + "logtail_profile_snapshot_bak";
+#endif
     mHostname = GetHostName();
 #if defined(_MSC_VER)
     mHostname = EncodingConverter::GetInstance()->FromACPToUTF8(mHostname);

@@ -16,6 +16,7 @@
 
 #include <filesystem>
 
+#include "app_config/AppConfig.h"
 #include "LogFileProfiler.h"
 #include "LogtailMetric.h"
 #include "MetricConstants.h"
@@ -31,7 +32,6 @@ using namespace sls_logs;
 using namespace std;
 
 DECLARE_FLAG_STRING(metrics_report_method);
-DECLARE_FLAG_STRING(loongcollector_log_dir);
 
 namespace logtail {
 
@@ -109,7 +109,7 @@ void MetricExportor::SendToLocalFile(std::string& metricsContent, const std::str
 
     if (!metricsContent.empty()) {
         // 创建输出目录（如果不存在）
-        std::string outputDirectory = STRING_FLAG(loongcollector_log_dir) + metricsDirName;
+        std::string outputDirectory = GetLogDir() + metricsDirName;
         Mkdirs(outputDirectory);
 
         std::vector<std::filesystem::path> metricFiles;

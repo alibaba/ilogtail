@@ -103,12 +103,12 @@ $ ll
 # 1. 创建sys_conf_dir
 $ mkdir sys_conf_dir
 
-# 2. 创建loongcollector_config.json并完成配置。
+# 2. 创建ilogtail_config.json并完成配置。
 ##### logtail_sys_conf_dir取值为：$pwd/sys_conf_dir/
 ##### config_server_address固定取值，保持不变。
 $ pwd
 /root/bin/logtail-linux64/bin
-$ cat loongcollector_config.json
+$ cat ilogtail_config.json
 {
      "logtail_sys_conf_dir": "/root/bin/logtail-linux64/bin/sys_conf_dir/",  
 
@@ -118,7 +118,7 @@ $ cat loongcollector_config.json
 # 3. 此时的目录结构
 $ ll
 -rwxr-xr-x 1  500  500 ilogtail_1.0.28
--rw-r--r-- 1 root root loongcollector_config.json
+-rw-r--r-- 1 root root ilogtail_config.json
 -rwxr-xr-x 1  500  500 ilogtaild
 -rwxr-xr-x 1  500  500 libPluginAdapter.so
 -rw-r--r-- 1  500  500 libPluginBase.so

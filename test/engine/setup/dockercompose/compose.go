@@ -231,7 +231,7 @@ func (c *ComposeBooter) CopyCoreLogs() {
 		if err != nil {
 			logger.Error(context.Background(), "COPY_LOG_ALARM", "type", "main", "err", err)
 		}
-		cmd = exec.Command("docker", "cp", c.logtailID+":/loongcollector/log/loongcollector_plugin.LOG", config.LogDir)
+		cmd = exec.Command("docker", "cp", c.logtailID+":/loongcollector/log/go_plugin.LOG", config.LogDir)
 		output, err = cmd.CombinedOutput()
 		logger.Debugf(context.Background(), "\n%s", string(output))
 		if err != nil {

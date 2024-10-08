@@ -55,3 +55,7 @@ DECLARE_FLAG_BOOL(enable_root_path_collection);
 DECLARE_FLAG_INT32(timeout_interval);
 
 DECLARE_FLAG_STRING(default_container_host_path);
+
+DECLARE_FLAG_STRING(loongcollector_conf_dir);
+DECLARE_FLAG_STRING(loongcollector_log_dir);
+DECLARE_FLAG_STRING(loongcollector_data_dir);

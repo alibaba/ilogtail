@@ -23,9 +23,7 @@
 #include "common/ErrorUtil.h"
 #include "common/FileSystemUtil.h"
 #include "common/Flags.h"
-#include "common/JsonUtil.h"
 #include "common/version.h"
-#include "config/PipelineConfig.h"
 #include "logger/Logger.h"
 
 using namespace logtail;
@@ -40,8 +38,7 @@ void* __wrap_memcpy(void* dest, const void* src, size_t n) {
 }
 #endif
 
-DECLARE_FLAG_STRING(loongcollector_lib_dir);
-DECLARE_FLAG_STRING(loongcollector_config_dir);
+DECLARE_FLAG_STRING(loongcollector_conf_dir);
 DECLARE_FLAG_STRING(loongcollector_log_dir);
 DECLARE_FLAG_STRING(loongcollector_data_dir);
 DECLARE_FLAG_BOOL(ilogtail_disable_core);
@@ -83,10 +80,6 @@ void enable_core(void) {
 
 static void overwrite_community_edition_flags() {
     // support run in installation dir on default
-    STRING_FLAG(logtail_sys_conf_dir) = "../etc/";
-    STRING_FLAG(check_point_filename) = "../data/checkpoint/logtail_check_point";
-    STRING_FLAG(default_buffer_file_path) = "../data/checkpoint";
-    STRING_FLAG(ilogtail_docker_file_path_config) = "../data/docker_path_config.json";
     STRING_FLAG(metrics_report_method) = "";
     INT32_FLAG(data_server_port) = 443;
     BOOL_FLAG(enable_env_ref_in_config) = true;
@@ -96,17 +89,12 @@ static void overwrite_community_edition_flags() {
 
 // Main routine of worker process.
 void do_worker_process() {
-    std::string dir = GetProcessExecutionDir();
-
-    Json::Value confJson(Json::objectValue);
-    LoadConfigDetailFromFile(dir + "loongcollector_config.json", confJson, true);
-
+    std::string processExecutionDir = GetProcessExecutionDir();
 #define PROCESSDIRFLAG(flag_name, env_name, dir_name) \
-    LoadStringParameter(STRING_FLAG(flag_name), confJson, #flag_name, env_name); \
     if (STRING_FLAG(flag_name).empty()) { \
-        STRING_FLAG(flag_name) = dir + "../" + #dir_name + "/"; \
+        STRING_FLAG(flag_name) = processExecutionDir + #dir_name + "/"; \
     } else if (STRING_FLAG(flag_name).at(0) != '/') { \
-        STRING_FLAG(flag_name) = dir + "../" + STRING_FLAG(flag_name) + "/"; \
+        STRING_FLAG(flag_name) = AbsolutePath(STRING_FLAG(flag_name), processExecutionDir); \
     } \
     if (!CheckExistance(STRING_FLAG(flag_name))) { \
         if (Mkdirs(STRING_FLAG(flag_name))) { \
@@ -117,8 +105,7 @@ void do_worker_process() {
         } \
     }
 
-    PROCESSDIRFLAG(loongcollector_lib_dir, "ALIYUN_LOONGCOLLECTOR_LIB_DIR", lib);
-    PROCESSDIRFLAG(loongcollector_config_dir, "ALIYUN_LOONGCOLLECTOR_CONFIG_DIR", etc);
+    PROCESSDIRFLAG(loongcollector_conf_dir, "ALIYUN_LOONGCOLLECTOR_CONF_DIR", conf);
     PROCESSDIRFLAG(loongcollector_log_dir, "ALIYUN_LOONGCOLLECTOR_LOG_DIR", log);
     PROCESSDIRFLAG(loongcollector_data_dir, "ALIYUN_LOONGCOLLECTOR_DATA_DIR", data);
 

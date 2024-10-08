@@ -487,7 +487,7 @@ bool Pipeline::LoadGoPipelines() const {
                                                         mContext.GetRegion(),
                                                         mContext.GetLogstoreKey())) {
             LOG_ERROR(mContext.GetLogger(),
-                      ("failed to init pipeline", "Go pipeline is invalid, see loongcollector_plugin.LOG for detail")(
+                      ("failed to init pipeline", "Go pipeline is invalid, see go_plugin.LOG for detail")(
                           "Go pipeline num", "2")("Go pipeline content", content)("config", mName));
             LogtailAlarm::GetInstance()->SendAlarm(CATEGORY_CONFIG_ALARM,
                                                    "Go pipeline is invalid, content: " + content + ", config: " + mName,
@@ -506,7 +506,7 @@ bool Pipeline::LoadGoPipelines() const {
                                                         mContext.GetRegion(),
                                                         mContext.GetLogstoreKey())) {
             LOG_ERROR(mContext.GetLogger(),
-                      ("failed to init pipeline", "Go pipeline is invalid, see loongcollector_plugin.LOG for detail")(
+                      ("failed to init pipeline", "Go pipeline is invalid, see go_plugin.LOG for detail")(
                           "Go pipeline num", "1")("Go pipeline content", content)("config", mName));
             LogtailAlarm::GetInstance()->SendAlarm(CATEGORY_CONFIG_ALARM,
                                                    "Go pipeline is invalid, content: " + content + ", config: " + mName,

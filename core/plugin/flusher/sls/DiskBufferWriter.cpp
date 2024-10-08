@@ -42,8 +42,6 @@ DEFINE_FLAG_INT32(secondary_buffer_count_limit, "data ready for write buffer fil
 DEFINE_FLAG_INT32(send_retry_sleep_interval, "sleep microseconds when sync send fail, 50ms", 50000);
 DEFINE_FLAG_INT32(buffer_check_period, "check logtail local storage buffer period", 60);
 
-DECLARE_FLAG_STRING(loongcollector_data_dir);
-
 using namespace std;
 
 namespace logtail {
@@ -209,7 +207,7 @@ void DiskBufferWriter::BufferSenderThread() {
 void DiskBufferWriter::SetBufferFilePath(const std::string& bufferfilepath) {
     lock_guard<mutex> lock(mBufferFileLock);
     if (bufferfilepath == "") {
-        mBufferFilePath = STRING_FLAG(loongcollector_data_dir);
+        mBufferFilePath = GetDataDir();
     } else
         mBufferFilePath = bufferfilepath;
 
@@ -236,7 +234,7 @@ std::string DiskBufferWriter::GetBufferFileName() {
 bool DiskBufferWriter::LoadFileToSend(time_t timeLine, std::vector<std::string>& filesToSend) {
     string bufferFilePath = GetBufferFilePath();
     if (!CheckExistance(bufferFilePath)) {
-        if (STRING_FLAG(loongcollector_data_dir).find(bufferFilePath) != 0) {
+        if (GetDataDir().find(bufferFilePath) != 0) {
             LOG_WARNING(sLogger,
                         ("buffer file path not exist", bufferFilePath)("logtail will not recreate external path",
                                                                        "local secondary does not work"));

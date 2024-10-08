@@ -15,6 +15,7 @@
 #include "PCAPWrapper.h"
 
 #include <utility>
+#include "app_config/AppConfig.h"
 #include "common/xxhash/xxhash.h"
 #include "common/MachineInfoUtil.h"
 #include "logger/Logger.h"
@@ -22,8 +23,6 @@
 #include "RuntimeUtil.h"
 #include "network/protocols/utils.h"
 #include "interface/layerfour.h"
-
-DECLARE_FLAG_STRING(loongcollector_lib_dir);
 
 static void OnPCAPPacketsCallBack(u_char* user, const struct pcap_pkthdr* packet_header, const u_char* packet_content) {
     logtail::PCAPWrapper* wrapper = (logtail::PCAPWrapper*)user;
@@ -84,7 +83,8 @@ bool PCAPWrapper::Init(std::function<int(StringPiece)> processor) {
         LOG_INFO(sLogger, ("load pcap dynamic library", "begin"));
         mPCAPLib = new DynamicLibLoader;
         std::string loadErr;
-        if (!mPCAPLib->LoadDynLib("pcap", loadErr, STRING_FLAG(loongcollector_lib_dir))) {
+        // pcap lib load
+        if (!mPCAPLib->LoadDynLib("pcap", loadErr, GetProcessExecutionDir())) {
             if (!mPCAPLib->LoadDynLib("pcap", loadErr)) {
                 LOG_ERROR(sLogger, ("load pcap dynamic library", "failed")("error", loadErr));
                 LogtailAlarm::GetInstance()->SendAlarm(OBSERVER_INIT_ALARM, "cannot load pcap dynamic library");
