@@ -164,7 +164,7 @@ std::string GetAgentLogDir() {
     if (!dir.empty()) {
         return dir;
     }
-#if defined(__RUN_LOGTAIL__)
+#if defined(__RUN_LOGTAIL__) || defined(APSARA_UNIT_TEST_MAIN)
     dir = GetProcessExecutionDir();
 #else
     dir = STRING_FLAG(loongcollector_log_dir) + PATH_SEPARATOR;
@@ -177,7 +177,7 @@ std::string GetAgentDataDir() {
     if (!dir.empty()) {
         return dir;
     }
-#if defined(__RUN_LOGTAIL__)
+#if defined(__RUN_LOGTAIL__) || defined(APSARA_UNIT_TEST_MAIN)
     dir = GetProcessExecutionDir();
 #else
     dir = STRING_FLAG(loongcollector_data_dir) + PATH_SEPARATOR;
@@ -190,7 +190,7 @@ std::string GetAgentConfDir() {
     if (!dir.empty()) {
         return dir;
     }
-#if defined(__RUN_LOGTAIL__)
+#if defined(__RUN_LOGTAIL__) || defined(APSARA_UNIT_TEST_MAIN)
     dir = GetProcessExecutionDir();
 #else
     dir = STRING_FLAG(loongcollector_conf_dir) + PATH_SEPARATOR;
@@ -203,7 +203,7 @@ std::string GetAgentRuntimeDir() {
     if (!dir.empty()) {
         return dir;
     }
-#if defined(__RUN_LOGTAIL__)
+#if defined(__RUN_LOGTAIL__) || defined(APSARA_UNIT_TEST_MAIN)
     dir = GetProcessExecutionDir();
 #else
     dir = STRING_FLAG(loongcollector_run_dir) + PATH_SEPARATOR;
@@ -337,7 +337,7 @@ void AppConfig::LoadAppConfig(const std::string& ilogtailConfigFile) {
     }
 
     if (newSysConfDir.empty()) {
-#if defined(__RUN_LOGTAIL__)
+#if defined(__RUN_LOGTAIL__) || defined(APSARA_UNIT_TEST_MAIN)
         newSysConfDir = STRING_FLAG(logtail_sys_conf_dir);
 #else
         // 说明用户没有配置老的这个自定目录参数， 就使用loongcollector_conf_dir
