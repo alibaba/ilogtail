@@ -80,8 +80,17 @@ const string METRIC_PLUGIN_PARSE_STDOUT_TOTAL = "plugin_parse_stdout_total";
 /**********************************************************
  *   flusher_sls
  **********************************************************/
-const string METRIC_PLUGIN_PUSH_HTTP_TOTAL = "plugin_push_http_total";
-const string METRIC_PLUGIN_HTTP_SUCCESS_TOTAL = "plugin_http_success_total";
-const string METRIC_PLUGIN_HTTP_FAIL_TOTAL = "plugin_http_fail_total";
+const string METRIC_PLUGIN_PUSH_CURL_TOTAL = "plugin_push_curl_total";
+const string METRIC_PLUGIN_CURL_SUCCESS_TOTAL = "plugin_curl_success_total";
+const string METRIC_PLUGIN_CURL_SEND_DONE_TOTAL = "plugin_curl_send_done_total";
+const string METRIC_PLUGIN_CURL_NETWORK_ERROR_TOTAL = "plugin_curl_network_error_total";
+const string METRIC_PLUGIN_CURL_SERVER_ERROR_TOTAL = "plugin_curl_server_error_total";
+const string METRIC_PLUGIN_CURL_SHARD_WRITE_QUOTA_ERROR_TOTAL = "plugin_curl_shard_write_quota_error_total";
+const string METRIC_PLUGIN_CURL_PROJECT_QUOTA_ERROR_TOTAL = "plugin_curl_project_quota_error_total";
+const string METRIC_PLUGIN_CURL_UNAUTH_ERROR_TOTAL = "plugin_curl_unauth_error_total";
+const string METRIC_PLUGIN_CURL_PARAMS_ERROR_TOTAL = "plugin_curl_params_error_total";
+const string METRIC_PLUGIN_CURL_SEQUENCE_ID_ERROR_TOTAL = "plugin_curl_sequence_id_error_total";
+const string METRIC_PLUGIN_CURL_REQUEST_EXPRIRED_ERROR_TOTAL = "plugin_curl_request_exprired_error_total";
+const string METRIC_PLUGIN_CURL_OTHER_ERROR_TOTAL = "plugin_curl_other_error_total";
 
 } // namespace logtail

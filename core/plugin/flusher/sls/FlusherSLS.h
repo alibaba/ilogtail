@@ -128,9 +128,17 @@ private:
     std::unique_ptr<Serializer<std::vector<CompressedLogGroup>>> mGroupListSerializer;
 
     CounterPtr mPushHttpCnt;
+    CounterPtr mSendDoneCnt;
     CounterPtr mSuccessCnt;
-    CounterPtr mFailCnt;
-
+    CounterPtr mNetworkErrorCnt;
+    CounterPtr mServerErrorCnt;
+    CounterPtr mShardWriteQuotaErrorCnt;
+    CounterPtr mProjectQuotaErrorCnt;
+    CounterPtr mUnauthErrorCnt;
+    CounterPtr mParamsErrorCnt;
+    CounterPtr mSequenceIDErrorCnt;
+    CounterPtr mRequestExpiredErrorCnt;
+    CounterPtr mOtherErrorCnt;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class FlusherSLSUnittest;
