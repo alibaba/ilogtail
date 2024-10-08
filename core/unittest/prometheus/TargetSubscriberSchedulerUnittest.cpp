@@ -129,8 +129,7 @@ protected:
     ])JSON";
         }
     }
-    void TearDown() override {
-    }
+    void TearDown() override {}
 
 private:
     HttpResponse mHttpResponse;
@@ -149,7 +148,9 @@ void TargetSubscriberSchedulerUnittest::OnInitScrapeJobEvent() {
 
 void TargetSubscriberSchedulerUnittest::TestProcess() {
     std::shared_ptr<TargetSubscriberScheduler> targetSubscriber = std::make_shared<TargetSubscriberScheduler>();
+    auto metricLabels = MetricLabels();
     APSARA_TEST_TRUE(targetSubscriber->Init(mConfig["ScrapeConfig"]));
+    targetSubscriber->InitSelfMonitor(metricLabels);
 
     // if status code is not 200
     mHttpResponse.mStatusCode = 404;
