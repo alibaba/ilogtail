@@ -107,7 +107,48 @@ bool SenderQueue::Remove(SenderQueueItem* item) {
     return true;
 }
 
-void SenderQueue::GetAllAvailableItems(vector<SenderQueueItem*>& items, bool withLimits) {
+
+void SenderQueue::GetLimitAvailableItems(vector<SenderQueueItem*>& items, int32_t limit) {
+    if (Empty()) {
+        return;
+    }
+    int itemsCnt = 0;
+    for (auto index = mRead; index < mWrite; ++index) {
+        SenderQueueItem* item = mQueue[index % mCapacity].get();
+        if (item == nullptr) {
+            continue;
+        }
+        if (mRateLimiter && !mRateLimiter->IsValidToPop()) {
+            return;
+        }
+        for (auto& limiter : mConcurrencyLimiters) {
+            if (!limiter->IsValidToPop()) {
+                return;
+            }
+        }
+        
+        if (item->mStatus.Get() == SendingStatus::IDLE) {
+            item->mStatus.Set(SendingStatus::SENDING);
+            items.emplace_back(item);
+            for (auto& limiter : mConcurrencyLimiters) {
+                if (limiter != nullptr) {
+                    limiter->PostPop();
+                }
+            }
+            if (mRateLimiter) {
+                mRateLimiter->PostPop(item->mRawSize);
+            }
+            
+        }
+        ++ itemsCnt;
+        if (itemsCnt >= limit) {
+            return;
+        }
+    }
+}
+
+
+void SenderQueue::GetAllAvailableItems(vector<SenderQueueItem*>& items) {
     if (Empty()) {
         return;
     }
@@ -116,31 +157,12 @@ void SenderQueue::GetAllAvailableItems(vector<SenderQueueItem*>& items, bool wit
         if (item == nullptr) {
             continue;
         }
-        if (withLimits) {
-            if (mRateLimiter && !mRateLimiter->IsValidToPop()) {
-                return;
-            }
-            for (auto& limiter : mConcurrencyLimiters) {
-                if (!limiter->IsValidToPop()) {
-                    return;
-                }
-            }
-        }
         if (item->mStatus.Get() == SendingStatus::IDLE) {
             item->mStatus.Set(SendingStatus::SENDING);
             items.emplace_back(item);
-            if (withLimits) {
-                for (auto& limiter : mConcurrencyLimiters) {
-                    if (limiter != nullptr) {
-                        limiter->PostPop();
-                    }
-                }
-                if (mRateLimiter) {
-                    mRateLimiter->PostPop(item->mRawSize);
-                }
-            }
         }
     }
 }
+
 
 } // namespace logtail

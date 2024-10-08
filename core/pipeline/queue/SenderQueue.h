@@ -35,7 +35,8 @@ public:
 
     bool Push(std::unique_ptr<SenderQueueItem>&& item) override;
     bool Remove(SenderQueueItem* item) override;
-    void GetAllAvailableItems(std::vector<SenderQueueItem*>& items, bool withLimits = true) override;
+    void GetAllAvailableItems(std::vector<SenderQueueItem*>& items) override;
+    void GetLimitAvailableItems(std::vector<SenderQueueItem*>& items, int32_t limit) override;
 
 private:
     size_t Size() const override { return mSize; }

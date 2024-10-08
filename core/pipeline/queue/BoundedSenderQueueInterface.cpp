@@ -66,7 +66,7 @@ void BoundedSenderQueueInterface::OnSendingSuccess() {
 void BoundedSenderQueueInterface::DecreaseSendingCnt() {
     for (auto& limiter : mConcurrencyLimiters) {
         if (limiter != nullptr) {
-            limiter->OnDone();
+            limiter->OnSendDone();
         }
     }
 }

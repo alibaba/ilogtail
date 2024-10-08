@@ -20,65 +20,50 @@
 #include <ctime>
 #include <mutex>
 
-
-using namespace std;
-
 namespace logtail {
 
 class ConcurrencyLimiter {
 public:
-    ConcurrencyLimiter() {}
-    ConcurrencyLimiter(uint32_t maxCocurrency, uint32_t minCocurrency, uint32_t cocurrency, 
-        uint32_t maxRetryIntervalSeconds = 3600, uint32_t minRetryIntervalSeconds = 30, uint32_t retryIntervalSeconds = 60, 
+    ConcurrencyLimiter(uint32_t maxConcurrency, uint32_t minConcurrency = 1,  
+        uint32_t maxRetryIntervalSecs = 3600, uint32_t minRetryIntervalSecs = 30, 
         double upRatio = 1.5, double downRatio = 0.5) : 
-        mMaxCocurrency(maxCocurrency), mMinCocurrency(minCocurrency), mConcurrency(cocurrency),
-        mMaxRetryIntervalSeconds(maxRetryIntervalSeconds), mMinRetryIntervalSeconds(minRetryIntervalSeconds), 
-        mRetryIntervalSeconds(retryIntervalSeconds), mUpRatio(upRatio), mDownRatio(downRatio) {}
+        mMaxConcurrency(maxConcurrency), mMinConcurrency(minConcurrency), mCurrenctConcurrency(maxConcurrency),
+        mMaxRetryIntervalSecs(maxRetryIntervalSecs), mMinRetryIntervalSecs(minRetryIntervalSecs), 
+        mRetryIntervalSecs(minRetryIntervalSecs), mUpRatio(upRatio), mDownRatio(downRatio) {}
 
     bool IsValidToPop();
     void PostPop();
-    void OnDone();
+    void OnSendDone();
 
     void OnSuccess();
     void OnFail(time_t curTime);
 
-    uint32_t GetLimit() const { 
-        lock_guard<mutex> lock(mConcurrencyMux);
-        return mConcurrency; 
-    }
+    uint32_t GetLimit() const;
 
-    uint32_t GetInterval() const { 
-        lock_guard<mutex> lock(mIntervalMux);
-        return mRetryIntervalSeconds; 
-    }
+    uint32_t GetInterval() const;
 
 #ifdef APSARA_UNIT_TEST_MAIN
-    void SetLimit(int limit) { 
-        lock_guard<mutex> lock(mConcurrencyMux);
-        mConcurrency = limit;
-    }
+    void SetLimit(int limit);
 
-    void SetSendingCount(int count) {
-        mInSendingCnt.store(count);
-    }
-    int GetSendingCount() const { return mInSendingCnt.load(); }
+    void SetSendingCount(int count);
+    int GetSendingCount() const;
 
 #endif
 
 private:
     std::atomic_int mInSendingCnt = 0;
 
-    uint32_t mMaxCocurrency = 0;
-    uint32_t mMinCocurrency = 0;
+    uint32_t mMaxConcurrency = 0;
+    uint32_t mMinConcurrency = 0;
 
-    mutable std::mutex mConcurrencyMux;
-    uint32_t mConcurrency = 0;
+    mutable std::mutex mCurrenctConcurrencyMux;
+    uint32_t mCurrenctConcurrency = 0;
 
-    uint32_t mMaxRetryIntervalSeconds = 0;
-    uint32_t mMinRetryIntervalSeconds = 0;
+    uint32_t mMaxRetryIntervalSecs = 0;
+    uint32_t mMinRetryIntervalSecs = 0;
 
     mutable std::mutex mIntervalMux;
-    uint32_t mRetryIntervalSeconds = 0;
+    uint32_t mRetryIntervalSecs = 0;
 
     double mUpRatio = 0.0;
     double mDownRatio = 0.0;

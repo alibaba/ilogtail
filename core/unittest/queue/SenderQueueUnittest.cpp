@@ -29,7 +29,7 @@ public:
 
 protected:
     static void SetUpTestCase() {
-        sConcurrencyLimiter = make_shared<ConcurrencyLimiter>();
+        sConcurrencyLimiter = make_shared<ConcurrencyLimiter>(80);
         sCtx.SetConfigName("test_config");
     }
 
@@ -42,7 +42,7 @@ protected:
 
     void TearDown() override {
         sFeedback.Clear();
-        sConcurrencyLimiter = make_shared<ConcurrencyLimiter>();
+        sConcurrencyLimiter = make_shared<ConcurrencyLimiter>(80);
     }
 
 private:
@@ -127,7 +127,7 @@ void SenderQueueUnittest::TestGetAllAvailableItems() {
     {
         // no limits
         vector<SenderQueueItem*> items;
-        mQueue->GetAllAvailableItems(items, false);
+        mQueue->GetAllAvailableItems(items);
         APSARA_TEST_EQUAL(2U, items.size());
         for (auto& item : items) {
             item->mStatus.Set(SendingStatus::IDLE);

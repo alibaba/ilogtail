@@ -111,7 +111,47 @@ bool ExactlyOnceSenderQueue::Remove(SenderQueueItem* item) {
     return true;
 }
 
-void ExactlyOnceSenderQueue::GetAllAvailableItems(vector<SenderQueueItem*>& items, bool withLimits) {
+
+void ExactlyOnceSenderQueue::GetLimitAvailableItems(vector<SenderQueueItem*>& items, int32_t limit) {
+    if (Empty()) {
+        return;
+    }
+    int itemsCnt = 0;
+    for (size_t index = 0; index < mCapacity; ++index) {
+        SenderQueueItem* item = mQueue[index].get();
+        if (item == nullptr) {
+            continue;
+        }
+        if (mRateLimiter && !mRateLimiter->IsValidToPop()) {
+            return;
+        }
+        for (auto& limiter : mConcurrencyLimiters) {
+            if (!limiter->IsValidToPop()) {
+                return;
+            }
+        }
+        
+        if (item->mStatus.Get() == SendingStatus::IDLE) {
+            item->mStatus.Set(SendingStatus::SENDING);
+            items.emplace_back(item);
+            for (auto& limiter : mConcurrencyLimiters) {
+                if (limiter != nullptr) {
+                    limiter->PostPop();
+                }
+            }
+            if (mRateLimiter) {
+                mRateLimiter->PostPop(item->mRawSize);
+            }
+            
+        }
+        ++ itemsCnt;
+        if (itemsCnt >= limit) {
+            return;
+        }
+    }
+}
+
+void ExactlyOnceSenderQueue::GetAllAvailableItems(vector<SenderQueueItem*>& items) {
     if (Empty()) {
         return;
     }
@@ -120,27 +160,10 @@ void ExactlyOnceSenderQueue::GetAllAvailableItems(vector<SenderQueueItem*>& item
         if (item == nullptr) {
             continue;
         }
-        if (withLimits) {
-            if (mRateLimiter && !mRateLimiter->IsValidToPop()) {
-                return;
-            }
-            for (auto& limiter : mConcurrencyLimiters) {
-                if (!limiter->IsValidToPop()) {
-                    return;
-                }
-            }
-        }
         if (item->mStatus.Get() == SendingStatus::IDLE) {
             item->mStatus.Set(SendingStatus::SENDING);
             items.emplace_back(item);
-            if (withLimits) {
-                for (auto& limiter : mConcurrencyLimiters) {
-                    limiter->PostPop();
-                }
-                if (mRateLimiter) {
-                    mRateLimiter->PostPop(item->mRawSize);
-                }
-            }
+            
         }
     }
 }

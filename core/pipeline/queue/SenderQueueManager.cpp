@@ -112,17 +112,24 @@ void SenderQueueManager::GetAllAvailableItems(vector<SenderQueueItem*>& items, b
         if (mQueues.empty()) {
             return;
         }
-        // must check index before moving iterator
-        mSenderQueueBeginIndex = mSenderQueueBeginIndex % mQueues.size();
-        // here we set sender queue begin index, let the sender order be different each time
-        auto beginIter = mQueues.begin();
-        std::advance(beginIter, mSenderQueueBeginIndex++);
+        if (withLimits) {
+            int cntLimitPerQueue = mQueueParam.GetCapacity() * 0.3;
+            // must check index before moving iterator
+            mSenderQueueBeginIndex = mSenderQueueBeginIndex % mQueues.size();
+            // here we set sender queue begin index, let the sender order be different each time
+            auto beginIter = mQueues.begin();
+            std::advance(beginIter, mSenderQueueBeginIndex++);
 
-        for (auto iter = beginIter; iter != mQueues.end(); ++iter) {
-            iter->second.GetAllAvailableItems(items, withLimits);
-        }
-        for (auto iter = mQueues.begin(); iter != beginIter; ++iter) {         
-            iter->second.GetAllAvailableItems(items, withLimits);
+            for (auto iter = beginIter; iter != mQueues.end(); ++iter) {
+                iter->second.GetLimitAvailableItems(items, cntLimitPerQueue);
+            }
+            for (auto iter = mQueues.begin(); iter != beginIter; ++iter) {        
+                iter->second.GetLimitAvailableItems(items, cntLimitPerQueue);
+            }
+        } else {
+            for (auto iter = mQueues.begin(); iter != mQueues.end(); ++iter) {         
+                iter->second.GetAllAvailableItems(items);
+            }
         }
     }
     ExactlyOnceQueueManager::GetInstance()->GetAllAvailableSenderQueueItems(items, withLimits);

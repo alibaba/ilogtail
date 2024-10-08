@@ -184,7 +184,12 @@ int ExactlyOnceQueueManager::PushSenderQueue(QueueKey key, unique_ptr<SenderQueu
 void ExactlyOnceQueueManager::GetAllAvailableSenderQueueItems(std::vector<SenderQueueItem*>& item, bool withLimits) {
     lock_guard<mutex> lock(mSenderQueueMux);
     for (auto iter = mSenderQueues.begin(); iter != mSenderQueues.end(); ++iter) {
-        iter->second.GetAllAvailableItems(item, withLimits);
+        if (withLimits) {
+            int cntLimitPerQueue = mProcessQueueParam.GetCapacity() * 0.3;
+            iter->second.GetLimitAvailableItems(item, cntLimitPerQueue);
+        } else {
+            iter->second.GetAllAvailableItems(item);
+        }
     }
 }
 

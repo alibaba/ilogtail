@@ -127,7 +127,7 @@ void ExactlyOnceSenderQueueUnittest::TestGetAllAvailableItems() {
     {
         // no limits
         vector<SenderQueueItem*> items;
-        mQueue->GetAllAvailableItems(items, false);
+        mQueue->GetAllAvailableItems(items);
         APSARA_TEST_EQUAL(2U, items.size());
         for (auto& item : items) {
             item->mStatus.Set(SendingStatus::IDLE);

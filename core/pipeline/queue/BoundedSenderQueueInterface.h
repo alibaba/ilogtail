@@ -44,7 +44,8 @@ public:
 
     virtual bool Remove(SenderQueueItem* item) = 0;
     
-    virtual void GetAllAvailableItems(std::vector<SenderQueueItem*>& items, bool withLimits = true) = 0;
+    virtual void GetAllAvailableItems(std::vector<SenderQueueItem*>& items) = 0;
+    virtual void GetLimitAvailableItems(std::vector<SenderQueueItem*>& items, int32_t limit) = 0;
 
     void DecreaseSendingCnt();
     void OnSendingSuccess();
