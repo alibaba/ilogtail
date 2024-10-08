@@ -127,6 +127,11 @@ private:
     std::unique_ptr<EventGroupSerializer> mGroupSerializer;
     std::unique_ptr<Serializer<std::vector<CompressedLogGroup>>> mGroupListSerializer;
 
+    CounterPtr mPushHttpCnt;
+    CounterPtr mSuccessCnt;
+    CounterPtr mFailCnt;
+
+
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class FlusherSLSUnittest;
 #endif

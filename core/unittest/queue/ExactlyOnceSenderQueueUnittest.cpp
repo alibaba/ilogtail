@@ -136,13 +136,13 @@ void ExactlyOnceSenderQueueUnittest::TestGetAllAvailableItems() {
     {
         // with limits, limited by concurrency limiter
         mQueue->mRateLimiter->mMaxSendBytesPerSecond = 100;
-        mQueue->mConcurrencyLimiters[0]->SetCurrentLimit(1);
+        mQueue->mConcurrencyLimiters[0]->SetCurrentLimit(2);
         mQueue->mConcurrencyLimiters[0]->SetInSendingCount(0);
         vector<SenderQueueItem*> items;
-        mQueue->GetAllAvailableItems(items);
-        APSARA_TEST_EQUAL(1U, items.size());
-        APSARA_TEST_EQUAL(sDataSize, mQueue->mRateLimiter->mLastSecondTotalBytes);
-        APSARA_TEST_EQUAL(1, mQueue->mConcurrencyLimiters[0]->GetInSendingCount());
+        mQueue->GetLimitAvailableItems(items, 80);
+        APSARA_TEST_EQUAL(2U, items.size());
+        APSARA_TEST_EQUAL(sDataSize*2, mQueue->mRateLimiter->mLastSecondTotalBytes);
+        APSARA_TEST_EQUAL(2, mQueue->mConcurrencyLimiters[0]->GetInSendingCount());
         for (auto& item : items) {
             item->mStatus.Set(SendingStatus::IDLE);
         }
@@ -154,7 +154,7 @@ void ExactlyOnceSenderQueueUnittest::TestGetAllAvailableItems() {
         mQueue->mConcurrencyLimiters[0]->SetCurrentLimit(3);
         mQueue->mConcurrencyLimiters[0]->SetInSendingCount(0);
         vector<SenderQueueItem*> items;
-        mQueue->GetAllAvailableItems(items);
+        mQueue->GetLimitAvailableItems(items, 80);
         APSARA_TEST_EQUAL(1U, items.size());
         APSARA_TEST_EQUAL(sDataSize, mQueue->mRateLimiter->mLastSecondTotalBytes);
         APSARA_TEST_EQUAL(1, mQueue->mConcurrencyLimiters[0]->GetInSendingCount());
@@ -166,7 +166,7 @@ void ExactlyOnceSenderQueueUnittest::TestGetAllAvailableItems() {
         mQueue->mConcurrencyLimiters[0]->SetCurrentLimit(3);
         mQueue->mConcurrencyLimiters[0]->SetInSendingCount(0);
         vector<SenderQueueItem*> items;
-        mQueue->GetAllAvailableItems(items);
+        mQueue->GetLimitAvailableItems(items, 80);
         APSARA_TEST_EQUAL(1U, items.size());
         APSARA_TEST_EQUAL(sDataSize, mQueue->mRateLimiter->mLastSecondTotalBytes);
         APSARA_TEST_EQUAL(1, mQueue->mConcurrencyLimiters[0]->GetInSendingCount());

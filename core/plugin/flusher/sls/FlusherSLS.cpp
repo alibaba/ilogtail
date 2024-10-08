@@ -529,6 +529,12 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
 
     GenerateGoPlugin(config, optionalGoPipeline);
 
+
+    // TODO:taiye
+    mPushHttpCnt = GetMetricsRecordRef().CreateCounter("");
+    mSuccessCnt = GetMetricsRecordRef().CreateCounter("");
+    mFailCnt = GetMetricsRecordRef().CreateCounter("");
+
     return true;
 }
 
@@ -588,6 +594,7 @@ unique_ptr<HttpSinkRequest> FlusherSLS::BuildRequest(SenderQueueItem* item) cons
             lastResetEndpointTime = curTime;
         }
     }
+    mPushHttpCnt->Add(1);
     if (BOOL_FLAG(send_prefer_real_ip)) {
         if (curTime - sendClient->GetSlsRealIpUpdateTime() >= INT32_FLAG(send_check_real_ip_interval)) {
             SLSClientManager::GetInstance()->UpdateSendClientRealIp(sendClient, mRegion);
@@ -678,11 +685,13 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
         GetLogstoreConcurrencyLimiter(mProject, mLogstore)->OnSuccess();                                                                                       
         SenderQueueManager::GetInstance()->DecreaseConcurrencyLimiterInSendingCnt(item->mQueueKey);
         DealSenderQueueItemAfterSend(item, false);
+        mSuccessCnt->Add(1);
     } else {
         OperationOnFail operation;
         SendResult sendResult = ConvertErrorCode(slsResponse.mErrorCode);
         ostringstream failDetail, suggestion;
         string failEndpoint = data->mCurrentEndpoint;
+        mFailCnt->Add(1);
         if (sendResult == SEND_NETWORK_ERROR || sendResult == SEND_SERVER_ERROR) {
             if (sendResult == SEND_NETWORK_ERROR) {
                 failDetail << "network error";
