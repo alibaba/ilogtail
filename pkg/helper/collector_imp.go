@@ -127,7 +127,7 @@ func (p *nativeProcessPipeCollector) Collect(group *models.GroupInfo, events ...
 		return
 	}
 
-	pipelineEventGroup, err := CreatePipelineEventGroup(group, events)
+	pipelineEventGroup, err := TransferPipelineEventGroupToPB(group, events)
 	if err != nil {
 		return
 	}

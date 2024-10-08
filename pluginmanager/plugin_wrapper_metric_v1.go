@@ -164,7 +164,7 @@ func (wrapper *MetricWrapperV1) AddRawLogWithContext(log *protocol.Log, ctx map[
 	wrapper.outEventGroupsTotal.Add(1)
 	wrapper.outSizeBytes.Add(int64(log.Size()))
 	if wrapper.Config.GlobalConfig.GoInputToNativeProcessor {
-		logEvent, _ := helper.CreateLogEventByRawLogLegacyRawLog(log)
+		logEvent, _ := helper.CreateLogEventByLegacyRawLog(log)
 		wrapper.LogsCachedChan <- &pipeline.LogEventWithContext{LogEvent: logEvent, Context: ctx}
 		return
 	}
@@ -255,7 +255,7 @@ func (wrapper *MetricWrapperV1) pushNativeProcessQueue(retryCnt int) bool {
 				break
 			}
 		}
-		group, _ := helper.CreatePipelineEventGroupLegacyRawLog(wrapper.eventCached[:pushSize], wrapper.Tags, tag, ctx)
+		group, _ := helper.CreatePipelineEventGroupByLegacyRawLog(wrapper.eventCached[:pushSize], wrapper.Tags, tag, ctx)
 		pbSize := group.Size()
 		if cap(wrapper.pbBuffer) < pbSize {
 			if cap(wrapper.pbBuffer)*2 >= pbSize {

@@ -8,8 +8,8 @@ message UntypedSingleValue {
 message MetricEvent {  
     uint64 Timestamp = 1;
     bytes Name = 2;  
+    map<string, bytes> Tags = 3;
     oneof Value {
-        UntypedSingleValue UntypedSingleValue = 3;
+        UntypedSingleValue UntypedSingleValue = 4;
     }
-    map<string, bytes> Tags = 4;
 }

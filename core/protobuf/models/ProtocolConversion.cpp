@@ -4,14 +4,13 @@ using namespace std;
 
 namespace logtail {
 
-
 bool TransferPBToPipelineEventGroup(const logtail::models::PipelineEventGroup& src, logtail::PipelineEventGroup& dst, std::string& errMsg) {
     // events
     switch (src.PipelineEvents_case())
     {
     case logtail::models::PipelineEventGroup::PipelineEventsCase::kLogs:
         if (src.logs().events_size() == 0) {
-            errMsg = "error transfer PB to PipelineEventGroup: logs events is empty";
+            errMsg = "error transfer PB to PipelineEventGroup: no log events";
             return false;
         }
         dst.MutableEvents().reserve(src.logs().events_size());
@@ -24,7 +23,7 @@ bool TransferPBToPipelineEventGroup(const logtail::models::PipelineEventGroup& s
         break;
     case logtail::models::PipelineEventGroup::PipelineEventsCase::kMetrics:
         if (src.metrics().events_size() == 0) {
-            errMsg = "error transfer PB to PipelineEventGroup: metrics events is empty";
+            errMsg = "error transfer PB to PipelineEventGroup: no metric events";
             return false;
         }
         dst.MutableEvents().reserve(src.metrics().events_size());
@@ -37,10 +36,10 @@ bool TransferPBToPipelineEventGroup(const logtail::models::PipelineEventGroup& s
         break;
     case logtail::models::PipelineEventGroup::PipelineEventsCase::kSpans:
         if (src.spans().events_size() == 0) {
-            errMsg = "error transfer PB to PipelineEventGroup: spans events is empty";
+            errMsg = "error transfer PB to PipelineEventGroup: no span events";
             return false;
         }
-        // timestamp
+        dst.MutableEvents().reserve(src.spans().events_size());
         for (auto& spanSrc : src.spans().events()) {
             auto spanDst = dst.AddSpanEvent();
             if (!TransferPBToSpanEvent(spanSrc, *spanDst, errMsg)) {
@@ -72,7 +71,7 @@ bool TransferPBToLogEvent(const logtail::models::LogEvent& src, logtail::LogEven
     // timestamp
     std::chrono::nanoseconds tns(src.timestamp()); 
     std::chrono::seconds ts = std::chrono::duration_cast<std::chrono::seconds>(tns); 
-    dst.SetTimestamp(ts.count(), tns.count() % 1000000000);
+    dst.SetTimestamp(ts.count(), tns.count() - ts.count() * 1000000000);
     // contents
     for (auto& contentPair : src.contents()) {
         dst.SetContent(contentPair.key(), contentPair.value());
@@ -88,7 +87,7 @@ bool TransferPBToMetricEvent(const logtail::models::MetricEvent& src, logtail::M
     // timestamp
     std::chrono::nanoseconds tns(src.timestamp()); 
     std::chrono::seconds ts = std::chrono::duration_cast<std::chrono::seconds>(tns); 
-    dst.SetTimestamp(ts.count(), tns.count() % 1000000000);
+    dst.SetTimestamp(ts.count(), tns.count() - ts.count() * 1000000000);
     // name
     dst.SetName(src.name());
     // value
@@ -111,7 +110,7 @@ bool TransferPBToSpanEvent(const logtail::models::SpanEvent& src, logtail::SpanE
     // timestamp
     std::chrono::nanoseconds tns(src.timestamp()); 
     std::chrono::seconds ts = std::chrono::duration_cast<std::chrono::seconds>(tns); 
-    dst.SetTimestamp(ts.count(), tns.count() % 1000000000);
+    dst.SetTimestamp(ts.count(), tns.count() - ts.count() * 1000000000);
 
     dst.SetTraceId(src.traceid());
     dst.SetSpanId(src.spanid());
@@ -171,12 +170,10 @@ bool TransferPipelineEventGroupToPB(const logtail::PipelineEventGroup& src, logt
                 errMsg = "error transfer PipelineEventGroup to PB: unsupport pipelineEventGroup with multi types of events";
                 return false;
             }
-            if (event.Is<logtail::LogEvent>()) {
-                const auto& logSrc = event.Cast<logtail::LogEvent>();
-                auto logDst = dst.mutable_logs()->add_events();
-                if (!TransferLogEventToPB(logSrc, *logDst, errMsg)) {
-                    return false;
-                }
+            const auto& logSrc = event.Cast<logtail::LogEvent>();
+            auto logDst = dst.mutable_logs()->add_events();
+            if (!TransferLogEventToPB(logSrc, *logDst, errMsg)) {
+                return false;
             }
         }
         break;
@@ -188,7 +185,7 @@ bool TransferPipelineEventGroupToPB(const logtail::PipelineEventGroup& src, logt
                 return false;
             }
             const auto& metricSrc = event.Cast<logtail::MetricEvent>();
-            auto* metricDst = dst.mutable_metrics()->add_events();
+            auto metricDst = dst.mutable_metrics()->add_events();
             if (!TransferMetricEventToPB(metricSrc, *metricDst, errMsg)) {
                 return false;
             }
@@ -202,7 +199,7 @@ bool TransferPipelineEventGroupToPB(const logtail::PipelineEventGroup& src, logt
                 return false;
             }
             const auto& spanSrc = event.Cast<logtail::SpanEvent>();
-            auto* spanDst = dst.mutable_spans()->add_events();
+            auto spanDst = dst.mutable_spans()->add_events();
             if (!TransferSpanEventToPB(spanSrc, *spanDst, errMsg)) {
                 return false;
             }
@@ -229,11 +226,7 @@ bool TransferPipelineEventGroupToPB(const logtail::PipelineEventGroup& src, logt
 bool TransferLogEventToPB(const logtail::LogEvent& src, logtail::models::LogEvent& dst, std::string& errMsg) {
     // timestamp
     std::chrono::seconds ts(src.GetTimestamp()); 
-    std::chrono::nanoseconds tns = std::chrono::duration_cast<std::chrono::nanoseconds>(ts); 
-    if (src.GetTimestampNanosecond().has_value()) {
-        tns += std::chrono::nanoseconds(src.GetTimestampNanosecond().value());
-    }
-    dst.set_timestamp(tns.count());
+    dst.set_timestamp(ts.count() * 1000000000 + src.GetTimestampNanosecond().value_or(0));
 
     // contents
     dst.mutable_contents()->Reserve(src.Size());
@@ -256,11 +249,7 @@ bool TransferLogEventToPB(const logtail::LogEvent& src, logtail::models::LogEven
 bool TransferMetricEventToPB(const logtail::MetricEvent& src, logtail::models::MetricEvent& dst, std::string& errMsg) {
     // timestamp
     std::chrono::seconds ts(src.GetTimestamp()); 
-    std::chrono::nanoseconds tns = std::chrono::duration_cast<std::chrono::nanoseconds>(ts); 
-    if (src.GetTimestampNanosecond().has_value()) {
-        tns += std::chrono::nanoseconds(src.GetTimestampNanosecond().value());
-    }
-    dst.set_timestamp(tns.count());
+    dst.set_timestamp(ts.count() * 1000000000 + src.GetTimestampNanosecond().value_or(0));
 
     // name
     dst.set_name(src.GetName().to_string());
@@ -285,11 +274,7 @@ bool TransferMetricEventToPB(const logtail::MetricEvent& src, logtail::models::M
 bool TransferSpanEventToPB(const logtail::SpanEvent& src, logtail::models::SpanEvent& dst, std::string& errMsg) {
     // timestamp
     std::chrono::seconds ts(src.GetTimestamp()); 
-    std::chrono::nanoseconds tns = std::chrono::duration_cast<std::chrono::nanoseconds>(ts); 
-    if (src.GetTimestampNanosecond().has_value()) {
-        tns += std::chrono::nanoseconds(src.GetTimestampNanosecond().value());
-    }
-    dst.set_timestamp(tns.count());
+    dst.set_timestamp(ts.count() * 1000000000 + src.GetTimestampNanosecond().value_or(0));
 
     dst.set_traceid(src.GetTraceId().to_string());
     dst.set_spanid(src.GetSpanId().to_string());
