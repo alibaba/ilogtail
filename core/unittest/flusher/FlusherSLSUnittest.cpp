@@ -467,6 +467,7 @@ void FlusherSLSUnittest::OnPipelineUpdate() {
     Json::Value configJson, optionalGoPipeline;
     FlusherSLS flusher1;
     flusher1.SetContext(ctx1);
+    flusher1.SetMetricsRecordRef(FlusherSLS::sName, "1");
     string configStr, errorMsg;
 
     configStr = R"(
@@ -490,6 +491,7 @@ void FlusherSLSUnittest::OnPipelineUpdate() {
         ctx2.SetConfigName("test_config_2");
         FlusherSLS flusher2;
         flusher2.SetContext(ctx2);
+        flusher2.SetMetricsRecordRef(FlusherSLS::sName, "1");
         configStr = R"(
             {
                 "Type": "flusher_sls",
@@ -523,6 +525,7 @@ void FlusherSLSUnittest::OnPipelineUpdate() {
         ctx2.SetConfigName("test_config_1");
         FlusherSLS flusher2;
         flusher2.SetContext(ctx2);
+        flusher2.SetMetricsRecordRef(FlusherSLS::sName, "1");
         configStr = R"(
             {
                 "Type": "flusher_sls",
@@ -568,6 +571,7 @@ void FlusherSLSUnittest::TestSend() {
         ctx.SetConfigName("test_config");
         ctx.SetExactlyOnceFlag(true);
         flusher.SetContext(ctx);
+        flusher.SetMetricsRecordRef(FlusherSLS::sName, "1");
         flusher.Init(configJson, optionalGoPipeline);
 
         // create exactly once queue
@@ -714,6 +718,7 @@ void FlusherSLSUnittest::TestSend() {
         ParseJsonTable(configStr, configJson, errorMsg);
         FlusherSLS flusher;
         flusher.SetContext(ctx);
+        flusher.SetMetricsRecordRef(FlusherSLS::sName, "1");
         flusher.Init(configJson, optionalGoPipeline);
         {
             // empty group
@@ -805,6 +810,7 @@ void FlusherSLSUnittest::TestSend() {
         ParseJsonTable(configStr, configJson, errorMsg);
         FlusherSLS flusher;
         flusher.SetContext(ctx);
+        flusher.SetMetricsRecordRef(FlusherSLS::sName, "1");
         flusher.Init(configJson, optionalGoPipeline);
 
         PipelineEventGroup group(make_shared<SourceBuffer>());
@@ -906,6 +912,7 @@ void FlusherSLSUnittest::TestFlush() {
     ParseJsonTable(configStr, configJson, errorMsg);
     FlusherSLS flusher;
     flusher.SetContext(ctx);
+    flusher.SetMetricsRecordRef(FlusherSLS::sName, "1");
     flusher.Init(configJson, optionalGoPipeline);
 
     PipelineEventGroup group(make_shared<SourceBuffer>());
@@ -949,6 +956,7 @@ void FlusherSLSUnittest::TestFlushAll() {
     ParseJsonTable(configStr, configJson, errorMsg);
     FlusherSLS flusher;
     flusher.SetContext(ctx);
+    flusher.SetMetricsRecordRef(FlusherSLS::sName, "1");
     flusher.Init(configJson, optionalGoPipeline);
 
     PipelineEventGroup group(make_shared<SourceBuffer>());
@@ -1000,6 +1008,7 @@ void FlusherSLSUnittest::OnGoPipelineSend() {
         ParseJsonTable(configStr, configJson, errorMsg);
         FlusherSLS flusher;
         flusher.SetContext(ctx);
+        flusher.SetMetricsRecordRef(FlusherSLS::sName, "1");
         flusher.Init(configJson, optionalGoPipeline);
         {
             APSARA_TEST_TRUE(flusher.Send("content", "shardhash_key", "other_logstore"));
