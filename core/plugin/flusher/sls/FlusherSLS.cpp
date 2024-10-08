@@ -117,7 +117,7 @@ unordered_map<string, weak_ptr<ConcurrencyLimiter>> FlusherSLS::sLogstoreConcurr
 
 
 shared_ptr<ConcurrencyLimiter> GetConcurrencyLimiter(LimiterLabel limiterLabel) {
-    return make_shared<ConcurrencyLimiter>(limiterLabel, AppConfig::GetInstance()->GetSendRequestConcurrency(), 1, AppConfig::GetInstance()->GetSendRequestConcurrency());
+    return make_shared<ConcurrencyLimiter>(limiterLabel, AppConfig::GetInstance()->GetSendRequestConcurrency());
 }
 
 shared_ptr<ConcurrencyLimiter> FlusherSLS::GetLogstoreConcurrencyLimiter(const std::string& project, const std::string& logstore) {

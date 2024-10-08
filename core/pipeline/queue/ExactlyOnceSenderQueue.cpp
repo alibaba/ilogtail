@@ -48,6 +48,7 @@ bool ExactlyOnceSenderQueue::Push(unique_ptr<SenderQueueItem>&& item) {
         }
         mConcurrencyLimiters.emplace_back(FlusherSLS::GetRegionConcurrencyLimiter(f->mRegion));
         mConcurrencyLimiters.emplace_back(FlusherSLS::GetProjectConcurrencyLimiter(f->mProject));
+        mConcurrencyLimiters.emplace_back(FlusherSLS::GetLogstoreConcurrencyLimiter(f->mProject, f->mLogstore));
         mIsInitialised = true;
     }
 

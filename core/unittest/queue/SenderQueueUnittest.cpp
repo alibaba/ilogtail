@@ -136,13 +136,13 @@ void SenderQueueUnittest::TestGetAllAvailableItems() {
     {
         // with limits, limited by concurrency limiter
         mQueue->mRateLimiter->mMaxSendBytesPerSecond = 100;
-        sConcurrencyLimiter->SetCurrentLimit(3);
+        sConcurrencyLimiter->SetCurrentLimit(1);
         sConcurrencyLimiter->SetInSendingCount(0);
         vector<SenderQueueItem*> items;
         mQueue->GetLimitAvailableItems(items, 80);
-        APSARA_TEST_EQUAL(2U, items.size());
-        APSARA_TEST_EQUAL(sDataSize*2, mQueue->mRateLimiter->mLastSecondTotalBytes);
-        APSARA_TEST_EQUAL(2, sConcurrencyLimiter->GetInSendingCount());
+        APSARA_TEST_EQUAL(1U, items.size());
+        APSARA_TEST_EQUAL(sDataSize, mQueue->mRateLimiter->mLastSecondTotalBytes);
+        APSARA_TEST_EQUAL(1, sConcurrencyLimiter->GetInSendingCount());
         for (auto& item : items) {
             item->mStatus.Set(SendingStatus::IDLE);
         }

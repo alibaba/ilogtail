@@ -79,7 +79,7 @@ void ExactlyOnceSenderQueueUnittest::TestPush() {
     APSARA_TEST_NOT_EQUAL(nullptr, mQueue->mQueue[1]);
     APSARA_TEST_TRUE(mQueue->mRateLimiter.has_value());
     APSARA_TEST_EQUAL(100U, mQueue->mRateLimiter->mMaxSendBytesPerSecond);
-    APSARA_TEST_EQUAL(2U, mQueue->mConcurrencyLimiters.size());
+    APSARA_TEST_EQUAL(3U, mQueue->mConcurrencyLimiters.size());
     APSARA_TEST_EQUAL(FlusherSLS::GetRegionConcurrencyLimiter("region"), mQueue->mConcurrencyLimiters[0]);
     APSARA_TEST_EQUAL(FlusherSLS::GetProjectConcurrencyLimiter("project"), mQueue->mConcurrencyLimiters[1]);
 
@@ -136,13 +136,13 @@ void ExactlyOnceSenderQueueUnittest::TestGetAllAvailableItems() {
     {
         // with limits, limited by concurrency limiter
         mQueue->mRateLimiter->mMaxSendBytesPerSecond = 100;
-        mQueue->mConcurrencyLimiters[0]->SetCurrentLimit(2);
+        mQueue->mConcurrencyLimiters[0]->SetCurrentLimit(1);
         mQueue->mConcurrencyLimiters[0]->SetInSendingCount(0);
         vector<SenderQueueItem*> items;
         mQueue->GetLimitAvailableItems(items, 80);
-        APSARA_TEST_EQUAL(2U, items.size());
-        APSARA_TEST_EQUAL(sDataSize*2, mQueue->mRateLimiter->mLastSecondTotalBytes);
-        APSARA_TEST_EQUAL(2, mQueue->mConcurrencyLimiters[0]->GetInSendingCount());
+        APSARA_TEST_EQUAL(1U, items.size());
+        APSARA_TEST_EQUAL(sDataSize, mQueue->mRateLimiter->mLastSecondTotalBytes);
+        APSARA_TEST_EQUAL(1, mQueue->mConcurrencyLimiters[0]->GetInSendingCount());
         for (auto& item : items) {
             item->mStatus.Set(SendingStatus::IDLE);
         }

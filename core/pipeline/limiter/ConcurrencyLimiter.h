@@ -26,7 +26,7 @@ enum class LimiterLabel { REGION, PROJECT, LOGSTORE };
 
 class ConcurrencyLimiter {
 public:
-    ConcurrencyLimiter(LimiterLabel limiterLabel, uint32_t maxConcurrency, uint32_t minConcurrency = 1,  
+    ConcurrencyLimiter(LimiterLabel limiterLabel, uint32_t maxConcurrency, uint32_t minConcurrency = 0,  
         uint32_t maxRetryIntervalSecs = 3600, uint32_t minRetryIntervalSecs = 30, 
         double upRatio = 1.5, double downRatio = 0.5) : 
         mMaxConcurrency(maxConcurrency), mMinConcurrency(minConcurrency), mCurrenctConcurrency(maxConcurrency),
