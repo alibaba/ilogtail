@@ -37,9 +37,6 @@ public:
 
 protected:
     void SetUp() override {
-        setenv("POD_NAME", "prometheus-test", 1);
-        setenv("OPERATOR_HOST", "127.0.0.1", 1);
-        setenv("OPERATOR_PORT", "12345", 1);
         {
             mConfigString = R"JSON(
 {
@@ -133,9 +130,6 @@ protected:
         }
     }
     void TearDown() override {
-        unsetenv("POD_NAME");
-        unsetenv("OPERATOR_HOST");
-        unsetenv("OPERATOR_PORT");
     }
 
 private:

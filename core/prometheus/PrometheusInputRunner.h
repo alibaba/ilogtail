@@ -22,6 +22,8 @@
 
 #include "common/Lock.h"
 #include "common/timer/Timer.h"
+#include "monitor/LogtailMetric.h"
+#include "monitor/LoongCollectorMetricTypes.h"
 #include "prometheus/schedulers/TargetSubscriberScheduler.h"
 #include "runner/InputRunner.h"
 #include "sdk/Common.h"
@@ -42,7 +44,8 @@ public:
     }
 
     // input plugin update
-    void UpdateScrapeInput(std::shared_ptr<TargetSubscriberScheduler> targetSubscriber);
+    void UpdateScrapeInput(std::shared_ptr<TargetSubscriberScheduler> targetSubscriber,
+                           const MetricLabels& defaultLabels);
     void RemoveScrapeInput(const std::string& jobName);
 
     // target discover and scrape
@@ -75,6 +78,11 @@ private:
     std::map<std::string, std::shared_ptr<TargetSubscriberScheduler>> mTargetSubscriberSchedulerMap;
 
     std::atomic<uint64_t> mUnRegisterMs;
+
+    // self monitor
+    MetricsRecordRef mMetricsRecordRef;
+    std::unordered_map<std::string, CounterPtr> mCounters;
+    std::unordered_map<std::string, IntGaugePtr> mIntGauges;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class PrometheusInputRunnerUnittest;
