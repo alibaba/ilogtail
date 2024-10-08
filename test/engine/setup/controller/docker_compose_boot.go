@@ -27,9 +27,9 @@ import (
 type BootController struct {
 }
 
-func (c *BootController) Init() error {
+func (c *BootController) Init(initType string) error {
 	logger.Info(context.Background(), "boot controller is initializing....")
-	return dockercompose.Load()
+	return dockercompose.Load(initType)
 }
 
 func (c *BootController) Start(ctx context.Context) error {
