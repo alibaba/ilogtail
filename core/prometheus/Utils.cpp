@@ -124,6 +124,18 @@ void SplitStringView(const std::string& s, char delimiter, std::vector<StringVie
     }
 }
 
+void SplitStringView(StringView s, char delimiter, std::vector<StringView>& result) {
+    size_t start = 0;
+    size_t end = 0;
+    while ((end = s.find(delimiter, start)) != std::string::npos) {
+        result.emplace_back(s.data() + start, end - start);
+        start = end + 1;
+    }
+    if (start < s.size()) {
+        result.emplace_back(s.data() + start, s.size() - start);
+    }
+}
+
 bool IsNumber(const std::string& str) {
     return !str.empty() && str.find_first_not_of("0123456789") == std::string::npos;
 }

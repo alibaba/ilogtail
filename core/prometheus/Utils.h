@@ -16,6 +16,7 @@ uint64_t SizeToByte(const std::string& size);
 
 bool IsValidMetric(const StringView& line);
 void SplitStringView(const std::string& s, char delimiter, std::vector<StringView>& result);
+void SplitStringView(StringView s, char delimiter, std::vector<StringView>& result);
 bool IsNumber(const std::string& str);
 
 uint64_t GetRandSleepMilliSec(const std::string& key, uint64_t intervalSeconds, uint64_t currentMilliSeconds);

@@ -21,7 +21,6 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr&) const override;
 
 private:
-    bool ProcessEvent(PipelineEventPtr&, EventsContainer&, PipelineEventGroup&, TextParser& parser);
     std::unique_ptr<ScrapeConfig> mScrapeConfigPtr;
 
 #ifdef APSARA_UNIT_TEST_MAIN

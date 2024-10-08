@@ -33,6 +33,7 @@ public:
     void SetDefaultTimestamp(uint64_t defaultTimestamp, uint32_t defaultNanoSec);
 
     PipelineEventGroup Parse(const std::string& content, uint64_t defaultTimestamp, uint32_t defaultNanoSec);
+    bool Parse(StringView content, PipelineEventGroup&);
     PipelineEventGroup BuildLogGroup(const std::string& content);
 
     bool ParseLine(StringView line, MetricEvent& metricEvent);
