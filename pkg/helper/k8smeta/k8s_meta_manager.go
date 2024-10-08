@@ -24,6 +24,8 @@ var onceManager sync.Once
 
 type MetaCache interface {
 	Get(key []string) map[string][]*ObjectWrapper
+	GetSize() int
+	GetQueueSize() int
 	List() []*ObjectWrapper
 	RegisterSendFunc(key string, sendFunc SendFunc, interval int)
 	UnRegisterSendFunc(key string)
@@ -40,23 +42,32 @@ type MetaManager struct {
 	clientset *kubernetes.Clientset
 	stopCh    chan struct{}
 
-	eventCh chan *K8sMetaEvent
-	ready   atomic.Bool
+	ready atomic.Bool
 
+	metadataHandler  *metadataHandler
 	cacheMap         map[string]MetaCache
 	linkGenerator    *LinkGenerator
 	linkRegisterMap  map[string][]string
 	linkRegisterLock sync.RWMutex
 
-	metricContext pipeline.Context
+	// self metrics
+	metricRecord       pipeline.MetricsRecord
+	addEventCount      pipeline.CounterMetric
+	updateEventCount   pipeline.CounterMetric
+	deleteEventCount   pipeline.CounterMetric
+	cacheResourceGauge pipeline.GaugeMetric
+	queueSizeGauge     pipeline.GaugeMetric
+	httpRequestCount   pipeline.CounterMetric
+	httpAvgDelayMs     pipeline.CounterMetric
+	httpMaxDelayMs     pipeline.GaugeMetric
 }
 
 func GetMetaManagerInstance() *MetaManager {
 	onceManager.Do(func() {
 		metaManager = &MetaManager{
-			stopCh:  make(chan struct{}),
-			eventCh: make(chan *K8sMetaEvent, 1000),
+			stopCh: make(chan struct{}),
 		}
+		metaManager.metadataHandler = newMetadataHandler(metaManager)
 		metaManager.cacheMap = make(map[string]MetaCache)
 		for _, resource := range AllResources {
 			metaManager.cacheMap[resource] = newK8sMetaCache(metaManager.stopCh, resource)
@@ -84,7 +95,16 @@ func (m *MetaManager) Init(configPath string) (err error) {
 		return err
 	}
 	m.clientset = clientset
-	m.metricContext = &helper.LocalContext{}
+
+	m.metricRecord = pipeline.MetricsRecord{}
+	m.addEventCount = helper.NewCounterMetricAndRegister(&m.metricRecord, helper.MetricComponentK8sMetaAddEventTotal)
+	m.updateEventCount = helper.NewCounterMetricAndRegister(&m.metricRecord, helper.MetricComponentK8sMetaUpdateEventTotal)
+	m.deleteEventCount = helper.NewCounterMetricAndRegister(&m.metricRecord, helper.MetricComponentK8sMetaDeleteEventTotal)
+	m.cacheResourceGauge = helper.NewGaugeMetricAndRegister(&m.metricRecord, helper.MetricComponentK8sMetaCacheSize)
+	m.queueSizeGauge = helper.NewGaugeMetricAndRegister(&m.metricRecord, helper.MetricComponentK8sMetaQueueSize)
+	m.httpRequestCount = helper.NewCounterMetricAndRegister(&m.metricRecord, helper.MetricComponentK8sMetaHTTPRequestTotal)
+	m.httpAvgDelayMs = helper.NewAverageMetricAndRegister(&m.metricRecord, helper.MetricComponentK8sMetaHTTPAvgDelayMs)
+	m.httpMaxDelayMs = helper.NewMaxMetricAndRegister(&m.metricRecord, helper.MetricComponentK8sMetaHTTPMaxDelayMs)
 
 	go func() {
 		startTime := time.Now()
@@ -145,13 +165,28 @@ func (m *MetaManager) UnRegisterSendFunc(configName string, resourceType string)
 	}
 }
 
-func (m *MetaManager) GetMetricContext() pipeline.Context {
-	return m.metricContext
+func GetMetaManagerMetrics() []map[string]string {
+	manager := GetMetaManagerInstance()
+	if manager == nil || !manager.IsReady() {
+		return nil
+	}
+	// cache
+	queueSize := 0
+	cacheSize := 0
+	for _, cache := range manager.cacheMap {
+		queueSize += cache.GetQueueSize()
+		cacheSize += cache.GetSize()
+
+	}
+	manager.queueSizeGauge.Set(float64(queueSize))
+	manager.cacheResourceGauge.Set(float64(cacheSize))
+	return []map[string]string{
+		manager.metricRecord.ExportMetricRecords(),
+	}
 }
 
 func (m *MetaManager) runServer() {
-	metadataHandler := newMetadataHandler()
-	go metadataHandler.K8sServerRun(m.stopCh)
+	go m.metadataHandler.K8sServerRun(m.stopCh)
 }
 
 func isEntity(resourceType string) bool {
