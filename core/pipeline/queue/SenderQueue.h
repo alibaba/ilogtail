@@ -35,7 +35,8 @@ public:
 
     bool Push(std::unique_ptr<SenderQueueItem>&& item) override;
     bool Remove(SenderQueueItem* item) override;
-    void GetAllAvailableItems(std::vector<SenderQueueItem*>& items, bool withLimits = true) override;
+    void GetAllAvailableItems(std::vector<SenderQueueItem*>& items) override;
+    void GetLimitAvailableItems(std::vector<SenderQueueItem*>& items, int32_t limit) override;
 
 private:
     size_t Size() const override { return mSize; }
@@ -44,6 +45,13 @@ private:
     size_t mWrite = 0;
     size_t mRead = 0;
     size_t mSize = 0;
+
+    CounterPtr mGetTimesCnt;
+    CounterPtr mGetItemsCnt;
+    CounterPtr mLimitByRegionLimiterCnt;
+    CounterPtr mLimitByProjectLimiterCnt;
+    CounterPtr mLimitByLogstoreLimiterCnt;
+    CounterPtr mLimitByReteLimiterCnt;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class SenderQueueUnittest;

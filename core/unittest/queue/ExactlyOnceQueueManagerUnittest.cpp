@@ -232,20 +232,21 @@ void ExactlyOnceQueueManagerUnittest::TestGetAllAvailableSenderQueueItems() {
     {
         // no limits
         vector<SenderQueueItem*> items;
-        sManager->GetAllAvailableSenderQueueItems(items, false);
+        sManager->GetAllAvailableSenderQueueItems(items, 80, false);
         APSARA_TEST_EQUAL(4U, items.size());
         for (auto& item : items) {
-            item->mStatus = SendingStatus::IDLE;
+            item->mStatus.Set(SendingStatus::IDLE);
         }
     }
     auto& regionConcurrencyLimiter = sManager->mSenderQueues.at(0).mConcurrencyLimiters[0];
     {
         // with limits, limited by concurrency limiter
-        regionConcurrencyLimiter->SetLimit(3);
+        regionConcurrencyLimiter->SetCurrentLimit(3);
+        regionConcurrencyLimiter->SetInSendingCount(0);
         vector<SenderQueueItem*> items;
-        sManager->GetAllAvailableSenderQueueItems(items);
+        sManager->GetAllAvailableSenderQueueItems(items, 80);
         APSARA_TEST_EQUAL(3U, items.size());
-        APSARA_TEST_EQUAL(0, regionConcurrencyLimiter->GetLimit());
+        APSARA_TEST_EQUAL(3, regionConcurrencyLimiter->GetInSendingCount());
     }
 }
 

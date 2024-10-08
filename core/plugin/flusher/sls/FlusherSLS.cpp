@@ -113,17 +113,41 @@ void FlusherSLS::RecycleResourceIfNotUsed() {
 mutex FlusherSLS::sMux;
 unordered_map<string, weak_ptr<ConcurrencyLimiter>> FlusherSLS::sProjectConcurrencyLimiterMap;
 unordered_map<string, weak_ptr<ConcurrencyLimiter>> FlusherSLS::sRegionConcurrencyLimiterMap;
+unordered_map<string, weak_ptr<ConcurrencyLimiter>> FlusherSLS::sLogstoreConcurrencyLimiterMap;
+
+
+shared_ptr<ConcurrencyLimiter> GetConcurrencyLimiter(LimiterLabel limiterLabel) {
+    return make_shared<ConcurrencyLimiter>(limiterLabel, AppConfig::GetInstance()->GetSendRequestConcurrency());
+}
+
+shared_ptr<ConcurrencyLimiter> FlusherSLS::GetLogstoreConcurrencyLimiter(const std::string& project, const std::string& logstore) {
+    lock_guard<mutex> lock(sMux);
+    std::string key = project + "-" + logstore;
+
+    auto iter = sLogstoreConcurrencyLimiterMap.find(key);
+    if (iter == sLogstoreConcurrencyLimiterMap.end()) {
+        auto limiter = GetConcurrencyLimiter(LimiterLabel::LOGSTORE);
+        sLogstoreConcurrencyLimiterMap.try_emplace(key, limiter);
+        return limiter;
+    }
+    if (iter->second.expired()) {
+        auto limiter = GetConcurrencyLimiter(LimiterLabel::LOGSTORE);
+        iter->second = limiter;
+        return limiter;
+    }
+    return iter->second.lock();
+}
 
 shared_ptr<ConcurrencyLimiter> FlusherSLS::GetProjectConcurrencyLimiter(const string& project) {
     lock_guard<mutex> lock(sMux);
     auto iter = sProjectConcurrencyLimiterMap.find(project);
     if (iter == sProjectConcurrencyLimiterMap.end()) {
-        auto limiter = make_shared<ConcurrencyLimiter>();
+        auto limiter = GetConcurrencyLimiter(LimiterLabel::PROJECT);
         sProjectConcurrencyLimiterMap.try_emplace(project, limiter);
         return limiter;
     }
     if (iter->second.expired()) {
-        auto limiter = make_shared<ConcurrencyLimiter>();
+        auto limiter = GetConcurrencyLimiter(LimiterLabel::PROJECT);
         iter->second = limiter;
         return limiter;
     }
@@ -134,12 +158,12 @@ shared_ptr<ConcurrencyLimiter> FlusherSLS::GetRegionConcurrencyLimiter(const str
     lock_guard<mutex> lock(sMux);
     auto iter = sRegionConcurrencyLimiterMap.find(region);
     if (iter == sRegionConcurrencyLimiterMap.end()) {
-        auto limiter = make_shared<ConcurrencyLimiter>();
+        auto limiter = GetConcurrencyLimiter(LimiterLabel::REGION);
         sRegionConcurrencyLimiterMap.try_emplace(region, limiter);
         return limiter;
     }
     if (iter->second.expired()) {
-        auto limiter = make_shared<ConcurrencyLimiter>();
+        auto limiter = GetConcurrencyLimiter(LimiterLabel::REGION);
         iter->second = limiter;
         return limiter;
     }
@@ -158,6 +182,13 @@ void FlusherSLS::ClearInvalidConcurrencyLimiters() {
     for (auto iter = sRegionConcurrencyLimiterMap.begin(); iter != sRegionConcurrencyLimiterMap.end();) {
         if (iter->second.expired()) {
             iter = sRegionConcurrencyLimiterMap.erase(iter);
+        } else {
+            ++iter;
+        }
+    }
+    for (auto iter = sLogstoreConcurrencyLimiterMap.begin(); iter != sLogstoreConcurrencyLimiterMap.end();) {
+        if (iter->second.expired()) {
+            iter = sLogstoreConcurrencyLimiterMap.erase(iter);
         } else {
             ++iter;
         }
@@ -478,7 +509,8 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
             mPluginID,
             *mContext,
             vector<shared_ptr<ConcurrencyLimiter>>{GetRegionConcurrencyLimiter(mRegion),
-                                                   GetProjectConcurrencyLimiter(mProject)},
+                                                   GetProjectConcurrencyLimiter(mProject),
+                                                   GetLogstoreConcurrencyLimiter(mProject, mLogstore)},
             mMaxSendRate);
     }
 
@@ -497,12 +529,24 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
 
     GenerateGoPlugin(config, optionalGoPipeline);
 
+    mPushHttpCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_PUSH_CURL_TOTAL);
+    mSendDoneCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_CURL_SEND_DONE_TOTAL);
+    mSuccessCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_CURL_SUCCESS_TOTAL);
+    mNetworkErrorCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_CURL_NETWORK_ERROR_TOTAL);
+    mServerErrorCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_CURL_SERVER_ERROR_TOTAL);
+    mShardWriteQuotaErrorCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_CURL_SHARD_WRITE_QUOTA_ERROR_TOTAL);
+    mProjectQuotaErrorCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_CURL_PROJECT_QUOTA_ERROR_TOTAL);
+    mUnauthErrorCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_CURL_UNAUTH_ERROR_TOTAL);
+    mParamsErrorCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_CURL_PARAMS_ERROR_TOTAL);
+    mSequenceIDErrorCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_CURL_SEQUENCE_ID_ERROR_TOTAL);
+    mRequestExpiredErrorCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_CURL_REQUEST_EXPRIRED_ERROR_TOTAL);
+    mOtherErrorCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_CURL_OTHER_ERROR_TOTAL);
+
     return true;
 }
 
 bool FlusherSLS::Start() {
     Flusher::Start();
-
     InitResource();
 
     IncreaseProjectReferenceCnt(mProject);
@@ -556,6 +600,7 @@ unique_ptr<HttpSinkRequest> FlusherSLS::BuildRequest(SenderQueueItem* item) cons
             lastResetEndpointTime = curTime;
         }
     }
+    mPushHttpCnt->Add(1);
     if (BOOL_FLAG(send_prefer_real_ip)) {
         if (curTime - sendClient->GetSlsRealIpUpdateTime() >= INT32_FLAG(send_check_real_ip_interval)) {
             SLSClientManager::GetInstance()->UpdateSendClientRealIp(sendClient, mRegion);
@@ -603,6 +648,7 @@ unique_ptr<HttpSinkRequest> FlusherSLS::BuildRequest(SenderQueueItem* item) cons
 }
 
 void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item) {
+    mSendDoneCnt->Add(1);
     SLSResponse slsResponse;
     if (AppConfig::GetInstance()->IsResponseVerificationEnabled() && !IsSLSResponse(response)) {
         slsResponse.mStatusCode = 0;
@@ -642,7 +688,11 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
                           + "ms")("try cnt", data->mTryCnt)("endpoint", data->mCurrentEndpoint)("is profile data",
                                                                                                 isProfileData));
         GetRegionConcurrencyLimiter(mRegion)->OnSuccess();
+        GetProjectConcurrencyLimiter(mProject)->OnSuccess();
+        GetLogstoreConcurrencyLimiter(mProject, mLogstore)->OnSuccess();                                                                                       
+        SenderQueueManager::GetInstance()->DecreaseConcurrencyLimiterInSendingCnt(item->mQueueKey);
         DealSenderQueueItemAfterSend(item, false);
+        mSuccessCnt->Add(1);
     } else {
         OperationOnFail operation;
         SendResult sendResult = ConvertErrorCode(slsResponse.mErrorCode);
@@ -651,8 +701,10 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
         if (sendResult == SEND_NETWORK_ERROR || sendResult == SEND_SERVER_ERROR) {
             if (sendResult == SEND_NETWORK_ERROR) {
                 failDetail << "network error";
+                mNetworkErrorCnt->Add(1);
             } else {
                 failDetail << "server error";
+                mServerErrorCnt->Add(1);
             }
             suggestion << "check network connection to endpoint";
             if (BOOL_FLAG(send_prefer_real_ip) && data->mRealIpFlag) {
@@ -672,15 +724,26 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
                 }
             }
             operation = data->mBufferOrNot ? OperationOnFail::RETRY_LATER : OperationOnFail::DISCARD;
+            GetRegionConcurrencyLimiter(mRegion)->OnFail(time(nullptr));
+            GetProjectConcurrencyLimiter(mProject)->OnSuccess();
+            GetLogstoreConcurrencyLimiter(mProject, mLogstore)->OnSuccess();
         } else if (sendResult == SEND_QUOTA_EXCEED) {
             BOOL_FLAG(global_network_success) = true;
             if (slsResponse.mErrorCode == sdk::LOGE_SHARD_WRITE_QUOTA_EXCEED) {
                 failDetail << "shard write quota exceed";
                 suggestion << "Split logstore shards. https://help.aliyun.com/zh/sls/user-guide/expansion-of-resources";
+                GetLogstoreConcurrencyLimiter(mProject, mLogstore)->OnFail(time(nullptr));
+                GetRegionConcurrencyLimiter(mRegion)->OnSuccess();
+                GetProjectConcurrencyLimiter(mProject)->OnSuccess();
+                mShardWriteQuotaErrorCnt->Add(1);
             } else {
                 failDetail << "project write quota exceed";
                 suggestion << "Submit quota modification request. "
                               "https://help.aliyun.com/zh/sls/user-guide/expansion-of-resources";
+                GetProjectConcurrencyLimiter(mProject)->OnFail(time(nullptr));
+                GetRegionConcurrencyLimiter(mRegion)->OnSuccess();
+                GetLogstoreConcurrencyLimiter(mProject, mLogstore)->OnSuccess();
+                mProjectQuotaErrorCnt->Add(1);
             }
             LogtailAlarm::GetInstance()->SendAlarm(SEND_QUOTA_EXCEED_ALARM,
                                                    "error_code: " + slsResponse.mErrorCode
@@ -714,12 +777,15 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
                 }
 #endif
             }
+            mUnauthErrorCnt->Add(1);
         } else if (sendResult == SEND_PARAMETER_INVALID) {
             failDetail << "invalid paramters";
             suggestion << "check input parameters";
             operation = DefaultOperation(item->mTryCnt);
+            mParamsErrorCnt->Add(1);
         } else if (sendResult == SEND_INVALID_SEQUENCE_ID) {
             failDetail << "invalid exactly-once sequence id";
+            mSequenceIDErrorCnt->Add(1);
             do {
                 auto& cpt = data->mExactlyOnceCheckpoint;
                 if (!cpt) {
@@ -758,6 +824,7 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
             failDetail << "write request expired, will retry";
             suggestion << "check local system time";
             operation = OperationOnFail::RETRY_IMMEDIATELY;
+            mRequestExpiredErrorCnt->Add(1);
         } else {
             failDetail << "other error";
             suggestion << "no suggestion";
@@ -766,6 +833,7 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
             // then we record error and retry latter
             // when retry times > unknow_error_try_max, we will drop this data
             operation = DefaultOperation(item->mTryCnt);
+            mOtherErrorCnt->Add(1);
         }
         if (chrono::duration_cast<chrono::seconds>(curSystemTime - item->mEnqueTime).count()
             > INT32_FLAG(discard_send_fail_interval)) {
@@ -796,6 +864,7 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
                     LOG_WARNING(sLogger, LOG_PATTERN);
                     data->mLastLogWarningTime = curTime;
                 }
+                SenderQueueManager::GetInstance()->DecreaseConcurrencyLimiterInSendingCnt(item->mQueueKey);
                 DealSenderQueueItemAfterSend(item, true);
                 break;
             case OperationOnFail::DISCARD:
@@ -813,6 +882,7 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
                         data->mLogstore,
                         mRegion);
                 }
+                SenderQueueManager::GetInstance()->DecreaseConcurrencyLimiterInSendingCnt(item->mQueueKey);
                 DealSenderQueueItemAfterSend(item, false);
                 break;
         }

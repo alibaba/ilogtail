@@ -24,7 +24,14 @@ SenderQueue::SenderQueue(
     size_t cap, size_t low, size_t high, QueueKey key, const string& flusherId, const PipelineContext& ctx)
     : QueueInterface(key, cap, ctx), BoundedSenderQueueInterface(cap, low, high, key, flusherId, ctx) {
     mQueue.resize(cap);
-    WriteMetrics::GetInstance()->CommitMetricsRecordRef(mMetricsRecordRef);
+    // TODO:: taiye
+    mGetTimesCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_QUEUE_GET_ITEMS_TIMES_TOTAL);
+    mGetItemsCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_QUEUE_GET_ITEMS_TOTAL);
+    mLimitByRegionLimiterCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_QUEUE_LIMIT_BY_REGION_LIMITER_TOTAL);
+    mLimitByProjectLimiterCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_QUEUE_LIMIT_BY_PROJECT_LIMITER_TOTAL);
+    mLimitByLogstoreLimiterCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_QUEUE_LIMIT_BY_LOGTORE_LIMITER_TOTAL);
+    mLimitByReteLimiterCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_QUEUE_LIMIT_BY_RATE_LIMITER_TOTAL); 
+    WriteMetrics::GetInstance()->CommitMetricsRecordRef(mMetricsRecordRef);    
 }
 
 bool SenderQueue::Push(unique_ptr<SenderQueueItem>&& item) {
@@ -65,6 +72,7 @@ bool SenderQueue::Remove(SenderQueueItem* item) {
     if (item == nullptr) {
         return false;
     }
+    
     size_t size = 0;
     chrono::system_clock::time_point enQueuTime;
     auto index = mRead;
@@ -106,7 +114,63 @@ bool SenderQueue::Remove(SenderQueueItem* item) {
     return true;
 }
 
-void SenderQueue::GetAllAvailableItems(vector<SenderQueueItem*>& items, bool withLimits) {
+
+void SenderQueue::GetLimitAvailableItems(vector<SenderQueueItem*>& items, int32_t limit) {
+    mGetTimesCnt->Add(1);
+    if (Empty()) {
+        return;
+    }
+    int itemsCnt = 0;
+    for (auto index = mRead; index < mWrite; ++index) {
+        SenderQueueItem* item = mQueue[index % mCapacity].get();
+        if (item == nullptr) {
+            continue;
+        }
+        mGetItemsCnt->Add(1);
+        if (mRateLimiter && !mRateLimiter->IsValidToPop()) {
+            mLimitByReteLimiterCnt->Add(1);
+            return;
+        }
+        for (auto& limiter : mConcurrencyLimiters) {
+            if (!limiter->IsValidToPop()) {
+                switch (limiter->GetLimiterLabel()) {
+                    case LimiterLabel::REGION:
+                        mLimitByRegionLimiterCnt->Add(1);
+                        break;
+                    case LimiterLabel::PROJECT:
+                        mLimitByProjectLimiterCnt->Add(1);
+                        break;
+                    case LimiterLabel::LOGSTORE:
+                        mLimitByLogstoreLimiterCnt->Add(1);
+                        break;
+                    default:
+                        break;
+                }
+                return;
+            }
+        }
+        
+        if (item->mStatus.Get() == SendingStatus::IDLE) {
+            item->mStatus.Set(SendingStatus::SENDING);
+            items.emplace_back(item);
+            for (auto& limiter : mConcurrencyLimiters) {
+                if (limiter != nullptr) {
+                    limiter->PostPop();
+                }
+            }
+            if (mRateLimiter) {
+                mRateLimiter->PostPop(item->mRawSize);
+            }
+        }
+        ++itemsCnt;
+        if (itemsCnt >= limit) {
+            return;
+        }
+    }
+}
+
+
+void SenderQueue::GetAllAvailableItems(vector<SenderQueueItem*>& items) {
     if (Empty()) {
         return;
     }
@@ -115,31 +179,12 @@ void SenderQueue::GetAllAvailableItems(vector<SenderQueueItem*>& items, bool wit
         if (item == nullptr) {
             continue;
         }
-        if (withLimits) {
-            if (mRateLimiter && !mRateLimiter->IsValidToPop()) {
-                return;
-            }
-            for (auto& limiter : mConcurrencyLimiters) {
-                if (!limiter->IsValidToPop()) {
-                    return;
-                }
-            }
-        }
-        if (item->mStatus == SendingStatus::IDLE) {
-            item->mStatus = SendingStatus::SENDING;
+        if (item->mStatus.Get() == SendingStatus::IDLE) {
+            item->mStatus.Set(SendingStatus::SENDING);
             items.emplace_back(item);
-            if (withLimits) {
-                for (auto& limiter : mConcurrencyLimiters) {
-                    if (limiter != nullptr) {
-                        limiter->PostPop();
-                    }
-                }
-                if (mRateLimiter) {
-                    mRateLimiter->PostPop(item->mRawSize);
-                }
-            }
         }
     }
 }
+
 
 } // namespace logtail

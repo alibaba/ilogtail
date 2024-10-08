@@ -18,24 +18,64 @@
 
 #include <atomic>
 #include <ctime>
+#include <mutex>
 
 namespace logtail {
 
+enum class LimiterLabel { REGION, PROJECT, LOGSTORE };
+
 class ConcurrencyLimiter {
 public:
+    ConcurrencyLimiter(LimiterLabel limiterLabel, uint32_t maxConcurrency, uint32_t minConcurrency = 0,  
+        uint32_t maxRetryIntervalSecs = 3600, uint32_t minRetryIntervalSecs = 30, 
+        double upRatio = 1.5, double downRatio = 0.5) : 
+        mMaxConcurrency(maxConcurrency), mMinConcurrency(minConcurrency), mCurrenctConcurrency(maxConcurrency),
+        mMaxRetryIntervalSecs(maxRetryIntervalSecs), mMinRetryIntervalSecs(minRetryIntervalSecs), 
+        mRetryIntervalSecs(minRetryIntervalSecs), mUpRatio(upRatio), mDownRatio(downRatio) {}
+
     bool IsValidToPop();
     void PostPop();
+    void OnSendDone();
+    LimiterLabel GetLimiterLabel() {
+        return mLimiterLabel;
+    }
+
     void OnSuccess();
     void OnFail(time_t curTime);
 
+    uint32_t GetCurrentLimit() const;
+
+    uint32_t GetCurrentInterval() const;
+
 #ifdef APSARA_UNIT_TEST_MAIN
-    void Reset() { mLimit = -1; }
-    void SetLimit(int limit) { mLimit = limit; }
-    int GetLimit() const { return mLimit; }
+    void SetCurrentLimit(uint32_t limit);
+
+    void SetInSendingCount(uint32_t count);
+    uint32_t GetInSendingCount() const;
+
 #endif
 
 private:
-    std::atomic_int mLimit = -1;
+    std::atomic<uint32_t> mInSendingCnt = 0;
+
+    LimiterLabel mLimiterLabel;
+
+    uint32_t mMaxConcurrency = 0;
+    uint32_t mMinConcurrency = 0;
+
+    mutable std::mutex mCurrenctConcurrencyMux;
+    uint32_t mCurrenctConcurrency = 0;
+
+    uint32_t mMaxRetryIntervalSecs = 0;
+    uint32_t mMinRetryIntervalSecs = 0;
+
+    mutable std::mutex mIntervalMux;
+    uint32_t mRetryIntervalSecs = 0;
+
+    double mUpRatio = 0.0;
+    double mDownRatio = 0.0;
+
+    std::chrono::system_clock::time_point mLastCheckTime;
 };
 
 } // namespace logtail

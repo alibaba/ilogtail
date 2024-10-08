@@ -43,8 +43,12 @@ public:
     bool Pop(std::unique_ptr<SenderQueueItem>& item) override { return false; }
 
     virtual bool Remove(SenderQueueItem* item) = 0;
-    virtual void GetAllAvailableItems(std::vector<SenderQueueItem*>& items, bool withLimits = true) = 0;
+    
+    virtual void GetAllAvailableItems(std::vector<SenderQueueItem*>& items) = 0;
+    virtual void GetLimitAvailableItems(std::vector<SenderQueueItem*>& items, int32_t limit) = 0;
 
+    void DecreaseSendingCnt();
+    void OnSendingSuccess();
     void SetRateLimiter(uint32_t maxRate);
     void SetConcurrencyLimiters(std::vector<std::shared_ptr<ConcurrencyLimiter>>&& limiters);
 

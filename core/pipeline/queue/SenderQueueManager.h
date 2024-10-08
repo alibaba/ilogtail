@@ -57,8 +57,9 @@ public:
     bool ReuseQueue(QueueKey key);
     // 0: success, 1: queue is full, 2: queue not found
     int PushQueue(QueueKey key, std::unique_ptr<SenderQueueItem>&& item);
-    void GetAllAvailableItems(std::vector<SenderQueueItem*>& items, bool withLimits = true);
+    void GetAllAvailableItems(std::vector<SenderQueueItem*>& items, int32_t itemsCntLimit, bool withLimits = true);
     bool RemoveItem(QueueKey key, SenderQueueItem* item);
+    void DecreaseConcurrencyLimiterInSendingCnt(QueueKey key);
     bool IsAllQueueEmpty() const;
     void ClearUnusedQueues();
 
@@ -90,6 +91,7 @@ private:
     mutable std::mutex mStateMux;
     mutable std::condition_variable mCond;
     bool mValidToPop = false;
+    size_t mSenderQueueBeginIndex = 0;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class SenderQueueManagerUnittest;

@@ -106,14 +106,33 @@ int SenderQueueManager::PushQueue(QueueKey key, unique_ptr<SenderQueueItem>&& it
     return 0;
 }
 
-void SenderQueueManager::GetAllAvailableItems(vector<SenderQueueItem*>& items, bool withLimits) {
+void SenderQueueManager::GetAllAvailableItems(vector<SenderQueueItem*>& items, int32_t itemsCntLimit, bool withLimits) {
     {
         lock_guard<mutex> lock(mQueueMux);
-        for (auto iter = mQueues.begin(); iter != mQueues.end(); ++iter) {
-            iter->second.GetAllAvailableItems(items, withLimits);
+        if (mQueues.empty()) {
+            return;
+        }
+        if (withLimits) {
+            int cntLimitPerQueue = std::max((int)(mQueueParam.GetCapacity() * 0.3), (int)(itemsCntLimit/mQueues.size()));
+            // must check index before moving iterator
+            mSenderQueueBeginIndex = mSenderQueueBeginIndex % mQueues.size();
+            // here we set sender queue begin index, let the sender order be different each time
+            auto beginIter = mQueues.begin();
+            std::advance(beginIter, mSenderQueueBeginIndex++);
+
+            for (auto iter = beginIter; iter != mQueues.end(); ++iter) {
+                iter->second.GetLimitAvailableItems(items, cntLimitPerQueue);
+            }
+            for (auto iter = mQueues.begin(); iter != beginIter; ++iter) {        
+                iter->second.GetLimitAvailableItems(items, cntLimitPerQueue);
+            }
+        } else {
+            for (auto iter = mQueues.begin(); iter != mQueues.end(); ++iter) {         
+                iter->second.GetAllAvailableItems(items);
+            }
         }
     }
-    ExactlyOnceQueueManager::GetInstance()->GetAllAvailableSenderQueueItems(items, withLimits);
+    ExactlyOnceQueueManager::GetInstance()->GetAllAvailableSenderQueueItems(items, itemsCntLimit, withLimits);
 }
 
 bool SenderQueueManager::RemoveItem(QueueKey key, SenderQueueItem* item) {
@@ -125,6 +144,14 @@ bool SenderQueueManager::RemoveItem(QueueKey key, SenderQueueItem* item) {
         }
     }
     return ExactlyOnceQueueManager::GetInstance()->RemoveSenderQueueItem(key, item);
+}
+
+void SenderQueueManager::DecreaseConcurrencyLimiterInSendingCnt(QueueKey key) {
+    lock_guard<mutex> lock(mQueueMux);
+    auto iter = mQueues.find(key);
+    if (iter != mQueues.end()) {
+        iter->second.DecreaseSendingCnt();
+    }
 }
 
 bool SenderQueueManager::IsAllQueueEmpty() const {
