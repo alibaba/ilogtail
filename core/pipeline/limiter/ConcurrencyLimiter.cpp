@@ -31,27 +31,27 @@ uint32_t ConcurrencyLimiter::GetCurrentInterval() const {
 }
 
 #ifdef APSARA_UNIT_TEST_MAIN
-void ConcurrencyLimiter::SetLimit(int limit) { 
+void ConcurrencyLimiter::SetCurrentLimit(uint32_t limit) { 
     lock_guard<mutex> lock(mCurrenctConcurrencyMux);
     mCurrenctConcurrency = limit;
 }
 
-void ConcurrencyLimiter::SetSendingCount(int count) {
+void ConcurrencyLimiter::SetInSendingCount(uint32_t count) {
     mInSendingCnt.store(count);
 }
-int ConcurrencyLimiter::GetSendingCount() const { return mInSendingCnt.load(); }
+uint32_t ConcurrencyLimiter::GetInSendingCount() const { return mInSendingCnt.load(); }
 
 #endif
 
 
 bool ConcurrencyLimiter::IsValidToPop() {
-    if (mLastSendTime == 0) {
-        mLastSendTime = time(nullptr);
+    if (mLastCheckTime.time_since_epoch().count()  == 0) {
+        mLastCheckTime = std::chrono::system_clock::now();
     }
     if (GetCurrentLimit() <= mMinConcurrency) {
-        time_t curTime = time(nullptr);
-        if (curTime -  mLastSendTime > GetCurrentInterval()) {
-            mLastSendTime = curTime;
+        std::chrono::system_clock::time_point curTime = std::chrono::system_clock::now();
+        if (chrono::duration_cast<chrono::seconds>(curTime - mLastCheckTime).count() > GetCurrentInterval()) {
+            mLastCheckTime = curTime;
             return true;
         } else {
             return false;

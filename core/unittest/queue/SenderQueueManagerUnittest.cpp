@@ -220,12 +220,12 @@ void SenderQueueManagerUnittest::TestGetAllAvailableItems() {
     auto regionConcurrencyLimiter = FlusherSLS::GetRegionConcurrencyLimiter(mFlusher.mRegion);
     {
         // with limits, limited by concurrency limiter
-        regionConcurrencyLimiter->SetLimit(3);
-        regionConcurrencyLimiter->SetSendingCount(2);
+        regionConcurrencyLimiter->SetCurrentLimit(3);
+        regionConcurrencyLimiter->SetInSendingCount(2);
         vector<SenderQueueItem*> items;
         sManager->GetAllAvailableItems(items, 80);
         APSARA_TEST_EQUAL(1U, items.size());
-        APSARA_TEST_EQUAL(3U, regionConcurrencyLimiter->GetSendingCount());
+        APSARA_TEST_EQUAL(3U, regionConcurrencyLimiter->GetInSendingCount());
     }
 }
 

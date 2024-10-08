@@ -674,7 +674,7 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
                           + "ms")("try cnt", data->mTryCnt)("endpoint", data->mCurrentEndpoint)("is profile data",
                                                                                                 isProfileData));
         GetRegionConcurrencyLimiter(mRegion)->OnSuccess();
-        GetLogstoreConcurrencyLimiter(mProject, mLogstore)->OnSuccess();
+        GetProjectConcurrencyLimiter(mProject)->OnSuccess();
         GetLogstoreConcurrencyLimiter(mProject, mLogstore)->OnSuccess();                                                                                       
         SenderQueueManager::GetInstance()->DecreaseConcurrencyLimiterInSendingCnt(item->mQueueKey);
         DealSenderQueueItemAfterSend(item, false);
@@ -708,17 +708,23 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
             }
             operation = data->mBufferOrNot ? OperationOnFail::RETRY_LATER : OperationOnFail::DISCARD;
             GetRegionConcurrencyLimiter(mRegion)->OnFail(time(nullptr));
+            GetProjectConcurrencyLimiter(mProject)->OnSuccess();
+            GetLogstoreConcurrencyLimiter(mProject, mLogstore)->OnSuccess();
         } else if (sendResult == SEND_QUOTA_EXCEED) {
             BOOL_FLAG(global_network_success) = true;
             if (slsResponse.mErrorCode == sdk::LOGE_SHARD_WRITE_QUOTA_EXCEED) {
                 failDetail << "shard write quota exceed";
                 suggestion << "Split logstore shards. https://help.aliyun.com/zh/sls/user-guide/expansion-of-resources";
                 GetLogstoreConcurrencyLimiter(mProject, mLogstore)->OnFail(time(nullptr));
+                GetRegionConcurrencyLimiter(mRegion)->OnSuccess();
+                GetProjectConcurrencyLimiter(mProject)->OnSuccess();
             } else {
                 failDetail << "project write quota exceed";
                 suggestion << "Submit quota modification request. "
                               "https://help.aliyun.com/zh/sls/user-guide/expansion-of-resources";
                 GetProjectConcurrencyLimiter(mProject)->OnFail(time(nullptr));
+                GetRegionConcurrencyLimiter(mRegion)->OnSuccess();
+                GetLogstoreConcurrencyLimiter(mProject, mLogstore)->OnSuccess();
             }
             LogtailAlarm::GetInstance()->SendAlarm(SEND_QUOTA_EXCEED_ALARM,
                                                    "error_code: " + slsResponse.mErrorCode

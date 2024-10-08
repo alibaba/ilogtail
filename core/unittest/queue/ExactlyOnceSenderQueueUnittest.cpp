@@ -136,13 +136,13 @@ void ExactlyOnceSenderQueueUnittest::TestGetAllAvailableItems() {
     {
         // with limits, limited by concurrency limiter
         mQueue->mRateLimiter->mMaxSendBytesPerSecond = 100;
-        mQueue->mConcurrencyLimiters[0]->SetLimit(1);
-        mQueue->mConcurrencyLimiters[0]->SetSendingCount(0);
+        mQueue->mConcurrencyLimiters[0]->SetCurrentLimit(1);
+        mQueue->mConcurrencyLimiters[0]->SetInSendingCount(0);
         vector<SenderQueueItem*> items;
         mQueue->GetAllAvailableItems(items);
         APSARA_TEST_EQUAL(1U, items.size());
         APSARA_TEST_EQUAL(sDataSize, mQueue->mRateLimiter->mLastSecondTotalBytes);
-        APSARA_TEST_EQUAL(1, mQueue->mConcurrencyLimiters[0]->GetSendingCount());
+        APSARA_TEST_EQUAL(1, mQueue->mConcurrencyLimiters[0]->GetInSendingCount());
         for (auto& item : items) {
             item->mStatus.Set(SendingStatus::IDLE);
         }
@@ -151,25 +151,25 @@ void ExactlyOnceSenderQueueUnittest::TestGetAllAvailableItems() {
     {
         // with limits, limited by rate limiter
         mQueue->mRateLimiter->mMaxSendBytesPerSecond = 5;
-        mQueue->mConcurrencyLimiters[0]->SetLimit(3);
-        mQueue->mConcurrencyLimiters[0]->SetSendingCount(0);
+        mQueue->mConcurrencyLimiters[0]->SetCurrentLimit(3);
+        mQueue->mConcurrencyLimiters[0]->SetInSendingCount(0);
         vector<SenderQueueItem*> items;
         mQueue->GetAllAvailableItems(items);
         APSARA_TEST_EQUAL(1U, items.size());
         APSARA_TEST_EQUAL(sDataSize, mQueue->mRateLimiter->mLastSecondTotalBytes);
-        APSARA_TEST_EQUAL(1, mQueue->mConcurrencyLimiters[0]->GetSendingCount());
+        APSARA_TEST_EQUAL(1, mQueue->mConcurrencyLimiters[0]->GetInSendingCount());
         mQueue->mRateLimiter->mLastSecondTotalBytes = 0;
     }
     {
         // with limits, does not work
         mQueue->mRateLimiter->mMaxSendBytesPerSecond = 100;
-        mQueue->mConcurrencyLimiters[0]->SetLimit(3);
-        mQueue->mConcurrencyLimiters[0]->SetSendingCount(0);
+        mQueue->mConcurrencyLimiters[0]->SetCurrentLimit(3);
+        mQueue->mConcurrencyLimiters[0]->SetInSendingCount(0);
         vector<SenderQueueItem*> items;
         mQueue->GetAllAvailableItems(items);
         APSARA_TEST_EQUAL(1U, items.size());
         APSARA_TEST_EQUAL(sDataSize, mQueue->mRateLimiter->mLastSecondTotalBytes);
-        APSARA_TEST_EQUAL(1, mQueue->mConcurrencyLimiters[0]->GetSendingCount());
+        APSARA_TEST_EQUAL(1, mQueue->mConcurrencyLimiters[0]->GetInSendingCount());
     }
 }
 

@@ -48,10 +48,10 @@ public:
     uint32_t GetCurrentInterval() const;
 
 #ifdef APSARA_UNIT_TEST_MAIN
-    void SetLimit(int limit);
+    void SetCurrentLimit(uint32_t limit);
 
-    void SetSendingCount(int count);
-    int GetSendingCount() const;
+    void SetInSendingCount(uint32_t count);
+    uint32_t GetInSendingCount() const;
 
 #endif
 
@@ -75,7 +75,7 @@ private:
     double mUpRatio = 0.0;
     double mDownRatio = 0.0;
 
-    time_t mLastSendTime = 0;
+    std::chrono::system_clock::time_point mLastCheckTime;
 };
 
 } // namespace logtail
