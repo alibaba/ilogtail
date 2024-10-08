@@ -88,6 +88,7 @@ void PrometheusInputRunner::Init() {
     }
     LOG_INFO(sLogger, ("PrometheusInputRunner", "Start"));
     mIsStarted = true;
+
 #ifndef APSARA_UNIT_TEST_MAIN
     mTimer->Init();
     AsynCurlRunner::GetInstance()->Init();

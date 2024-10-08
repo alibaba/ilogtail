@@ -16,20 +16,21 @@
 
 #include "pipeline/Pipeline.h"
 
+#include <chrono>
 #include <cstdint>
 #include <utility>
 
-#include "pipeline/batch/TimeoutFlushManager.h"
 #include "common/Flags.h"
 #include "common/ParamExtractor.h"
-#include "plugin/flusher/sls/FlusherSLS.h"
 #include "go_pipeline/LogtailPlugin.h"
-#include "plugin/input/InputFeedbackInterfaceRegistry.h"
+#include "pipeline/batch/TimeoutFlushManager.h"
 #include "pipeline/plugin/PluginRegistry.h"
-#include "plugin/processor/ProcessorParseApsaraNative.h"
 #include "pipeline/queue/ProcessQueueManager.h"
 #include "pipeline/queue/QueueKeyManager.h"
 #include "pipeline/queue/SenderQueueManager.h"
+#include "plugin/flusher/sls/FlusherSLS.h"
+#include "plugin/input/InputFeedbackInterfaceRegistry.h"
+#include "plugin/processor/ProcessorParseApsaraNative.h"
 
 DECLARE_FLAG_INT32(default_plugin_log_queue_size);
 
@@ -288,10 +289,11 @@ bool Pipeline::Init(PipelineConfig&& config) {
             ? ProcessQueueManager::sMaxPriority
             : mContext.GetGlobalConfig().mProcessPriority - 1;
         if (isInputSupportAck) {
-            ProcessQueueManager::GetInstance()->CreateOrUpdateBoundedQueue(mContext.GetProcessQueueKey(), priority);
+            ProcessQueueManager::GetInstance()->CreateOrUpdateBoundedQueue(
+                mContext.GetProcessQueueKey(), priority, mContext);
         } else {
             ProcessQueueManager::GetInstance()->CreateOrUpdateCircularQueue(
-                mContext.GetProcessQueueKey(), priority, 1024);
+                mContext.GetProcessQueueKey(), priority, 1024, mContext);
         }
 
 
@@ -313,10 +315,20 @@ bool Pipeline::Init(PipelineConfig&& config) {
         ProcessQueueManager::GetInstance()->SetDownStreamQueues(mContext.GetProcessQueueKey(), std::move(senderQueues));
     }
 
+    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
+        mMetricsRecordRef,
+        {{METRIC_LABEL_KEY_PROJECT, mContext.GetProjectName()}, {METRIC_LABEL_KEY_PIPELINE_NAME, mName}});
+    mStartTime = mMetricsRecordRef.CreateIntGauge(METRIC_PIPELINE_START_TIME);
+    mProcessorsInEventsTotal = mMetricsRecordRef.CreateCounter(METRIC_PIPELINE_PROCESSORS_IN_EVENTS_TOTAL);
+    mProcessorsInGroupsTotal = mMetricsRecordRef.CreateCounter(METRIC_PIPELINE_PROCESSORS_IN_EVENT_GROUPS_TOTAL);
+    mProcessorsInSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_PIPELINE_PROCESSORS_IN_SIZE_BYTES);
+    mProcessorsTotalProcessTimeMs = mMetricsRecordRef.CreateCounter(METRIC_PIPELINE_PROCESSORS_TOTAL_PROCESS_TIME_MS);
+
     return true;
 }
 
 void Pipeline::Start() {
+#ifndef APSARA_UNIT_TEST_MAIN
     // TODO: 应该保证指定时间内返回，如果无法返回，将配置放入startDisabled里
     for (const auto& flusher : mFlushers) {
         flusher->Start();
@@ -326,7 +338,7 @@ void Pipeline::Start() {
         // TODO: 加载该Go流水线
     }
 
-    // TODO: 启用Process中改流水线对应的输入队列
+    ProcessQueueManager::GetInstance()->EnablePop(mName);
 
     if (!mGoPipelineWithInput.isNull()) {
         // TODO: 加载该Go流水线
@@ -336,16 +348,27 @@ void Pipeline::Start() {
         input->Start();
     }
 
+    mStartTime->Set(chrono::duration_cast<chrono::seconds>(chrono::system_clock::now().time_since_epoch()).count());
+#endif
     LOG_INFO(sLogger, ("pipeline start", "succeeded")("config", mName));
 }
 
 void Pipeline::Process(vector<PipelineEventGroup>& logGroupList, size_t inputIndex) {
+    for (const auto& logGroup : logGroupList) {
+        mProcessorsInEventsTotal->Add(logGroup.GetEvents().size());
+        mProcessorsInSizeBytes->Add(logGroup.DataSize());
+    }
+    mProcessorsInGroupsTotal->Add(logGroupList.size());
+
+    auto before = chrono::system_clock::now();
     for (auto& p : mInputs[inputIndex]->GetInnerProcessors()) {
         p->Process(logGroupList);
     }
     for (auto& p : mProcessorLine) {
         p->Process(logGroupList);
     }
+    mProcessorsTotalProcessTimeMs->Add(
+        chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - before).count());
 }
 
 bool Pipeline::Send(vector<PipelineEventGroup>&& groupList) {
@@ -380,6 +403,7 @@ bool Pipeline::FlushBatch() {
 }
 
 void Pipeline::Stop(bool isRemoving) {
+#ifndef APSARA_UNIT_TEST_MAIN
     // TODO: 应该保证指定时间内返回，如果无法返回，将配置放入stopDisabled里
     for (const auto& input : mInputs) {
         input->Stop(isRemoving);
@@ -402,7 +426,7 @@ void Pipeline::Stop(bool isRemoving) {
     for (const auto& flusher : mFlushers) {
         flusher->Stop(isRemoving);
     }
-
+#endif
     LOG_INFO(sLogger, ("pipeline stop", "succeeded")("config", mName));
 }
 
@@ -501,14 +525,8 @@ std::string Pipeline::GetNowPluginID() {
 
 PluginInstance::PluginMeta Pipeline::GenNextPluginMeta(bool lastOne) {
     mPluginID.fetch_add(1);
-    int32_t childNodeID = mPluginID.load();
-    if (lastOne) {
-        childNodeID = -1;
-    } else {
-        childNodeID += 1;
-    }
     return PluginInstance::PluginMeta(
-        std::to_string(mPluginID.load()), std::to_string(mPluginID.load()), std::to_string(childNodeID));
+        std::to_string(mPluginID.load()));
 }
 
 } // namespace logtail

@@ -49,7 +49,7 @@ protected:
         mScrapeConfig->mScrapeIntervalSeconds = 10;
         mScrapeConfig->mScrapeTimeoutSeconds = 10;
         mScrapeConfig->mMetricsPath = "/metrics";
-        mScrapeConfig->mAuthHeaders = {{"Authorization", "Bearer xxxxx"}};
+        mScrapeConfig->mRequestHeaders = {{"Authorization", "Bearer xxxxx"}};
 
         mHttpResponse.mBody
             = "# HELP go_gc_duration_seconds A summary of the pause duration of garbage collection cycles.\n"
@@ -84,15 +84,15 @@ private:
 
 void ScrapeSchedulerUnittest::TestInitscrapeScheduler() {
     Labels labels;
-    labels.Push({prometheus::ADDRESS_LABEL_NAME, "localhost:8080"});
+    labels.Set(prometheus::ADDRESS_LABEL_NAME, "localhost:8080");
     ScrapeScheduler event(mScrapeConfig, "localhost", 8080, labels, 0, 0);
     APSARA_TEST_EQUAL(event.GetId(), "test_jobhttp://localhost:8080/metrics" + ToString(labels.Hash()));
 }
 
 void ScrapeSchedulerUnittest::TestProcess() {
     Labels labels;
-    labels.Push({prometheus::ADDRESS_LABEL_NAME, "localhost:8080"});
-    labels.Push({prometheus::ADDRESS_LABEL_NAME, "localhost:8080"});
+    labels.Set(prometheus::ADDRESS_LABEL_NAME, "localhost:8080");
+    labels.Set(prometheus::ADDRESS_LABEL_NAME, "localhost:8080");
     ScrapeScheduler event(mScrapeConfig, "localhost", 8080, labels, 0, 0);
     APSARA_TEST_EQUAL(event.GetId(), "test_jobhttp://localhost:8080/metrics" + ToString(labels.Hash()));
     // if status code is not 200, no data will be processed
@@ -110,8 +110,8 @@ void ScrapeSchedulerUnittest::TestProcess() {
 
 void ScrapeSchedulerUnittest::TestSplitByLines() {
     Labels labels;
-    labels.Push({prometheus::ADDRESS_LABEL_NAME, "localhost:8080"});
-    labels.Push({prometheus::ADDRESS_LABEL_NAME, "localhost:8080"});
+    labels.Set(prometheus::ADDRESS_LABEL_NAME, "localhost:8080");
+    labels.Set(prometheus::ADDRESS_LABEL_NAME, "localhost:8080");
     ScrapeScheduler event(mScrapeConfig, "localhost", 8080, labels, 0, 0);
     APSARA_TEST_EQUAL(event.GetId(), "test_jobhttp://localhost:8080/metrics" + ToString(labels.Hash()));
     auto res = event.BuildPipelineEventGroup(mHttpResponse.mBody);
@@ -142,8 +142,8 @@ void ScrapeSchedulerUnittest::TestSplitByLines() {
 
 void ScrapeSchedulerUnittest::TestReceiveMessage() {
     Labels labels;
-    labels.Push({prometheus::ADDRESS_LABEL_NAME, "localhost:8080"});
-    labels.Push({prometheus::ADDRESS_LABEL_NAME, "localhost:8080"});
+    labels.Set(prometheus::ADDRESS_LABEL_NAME, "localhost:8080");
+    labels.Set(prometheus::ADDRESS_LABEL_NAME, "localhost:8080");
     auto event = make_shared<ScrapeScheduler>(mScrapeConfig, "localhost", 8080, labels, 0, 0);
 
 
@@ -157,7 +157,7 @@ void ScrapeSchedulerUnittest::TestReceiveMessage() {
 
 void ScrapeSchedulerUnittest::TestScheduler() {
     Labels labels;
-    labels.Push({prometheus::ADDRESS_LABEL_NAME, "localhost:8080"});
+    labels.Set(prometheus::ADDRESS_LABEL_NAME, "localhost:8080");
     ScrapeScheduler event(mScrapeConfig, "localhost", 8080, labels, 0, 0);
     auto timer = make_shared<Timer>();
     event.SetTimer(timer);

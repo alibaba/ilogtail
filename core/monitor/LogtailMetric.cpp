@@ -25,6 +25,9 @@ using namespace sls_logs;
 
 namespace logtail {
 
+const std::string LABEL_PREFIX = "label.";
+const std::string VALUE_PREFIX = "value.";
+
 MetricsRecord::MetricsRecord(MetricLabelsPtr labels, DynamicMetricLabelsPtr dynamicLabels)
     : mLabels(labels), mDynamicLabels(dynamicLabels), mDeleted(false) {
 }
@@ -36,7 +39,7 @@ CounterPtr MetricsRecord::CreateCounter(const std::string& name) {
 }
 
 IntGaugePtr MetricsRecord::CreateIntGauge(const std::string& name) {
-    IntGaugePtr gaugePtr = std::make_shared<Gauge<uint64_t>>(name);
+    IntGaugePtr gaugePtr = std::make_shared<IntGauge>(name);
     mIntGauges.emplace_back(gaugePtr);
     return gaugePtr;
 }
@@ -134,6 +137,21 @@ const MetricsRecord* MetricsRecordRef::operator->() const {
     return mMetrics;
 }
 
+void MetricsRecordRef::AddLabels(MetricLabels&& labels) {
+    mMetrics->GetLabels()->insert(mMetrics->GetLabels()->end(), labels.begin(), labels.end());
+}
+
+#ifdef APSARA_UNIT_TEST_MAIN
+bool MetricsRecordRef::HasLabel(const std::string& key, const std::string& value) const {
+    for (auto item : *(mMetrics->GetLabels())) {
+        if (item.first == key && item.second == value) {
+            return true;
+        }
+    }
+    return false;
+}
+#endif
+
 // ReentrantMetricsRecord相关操作可以无锁，因为mCounters、mGauges只在初始化时会添加内容，后续只允许Get操作
 void ReentrantMetricsRecord::Init(MetricLabels& labels, std::unordered_map<std::string, MetricType>& metricKeys) {
     WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, std::move(labels));
@@ -190,34 +208,25 @@ WriteMetrics::~WriteMetrics() {
     Clear();
 }
 
-void WriteMetrics::PreparePluginCommonLabels(const std::string& projectName,
-                                             const std::string& logstoreName,
-                                             const std::string& region,
-                                             const std::string& configName,
-                                             const std::string& pluginType,
-                                             const std::string& pluginID,
-                                             const std::string& nodeID,
-                                             const std::string& childNodeID,
-                                             MetricLabels& labels) {
-    labels.emplace_back(std::make_pair(METRIC_LABEL_PROJECT, projectName));
-    labels.emplace_back(std::make_pair(METRIC_LABEL_LOGSTORE, logstoreName));
-    labels.emplace_back(std::make_pair(METRIC_LABEL_REGION, region));
-    labels.emplace_back(std::make_pair(METRIC_LABEL_CONFIG_NAME, configName));
-    labels.emplace_back(std::make_pair(METRIC_LABEL_PLUGIN_NAME, pluginType));
-    labels.emplace_back(std::make_pair(METRIC_LABEL_PLUGIN_ID, pluginID));
-    labels.emplace_back(std::make_pair(METRIC_LABEL_NODE_ID, nodeID));
-    labels.emplace_back(std::make_pair(METRIC_LABEL_CHILD_NODE_ID, childNodeID));
-}
-
 void WriteMetrics::PrepareMetricsRecordRef(MetricsRecordRef& ref,
                                            MetricLabels&& labels,
                                            DynamicMetricLabels&& dynamicLabels) {
+    CreateMetricsRecordRef(ref, std::move(labels), std::move(dynamicLabels));
+    CommitMetricsRecordRef(ref);
+}
+
+void WriteMetrics::CreateMetricsRecordRef(MetricsRecordRef& ref,
+                                          MetricLabels&& labels,
+                                          DynamicMetricLabels&& dynamicLabels) {
     MetricsRecord* cur = new MetricsRecord(std::make_shared<MetricLabels>(labels),
                                            std::make_shared<DynamicMetricLabels>(dynamicLabels));
     ref.SetMetricsRecord(cur);
+}
+
+void WriteMetrics::CommitMetricsRecordRef(MetricsRecordRef& ref) {
     std::lock_guard<std::mutex> lock(mMutex);
-    cur->SetNext(mHead);
-    mHead = cur;
+    ref.mMetrics->SetNext(mHead);
+    mHead = ref.mMetrics;
 }
 
 MetricsRecord* WriteMetrics::GetHead() {
@@ -319,7 +328,9 @@ ReadMetrics::~ReadMetrics() {
     Clear();
 }
 
-void ReadMetrics::ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup*>& logGroupMap) const {
+void ReadMetrics::ReadAsLogGroup(const std::string& regionFieldName,
+                                 const std::string& defaultRegion,
+                                 std::map<std::string, sls_logs::LogGroup*>& logGroupMap) const {
     ReadLock lock(mReadWriteLock);
     MetricsRecord* tmp = mHead;
     while (tmp) {
@@ -327,7 +338,7 @@ void ReadMetrics::ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup*>& log
 
         for (auto item = tmp->GetLabels()->begin(); item != tmp->GetLabels()->end(); ++item) {
             std::pair<std::string, std::string> pair = *item;
-            if (METRIC_FIELD_REGION == pair.first) {
+            if (regionFieldName == pair.first) {
                 std::map<std::string, sls_logs::LogGroup*>::iterator iter;
                 std::string region = pair.second;
                 iter = logGroupMap.find(region);
@@ -343,14 +354,14 @@ void ReadMetrics::ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup*>& log
         }
         if (!logPtr) {
             std::map<std::string, sls_logs::LogGroup*>::iterator iter;
-            iter = logGroupMap.find(METRIC_REGION_DEFAULT);
+            iter = logGroupMap.find(defaultRegion);
             if (iter != logGroupMap.end()) {
                 sls_logs::LogGroup* logGroup = iter->second;
                 logPtr = logGroup->add_logs();
             } else {
                 sls_logs::LogGroup* logGroup = new sls_logs::LogGroup();
                 logPtr = logGroup->add_logs();
-                logGroupMap.insert(std::pair<std::string, sls_logs::LogGroup*>(METRIC_REGION_DEFAULT, logGroup));
+                logGroupMap.insert(std::pair<std::string, sls_logs::LogGroup*>(defaultRegion, logGroup));
             }
         }
         auto now = GetCurrentLogtailTime();

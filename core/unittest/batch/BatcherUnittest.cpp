@@ -12,9 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-#include "pipeline/batch/Batcher.h"
 #include "common/JsonUtil.h"
+#include "pipeline/batch/Batcher.h"
 #include "unittest/Unittest.h"
 #include "unittest/plugin/PluginMock.h"
 
@@ -34,6 +33,7 @@ public:
     void TestFlushGroupQueue();
     void TestFlushAllWithoutGroupBatch();
     void TestFlushAllWithGroupBatch();
+    void TestMetric();
 
 protected:
     static void SetUpTestCase() { sFlusher = make_unique<FlusherMock>(); }
@@ -41,7 +41,8 @@ protected:
     void SetUp() override {
         mCtx.SetConfigName("test_config");
         sFlusher->SetContext(mCtx);
-        sFlusher->SetMetricsRecordRef(FlusherMock::sName, "1", "1", "1");
+        sFlusher->SetMetricsRecordRef(FlusherMock::sName, "1");
+        sFlusher->SetPluginID("1");
     }
 
     void TearDown() override { TimeoutFlushManager::GetInstance()->mTimeoutRecords.clear(); }
@@ -559,6 +560,63 @@ void BatcherUnittest::TestFlushAllWithGroupBatch() {
     APSARA_TEST_STREQ("pack_id", res[1][0].mPackIdPrefix.data());
 }
 
+void BatcherUnittest::TestMetric() {
+    {
+        DefaultFlushStrategyOptions strategy;
+        strategy.mMaxCnt = 2;
+        strategy.mMaxSizeBytes = 1000;
+        strategy.mTimeoutSecs = 3;
+
+        Batcher<> batch;
+        batch.Init(Json::Value(), sFlusher.get(), strategy, false);
+
+        PipelineEventGroup g = CreateEventGroup(3);
+        auto groupSize = g.DataSize();
+        auto batchSize = groupSize - 2 * g.GetEvents()[0]->DataSize();
+
+        vector<BatchedEventsList> res;
+        batch.Add(std::move(g), res);
+        APSARA_TEST_EQUAL(5U, batch.mMetricsRecordRef->GetLabels()->size());
+        APSARA_TEST_TRUE(batch.mMetricsRecordRef.HasLabel(METRIC_LABEL_KEY_PROJECT, ""));
+        APSARA_TEST_TRUE(batch.mMetricsRecordRef.HasLabel(METRIC_LABEL_KEY_PIPELINE_NAME, "test_config"));
+        APSARA_TEST_TRUE(batch.mMetricsRecordRef.HasLabel(METRIC_LABEL_KEY_COMPONENT_NAME, METRIC_LABEL_VALUE_COMPONENT_NAME_BATCHER));
+        APSARA_TEST_TRUE(batch.mMetricsRecordRef.HasLabel(METRIC_LABEL_KEY_FLUSHER_PLUGIN_ID, "1"));
+        APSARA_TEST_TRUE(batch.mMetricsRecordRef.HasLabel("enable_group_batch", "false"));
+        APSARA_TEST_EQUAL(3U, batch.mInEventsTotal->GetValue());
+        APSARA_TEST_EQUAL(groupSize, batch.mInGroupDataSizeBytes->GetValue());
+        APSARA_TEST_EQUAL(2U, batch.mOutEventsTotal->GetValue());
+        APSARA_TEST_EQUAL(1U, batch.mEventBatchItemsTotal->GetValue());
+        APSARA_TEST_EQUAL(1U, batch.mBufferedGroupsTotal->GetValue());
+        APSARA_TEST_EQUAL(1U, batch.mBufferedEventsTotal->GetValue());
+        APSARA_TEST_EQUAL(batchSize, batch.mBufferedDataSizeByte->GetValue());
+    }
+    {
+        DefaultFlushStrategyOptions strategy;
+        strategy.mMaxCnt = 2;
+        strategy.mMaxSizeBytes = 1000;
+        strategy.mTimeoutSecs = 3;
+
+        Batcher<> batch;
+        batch.Init(Json::Value(), sFlusher.get(), strategy, true);
+
+        PipelineEventGroup g = CreateEventGroup(3);
+        auto groupSize = g.DataSize();
+        auto batchSize = groupSize - 2 * g.GetEvents()[0]->DataSize();
+
+        vector<BatchedEventsList> res;
+        batch.Add(std::move(g), res);
+        batch.FlushQueue(0, res[0]);
+        APSARA_TEST_TRUE(batch.mMetricsRecordRef.HasLabel("enable_group_batch", "true"));
+        APSARA_TEST_EQUAL(3U, batch.mInEventsTotal->GetValue());
+        APSARA_TEST_EQUAL(groupSize, batch.mInGroupDataSizeBytes->GetValue());
+        APSARA_TEST_EQUAL(2U, batch.mOutEventsTotal->GetValue());
+        APSARA_TEST_EQUAL(1U, batch.mEventBatchItemsTotal->GetValue());
+        APSARA_TEST_EQUAL(1U, batch.mBufferedGroupsTotal->GetValue());
+        APSARA_TEST_EQUAL(1U, batch.mBufferedEventsTotal->GetValue());
+        APSARA_TEST_EQUAL(batchSize, batch.mBufferedDataSizeByte->GetValue());
+    }
+}
+
 PipelineEventGroup BatcherUnittest::CreateEventGroup(size_t cnt) {
     PipelineEventGroup group(make_shared<SourceBuffer>());
     group.SetTag(string("key"), string("val"));
@@ -581,6 +639,7 @@ UNIT_TEST_CASE(BatcherUnittest, TestFlushEventQueueWithGroupBatch)
 UNIT_TEST_CASE(BatcherUnittest, TestFlushGroupQueue)
 UNIT_TEST_CASE(BatcherUnittest, TestFlushAllWithoutGroupBatch)
 UNIT_TEST_CASE(BatcherUnittest, TestFlushAllWithGroupBatch)
+UNIT_TEST_CASE(BatcherUnittest, TestMetric)
 
 } // namespace logtail
 

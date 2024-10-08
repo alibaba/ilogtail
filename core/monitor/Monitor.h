@@ -24,6 +24,7 @@
 #include "LogtailMetric.h"
 #include "MetricConstants.h"
 #include "MetricStore.h"
+
 #if defined(_MSC_VER)
 #include <Windows.h>
 #endif
@@ -165,8 +166,6 @@ private:
     // Memory usage statistics.
     MemStat mMemStat;
     IntGaugePtr mAgentMemoryGauge;
-
-    IntGaugePtr mAgentUsedSendingConcurrency;
 
     // Current scale up level, updated by CheckScaledCpuUsageUpLimit.
     float mScaledCpuUsageUpLimit;

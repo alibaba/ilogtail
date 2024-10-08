@@ -18,14 +18,14 @@
 #include "application/Application.h"
 #include "common/LogtailCommonFlags.h"
 #include "common/StringTools.h"
-#include "plugin/flusher/sls/DiskBufferWriter.h"
+#include "common/http/HttpRequest.h"
 #include "logger/Logger.h"
 #include "monitor/LogtailAlarm.h"
 #include "pipeline/plugin/interface/HttpFlusher.h"
 #include "pipeline/queue/QueueKeyManager.h"
 #include "pipeline/queue/SenderQueueItem.h"
 #include "pipeline/queue/SenderQueueManager.h"
-#include "common/http/HttpRequest.h"
+#include "plugin/flusher/sls/DiskBufferWriter.h"
 #include "runner/sink/http/HttpSink.h"
 // TODO: temporarily used here
 #include "plugin/flusher/sls/PackIdManager.h"
@@ -41,6 +41,16 @@ namespace logtail {
 
 bool FlusherRunner::Init() {
     srand(time(nullptr));
+    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef,
+                                                         {{METRIC_LABEL_KEY_RUNNER_NAME, METRIC_LABEL_VALUE_RUNNER_NAME_FLUSHER}});
+    mInItemsTotal = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_ITEMS_TOTAL);
+    mInItemDataSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_SIZE_BYTES);
+    mOutItemsTotal = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_OUT_ITEMS_TOTAL);
+    mTotalDelayMs = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_TOTAL_DELAY_MS);
+    mLastRunTime = mMetricsRecordRef.CreateIntGauge(METRIC_RUNNER_LAST_RUN_TIME);
+    mInItemRawDataSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_FLUSHER_IN_SIZE_BYTES);
+    mWaitingItemsTotal = mMetricsRecordRef.CreateIntGauge(METRIC_RUNNER_FLUSHER_WAITING_ITEMS_TOTAL);
+
     mThreadRes = async(launch::async, &FlusherRunner::Run, this);
     mLastCheckSendClientTime = time(nullptr);
     return true;
@@ -98,13 +108,21 @@ void FlusherRunner::PushToHttpSink(SenderQueueItem* item, bool withLimit) {
 void FlusherRunner::Run() {
     LOG_INFO(sLogger, ("flusher runner", "started"));
     while (true) {
-        int32_t curTime = time(NULL);
+        auto curTime = chrono::system_clock::now();
+        mLastRunTime->Set(chrono::duration_cast<chrono::seconds>(curTime.time_since_epoch()).count());
 
         vector<SenderQueueItem*> items;
         SenderQueueManager::GetInstance()->GetAllAvailableItems(items, !Application::GetInstance()->IsExiting());
         if (items.empty()) {
             SenderQueueManager::GetInstance()->Wait(1000);
         } else {
+            for (auto itr = items.begin(); itr != items.end(); ++itr) {
+                mInItemDataSizeBytes->Add((*itr)->mData.size());
+                mInItemRawDataSizeBytes->Add((*itr)->mRawSize);
+            }
+            mInItemsTotal->Add(items.size());
+            mWaitingItemsTotal->Add(items.size());
+
             // smoothing send tps, walk around webserver load burst
             uint32_t bufferPackageCount = items.size();
             if (!Application::GetInstance()->IsExiting() && AppConfig::GetInstance()->IsSendRandomSleep()) {
@@ -121,17 +139,21 @@ void FlusherRunner::Run() {
         }
 
         for (auto itr = items.begin(); itr != items.end(); ++itr) {
-            int32_t waitTime = curTime - (*itr)->mEnqueTime;
+            auto waitTime = chrono::duration_cast<chrono::milliseconds>(curTime - (*itr)->mEnqueTime);
             LOG_DEBUG(sLogger,
                       ("got item from sender queue, item address",
                        *itr)("config-flusher-dst", QueueKeyManager::GetInstance()->GetName((*itr)->mQueueKey))(
-                          "wait time", ToString(waitTime))("try cnt", ToString((*itr)->mTryCnt)));
+                          "wait time", ToString(waitTime.count()) + "ms")("try cnt", ToString((*itr)->mTryCnt)));
 
             if (!Application::GetInstance()->IsExiting() && AppConfig::GetInstance()->IsSendFlowControl()) {
                 RateLimiter::FlowControl((*itr)->mRawSize, mSendLastTime, mSendLastByte, true);
             }
 
             Dispatch(*itr);
+            mWaitingItemsTotal->Sub(1);
+            mOutItemsTotal->Add(1);
+            mTotalDelayMs->Add(
+                chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - curTime).count());
         }
 
         // TODO: move the following logic to scheduler
