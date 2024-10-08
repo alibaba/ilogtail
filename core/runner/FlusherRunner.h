@@ -71,12 +71,12 @@ private:
     bool mSendFlowControl;
 
     mutable MetricsRecordRef mMetricsRecordRef;
-    CounterPtr mInItemsCnt;
+    CounterPtr mInItemsTotal;
     CounterPtr mInItemDataSizeBytes;
     CounterPtr mInItemRawDataSizeBytes;
-    CounterPtr mOutItemsCnt;
+    CounterPtr mOutItemsTotal;
     CounterPtr mTotalDelayMs;
-    IntGaugePtr mWaitingItemsCnt;
+    IntGaugePtr mWaitingItemsTotal;
     IntGaugePtr mLastRunTime;
 
 #ifdef APSARA_UNIT_TEST_MAIN
