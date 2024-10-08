@@ -38,7 +38,7 @@ bool SenderQueue::Push(unique_ptr<SenderQueueItem>&& item) {
     item->mEnqueTime = chrono::system_clock::now();
     auto size = item->mData.size();
 
-    mInItemsCnt->Add(1);
+    mInItemsTotal->Add(1);
     mInItemDataSizeBytes->Add(size);
 
     if (Full()) {
@@ -62,7 +62,7 @@ bool SenderQueue::Push(unique_ptr<SenderQueueItem>&& item) {
     ++mSize;
     ChangeStateIfNeededAfterPush();
 
-    mQueueSize->Set(Size());
+    mQueueSizeTotal->Set(Size());
     mQueueDataSizeByte->Add(size);
     mValidToPushFlag->Set(IsValidToPush());
     return true;
@@ -92,7 +92,7 @@ bool SenderQueue::Remove(SenderQueueItem* item) {
     }
     --mSize;
 
-    mOutItemsCnt->Add(1);
+    mOutItemsTotal->Add(1);
     mTotalDelayMs->Add(chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - enQueuTime).count());
     mQueueDataSizeByte->Sub(size);
 
@@ -109,7 +109,7 @@ bool SenderQueue::Remove(SenderQueueItem* item) {
         GiveFeedback();
     }
 
-    mQueueSize->Set(Size());
+    mQueueSizeTotal->Set(Size());
     mValidToPushFlag->Set(IsValidToPush());
     return true;
 }
