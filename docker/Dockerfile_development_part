@@ -20,28 +20,27 @@ ARG VERSION=2.0.0
 USER root
 WORKDIR /loongcollector
 
-RUN mkdir -p /loongcollector/bin
-RUN mkdir -p /loongcollector/lib
-RUN mkdir -p /loongcollector/etc
+RUN mkdir -p /loongcollector/conf
 RUN mkdir -p /loongcollector/log
 RUN mkdir -p /loongcollector/data
+RUN mkdir -p /loongcollector/run
 
-COPY --from=build /src/core/build/loongcollector /loongcollector/bin/loongcollector
+COPY --from=build /src/core/build/loongcollector /loongcollector/
 COPY ./scripts/download_ebpflib.sh /tmp/
 
 RUN chown -R $(whoami) /loongcollector && \
-    chmod 755 /loongcollector/bin/loongcollector && \
+    chmod 755 /loongcollector/loongcollector && \
     mkdir /loongcollector/data/checkpoint && \
-    if [ `uname -m` = "x86_64" ]; then /tmp/download_ebpflib.sh /loongcollector/lib; fi && \
+    if [ `uname -m` = "x86_64" ]; then /tmp/download_ebpflib.sh /loongcollector; fi && \
     rm /tmp/download_ebpflib.sh
 
-COPY --from=build /src/output/libPluginBase.so /loongcollector/lib/
-COPY --from=build /src/example_config/quick_start/loongcollector_config.json /loongcollector/bin/
-COPY --from=build /src/core/build/go_pipeline/libPluginAdapter.so /loongcollector/lib/
+COPY --from=build /src/output/libPluginBase.so /loongcollector/
+COPY --from=build /src/example_config/quick_start/loongcollector_config.json /loongcollector/
+COPY --from=build /src/core/build/go_pipeline/libPluginAdapter.so /loongcollector/
 
 ENV HOST_OS=$HOST_OS
 ENV LOGTAIL_VERSION=$VERSION
 
 EXPOSE 18689
 
-ENTRYPOINT ["/loongcollector/bin/loongcollector"]
+ENTRYPOINT ["/loongcollector/loongcollector"]

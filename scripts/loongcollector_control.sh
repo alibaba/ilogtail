@@ -22,8 +22,8 @@ set -o pipefail
 
 caller_dir="$PWD"
 loongcollector_dir=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
-bin_file="$loongcollector_dir/bin/loongcollector"
-pid_file="$loongcollector_dir/log/loongcollector.pid"
+bin_file="$loongcollector_dir/loongcollector"
+pid_file="$loongcollector_dir/run/loongcollector.pid"
 kill_timeout=10
 port=${HTTP_PROBE_PORT:-7953}
 port_initial_delay_sec=${PORT_INITIAL_DELAY_SEC:-3}
