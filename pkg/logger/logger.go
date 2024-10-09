@@ -269,13 +269,6 @@ func setLogConf(logConfig string) {
 	debugFlag = 0
 	logtailLogger = seelog.Disabled
 	path := filepath.Clean(logConfig)
-	dir := filepath.Dir(path)
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		if err := os.MkdirAll(dir, os.ModePerm); err != nil {
-			fmt.Fprintf(os.Stderr, "unable to create log config directory, dir: %s, err: %v\n", dir, err)
-			return
-		}
-	}
 	if _, err := os.Stat(path); err != nil {
 		logConfigContent := generateDefaultConfig()
 		_ = os.WriteFile(path, []byte(logConfigContent), os.ModePerm)
