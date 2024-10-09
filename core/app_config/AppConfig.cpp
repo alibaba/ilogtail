@@ -1007,6 +1007,11 @@ void AppConfig::InitEnvMapping(const std::string& envStr, std::map<std::string, 
     }
 }
 void AppConfig::SetConfigFlag(const std::string& flagName, const std::string& value) {
+    static set<string> sIgnoreFlagSet
+        = {"loongcollector_conf_dir", "loongcollector_log_dir", "loongcollector_data_dir", "loongcollector_run_dir"};
+    if (sIgnoreFlagSet.find(flagName) != sIgnoreFlagSet.end()) {
+        return;
+    }
     GFLAGS_NAMESPACE::CommandLineFlagInfo info;
     bool rst = GetCommandLineFlagInfo(flagName.c_str(), &info);
     if (rst) {

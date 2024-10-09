@@ -36,11 +36,7 @@ namespace logtail {
 namespace detail {
 
     std::string getDatabasePath() {
-#if defined(__RUN_LOGTAIL__)
         auto fp = boost::filesystem::path(AppConfig::GetInstance()->GetLoongcollectorConfDir());
-#else
-        auto fp = boost::filesystem::path(GetAgentConfDir());
-#endif
         return (fp / "exactly_once_checkpoint").string();
     }
 
