@@ -36,7 +36,7 @@ DEFINE_FLAG_INT64(
     5004000000);
 DEFINE_FLAG_STRING(sls_observer_ebpf_host_path,
                    "the backup real host path for store libebpf.so",
-                   "/etc/ilogtail/ebpf/");
+                   "");
 
 static const std::string kLowkernelCentosName = "CentOS";
 static const uint16_t kLowkernelCentosMinVersion = 7006;
@@ -44,6 +44,14 @@ static const uint16_t kLowkernelSpecificVersion = 3010;
 
 
 namespace logtail {
+static std::string GetObserverEbpfHostPath() {
+    if (!STRING_FLAG(sls_observer_ebpf_host_path).empty()) {
+        return STRING_FLAG(sls_observer_ebpf_host_path);
+    } else {
+        return AppConfig::GetInstance()->GetLoongcollectorConfDir();
+    }
+}
+
 // copy from libbpf_print_level
 enum sls_libbpf_print_level {
     SLS_LIBBPF_WARN,
@@ -295,12 +303,12 @@ bool EBPFWrapper::loadEbpfLib(int64_t kernelVersion, std::string& soPath) {
         // overlay fs. detail: https://lore.kernel.org/lkml/20180228004014.445-1-hmclauchlan@fb.com/
         if (fsutil::PathStat::stat(STRING_FLAG(default_container_host_path).c_str(), buf)) {
             std::string cmd
-                = std::string("\\cp ").append(soPath).append(" ").append(STRING_FLAG(sls_observer_ebpf_host_path));
+                = std::string("\\cp ").append(soPath).append(" ").append(GetObserverEbpfHostPath());
             LOG_INFO(sLogger, ("invoke cp cmd:", cmd));
-            system(std::string("mkdir ").append(STRING_FLAG(sls_observer_ebpf_host_path)).c_str());
+            system(std::string("mkdir ").append(GetObserverEbpfHostPath()).c_str());
             system(cmd.c_str());
-            dlPrefix = STRING_FLAG(sls_observer_ebpf_host_path);
-            soPath = STRING_FLAG(sls_observer_ebpf_host_path) + "libebpf.so";
+            dlPrefix = GetObserverEbpfHostPath();
+            soPath = GetObserverEbpfHostPath() + "libebpf.so";
         }
     }
     LOG_INFO(sLogger, ("load ebpf, libebpf path", soPath));
