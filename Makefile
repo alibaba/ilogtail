@@ -13,7 +13,7 @@
 # limitations under the License.
 
 .DEFAULT_GOAL := all
-VERSION ?= 2.0.0
+VERSION ?= 0.0.1
 DOCKER_PUSH ?= false
 DOCKER_REPOSITORY ?= aliyun/loongcollector
 BUILD_REPOSITORY ?= aliyun/loongcollector_build

@@ -25,6 +25,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/alibaba/ilogtail/pkg/config"
 	"github.com/stretchr/testify/require"
 )
 

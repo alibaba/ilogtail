@@ -30,7 +30,7 @@ function arch() {
 # intialize variables
 OUT_DIR=${1:-output}
 DIST_DIR=${2:-dist}
-PACKAGE_DIR=${3:-loongcollector-1.2.1}
+PACKAGE_DIR=${3:-loongcollector-0.0.1}
 ROOTDIR=$(cd $(dirname "${BASH_SOURCE[0]}") && cd .. && pwd)
 ARCH=$(arch)
 
