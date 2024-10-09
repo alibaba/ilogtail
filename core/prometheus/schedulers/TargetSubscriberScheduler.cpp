@@ -159,23 +159,22 @@ bool TargetSubscriberScheduler::ParseScrapeSchedulerGroup(const std::string& con
         }
         // Parse labels
         Labels labels;
-        labels.Push(Label{prometheus::JOB, mJobName});
-        labels.Push(Label{prometheus::ADDRESS_LABEL_NAME, targets[0]});
-        labels.Push(Label{prometheus::SCHEME_LABEL_NAME, mScrapeConfigPtr->mScheme});
-        labels.Push(Label{prometheus::METRICS_PATH_LABEL_NAME, mScrapeConfigPtr->mMetricsPath});
-        labels.Push(
-            Label{prometheus::SCRAPE_INTERVAL_LABEL_NAME, SecondToDuration(mScrapeConfigPtr->mScrapeIntervalSeconds)});
-        labels.Push(
-            Label{prometheus::SCRAPE_TIMEOUT_LABEL_NAME, SecondToDuration(mScrapeConfigPtr->mScrapeTimeoutSeconds)});
+        labels.Set(prometheus::JOB, mJobName);
+        labels.Set(prometheus::INSTANCE, targets[0]);
+        labels.Set(prometheus::ADDRESS_LABEL_NAME, targets[0]);
+        labels.Set(prometheus::SCHEME_LABEL_NAME, mScrapeConfigPtr->mScheme);
+        labels.Set(prometheus::METRICS_PATH_LABEL_NAME, mScrapeConfigPtr->mMetricsPath);
+        labels.Set(prometheus::SCRAPE_INTERVAL_LABEL_NAME, SecondToDuration(mScrapeConfigPtr->mScrapeIntervalSeconds));
+        labels.Set(prometheus::SCRAPE_TIMEOUT_LABEL_NAME, SecondToDuration(mScrapeConfigPtr->mScrapeTimeoutSeconds));
         for (const auto& pair : mScrapeConfigPtr->mParams) {
             if (!pair.second.empty()) {
-                labels.Push(Label{prometheus::PARAM_LABEL_NAME + pair.first, pair.second[0]});
+                labels.Set(prometheus::PARAM_LABEL_NAME + pair.first, pair.second[0]);
             }
         }
 
         if (element.isMember(prometheus::LABELS) && element[prometheus::LABELS].isObject()) {
-            for (const auto& labelKey : element[prometheus::LABELS].getMemberNames()) {
-                labels.Push(Label{labelKey, element[prometheus::LABELS][labelKey].asString()});
+            for (const string& labelKey : element[prometheus::LABELS].getMemberNames()) {
+                labels.Set(labelKey, element[prometheus::LABELS][labelKey].asString());
             }
         }
         scrapeSchedulerGroup.push_back(labels);
@@ -188,9 +187,12 @@ TargetSubscriberScheduler::BuildScrapeSchedulerSet(std::vector<Labels>& targetGr
     std::unordered_map<std::string, std::shared_ptr<ScrapeScheduler>> scrapeSchedulerMap;
     for (const auto& labels : targetGroups) {
         // Relabel Config
-        Labels resultLabel = Labels();
-        bool keep = prometheus::Process(labels, mScrapeConfigPtr->mRelabelConfigs, resultLabel);
-        if (!keep) {
+        Labels resultLabel = labels;
+        // bool keep = prometheus::Process(labels, mScrapeConfigPtr->mRelabelConfigs, resultLabel);
+        // if (!keep) {
+        //     continue;
+        // }
+        if (!mScrapeConfigPtr->mRelabelConfigs.Process(resultLabel)) {
             continue;
         }
         resultLabel.RemoveMetaLabels();
@@ -235,11 +237,12 @@ string TargetSubscriberScheduler::GetId() const {
 }
 
 void TargetSubscriberScheduler::ScheduleNext() {
-    auto future = std::make_shared<PromFuture>();
+    auto future = std::make_shared<PromFuture<const HttpResponse&, uint64_t>>();
     future->AddDoneCallback([this](const HttpResponse& response, uint64_t timestampMilliSec) {
         this->OnSubscription(response, timestampMilliSec);
         this->ExecDone();
         this->ScheduleNext();
+        return true;
     });
     if (IsCancelled()) {
         mFuture->Cancel();
@@ -265,9 +268,10 @@ void TargetSubscriberScheduler::Cancel() {
 }
 
 void TargetSubscriberScheduler::SubscribeOnce(std::chrono::steady_clock::time_point execTime) {
-    auto future = std::make_shared<PromFuture>();
+    auto future = std::make_shared<PromFuture<const HttpResponse&, uint64_t>>();
     future->AddDoneCallback([this](const HttpResponse& response, uint64_t timestampNanoSec) {
         this->OnSubscription(response, timestampNanoSec);
+        return true;
     });
     mFuture = future;
     auto event = BuildSubscriberTimerEvent(execTime);
