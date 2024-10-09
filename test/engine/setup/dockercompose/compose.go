@@ -56,7 +56,7 @@ services:
       interval: 1s
       retries: 10
   ilogtailC:
-    image: aliyun/loongcollector:2.0.0
+    image: aliyun/loongcollector:0.0.1
     hostname: ilogtail
     privileged: true
     pid: host
