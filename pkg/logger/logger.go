@@ -100,7 +100,7 @@ var (
 	closedCatchStdout bool
 )
 
-func Init() {
+func InitLogger() {
 	once.Do(func() {
 		initNormalLogger()
 		catchStandardOutput()

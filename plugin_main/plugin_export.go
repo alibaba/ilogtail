@@ -111,12 +111,13 @@ func LoadGlobalConfig(jsonStr string) int {
 	// Only the first call will return non-zero.
 	retcode := 0
 	loadOnce.Do(func() {
-		logger.Info(context.Background(), "load global config", jsonStr)
 		if len(jsonStr) >= 2 { // For invalid JSON, use default value and return 0
 			if err := json.Unmarshal([]byte(jsonStr), &config.LoongcollectorGlobalConfig); err != nil {
-				logger.Error(context.Background(), "LOAD_PLUGIN_ALARM", "load global config error", err)
+				fmt.Println("load global config error", "GlobalConfig", jsonStr, "err", err)
 				retcode = 1
 			}
+			logger.InitLogger()
+			logger.Info(context.Background(), "load global config", jsonStr)
 			config.UserAgent = fmt.Sprintf("ilogtail/%v (%v) ip/%v", config.BaseVersion, runtime.GOOS, config.LoongcollectorGlobalConfig.HostIP)
 		}
 	})
@@ -242,7 +243,7 @@ func CtlCmd(configName string, cmdID int, cmdDetail string) {
 
 //export GetContainerMeta
 func GetContainerMeta(containerID string) *C.struct_containerMeta {
-	logger.Init()
+	logger.InitLogger()
 	meta := helper.GetContainerMeta(containerID)
 	if meta == nil {
 		logger.Debug(context.Background(), "get meta", "")
@@ -332,11 +333,10 @@ func initPluginBase(cfgStr string) int {
 	// Only the first call will return non-zero.
 	rst := 0
 	initOnce.Do(func() {
-		logger.Init()
+		LoadGlobalConfig(cfgStr)
 		InitHTTPServer()
 		setGCPercentForSlowStart()
 		logger.Info(context.Background(), "init plugin base, version", config.BaseVersion)
-		LoadGlobalConfig(cfgStr)
 		if *flags.DeployMode == flags.DeploySingleton && *flags.EnableKubernetesMeta {
 			instance := k8smeta.GetMetaManagerInstance()
 			err := instance.Init("")
