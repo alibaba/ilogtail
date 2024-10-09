@@ -464,7 +464,7 @@ void LogFileProfiler::DumpToLocal(int32_t curTime, bool forceSend, Json::Value& 
                      ("rename profile snapshot fail, file", mDumpFileName)("error", ErrnoToString(GetErrno())));
     }
 
-    static auto gProfileLogger = Logger::Instance().GetLogger("/apsara/sls/loongcollector/profile");
+    static auto gProfileLogger = Logger::Instance().GetLogger("/apsara/loongcollector/profile");
     LOG_INFO(gProfileLogger, ("\n", styledRoot));
 }
 

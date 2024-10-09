@@ -110,7 +110,7 @@ void Logger::LogMsg(const std::string& msg) {
 
 void Logger::InitGlobalLoggers() {
     if (!sLogger)
-        sLogger = GetLogger("/apsara/sls/loongcollector");
+        sLogger = GetLogger("/apsara/loongcollector");
 }
 
 Logger::logger Logger::CreateLogger(const std::string& loggerName,
@@ -174,7 +174,7 @@ Logger::logger Logger::GetLogger(const std::string& loggerName) {
 //          // Attributes for the logger, (sink_name, log_level).
 //          "AsyncFileSink": "WARNING"
 //     },
-//     "/apsara/sls/loongcollector": { // Another logger.
+//     "/apsara/loongcollector": { // Another logger.
 //          // ....
 //     }
 // },
@@ -326,7 +326,7 @@ void Logger::LoadConfig(const std::string& filePath) {
 
         spdlog::register_logger(logger);
         logger->set_pattern(DEFAULT_PATTERN);
-        if (name == "/apsara/sls/loongcollector" && !aliyun_logtail_log_level.empty()) {
+        if (name == "/apsara/loongcollector" && !aliyun_logtail_log_level.empty()) {
             logger->set_level(envLogLevel);
             logger->flush_on(envLogLevel);
         } else {
@@ -414,9 +414,9 @@ void Logger::LoadAllDefaultConfigs(std::map<std::string, LoggerConfig>& loggerCf
                                    std::map<std::string, SinkConfig>& sinkCfgs) {
     LoadDefaultConfig(loggerCfgs, sinkCfgs);
 
-    loggerCfgs.insert({"/apsara/sls/loongcollector", LoggerConfig{"AsyncFileSink", level::info}});
-    loggerCfgs.insert({"/apsara/sls/loongcollector/profile", LoggerConfig{"AsyncFileSinkProfile", level::info}});
-    loggerCfgs.insert({"/apsara/sls/loongcollector/status", LoggerConfig{"AsyncFileSinkStatus", level::info}});
+    loggerCfgs.insert({"/apsara/loongcollector", LoggerConfig{"AsyncFileSink", level::info}});
+    loggerCfgs.insert({"/apsara/loongcollector/profile", LoggerConfig{"AsyncFileSinkProfile", level::info}});
+    loggerCfgs.insert({"/apsara/loongcollector/status", LoggerConfig{"AsyncFileSinkStatus", level::info}});
 
     std::string dirPath = GetAgentLogDir() + "snapshot";
     if (!Mkdir(dirPath)) {
