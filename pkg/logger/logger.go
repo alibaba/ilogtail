@@ -330,7 +330,7 @@ func generateDefaultConfig() string {
 	if memoryReceiverFlag {
 		memoryReceiverFlagStr = "<custom name=\"memory\" />"
 	}
-	return fmt.Sprintf(template, levelFlag, path.Join(config.LoongcollectorGlobalConfig.LoongcollectorLogDir, "plugin_logger.xml"), consoleStr, memoryReceiverFlagStr)
+	return fmt.Sprintf(template, levelFlag, config.LoongcollectorGlobalConfig.LoongcollectorLogDir, consoleStr, memoryReceiverFlagStr)
 }
 
 // Close the logger and recover the stdout and stderr
