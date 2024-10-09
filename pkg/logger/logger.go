@@ -20,6 +20,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"path"
 
 	"os"
 	"path/filepath"
@@ -30,6 +31,7 @@ import (
 	"time"
 
 	"github.com/alibaba/ilogtail/pkg"
+	"github.com/alibaba/ilogtail/pkg/config"
 	"github.com/alibaba/ilogtail/pkg/util"
 
 	"github.com/cihub/seelog"
@@ -119,7 +121,7 @@ func initNormalLogger() {
 	for _, option := range defaultProductionOptions {
 		option()
 	}
-	setLogConf(util.GetCurrentBinaryPath() + "../log/plugin_logger.xml")
+	setLogConf(path.Join(config.LogtailGlobalConfig.LoongcollectorLogDir, "plugin_logger.xml"))
 }
 
 // initTestLogger extracted from Init method for unit test.
@@ -132,7 +134,7 @@ func initTestLogger(options ...ConfigOption) {
 	for _, option := range options {
 		option()
 	}
-	setLogConf(util.GetCurrentBinaryPath() + "../log/plugin_logger.xml")
+	setLogConf(path.Join(config.LogtailGlobalConfig.LoongcollectorLogDir, "plugin_logger.xml"))
 }
 
 func Debug(ctx context.Context, kvPairs ...interface{}) {
@@ -262,7 +264,7 @@ func Flush() {
 
 func setLogConf(logConfig string) {
 	if !retainFlag {
-		_ = os.Remove(util.GetCurrentBinaryPath() + "../log/plugin_logger.xml")
+		_ = os.Remove(path.Join(config.LogtailGlobalConfig.LoongcollectorLogDir, "plugin_logger.xml"))
 	}
 	debugFlag = 0
 	logtailLogger = seelog.Disabled
@@ -328,7 +330,7 @@ func generateDefaultConfig() string {
 	if memoryReceiverFlag {
 		memoryReceiverFlagStr = "<custom name=\"memory\" />"
 	}
-	return fmt.Sprintf(template, levelFlag, util.GetCurrentBinaryPath()+"../log/", consoleStr, memoryReceiverFlagStr)
+	return fmt.Sprintf(template, levelFlag, path.Join(config.LogtailGlobalConfig.LoongcollectorLogDir, "plugin_logger.xml"), consoleStr, memoryReceiverFlagStr)
 }
 
 // Close the logger and recover the stdout and stderr

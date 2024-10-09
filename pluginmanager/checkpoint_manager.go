@@ -79,13 +79,14 @@ func (p *checkPointManager) Init() error {
 		return nil
 	}
 	p.shutdown = make(chan struct{}, 1)
-	logtailConfigDir := config.LogtailGlobalConfig.LogtailSysConfDir
+	logtailConfigDir := config.LogtailGlobalConfig.LoongcollectorSysConfDir
 	pathExist, err := util.PathExists(logtailConfigDir)
 	var dbPath string
 	if err == nil && pathExist {
 		dbPath = filepath.Join(logtailConfigDir, *CheckPointFile)
 	} else {
-		dbPath = util.GetCurrentBinaryPath() + "../data/" + *CheckPointFile
+		logger.Error(context.Background(), "CHECKPOINT_ALARM", "logtailConfigDir not exist", logtailConfigDir, "err", err)
+		return err
 	}
 
 	p.db, err = leveldb.OpenFile(dbPath, nil)

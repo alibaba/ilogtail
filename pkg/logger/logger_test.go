@@ -19,6 +19,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path"
 	"regexp"
 	"strings"
 	"sync"
@@ -29,6 +30,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/alibaba/ilogtail/pkg"
+	"github.com/alibaba/ilogtail/pkg/config"
 	"github.com/alibaba/ilogtail/pkg/util"
 )
 
@@ -46,12 +48,12 @@ func init() {
 }
 
 func clean() {
-	_ = os.Remove(util.GetCurrentBinaryPath() + "plugin_logger.xml")
-	_ = os.Remove(util.GetCurrentBinaryPath() + "go_plugin.LOG")
+	_ = os.Remove(path.Join(config.LogtailGlobalConfig.LoongcollectorLogDir, "plugin_logger.xml"))
+	_ = os.Remove(path.Join(config.LogtailGlobalConfig.LoongcollectorLogDir, "go_plugin.LOG"))
 }
 
 func readLog(index int) string {
-	bytes, _ := os.ReadFile(util.GetCurrentBinaryPath() + "go_plugin.LOG")
+	bytes, _ := os.ReadFile(path.Join(config.LogtailGlobalConfig.LoongcollectorLogDir, "go_plugin.LOG"))
 	logs := strings.Split(string(bytes), "\n")
 	if index > len(logs)-1 {
 		return ""
@@ -106,26 +108,26 @@ func Test_generateDefaultConfig(t *testing.T) {
 	}{
 		{
 			name:       "production",
-			want:       fmt.Sprintf(template, "info", util.GetCurrentBinaryPath(), "", ""),
+			want:       fmt.Sprintf(template, "info", config.LogtailGlobalConfig.LoongcollectorLogDir, "", ""),
 			flagSetter: func() {},
 		},
 		{
 			name: "test-debug-level",
-			want: fmt.Sprintf(template, "debug", util.GetCurrentBinaryPath(), "", ""),
+			want: fmt.Sprintf(template, "debug", config.LogtailGlobalConfig.LoongcollectorLogDir, "", ""),
 			flagSetter: func() {
 				flag.Set(FlagLevelName, "debug")
 			},
 		},
 		{
 			name: "test-wrong-level",
-			want: fmt.Sprintf(template, "info", util.GetCurrentBinaryPath(), "", ""),
+			want: fmt.Sprintf(template, "info", config.LogtailGlobalConfig.LoongcollectorLogDir, "", ""),
 			flagSetter: func() {
 				flag.Set(FlagLevelName, "debug111")
 			},
 		},
 		{
 			name: "test-open-console",
-			want: fmt.Sprintf(template, "info", util.GetCurrentBinaryPath(), "<console/>", ""),
+			want: fmt.Sprintf(template, "info", config.LogtailGlobalConfig.LoongcollectorLogDir, "<console/>", ""),
 			flagSetter: func() {
 				flag.Set(FlagConsoleName, "true")
 			},
