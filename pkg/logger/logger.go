@@ -109,6 +109,7 @@ func InitLogger() {
 
 func InitTestLogger(options ...ConfigOption) {
 	once.Do(func() {
+		config.LoongcollectorGlobalConfig.LoongcollectorLogDir = "."
 		initTestLogger(options...)
 		catchStandardOutput()
 	})
