@@ -61,8 +61,8 @@ services:
     privileged: true
     pid: host
     volumes:
-      - %s:/loongcollector/etc/default_flusher.json
-      - %s:/loongcollector/etc/pipelineconfig/local
+      - %s:/loongcollector/conf/default_flusher.json
+      - %s:/loongcollector/conf/pipelineconfig/local
       - /:/logtail_host
       - /var/run/docker.sock:/var/run/docker.sock
       - /sys/:/sys/
