@@ -61,7 +61,7 @@ LogtailPlugin::LogtailPlugin() {
     mPluginContainerConfig.mAliuid = STRING_FLAG(logtail_profile_aliuid);
     mPluginContainerConfig.mCompressor = CompressorFactory::GetInstance()->Create(CompressType::ZSTD);
 
-    mPluginCfg["LoongcollectorSysConfDir"] = AppConfig::GetInstance()->GetLogtailSysConfDir();
+    mPluginCfg["LoongcollectorSysConfDir"] = AppConfig::GetInstance()->GetLoongcollectorConfDir();
     mPluginCfg["LoongcollectorLogDir"] = GetAgentLogDir();
     mPluginCfg["HostIP"] = LogFileProfiler::mIpAddr;
     mPluginCfg["Hostname"] = LogFileProfiler::mHostname;

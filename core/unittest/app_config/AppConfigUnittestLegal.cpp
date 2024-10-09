@@ -130,7 +130,7 @@ void AppConfigUnittest::testParameters(const std::string& sysConfDir) {
     AppConfig* appConfig = AppConfig::GetInstance();
     appConfig->LoadAppConfig(STRING_FLAG(ilogtail_config));
 
-    APSARA_TEST_EQUAL(appConfig->GetLogtailSysConfDir(), sysConfDir);
+    APSARA_TEST_EQUAL(appConfig->GetLoongcollectorConfDir(), sysConfDir);
     APSARA_TEST_EQUAL(appConfig->IsAcceptMultiConfig(), kAccessMultiConfig);
     APSARA_TEST_EQUAL(appConfig->GetMaxMultiConfigSize(), kMaxMultiConfig);
     APSARA_TEST_EQUAL(INT32_FLAG(batch_send_interval), kBatchSendInterval);

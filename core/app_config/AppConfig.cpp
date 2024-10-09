@@ -256,7 +256,7 @@ void AppConfig::LoadIncludeConfig(Json::Value& confJson) {
     // to config.d, be compatible with old default value.
     string dirPath = STRING_FLAG(default_include_config_path);
     if (!dirPath.empty() && dirPath[0] != '/') {
-        dirPath = mLogtailSysConfDir + dirPath + PATH_SEPARATOR;
+        dirPath = mLoongcollectorConfDir + dirPath + PATH_SEPARATOR;
     }
     if (confJson.isMember("include_config_path") && confJson["include_config_path"].isString()) {
         dirPath = confJson["include_config_path"].asString();
@@ -344,7 +344,7 @@ void AppConfig::LoadAppConfig(const std::string& ilogtailConfigFile) {
         newSysConfDir = STRING_FLAG(loongcollector_conf_dir);
 #endif
     }
-    SetLogtailSysConfDir(AbsolutePath(newSysConfDir, mProcessExecutionDir));
+    SetLoongcollectorConfDir(AbsolutePath(newSysConfDir, mProcessExecutionDir));
 
     LoadIncludeConfig(confJson);
     string configJsonString = confJson.toStyledString();
@@ -1215,14 +1215,14 @@ bool AppConfig::IsInInotifyBlackList(const std::string& path) const {
 // TODO: Use Boost instead.
 // boost::filesystem::directory_iterator end;
 // try { boost::filesystem::directory_iterator(path); } catch (...) { // failed } // OK
-void AppConfig::SetLogtailSysConfDir(const std::string& dirPath) {
-    mLogtailSysConfDir = dirPath;
+void AppConfig::SetLoongcollectorConfDir(const std::string& dirPath) {
+    mLoongcollectorConfDir = dirPath;
     if (dirPath.back() != '/' || dirPath.back() != '\\') {
-        mLogtailSysConfDir += PATH_SEPARATOR;
+        mLoongcollectorConfDir += PATH_SEPARATOR;
     }
 
-    if (!CheckExistance(mLogtailSysConfDir)) {
-        if (Mkdir(mLogtailSysConfDir)) {
+    if (!CheckExistance(mLoongcollectorConfDir)) {
+        if (Mkdir(mLoongcollectorConfDir)) {
             LOG_INFO(sLogger, ("sys conf dir is not existing, create", "done"));
         } else {
             LOG_WARNING(sLogger, ("sys conf dir is not existing, create", "failed"));
@@ -1236,16 +1236,16 @@ void AppConfig::SetLogtailSysConfDir(const std::string& dirPath) {
         LOG_WARNING(sLogger, ("open sys conf dir error", dirPath)("error", strerror(errno)));
         if (savedErrno == EACCES || savedErrno == ENOTDIR || savedErrno == ENOENT) {
             // 如果conf目录获取失败，此处需要直接退出agent吗？
-            mLogtailSysConfDir = GetAgentConfDir();
+            mLoongcollectorConfDir = GetAgentConfDir();
         }
     } else {
         closedir(dir);
     }
 #elif defined(_MSC_VER)
-    DWORD ret = GetFileAttributes(mLogtailSysConfDir.c_str());
+    DWORD ret = GetFileAttributes(mLoongcollectorConfDir.c_str());
     if (INVALID_FILE_ATTRIBUTES == ret) {
         // 如果conf目录获取失败，此处需要直接退出agent吗？
-        mLogtailSysConfDir = GetAgentConfDir();
+        mLoongcollectorConfDir = GetAgentConfDir();
     }
 #endif
 
@@ -1258,13 +1258,13 @@ void AppConfig::SetLogtailSysConfDir(const std::string& dirPath) {
     //     LOG_WARNING(sLogger, ("flag error", "ilogtail_local_config_dir must be non-empty"));
     //     STRING_FLAG(ilogtail_local_config_dir) = DEFAULT_ILOGTAIL_LOCAL_CONFIG_DIR_FLAG_VALUE;
     // }
-    // mUserLocalConfigPath = AbsolutePath(STRING_FLAG(ilogtail_local_config), mLogtailSysConfDir);
-    // mUserLocalConfigDirPath = AbsolutePath(STRING_FLAG(ilogtail_local_config_dir), mLogtailSysConfDir) +
+    // mUserLocalConfigPath = AbsolutePath(STRING_FLAG(ilogtail_local_config), mLoongcollectorConfDir);
+    // mUserLocalConfigDirPath = AbsolutePath(STRING_FLAG(ilogtail_local_config_dir), mLoongcollectorConfDir) +
     // PATH_SEPARATOR; mUserLocalYamlConfigDirPath
-    //     = AbsolutePath(STRING_FLAG(ilogtail_local_yaml_config_dir), mLogtailSysConfDir) + PATH_SEPARATOR;
+    //     = AbsolutePath(STRING_FLAG(ilogtail_local_yaml_config_dir), mLoongcollectorConfDir) + PATH_SEPARATOR;
     // mUserRemoteYamlConfigDirPath
-    //     = AbsolutePath(STRING_FLAG(ilogtail_remote_yaml_config_dir), mLogtailSysConfDir) + PATH_SEPARATOR;
-    LOG_INFO(sLogger, ("set logtail sys conf dir", mLogtailSysConfDir));
+    //     = AbsolutePath(STRING_FLAG(ilogtail_remote_yaml_config_dir), mLoongcollectorConfDir) + PATH_SEPARATOR;
+    LOG_INFO(sLogger, ("set logtail sys conf dir", mLoongcollectorConfDir));
 }
 
 bool AppConfig::IsHostPathMatchBlacklist(const string& dirPath) const {

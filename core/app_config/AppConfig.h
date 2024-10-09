@@ -136,7 +136,7 @@ private:
     // logtail will force quit, 7200s by default.
     int32_t mForceQuitReadTimeout;
 
-    std::string mLogtailSysConfDir; // MUST ends with path separator
+    std::string mLoongcollectorConfDir; // MUST ends with path separator
 
     // For such security case: logtail -> proxy server + firewall (domain rule).
     // By default, logtail will construct HTTP request URL by concating host IP with
@@ -384,9 +384,9 @@ public:
     // const std::string& GetAlipayZone() const { return mAlipayZone; }
 
     // If @dirPath is not accessible, GetProcessExecutionDir will be set.
-    void SetLogtailSysConfDir(const std::string& dirPath);
+    void SetLoongcollectorConfDir(const std::string& dirPath);
 
-    const std::string& GetLogtailSysConfDir() const { return mLogtailSysConfDir; }
+    const std::string& GetLoongcollectorConfDir() const { return mLoongcollectorConfDir; }
 
     inline bool IsHostIPReplacePolicyEnabled() const { return mEnableHostIPReplace; }
 

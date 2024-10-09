@@ -24,7 +24,7 @@
 
 DEFINE_FLAG_INT32(adhoc_checkpoint_dump_thread_wait_interval, "microseconds", 5 * 1000);
 
-// TODO: Change to AppConfig::GetInstance()->GetLogtailSysConfDir()
+// TODO: Change to AppConfig::GetInstance()->GetLoongcollectorConfDir()
 // /etc/ilogtail + /checkpoint/logtail_adhoc_checkpoint/${jobName}
 #if defined(__linux__)
 DEFINE_FLAG_STRING(adhoc_check_point_file_dir, "", "/tmp/logtail_adhoc_checkpoint");

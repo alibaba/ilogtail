@@ -216,7 +216,7 @@ void Application::Start() { // GCOVR_EXCL_START
     {
         // add local config dir
         filesystem::path localConfigPath
-            = filesystem::path(AppConfig::GetInstance()->GetLogtailSysConfDir()) / "pipelineconfig" / "local";
+            = filesystem::path(AppConfig::GetInstance()->GetLoongcollectorConfDir()) / "pipelineconfig" / "local";
         error_code ec;
         filesystem::create_directories(localConfigPath, ec);
         if (ec) {
@@ -229,7 +229,7 @@ void Application::Start() { // GCOVR_EXCL_START
     {
         // add local config dir
         filesystem::path localConfigPath
-            = filesystem::path(AppConfig::GetInstance()->GetLogtailSysConfDir()) / "instanceconfig" / "local";
+            = filesystem::path(AppConfig::GetInstance()->GetLoongcollectorConfDir()) / "instanceconfig" / "local";
         error_code ec;
         filesystem::create_directories(localConfigPath, ec);
         if (ec) {
