@@ -28,7 +28,7 @@ type GlobalConfig struct {
 	DefaultLogGroupQueueSize int
 	Tags                     map[string]string
 	// Directory to store loongcollector data, such as checkpoint, etc.
-	LoongcollectorSysConfDir string
+	LoongcollectorConfDir string
 	// Directory to store loongcollector log.
 	LoongcollectorLogDir string
 	// Network identification from loongcollector.
@@ -57,7 +57,7 @@ func newGlobalConfig() (cfg GlobalConfig) {
 		FlushIntervalMs:          3000,
 		DefaultLogQueueSize:      1000,
 		DefaultLogGroupQueueSize: 4,
-		LoongcollectorSysConfDir: "./conf/",
+		LoongcollectorConfDir:    "./conf/",
 		LoongcollectorLogDir:     "./log/",
 		DelayStopSec:             300,
 	}
