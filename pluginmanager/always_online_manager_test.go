@@ -29,7 +29,7 @@ import (
 
 // init change the logtail config dir to avoid change the config on the production when testing.
 func init() {
-	config.LogtailGlobalConfig.LoongcollectorSysConfDir = "."
+	config.LoongcollectorGlobalConfig.LoongcollectorSysConfDir = "."
 }
 
 func TestAlwaysOnlineManager(t *testing.T) {

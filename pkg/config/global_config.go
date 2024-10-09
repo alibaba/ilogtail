@@ -43,8 +43,8 @@ type GlobalConfig struct {
 	EnableSlsMetricsFormat         bool
 }
 
-// LogtailGlobalConfig is the singleton instance of GlobalConfig.
-var LogtailGlobalConfig = newGlobalConfig()
+// LoongcollectorGlobalConfig is the singleton instance of GlobalConfig.
+var LoongcollectorGlobalConfig = newGlobalConfig()
 
 // StatisticsConfigJson, AlarmConfigJson
 var BaseVersion = "0.1.0"                                                  // will be overwritten through ldflags at compile time

@@ -121,7 +121,7 @@ func initNormalLogger() {
 	for _, option := range defaultProductionOptions {
 		option()
 	}
-	setLogConf(path.Join(config.LogtailGlobalConfig.LoongcollectorLogDir, "plugin_logger.xml"))
+	setLogConf(path.Join(config.LoongcollectorGlobalConfig.LoongcollectorLogDir, "plugin_logger.xml"))
 }
 
 // initTestLogger extracted from Init method for unit test.
@@ -134,7 +134,7 @@ func initTestLogger(options ...ConfigOption) {
 	for _, option := range options {
 		option()
 	}
-	setLogConf(path.Join(config.LogtailGlobalConfig.LoongcollectorLogDir, "plugin_logger.xml"))
+	setLogConf(path.Join(config.LoongcollectorGlobalConfig.LoongcollectorLogDir, "plugin_logger.xml"))
 }
 
 func Debug(ctx context.Context, kvPairs ...interface{}) {
@@ -264,7 +264,7 @@ func Flush() {
 
 func setLogConf(logConfig string) {
 	if !retainFlag {
-		_ = os.Remove(path.Join(config.LogtailGlobalConfig.LoongcollectorLogDir, "plugin_logger.xml"))
+		_ = os.Remove(path.Join(config.LoongcollectorGlobalConfig.LoongcollectorLogDir, "plugin_logger.xml"))
 	}
 	debugFlag = 0
 	logtailLogger = seelog.Disabled
@@ -330,7 +330,7 @@ func generateDefaultConfig() string {
 	if memoryReceiverFlag {
 		memoryReceiverFlagStr = "<custom name=\"memory\" />"
 	}
-	return fmt.Sprintf(template, levelFlag, path.Join(config.LogtailGlobalConfig.LoongcollectorLogDir, "plugin_logger.xml"), consoleStr, memoryReceiverFlagStr)
+	return fmt.Sprintf(template, levelFlag, path.Join(config.LoongcollectorGlobalConfig.LoongcollectorLogDir, "plugin_logger.xml"), consoleStr, memoryReceiverFlagStr)
 }
 
 // Close the logger and recover the stdout and stderr

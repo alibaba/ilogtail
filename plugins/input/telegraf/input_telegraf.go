@@ -37,7 +37,7 @@ func (s *ServiceTelegraf) Init(ctx pipeline.Context) (int, error) {
 		Name:   ctx.GetConfigName(),
 		Detail: s.Detail,
 	}
-	s.tm = GetTelegrafManager(path.Join(global_config.LogtailGlobalConfig.LoongcollectorSysConfDir, "telegraf"))
+	s.tm = GetTelegrafManager(path.Join(global_config.LoongcollectorGlobalConfig.LoongcollectorSysConfDir, "telegraf"))
 	return 0, nil
 }
 

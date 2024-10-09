@@ -79,7 +79,7 @@ func (p *checkPointManager) Init() error {
 		return nil
 	}
 	p.shutdown = make(chan struct{}, 1)
-	logtailConfigDir := config.LogtailGlobalConfig.LoongcollectorSysConfDir
+	logtailConfigDir := config.LoongcollectorGlobalConfig.LoongcollectorSysConfDir
 	pathExist, err := util.PathExists(logtailConfigDir)
 	var dbPath string
 	if err == nil && pathExist {

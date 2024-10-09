@@ -113,19 +113,19 @@ func LoadGlobalConfig(jsonStr string) int {
 	loadOnce.Do(func() {
 		logger.Info(context.Background(), "load global config", jsonStr)
 		if len(jsonStr) >= 2 { // For invalid JSON, use default value and return 0
-			if err := json.Unmarshal([]byte(jsonStr), &config.LogtailGlobalConfig); err != nil {
+			if err := json.Unmarshal([]byte(jsonStr), &config.LoongcollectorGlobalConfig); err != nil {
 				logger.Error(context.Background(), "LOAD_PLUGIN_ALARM", "load global config error", err)
 				retcode = 1
 			}
-			config.UserAgent = fmt.Sprintf("ilogtail/%v (%v) ip/%v", config.BaseVersion, runtime.GOOS, config.LogtailGlobalConfig.HostIP)
+			config.UserAgent = fmt.Sprintf("ilogtail/%v (%v) ip/%v", config.BaseVersion, runtime.GOOS, config.LoongcollectorGlobalConfig.HostIP)
 		}
 	})
 	if retcode == 0 {
 		// Update when both of them are not empty.
 		logger.Debugf(context.Background(), "host IP: %v, hostname: %v",
-			config.LogtailGlobalConfig.HostIP, config.LogtailGlobalConfig.Hostname)
-		if len(config.LogtailGlobalConfig.Hostname) > 0 && len(config.LogtailGlobalConfig.HostIP) > 0 {
-			util.SetNetworkIdentification(config.LogtailGlobalConfig.HostIP, config.LogtailGlobalConfig.Hostname)
+			config.LoongcollectorGlobalConfig.HostIP, config.LoongcollectorGlobalConfig.Hostname)
+		if len(config.LoongcollectorGlobalConfig.Hostname) > 0 && len(config.LoongcollectorGlobalConfig.HostIP) > 0 {
+			util.SetNetworkIdentification(config.LoongcollectorGlobalConfig.HostIP, config.LoongcollectorGlobalConfig.Hostname)
 		}
 	}
 	return retcode
