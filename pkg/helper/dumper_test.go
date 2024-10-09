@@ -25,8 +25,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alibaba/ilogtail/pkg/config"
 	"github.com/stretchr/testify/require"
+
+	"github.com/alibaba/ilogtail/pkg/config"
 )
 
 func TestServiceHTTP_doDumpFile(t *testing.T) {
