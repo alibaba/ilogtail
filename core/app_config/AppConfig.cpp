@@ -304,7 +304,7 @@ void AppConfig::LoadAppConfig(const std::string& ilogtailConfigFile) {
     mDockerFilePathConfig = GetAgentDataDir() + STRING_FLAG(ilogtail_docker_file_path_config);
 
     Json::Value confJson(Json::objectValue);
-    std::string newSysConfDir;
+    std::string newConfDir;
 
     if (!ilogtailConfigFile.empty()) {
         ParseConfResult res = ParseConfig(ilogtailConfigFile, confJson);
@@ -323,7 +323,7 @@ void AppConfig::LoadAppConfig(const std::string& ilogtailConfigFile) {
 
         if (res == CONFIG_OK) {
             // Should be loaded here because other parameters depend on it.
-            LoadStringParameter(newSysConfDir, confJson, "logtail_sys_conf_dir", "ALIYUN_LOGTAIL_SYS_CONF_DIR");
+            LoadStringParameter(newConfDir, confJson, "logtail_sys_conf_dir", "ALIYUN_LOGTAIL_SYS_CONF_DIR");
         } else {
             confJson.clear();
             if (res == CONFIG_NOT_EXIST) {
@@ -336,15 +336,15 @@ void AppConfig::LoadAppConfig(const std::string& ilogtailConfigFile) {
         }
     }
 
-    if (newSysConfDir.empty()) {
+    if (newConfDir.empty()) {
 #if defined(__RUN_LOGTAIL__) || defined(APSARA_UNIT_TEST_MAIN)
-        newSysConfDir = STRING_FLAG(logtail_sys_conf_dir);
+        newConfDir = STRING_FLAG(logtail_sys_conf_dir);
 #else
         // 说明用户没有配置老的这个自定目录参数， 就使用loongcollector_conf_dir
-        newSysConfDir = STRING_FLAG(loongcollector_conf_dir);
+        newConfDir = STRING_FLAG(loongcollector_conf_dir);
 #endif
     }
-    SetLoongcollectorConfDir(AbsolutePath(newSysConfDir, mProcessExecutionDir));
+    SetLoongcollectorConfDir(AbsolutePath(newConfDir, mProcessExecutionDir));
 
     LoadIncludeConfig(confJson);
     string configJsonString = confJson.toStyledString();

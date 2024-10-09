@@ -81,7 +81,7 @@ private:
         v[key] = value;
     }
 
-    void testParameters(const std::string& sysConfDir);
+    void testParameters(const std::string& confDir);
 };
 
 APSARA_UNIT_TEST_CASE(AppConfigUnittest, TestLoadEnvParameters, 0);
@@ -126,11 +126,11 @@ const int32_t kPollingFileFirstWatchTimeout = 100;
 const int32_t kPollingModifyCheckInterval = 10000;
 const int32_t kPollingIgnoreFileModifyTimeout = 100;
 
-void AppConfigUnittest::testParameters(const std::string& sysConfDir) {
+void AppConfigUnittest::testParameters(const std::string& confDir) {
     AppConfig* appConfig = AppConfig::GetInstance();
     appConfig->LoadAppConfig(STRING_FLAG(ilogtail_config));
 
-    APSARA_TEST_EQUAL(appConfig->GetLoongcollectorConfDir(), sysConfDir);
+    APSARA_TEST_EQUAL(appConfig->GetLoongcollectorConfDir(), confDir);
     APSARA_TEST_EQUAL(appConfig->IsAcceptMultiConfig(), kAccessMultiConfig);
     APSARA_TEST_EQUAL(appConfig->GetMaxMultiConfigSize(), kMaxMultiConfig);
     APSARA_TEST_EQUAL(INT32_FLAG(batch_send_interval), kBatchSendInterval);
@@ -170,9 +170,9 @@ void AppConfigUnittest::testParameters(const std::string& sysConfDir) {
 
 // env > gflag
 void AppConfigUnittest::TestLoadEnvParameters() {
-    const std::string kLogtailSysConfDir = GetProcessExecutionDir();
+    const std::string kConfDir = GetProcessExecutionDir();
 
-    setEnv("logtail_sys_conf_dir", kLogtailSysConfDir);
+    setEnv("logtail_sys_conf_dir", kConfDir);
     setEnv("accept_multi_config", kAccessMultiConfig);
     setEnv("max_multi_config", kMaxMultiConfig);
     setEnv("batch_send_interval", kBatchSendInterval);
@@ -210,17 +210,17 @@ void AppConfigUnittest::TestLoadEnvParameters() {
     setEnv("polling_ignore_file_modify_timeout", kPollingIgnoreFileModifyTimeout);
 
     writeLogtailConfigJSON(Json::Value(Json::objectValue));
-    testParameters(kLogtailSysConfDir);
+    testParameters(kConfDir);
 
     unsetEnvKeys();
 }
 
 // loongcollector_config.json > gflag
 void AppConfigUnittest::TestLoadFileParameters() {
-    const std::string kLogtailSysConfDir = GetProcessExecutionDir();
+    const std::string kConfDir = GetProcessExecutionDir();
 
     Json::Value value;
-    setJSON(value, "logtail_sys_conf_dir", kLogtailSysConfDir);
+    setJSON(value, "logtail_sys_conf_dir", kConfDir);
     setJSON(value, "accept_multi_config", kAccessMultiConfig);
     setJSON(value, "max_multi_config", kMaxMultiConfig);
     setJSON(value, "batch_send_interval", kBatchSendInterval);
@@ -258,7 +258,7 @@ void AppConfigUnittest::TestLoadFileParameters() {
     setJSON(value, "polling_ignore_file_modify_timeout", kPollingIgnoreFileModifyTimeout);
 
     writeLogtailConfigJSON(value);
-    testParameters(kLogtailSysConfDir);
+    testParameters(kConfDir);
 }
 
 DEFINE_FLAG_BOOL(test_param_bool, "test_param_bool", true);
