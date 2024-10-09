@@ -55,8 +55,8 @@ LogFileProfiler::LogFileProfiler() {
     mDumpFileName = GetProcessExecutionDir() + STRING_FLAG(logtail_profile_snapshot);
     mBakDumpFileName = GetProcessExecutionDir() + STRING_FLAG(logtail_profile_snapshot) + "_bak";
 #else
-    mDumpFileName = STRING_FLAG(loongcollector_log_dir) + "logtail_profile_snapshot";
-    mBakDumpFileName = STRING_FLAG(loongcollector_log_dir) + "logtail_profile_snapshot_bak";
+    mDumpFileName = STRING_FLAG(loongcollector_log_dir) + "profile_snapshot";
+    mBakDumpFileName = STRING_FLAG(loongcollector_log_dir) + "profile_snapshot_bak";
 #endif
     mHostname = GetHostName();
 #if defined(_MSC_VER)
