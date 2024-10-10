@@ -95,19 +95,12 @@ const string METRIC_RUNNER_FILE_POLLING_FILE_CACHE_SIZE = "runner_polling_file_c
 /**********************************************************
  *   ebpf server
  **********************************************************/
-// const string METRIC_RUNNER_EBPF_RECV_KERNEL_EVENTS_TOTAL = "runner_recv_kernel_events_total";
 const string METRIC_RUNNER_EBPF_LOSS_KERNEL_EVENTS_TOTAL = "runner_loss_kernel_events_total";
-// const string METRIC_RUNNER_EBPF_PUSH_CALLBACK_EVENTS_TOTAL = "runner_push_callback_events_total";
-// const string METRIC_RUNNER_EBPF_PUSH_CALLBACK_SPANS_TOTAL = "runner_push_callback_spans_total";
-// const string METRIC_RUNNER_EBPF_PUSH_CALLBACK_METRICS_TOTAL = "runner_push_callback_metrics_total";
-// const string METRIC_RUNNER_EBPF_PUSH_QUEUE_EVENTS_TOTAL = "runner_push_queue_events_total";
-
 const string METRIC_RUNNER_EBPF_NETWORK_OBSERVER_CONNTRACKER_NUM = "runner_network_observer_conntracker_num";
 const string METRIC_RUNNER_EBPF_NETWORK_OBSERVER_WORKER_HANDLE_EVENTS_TOTAL = "runner_network_observer_worker_handle_events_total";
 const string METRIC_RUNNER_EBPF_NETWORK_OBSERVER_PROTOCOL_PARSE_RECORDS_TOTAL = "runner_network_observer_parse_records_total";
 const string METRIC_RUNNER_EBPF_NETWORK_OBSERVER_AGGREGATE_EVENTS_TOTAL = "runner_network_observer_aggregate_events_total";
 const string METRIC_RUNNER_EBPF_NETWORK_OBSERVER_AGGREGATE_KEY_NUM = "runner_network_observer_aggregate_key_num";
-
 const string METRIC_RUNNER_EBPF_PROCESS_CACHE_ENTRIES_NUM = "runner_process_cache_entries_num";
 const string METRIC_RUNNER_EBPF_PROCESS_CACHE_MISS_TOTAL = "runner_process_cache_miss_total";
 

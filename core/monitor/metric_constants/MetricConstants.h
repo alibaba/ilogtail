@@ -305,13 +305,7 @@ extern const std::string METRIC_RUNNER_FILE_POLLING_FILE_CACHE_SIZE;
 /**********************************************************
  *   ebpf server
  **********************************************************/
-// input ebpf plugins metrics
-// extern const std::string METRIC_RUNNER_EBPF_RECV_KERNEL_EVENTS_TOTAL; // METRIC_RUNNER_IN_EVENTS_TOTAL
 extern const std::string METRIC_RUNNER_EBPF_LOSS_KERNEL_EVENTS_TOTAL;
-// extern const std::string METRIC_RUNNER_EBPF_PUSH_CALLBACK_EVENTS_TOTAL; // METRIC_RUNNER_IN_EVENTS_TOTAL
-// extern const std::string METRIC_RUNNER_EBPF_PUSH_CALLBACK_METRICS_TOTAL; // METRIC_RUNNER_IN_EVENTS_TOTAL
-// extern const std::string METRIC_RUNNER_EBPF_PUSH_CALLBACK_SPANS_TOTAL; // METRIC_RUNNER_IN_EVENTS_TOTAL
-// extern const std::string METRIC_RUNNER_EBPF_PUSH_QUEUE_EVENTS_TOTAL; // ?????
 extern const std::string METRIC_RUNNER_EBPF_NETWORK_OBSERVER_CONNTRACKER_NUM;
 extern const std::string METRIC_RUNNER_EBPF_NETWORK_OBSERVER_WORKER_HANDLE_EVENTS_TOTAL;
 extern const std::string METRIC_RUNNER_EBPF_NETWORK_OBSERVER_PROTOCOL_PARSE_RECORDS_TOTAL;
