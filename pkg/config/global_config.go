@@ -27,9 +27,11 @@ type GlobalConfig struct {
 	DefaultLogQueueSize      int
 	DefaultLogGroupQueueSize int
 	Tags                     map[string]string
-	// Directory to store logtail data, such as checkpoint, etc.
-	LogtailSysConfDir string
-	// Network identification from logtail.
+	// Directory to store loongcollector data, such as checkpoint, etc.
+	LoongcollectorConfDir string
+	// Directory to store loongcollector log.
+	LoongcollectorLogDir string
+	// Network identification from loongcollector.
 	HostIP       string
 	Hostname     string
 	AlwaysOnline bool
@@ -41,8 +43,8 @@ type GlobalConfig struct {
 	EnableSlsMetricsFormat         bool
 }
 
-// LogtailGlobalConfig is the singleton instance of GlobalConfig.
-var LogtailGlobalConfig = newGlobalConfig()
+// LoongcollectorGlobalConfig is the singleton instance of GlobalConfig.
+var LoongcollectorGlobalConfig = newGlobalConfig()
 
 // StatisticsConfigJson, AlarmConfigJson
 var BaseVersion = "0.1.0"                                                  // will be overwritten through ldflags at compile time
@@ -55,7 +57,8 @@ func newGlobalConfig() (cfg GlobalConfig) {
 		FlushIntervalMs:          3000,
 		DefaultLogQueueSize:      1000,
 		DefaultLogGroupQueueSize: 4,
-		LogtailSysConfDir:        ".",
+		LoongcollectorConfDir:    "./conf/",
+		LoongcollectorLogDir:     "./log/",
 		DelayStopSec:             300,
 	}
 	return

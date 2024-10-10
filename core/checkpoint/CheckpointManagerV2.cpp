@@ -36,8 +36,8 @@ namespace logtail {
 namespace detail {
 
     std::string getDatabasePath() {
-        auto fp = boost::filesystem::path(AppConfig::GetInstance()->GetLogtailSysConfDir());
-        return (fp / "checkpoint_v2").string();
+        auto fp = boost::filesystem::path(AppConfig::GetInstance()->GetLoongcollectorConfDir());
+        return (fp / "exactly_once_checkpoint").string();
     }
 
     // Log error locally and send alarm.

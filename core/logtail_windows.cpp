@@ -16,13 +16,20 @@
 #include <Winsock2.h>
 #include <direct.h>
 
+#include <iostream>
+
+#include "RuntimeUtil.h"
 #include "application/Application.h"
+#include "common/FileSystemUtil.h"
 #include "common/Flags.h"
 #include "logger/Logger.h"
 #include "monitor/LogtailAlarm.h"
 
 using namespace logtail;
 
+DECLARE_FLAG_STRING(loongcollector_conf_dir);
+DECLARE_FLAG_STRING(loongcollector_log_dir);
+DECLARE_FLAG_STRING(loongcollector_data_dir);
 DECLARE_FLAG_STRING(logtail_sys_conf_dir);
 DECLARE_FLAG_STRING(check_point_filename);
 DECLARE_FLAG_STRING(default_buffer_file_path);
@@ -35,10 +42,6 @@ DECLARE_FLAG_BOOL(enable_containerd_upper_dir_detect);
 
 static void overwrite_community_edition_flags() {
     // support run in installation dir on default
-    STRING_FLAG(logtail_sys_conf_dir) = ".";
-    STRING_FLAG(check_point_filename) = "checkpoint/logtail_check_point";
-    STRING_FLAG(default_buffer_file_path) = "checkpoint";
-    STRING_FLAG(ilogtail_docker_file_path_config) = "checkpoint/docker_path_config.json";
     STRING_FLAG(metrics_report_method) = "";
     INT32_FLAG(data_server_port) = 443;
     BOOL_FLAG(enable_env_ref_in_config) = true;
@@ -47,6 +50,27 @@ static void overwrite_community_edition_flags() {
 }
 
 void do_worker_process() {
+    std::string processExecutionDir = GetProcessExecutionDir();
+#define PROCESSDIRFLAG(flag_name, env_name, dir_name) \
+    if (STRING_FLAG(flag_name).empty()) { \
+        STRING_FLAG(flag_name) = processExecutionDir + #dir_name + PATH_SEPARATOR; \
+    } else { \
+        STRING_FLAG(flag_name) = AbsolutePath(STRING_FLAG(flag_name), processExecutionDir); \
+    } \
+    if (!CheckExistance(STRING_FLAG(flag_name))) { \
+        if (Mkdirs(STRING_FLAG(flag_name))) { \
+            std::cout << STRING_FLAG(flag_name) + " dir is not existing, create done" << std::endl; \
+        } else { \
+            std::cout << STRING_FLAG(flag_name) + " dir is not existing, create failed" << std::endl; \
+            exit(0); \
+        } \
+    }
+
+    PROCESSDIRFLAG(loongcollector_conf_dir, "ALIYUN_LOONGCOLLECTOR_CONF_DIR", conf);
+    PROCESSDIRFLAG(loongcollector_log_dir, "ALIYUN_LOONGCOLLECTOR_LOG_DIR", log);
+    PROCESSDIRFLAG(loongcollector_data_dir, "ALIYUN_LOONGCOLLECTOR_DATA_DIR", data);
+    PROCESSDIRFLAG(loongcollector_run_dir, "ALIYUN_LOONGCOLLECTOR_RUN_DIR", run);
+
     Logger::Instance().InitGlobalLoggers();
 
     // Initialize Winsock.

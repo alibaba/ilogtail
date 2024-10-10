@@ -79,13 +79,15 @@ func (p *checkPointManager) Init() error {
 		return nil
 	}
 	p.shutdown = make(chan struct{}, 1)
-	logtailConfigDir := config.LogtailGlobalConfig.LogtailSysConfDir
+	logtailConfigDir := config.LoongcollectorGlobalConfig.LoongcollectorConfDir
 	pathExist, err := util.PathExists(logtailConfigDir)
 	var dbPath string
 	if err == nil && pathExist {
 		dbPath = filepath.Join(logtailConfigDir, *CheckPointFile)
 	} else {
-		dbPath = util.GetCurrentBinaryPath() + *CheckPointFile
+		// c++程序如果这个目录创建失败会直接exit，所以这里一般应该不会走进来
+		logger.Error(context.Background(), "CHECKPOINT_ALARM", "logtailConfigDir not exist", logtailConfigDir, "err", err)
+		return err
 	}
 
 	p.db, err = leveldb.OpenFile(dbPath, nil)

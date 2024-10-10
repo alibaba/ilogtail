@@ -24,8 +24,8 @@ set -o pipefail
 # e2e: Build plugin dynamic lib with GOC and build the CPP part.
 CATEGORY=$1
 GENERATED_HOME=$2
-VERSION=${3:-2.0.0}
-REPOSITORY=${4:-aliyun/ilogtail}
+VERSION=${3:-0.0.1}
+REPOSITORY=${4:-aliyun/loongcollector}
 OUT_DIR=${5:-output}
 EXPORT_GO_ENVS=${6:-${DOCKER_BUILD_EXPORT_GO_ENVS:-true}}
 COPY_GIT_CONFIGS=${7:-${DOCKER_BUILD_COPY_GIT_CONFIGS:-true}}
@@ -102,7 +102,7 @@ function generateCopyScript() {
     echo 'docker cp "$id":'${PATH_IN_DOCKER}'/'${OUT_DIR}'/libPluginBase.so $BINDIR' >>$COPY_SCRIPT_FILE
   elif [ $CATEGORY = "core" ]; then
     if [ $BUILD_LOGTAIL = "ON" ]; then
-      echo 'docker cp "$id":'${PATH_IN_DOCKER}'/core/build/ilogtail $BINDIR' >>$COPY_SCRIPT_FILE
+      echo 'docker cp "$id":'${PATH_IN_DOCKER}'/core/build/loongcollector $BINDIR' >>$COPY_SCRIPT_FILE
       echo 'docker cp "$id":'${PATH_IN_DOCKER}'/core/build/go_pipeline/libPluginAdapter.so $BINDIR' >>$COPY_SCRIPT_FILE
     fi
     if [ $BUILD_LOGTAIL_UT = "ON" ]; then
@@ -111,14 +111,14 @@ function generateCopyScript() {
     fi
   else
     echo 'docker cp "$id":'${PATH_IN_DOCKER}'/'${OUT_DIR}'/libPluginBase.so $BINDIR' >>$COPY_SCRIPT_FILE
-    echo 'docker cp "$id":'${PATH_IN_DOCKER}'/core/build/ilogtail $BINDIR' >>$COPY_SCRIPT_FILE
+    echo 'docker cp "$id":'${PATH_IN_DOCKER}'/core/build/loongcollector $BINDIR' >>$COPY_SCRIPT_FILE
     echo 'docker cp "$id":'${PATH_IN_DOCKER}'/core/build/go_pipeline/libPluginAdapter.so $BINDIR' >>$COPY_SCRIPT_FILE
     if [ $BUILD_LOGTAIL_UT = "ON" ]; then
       echo 'docker cp "$id":'${PATH_IN_DOCKER}'/core/build core/build' >>$COPY_SCRIPT_FILE
       echo 'rm -rf core/protobuf/sls && docker cp "$id":'${PATH_IN_DOCKER}'/core/protobuf/sls core/protobuf/sls' >>$COPY_SCRIPT_FILE
     fi
   fi
-  echo 'echo -e "{\n}" > $BINDIR/ilogtail_config.json' >>$COPY_SCRIPT_FILE
+  echo 'echo -e "{\n}" > $BINDIR/loongcollector_config.json' >>$COPY_SCRIPT_FILE
   echo 'mkdir -p $BINDIR/config/local' >>$COPY_SCRIPT_FILE
   echo 'docker rm -v "$id"' >>$COPY_SCRIPT_FILE
 }

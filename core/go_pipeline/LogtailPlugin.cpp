@@ -61,7 +61,8 @@ LogtailPlugin::LogtailPlugin() {
     mPluginContainerConfig.mAliuid = STRING_FLAG(logtail_profile_aliuid);
     mPluginContainerConfig.mCompressor = CompressorFactory::GetInstance()->Create(CompressType::ZSTD);
 
-    mPluginCfg["LogtailSysConfDir"] = AppConfig::GetInstance()->GetLogtailSysConfDir();
+    mPluginCfg["LoongcollectorConfDir"] = AppConfig::GetInstance()->GetLoongcollectorConfDir();
+    mPluginCfg["LoongcollectorLogDir"] = GetAgentLogDir();
     mPluginCfg["HostIP"] = LogFileProfiler::mIpAddr;
     mPluginCfg["Hostname"] = LogFileProfiler::mHostname;
     mPluginCfg["EnableContainerdUpperDirDetect"] = BOOL_FLAG(enable_containerd_upper_dir_detect);
@@ -260,6 +261,7 @@ bool LogtailPlugin::LoadPluginBase() {
     if (mPluginAdapterPtr == NULL) {
         DynamicLibLoader loader;
         std::string error;
+        // load plugin adapter
         if (!loader.LoadDynLib("PluginAdapter", error, AppConfig::GetInstance()->GetWorkingDir())) {
             LOG_ERROR(sLogger, ("open adapter lib error, Message", error));
             return mPluginValid;
@@ -304,6 +306,7 @@ bool LogtailPlugin::LoadPluginBase() {
     if (mPluginBasePtr == NULL) {
         DynamicLibLoader loader;
         std::string error;
+        // load plugin base
         if (!loader.LoadDynLib("PluginBase", error, AppConfig::GetInstance()->GetWorkingDir())) {
             LOG_ERROR(sLogger, ("open plugin base dl error, Message", error));
             return mPluginValid;
