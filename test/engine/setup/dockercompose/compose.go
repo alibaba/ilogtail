@@ -138,7 +138,10 @@ func (c *ComposeBooter) Start(ctx context.Context) error {
 	c.cli = cli
 
 	list, err := cli.ContainerList(context.Background(), types.ContainerListOptions{
-		Filters: filters.NewArgs(filters.Arg("name", fmt.Sprintf("%s-ilogtailC", projectName))),
+		Filters: filters.NewArgs(
+			filters.Arg("name", fmt.Sprintf("%s_ilogtailC*", projectName)),
+			filters.Arg("name", fmt.Sprintf("%s-ilogtailC*", projectName)),
+		),
 	})
 	if len(list) != 1 {
 		logger.Errorf(context.Background(), "LOGTAIL_COMPOSE_ALARM", "logtail container size is not equal 1, got %d count", len(list))

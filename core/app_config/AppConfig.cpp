@@ -15,18 +15,20 @@
 #include "AppConfig.h"
 
 #include <algorithm>
+#include <filesystem>
+#include <utility>
 
 #include "common/EnvUtil.h"
 #include "common/FileSystemUtil.h"
 #include "common/JsonUtil.h"
 #include "common/LogtailCommonFlags.h"
-#include "common/RuntimeUtil.h"
+#include "config/watcher/InstanceConfigWatcher.h"
 #include "file_server/ConfigManager.h"
+#include "file_server/reader/LogFileReader.h"
 #include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/LogtailAlarm.h"
 #include "monitor/Monitor.h"
-#include "file_server/reader/LogFileReader.h"
 #ifdef __ENTERPRISE__
 #include "config/provider/EnterpriseConfigProvider.h"
 #endif
@@ -45,11 +47,9 @@ DEFINE_FLAG_INT32(default_local_file_size, "default size of one buffer file", 20
 DEFINE_FLAG_INT32(pub_local_file_size, "default size of one buffer file", 20 * 1024 * 1024);
 DEFINE_FLAG_INT32(process_thread_count, "", 1);
 DEFINE_FLAG_INT32(send_request_concurrency, "max count keep in mem when async send", 10);
-DEFINE_FLAG_BOOL(enable_send_tps_smoothing, "avoid web server load burst", true);
-DEFINE_FLAG_BOOL(enable_flow_control, "if enable flow control", true);
 DEFINE_FLAG_STRING(default_buffer_file_path, "set current execution dir in default", "");
 DEFINE_FLAG_STRING(buffer_file_path, "set buffer dir", "");
-// DEFINE_FLAG_STRING(default_mapping_config_path, "", "mapping_config.json");
+
 DEFINE_FLAG_DOUBLE(default_machine_cpu_usage_threshold, "machine level", 0.4);
 DEFINE_FLAG_BOOL(default_resource_auto_scale, "", false);
 DEFINE_FLAG_BOOL(default_input_flow_control, "", false);
@@ -62,41 +62,15 @@ DEFINE_FLAG_STRING(logtail_sys_conf_dir, "store machine-unique-id, user-defined-
 #elif defined(_MSC_VER)
 DEFINE_FLAG_STRING(logtail_sys_conf_dir, "store machine-unique-id, user-defined-id, aliuid", "C:\\LogtailData\\");
 #endif
-// const char* DEFAULT_ILOGTAIL_LOCAL_CONFIG_FLAG_VALUE = "user_local_config.json";
-// DEFINE_FLAG_STRING(ilogtail_local_config, "local ilogtail config file", DEFAULT_ILOGTAIL_LOCAL_CONFIG_FLAG_VALUE);
-// const char* DEFAULT_ILOGTAIL_LOCAL_CONFIG_DIR_FLAG_VALUE = "user_config.d";
-// DEFINE_FLAG_STRING(ilogtail_local_config_dir,
-//                    "local ilogtail config file dir",
-//                    DEFAULT_ILOGTAIL_LOCAL_CONFIG_DIR_FLAG_VALUE);
-// const char* DEFAULT_ILOGTAIL_LOCAL_YAML_CONFIG_DIR_FLAG_VALUE = "user_yaml_config.d";
-// DEFINE_FLAG_STRING(ilogtail_local_yaml_config_dir,
-//                    "local ilogtail yaml config file dir",
-//                    DEFAULT_ILOGTAIL_LOCAL_YAML_CONFIG_DIR_FLAG_VALUE);
-// const char* DEFAULT_ILOGTAIL_REMOTE_YAML_CONFIG_DIR_FLAG_VALUE = "remote_yaml_config.d";
-// DEFINE_FLAG_STRING(ilogtail_remote_yaml_config_dir,
-//                    "remote ilogtail yaml config file dir",
-//                    DEFAULT_ILOGTAIL_REMOTE_YAML_CONFIG_DIR_FLAG_VALUE);
 
-// DEFINE_FLAG_BOOL(default_global_fuse_mode, "default global fuse mode", false);
-// DEFINE_FLAG_BOOL(default_global_mark_offset_flag, "default global mark offset flag", false);
-
-// DEFINE_FLAG_STRING(default_container_mount_path, "", "container_mount.json");
 DEFINE_FLAG_STRING(default_include_config_path, "", "config.d");
 
 DEFINE_FLAG_INT32(default_oas_connect_timeout, "default (minimum) connect timeout for OSARequest", 5);
 DEFINE_FLAG_INT32(default_oas_request_timeout, "default (minimum) request timeout for OSARequest", 10);
-// DEFINE_FLAG_BOOL(rapid_retry_update_config, "", false);
-DEFINE_FLAG_BOOL(check_profile_region, "", false);
-// DEFINE_FLAG_BOOL(enable_collection_mark,
-//                  "enable collection mark function to override check_ulogfs_env in user config",
-//                  false);
-// DEFINE_FLAG_BOOL(enable_env_ref_in_config, "enable environment variable reference replacement in configuration",
-// false);
-DEFINE_FLAG_INT32(data_server_port, "", 80);
 
-// DEFINE_FLAG_STRING(alipay_app_zone, "", "ALIPAY_APP_ZONE");
-// DEFINE_FLAG_STRING(alipay_zone, "", "ALIPAY_ZONE");
-// DEFINE_FLAG_STRING(alipay_zone_env_name, "", "");
+DEFINE_FLAG_BOOL(check_profile_region, "", false);
+
+DEFINE_FLAG_INT32(data_server_port, "", 80);
 
 DECLARE_FLAG_STRING(check_point_filename);
 
@@ -158,33 +132,31 @@ DEFINE_FLAG_INT32(loong_collector_operator_service_port, "loong collector operat
 DEFINE_FLAG_STRING(_pod_name_, "agent pod name", "");
 
 namespace logtail {
+
+std::string AppConfig::sLocalConfigDir = "local";
+
 AppConfig::AppConfig() {
     LOG_INFO(sLogger, ("AppConfig AppConfig", "success"));
-    mSendRandomSleep = BOOL_FLAG(enable_send_tps_smoothing);
-    mSendFlowControl = BOOL_FLAG(enable_flow_control);
     SetIlogtailConfigJson("");
-    // mStreamLogAddress = "0.0.0.0";
-    // mIsOldPubRegion = false;
-    // mOpenStreamLog = false;
+
     mSendRequestConcurrency = INT32_FLAG(send_request_concurrency);
     mProcessThreadCount = INT32_FLAG(process_thread_count);
-    // mMappingConfigPath = STRING_FLAG(default_mapping_config_path);
+
     mMachineCpuUsageThreshold = DOUBLE_FLAG(default_machine_cpu_usage_threshold);
     mCpuUsageUpLimit = DOUBLE_FLAG(cpu_usage_up_limit);
     mScaledCpuUsageUpLimit = DOUBLE_FLAG(cpu_usage_up_limit);
     mMemUsageUpLimit = INT64_FLAG(memory_usage_up_limit);
     mResourceAutoScale = BOOL_FLAG(default_resource_auto_scale);
     mInputFlowControl = BOOL_FLAG(default_input_flow_control);
-    // mDefaultRegion = STRING_FLAG(default_region_name);
+
     mAcceptMultiConfigFlag = BOOL_FLAG(default_accept_multi_config);
     mMaxMultiConfigSize = INT32_FLAG(max_multi_config_size);
-    // mUserConfigPath = STRING_FLAG(user_log_config);
+
     mIgnoreDirInodeChanged = false;
     mLogParseAlarmFlag = true;
     mNoInotify = false;
     mSendDataPort = 80;
     mShennongSocket = true;
-    // mInotifyBlackList.insert("/tmp");
 
     mPurageContainerMode = false;
     mForceQuitReadTimeout = 7200;
@@ -192,12 +164,29 @@ AppConfig::AppConfig() {
     CheckPurageContainerMode();
 }
 
+/**
+ * @brief 合并两个JSON对象
+ *
+ * 该函数将子JSON对象的所有成员合并到主JSON对象中。
+ * 如果存在相同的键，子对象的值将覆盖主对象的值。
+ *
+ * @param mainConfJson 主JSON对象，将被修改
+ * @param subConfJson 子JSON对象，其成员将被合并到主对象中
+ */
 void AppConfig::MergeJson(Json::Value& mainConfJson, const Json::Value& subConfJson) {
     for (auto subkey : subConfJson.getMemberNames()) {
         mainConfJson[subkey] = subConfJson[subkey];
     }
 }
 
+/**
+ * @brief 加载包含的配置文件
+ *
+ * 该函数从指定目录加载额外的JSON配置文件，并将其合并到主配置中。
+ * 配置文件按字母顺序加载，只处理.json后缀的文件。
+ *
+ * @param confJson 主配置JSON对象，将被修改以包含额外的配置
+ */
 void AppConfig::LoadIncludeConfig(Json::Value& confJson) {
     // New default value of the flag is renamed from /etc/ilogtail/config.d/
     // to config.d, be compatible with old default value.
@@ -247,7 +236,51 @@ void AppConfig::LoadIncludeConfig(Json::Value& confJson) {
     }
 }
 
+/**
+ * @brief 加载应用程序配置
+ *
+ * 该函数从指定的配置文件加载Logtail的主要配置。
+ * 它处理配置文件的解析、包含额外配置、设置系统目录等。
+ *
+ * @param ilogtailConfigFile 配置文件的路径
+ */
 void AppConfig::LoadAppConfig(const std::string& ilogtailConfigFile) {
+    // 加载本地配置
+    loadLocalConfig(ilogtailConfigFile);
+
+    // 加载 本地instanceconfig
+    // add local config dir
+    filesystem::path localConfigPath
+        = filesystem::path(AppConfig::GetInstance()->GetLogtailSysConfDir()) / "instanceconfig" / "local";
+    error_code ec;
+    filesystem::create_directories(localConfigPath, ec);
+    if (ec) {
+        LOG_WARNING(sLogger,
+                    ("failed to create dir for local instanceconfig",
+                     "manual creation may be required")("error code", ec.value())("error msg", ec.message()));
+    }
+    InstanceConfigWatcher::GetInstance()->AddSource(localConfigPath.string());
+    InstanceConfigDiff instanceConfigDiff = InstanceConfigWatcher::GetInstance()->CheckConfigDiff();
+    if (!instanceConfigDiff.IsEmpty()) {
+        InstanceConfigManager::GetInstance()->UpdateInstanceConfigs(instanceConfigDiff);
+    }
+
+
+    // 加载环境变量配置
+    loadEnvConfig();
+
+    ParseJsonToFlags(mLocalConfig);
+
+    ParseEnvToFlags();
+
+    LoadResourceConf(mLocalConfig);
+
+    LoadOtherConf(mLocalConfig);
+
+    CheckAndResetProxyEnv();
+}
+
+void AppConfig::loadLocalConfig(const std::string& ilogtailConfigFile) {
     std::string processExecutionDir = GetProcessExecutionDir();
     mDockerFilePathConfig = processExecutionDir + STRING_FLAG(ilogtail_docker_file_path_config);
 
@@ -289,24 +322,22 @@ void AppConfig::LoadAppConfig(const std::string& ilogtailConfigFile) {
     }
     SetLogtailSysConfDir(AbsolutePath(newSysConfDir, mProcessExecutionDir));
 
+    // 加载 本地配置
     LoadIncludeConfig(confJson);
     string configJsonString = confJson.toStyledString();
     SetIlogtailConfigJson(configJsonString);
     LOG_INFO(sLogger, ("load logtail config file, path", ilogtailConfigFile));
     LOG_INFO(sLogger, ("load logtail config file, detail", configJsonString));
 
-    ParseJsonToFlags(confJson);
-    ParseEnvToFlags();
-
-    LoadResourceConf(confJson);
-    // load addr will init sender, sender param depend on LoadResourceConf
-    // LoadAddrConfig(confJson);
-    LoadOtherConf(confJson);
-
-    CheckAndResetProxyEnv();
-    mConfJson = confJson;
+    mLocalConfig = confJson;
 }
 
+/**
+ * @brief 从环境变量加载标签
+ *
+ * 该函数从环境变量中加载预定义的标签。
+ * 标签键从环境变量中获取，对应的值也从环境变量中读取。
+ */
 void AppConfig::LoadEnvTags() {
     char* envTagKeys = getenv(STRING_FLAG(default_env_tag_keys).c_str());
     if (envTagKeys == NULL) {
@@ -328,7 +359,15 @@ void AppConfig::LoadEnvTags() {
     }
 }
 
-// @return true if input configValue has been updated.
+/**
+ * @brief 从环境变量加载单个配置值
+ *
+ * @tparam T 配置值的类型
+ * @param envKey 环境变量的键
+ * @param configValue 配置值的引用，如果环境变量存在且有效，将被更新
+ * @param minValue 配置值的最小允许值
+ * @return 如果配置值被更新，返回true；否则返回false
+ */
 template <typename T>
 bool LoadSingleValueEnvConfig(const char* envKey, T& configValue, const T minValue) {
     try {
@@ -348,6 +387,13 @@ bool LoadSingleValueEnvConfig(const char* envKey, T& configValue, const T minVal
     return false;
 }
 
+/**
+ * @brief 从环境变量加载配置值（如果存在）
+ *
+ * @tparam T 配置值的类型
+ * @param envKey 环境变量的键
+ * @param cfgValue 配置值的引用，如果环境变量存在，将被更新
+ */
 template <typename T>
 void LoadEnvValueIfExisting(const char* envKey, T& cfgValue) {
     try {
@@ -362,6 +408,13 @@ void LoadEnvValueIfExisting(const char* envKey, T& cfgValue) {
     }
 }
 
+/**
+ * @brief 从环境变量加载资源限制配置
+ *
+ * 该函数从环境变量中加载各种资源限制相关的配置，
+ * 包括CPU使用限制、内存使用限制、最大字节数/秒、
+ * 处理线程数和发送请求并发数。
+ */
 void AppConfig::LoadEnvResourceLimit() {
     LoadSingleValueEnvConfig("cpu_usage_limit", mCpuUsageUpLimit, (float)0.4);
     LoadSingleValueEnvConfig("mem_usage_limit", mMemUsageUpLimit, (int64_t)384);
@@ -370,6 +423,18 @@ void AppConfig::LoadEnvResourceLimit() {
     LoadSingleValueEnvConfig("send_request_concurrency", mSendRequestConcurrency, (int32_t)2);
 }
 
+/**
+ * @brief 检查是否处于纯容器模式
+ *
+ * 该函数检查系统是否运行在纯容器模式下。
+ *
+ * 主要步骤：
+ * 1. 在企业版中，检查是否设置了用户定义的ID环境变量
+ * 2. 检查默认容器主机路径是否存在
+ * 3. 根据检查结果设置mPurageContainerMode标志
+ *
+ * @note 该函数会更新mPurageContainerMode成员变量
+ */
 void AppConfig::CheckPurageContainerMode() {
 #ifdef __ENTERPRISE__
     if (getenv(STRING_FLAG(ilogtail_user_defined_id_env_name).c_str()) == NULL) {
@@ -384,6 +449,27 @@ void AppConfig::CheckPurageContainerMode() {
     LOG_INFO(sLogger, ("purage container mode", mPurageContainerMode));
 }
 
+/**
+ * @brief 加载资源配置
+ *
+ * @param confJson JSON格式的配置数据
+ *
+ * 该函数从JSON配置中加载各种资源相关的设置，包括但不限于：
+ * - 批量发送间隔
+ * - 最大发送字节数
+ * - 缓冲文件数量和大小
+ * - CPU和内存使用限制
+ * - 自动缩放和流量控制设置
+ * - 检查点文件路径
+ * - Docker相关配置
+ * - Inotify黑名单
+ * - 数据服务器端口
+ *
+ * 函数会根据配置更新相应的成员变量和全局标志。
+ * 对于某些设置，如果配置中未指定，会使用默认值或从环境变量中加载。
+ *
+ * @note 该函数较长，包含了大量的配置项处理逻辑
+ */
 void AppConfig::LoadResourceConf(const Json::Value& confJson) {
     LoadInt32Parameter(
         INT32_FLAG(batch_send_interval), confJson, "batch_send_interval", "ALIYUN_LOGTAIL_BATCH_SEND_INTERVAL");
@@ -755,6 +841,21 @@ void AppConfig::LoadResourceConf(const Json::Value& confJson) {
     }
 }
 
+/**
+ * @brief 检查并重置代理环境变量
+ *
+ * @return bool 如果所有代理设置都有效则返回true，否则返回false
+ *
+ * 该函数执行以下操作：
+ * 1. 检查并设置HTTP代理
+ * 2. 检查并设置HTTPS代理
+ * 3. 检查并设置ALL代理
+ * 4. 处理NO_PROXY设置
+ * 5. 如果设置了任何代理，禁用主机IP替换
+ *
+ * 函数会优先考虑大写的环境变量名，如果不存在则使用小写的。
+ * 对于每种代理类型，如果设置无效，函数会清除相关的环境变量并返回false。
+ */
 bool AppConfig::CheckAndResetProxyEnv() {
     // envs capitalized prioritize those in lower case
     string httpProxy = ToString(getenv("HTTP_PROXY"));
@@ -825,8 +926,17 @@ bool AppConfig::CheckAndResetProxyEnv() {
     return true;
 }
 
-// valid proxy address format: [scheme://[user:pwd\@]]address[:port], 'http' and '80' assumed if no scheme or port
-// provided
+/**
+ * @brief 检查并重置代理地址
+ *
+ * @param envKey 环境变量键名
+ * @param address 代理地址
+ * @return bool 如果地址有效则返回true，否则返回false
+ *
+ * 该函数验证代理地址的格式是否正确，格式为：[scheme://[user:pwd\@]]address[:port]
+ * 如果没有提供scheme或port，则假定为'http'和'80'
+ * 如果地址有效但缺少port，函数会添加默认port并更新环境变量
+ */
 bool AppConfig::CheckAndResetProxyAddress(const char* envKey, string& address) {
     if (address.empty()) {
         return true;
@@ -850,6 +960,25 @@ bool AppConfig::CheckAndResetProxyAddress(const char* envKey, string& address) {
     return true;
 }
 
+/**
+ * @brief 加载其他配置项
+ *
+ * @param confJson JSON格式的配置对象
+ *
+ * 该函数从给定的JSON配置对象中加载各种配置项，包括但不限于：
+ * - 流日志开关
+ * - OAS连接和请求超时时间
+ * - 强制退出读取超时时间
+ * - 动态插件列表
+ * - 检查点同步写入开关
+ * - 日志时间自动调整开关
+ * - 检查点搜索相关参数
+ * - 轮询发现相关参数
+ * - 多配置接受标志和最大数量
+ * - 日志解析错误报警标志
+ *
+ * 函数会根据配置项的存在与否来决定是否更新相应的成员变量或全局标志。
+ */
 void AppConfig::LoadOtherConf(const Json::Value& confJson) {
     {
         int32_t oasConnectTimeout = 0;
@@ -945,6 +1074,15 @@ void AppConfig::LoadOtherConf(const Json::Value& confJson) {
     }
 }
 
+/**
+ * @brief 初始化环境变量映射
+ *
+ * @param envStr 环境变量字符串，格式为"KEY=VALUE"
+ * @param envMapping 用于存储解析后的环境变量的映射
+ *
+ * 该函数解析给定的环境变量字符串，并将其添加到环境变量映射中。
+ * 如果解析失败，会记录警告日志。
+ */
 void AppConfig::InitEnvMapping(const std::string& envStr, std::map<std::string, std::string>& envMapping) {
     int pos = envStr.find('=');
     if (pos > 0 && size_t(pos) < envStr.size()) {
@@ -955,6 +1093,16 @@ void AppConfig::InitEnvMapping(const std::string& envStr, std::map<std::string, 
         APSARA_LOG_WARNING(sLogger, ("error to find ", "")("pos", pos)("env string", envStr));
     }
 }
+
+/**
+ * @brief 设置配置标志
+ *
+ * @param flagName 标志名称
+ * @param value 要设置的值
+ *
+ * 该函数尝试设置指定名称的配置标志为给定的值。
+ * 如果设置成功，会记录信息日志；如果标志未定义，会记录调试日志。
+ */
 void AppConfig::SetConfigFlag(const std::string& flagName, const std::string& value) {
     GFLAGS_NAMESPACE::CommandLineFlagInfo info;
     bool rst = GetCommandLineFlagInfo(flagName.c_str(), &info);
@@ -974,7 +1122,7 @@ void AppConfig::SetConfigFlag(const std::string& flagName, const std::string& va
 #include "processenv.h"
 #endif
 
-void AppConfig::ParseEnvToFlags() {
+std::map<std::string, std::string> AppConfig::GetEnvMapping() {
     std::map<std::string, std::string> envMapping;
 
 #if defined(__linux__) || defined(__APPLE__)
@@ -999,11 +1147,61 @@ void AppConfig::ParseEnvToFlags() {
         }
     }
 #endif
-    for (auto iter = envMapping.begin(); iter != envMapping.end(); ++iter) {
-        const std::string& key = iter->first;
-        const std::string& value = iter->second;
+    return envMapping;
+}
+
+void AppConfig::ParseEnvToFlags() {
+    std::map<std::string, std::string> envMapping = GetEnvMapping();
+
+    for (auto& iter : envMapping) {
+        const std::string& key = iter.first;
+        const std::string& value = iter.second;
         SetConfigFlag(key, value);
     }
+}
+
+void AppConfig::loadEnvConfig() {
+    std::map<std::string, std::string> envMapping = GetEnvMapping();
+    mEnvConfig.clear();
+    for (const auto& iter : envMapping) {
+        const std::string& flagName = iter.first;
+        const std::string& strValue = iter.second;
+        GFLAGS_NAMESPACE::CommandLineFlagInfo info;
+        bool rst = GetCommandLineFlagInfo(flagName.c_str(), &info);
+        if (rst) {
+            // 尝试解析为 double
+            char* end;
+            double doubleValue = strtod(strValue.c_str(), &end);
+            if (*end == '\0') {
+                mEnvConfig[flagName] = doubleValue;
+                continue;
+            }
+
+            // 尝试解析为 int64_t
+            int64_t int64Value = strtoll(strValue.c_str(), &end, 10);
+            if (*end == '\0' && errno != ERANGE) {
+                mEnvConfig[flagName] = Json::Int64(int64Value);
+                continue;
+            }
+
+            // 尝试解析为 int32_t
+            int32_t int32Value = static_cast<int32_t>(strtol(strValue.c_str(), &end, 10));
+            if (*end == '\0' && errno != ERANGE && static_cast<int64_t>(int32Value) == int64Value) {
+                mEnvConfig[flagName] = int32Value;
+                continue;
+            }
+
+            // 检查是否为 bool
+            if (strValue == "true" || strValue == "false") {
+                mEnvConfig[flagName] = (strValue == "true");
+                continue;
+            }
+
+            // 如果以上都不是，则作为 string 存储
+            mEnvConfig[flagName] = strValue;
+        }
+    }
+    LOG_INFO(sLogger, ("Loaded environment config", mEnvConfig.toStyledString()));
 }
 
 void AppConfig::DumpAllFlagsToMap(std::unordered_map<std::string, std::string>& flagMap) {
@@ -1025,6 +1223,23 @@ void AppConfig::ReadFlagsFromMap(const std::unordered_map<std::string, std::stri
     LOG_DEBUG(sLogger, ("ReadFlagsFromMap", flagMap.size()));
 }
 
+/**
+ * @brief 递归解析JSON配置到标志
+ *
+ * 该函数递归地遍历JSON对象，将其键值对转换为配置标志。
+ *
+ * @param confJson 要解析的JSON对象
+ * @param prefix 当前键的前缀，用于构建完整的标志名
+ *
+ * 主要逻辑:
+ * 1. 遍历JSON对象的所有成员
+ * 2. 对于嵌套的对象，递归调用自身
+ * 3. 对于非对象值:
+ *    - 忽略特定的键（如data_server_list）
+ *    - 将可转换为字符串的值设置为标志
+ *    - 对特定键（如config_server_address_list）强制转换为字符串
+ *    - 记录无法转换的值
+ */
 void AppConfig::RecurseParseJsonToFlags(const Json::Value& confJson, std::string prefix) {
     const static unordered_set<string> sIgnoreKeySet = {"data_server_list"};
     const static unordered_set<string> sForceKeySet = {"config_server_address_list"};
@@ -1055,10 +1270,33 @@ void AppConfig::RecurseParseJsonToFlags(const Json::Value& confJson, std::string
     }
 }
 
+/**
+ * @brief 将JSON配置解析为标志
+ *
+ * 该函数将传入的JSON配置对象解析为标志。
+ * 它调用RecurseParseJsonToFlags函数来递归地解析JSON对象,
+ * 将JSON中的键值对转换为相应的配置标志。
+ *
+ * @param confJson 要解析的JSON配置对象
+ */
 void AppConfig::ParseJsonToFlags(const Json::Value& confJson) {
     RecurseParseJsonToFlags(confJson, "");
 }
 
+/**
+ * @brief 检查并调整参数
+ *
+ * 该函数用于检查和调整Logtail的各项参数,主要包括:
+ * 1. 限制缓冲文件的大小和数量
+ * 2. 根据内存限制动态调整各项参数,如最大统计数、缓存大小等
+ * 3. 调整发送相关的参数
+ * 4. 当流量超过一定阈值时,禁用流量控制和随机延迟发送
+ *
+ * 具体调整逻辑如下:
+ * - 限制缓冲文件总大小不超过4GB
+ * - 根据内存限制按比例调整各项参数,但不超过默认最大值
+ * - 当发送流量超过30MB/s时,禁用流量控制和随机延迟发送
+ */
 void AppConfig::CheckAndAdjustParameters() {
     // the max buffer size is 4GB
     // if "fileNum * fileSize" from config more than 4GB, logtail will do restrictions
@@ -1141,16 +1379,8 @@ void AppConfig::CheckAndAdjustParameters() {
                                                                            INT32_FLAG(max_reader_open_files)));
 
     LOG_INFO(sLogger,
-             ("send byte per second limit", mMaxBytePerSec)("batch send interval", INT32_FLAG(batch_send_interval))(
-                 "batch send size", INT32_FLAG(batch_send_metric_size)));
-    // when inflow exceed 30MB/s, FlowControl lose precision
-    if (mMaxBytePerSec >= 30 * 1024 * 1024) {
-        if (mSendFlowControl)
-            mSendFlowControl = false;
-        if (mSendRandomSleep)
-            mSendRandomSleep = false;
-        LOG_INFO(sLogger, ("send flow control", "disable")("send random sleep", "disable"));
-    }
+             ("batch send interval", INT32_FLAG(batch_send_interval))("batch send size",
+                                                                      INT32_FLAG(batch_send_metric_size)));
 }
 
 bool AppConfig::IsInInotifyBlackList(const std::string& path) const {
@@ -1164,6 +1394,17 @@ bool AppConfig::IsInInotifyBlackList(const std::string& path) const {
 // TODO: Use Boost instead.
 // boost::filesystem::directory_iterator end;
 // try { boost::filesystem::directory_iterator(path); } catch (...) { // failed } // OK
+/**
+ * @brief 设置Logtail系统配置目录
+ *
+ * 该函数用于设置Logtail系统配置目录的路径。它执行以下操作：
+ * 1. 设置配置目录路径，确保路径以分隔符结尾
+ * 2. 如果目录不存在，尝试创建
+ * 3. 验证目录的可访问性，如果不可访问则使用进程执行目录作为备选
+ * 4. 记录最终设置的配置目录路径
+ *
+ * @param dirPath 要设置的配置目录路径
+ */
 void AppConfig::SetLogtailSysConfDir(const std::string& dirPath) {
     mLogtailSysConfDir = dirPath;
     if (dirPath.back() != '/' || dirPath.back() != '\\') {
@@ -1223,6 +1464,13 @@ bool AppConfig::IsHostPathMatchBlacklist(const string& dirPath) const {
     return false;
 }
 
+/**
+ * @brief 更新文件标签
+ *
+ * 该函数从指定的配置文件中读取文件标签信息，并更新内部的文件标签存储。
+ * 如果配置文件不存在或格式无效，将记录错误日志。
+ * 只有当新的标签配置与当前存储的配置不同时，才会进行更新。
+ */
 void AppConfig::UpdateFileTags() {
     if (STRING_FLAG(ALIYUN_LOG_FILE_TAGS).empty()) {
         return;
@@ -1257,6 +1505,177 @@ void AppConfig::UpdateFileTags() {
         }
     }
     return;
+}
+
+Json::Value AppConfig::mergeAllConfigs() {
+    Json::Value mergedConfig;
+    for (const auto& key : mLocalConfig.getMemberNames()) {
+        mergedConfig[key] = Json::Value(mLocalConfig[key]);
+    }
+    for (const auto& key : mLocalInstanceConfig.getMemberNames()) {
+        mergedConfig[key] = Json::Value(mLocalInstanceConfig[key]);
+    }
+    for (const auto& key : mEnvConfig.getMemberNames()) {
+        mergedConfig[key] = Json::Value(mEnvConfig[key]);
+    }
+    for (const auto& key : mRemoteConfig.getMemberNames()) {
+        mergedConfig[key] = Json::Value(mRemoteConfig[key]);
+    }
+    return mergedConfig;
+}
+
+void AppConfig::LoadInstanceConfig(std::map<std::string, Json::Value>& instanceConfig) {
+    mRemoteConfig.clear();
+    mLocalInstanceConfig.clear();
+    for (auto& config : instanceConfig) {
+        if (config.first == AppConfig::sLocalConfigDir) {
+            MergeJson(mLocalInstanceConfig, config.second);
+        } else {
+            MergeJson(mRemoteConfig, config.second);
+        }
+    }
+    auto mergedConfig = mergeAllConfigs();
+    for (const auto& callback : mCallbacks) {
+        const std::string& key = callback.first;
+        if (!mMergedConfig.isMember(key) && !mergedConfig.isMember(key)) {
+            continue;
+        }
+        if (!mMergedConfig.isMember(key) && mergedConfig.isMember(key)) {
+            callback.second(false);
+        }
+        if (mMergedConfig.isMember(key) && !mergedConfig.isMember(key)) {
+            callback.second(false);
+        }
+        if (mMergedConfig[key] != mergedConfig[key]) {
+            callback.second(false);
+        }
+    }
+    mMergedConfig = std::move(mergedConfig);
+}
+
+void AppConfig::RegisterCallback(const std::string& key, std::function<bool(bool)> callback) {
+    mCallbacks[key] = std::move(callback);
+}
+
+int32_t AppConfig::MergeInt32(int32_t defaultValue,
+                              const Json::Value& localConf,
+                              const Json::Value& envConfig,
+                              const Json::Value& remoteConf,
+                              const Json::Value& localInstanceConfig,
+                              const std::string name,
+                              const std::function<bool(const std::string key, const int32_t value)>& validateFn) {
+    int32_t res = defaultValue;
+    if (localConf.isMember(name) && localConf[name].isInt() && validateFn(name, localConf[name].asInt())) {
+        res = localConf[name].asInt();
+    }
+    if (localInstanceConfig.isMember(name) && localInstanceConfig[name].isInt()
+        && validateFn(name, localInstanceConfig[name].asInt())) {
+        res = localInstanceConfig[name].asInt();
+    }
+    if (envConfig.isMember(name) && envConfig[name].isInt() && validateFn(name, envConfig[name].asInt())) {
+        res = envConfig[name].asInt();
+    }
+    if (remoteConf.isMember(name) && remoteConf[name].isInt() && validateFn(name, remoteConf[name].asInt())) {
+        res = remoteConf[name].asInt();
+    }
+    return res;
+}
+
+int64_t AppConfig::MergeInt64(int64_t defaultValue,
+                              const Json::Value& localConf,
+                              const Json::Value& envConfig,
+                              const Json::Value& remoteConf,
+                              const Json::Value& localInstanceConfig,
+                              const std::string name,
+                              const std::function<bool(const std::string key, const int64_t value)>& validateFn) {
+    int64_t res = defaultValue;
+    if (localConf.isMember(name) && localConf[name].isInt64() && validateFn(name, localConf[name].asInt64())) {
+        res = localConf[name].asInt64();
+    }
+    if (localInstanceConfig.isMember(name) && localInstanceConfig[name].isInt64()
+        && validateFn(name, localInstanceConfig[name].asInt64())) {
+        res = localInstanceConfig[name].asInt64();
+    }
+    if (envConfig.isMember(name) && envConfig[name].isInt64() && validateFn(name, envConfig[name].asInt64())) {
+        res = envConfig[name].asInt64();
+    }
+    if (remoteConf.isMember(name) && remoteConf[name].isInt64() && validateFn(name, remoteConf[name].asInt64())) {
+        res = remoteConf[name].asInt64();
+    }
+    return res;
+}
+
+bool AppConfig::MergeBool(bool defaultValue,
+                          const Json::Value& localConf,
+                          const Json::Value& envConfig,
+                          const Json::Value& remoteConf,
+                          const Json::Value& localInstanceConfig,
+                          const std::string name,
+                          const std::function<bool(const std::string key, const bool value)>& validateFn) {
+    bool res = defaultValue;
+    if (localConf.isMember(name) && localConf[name].isBool() && validateFn(name, localConf[name].asBool())) {
+        res = localConf[name].asBool();
+    }
+    if (localInstanceConfig.isMember(name) && localInstanceConfig[name].isBool()
+        && validateFn(name, localInstanceConfig[name].asBool())) {
+        res = localInstanceConfig[name].asBool();
+    }
+    if (envConfig.isMember(name) && envConfig[name].isBool() && validateFn(name, envConfig[name].asBool())) {
+        res = envConfig[name].asBool();
+    }
+    if (remoteConf.isMember(name) && remoteConf[name].isBool() && validateFn(name, remoteConf[name].asBool())) {
+        res = remoteConf[name].asBool();
+    }
+    return res;
+}
+
+std::string
+AppConfig::MergeString(const std::string& defaultValue,
+                       const Json::Value& localConf,
+                       const Json::Value& envConfig,
+                       const Json::Value& remoteConf,
+                       const Json::Value& localInstanceConfig,
+                       const std::string name,
+                       const std::function<bool(const std::string key, const std::string value)>& validateFn) {
+    std::string res = defaultValue;
+    if (localConf.isMember(name) && localConf[name].isString() && validateFn(name, localConf[name].asString())) {
+        res = localConf[name].asString();
+    }
+    if (localInstanceConfig.isMember(name) && localInstanceConfig[name].isString()
+        && validateFn(name, localInstanceConfig[name].asString())) {
+        res = localInstanceConfig[name].asString();
+    }
+    if (envConfig.isMember(name) && envConfig[name].isString() && validateFn(name, envConfig[name].asString())) {
+        res = envConfig[name].asString();
+    }
+    if (remoteConf.isMember(name) && remoteConf[name].isString() && validateFn(name, remoteConf[name].asString())) {
+        res = remoteConf[name].asString();
+    }
+    return res;
+}
+
+double AppConfig::MergeDouble(double defaultValue,
+                              const Json::Value& localConf,
+                              const Json::Value& envConfig,
+                              const Json::Value& remoteConf,
+                              const Json::Value& localInstanceConfig,
+                              const std::string name,
+                              const std::function<bool(const std::string key, const double value)>& validateFn) {
+    double res = defaultValue;
+    if (localConf.isMember(name) && localConf[name].isDouble() && validateFn(name, localConf[name].asDouble())) {
+        res = localConf[name].asDouble();
+    }
+    if (localInstanceConfig.isMember(name) && localInstanceConfig[name].isDouble()
+        && validateFn(name, localInstanceConfig[name].asDouble())) {
+        res = localInstanceConfig[name].asDouble();
+    }
+    if (envConfig.isMember(name) && envConfig[name].isDouble() && validateFn(name, envConfig[name].asDouble())) {
+        res = envConfig[name].asDouble();
+    }
+    if (remoteConf.isMember(name) && remoteConf[name].isDouble() && validateFn(name, remoteConf[name].asDouble())) {
+        res = remoteConf[name].asDouble();
+    }
+    return res;
 }
 
 } // namespace logtail

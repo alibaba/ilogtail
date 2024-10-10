@@ -46,7 +46,24 @@ private:
 
 class AppConfig {
 private:
-    Json::Value mConfJson;
+    static std::string sLocalConfigDir;
+    void loadLocalConfig(const std::string& ilogtailConfigFile);
+    void loadEnvConfig();
+    Json::Value mergeAllConfigs();
+
+    Json::Value mLocalConfig;
+    Json::Value mLocalInstanceConfig;
+    Json::Value mEnvConfig;
+    Json::Value mRemoteConfig;
+    Json::Value mMergedConfig;
+
+    std::map<std::string, std::function<bool(bool)>> mCallbacks;
+
+    DoubleBuffer<std::vector<sls_logs::LogTag>> mFileTags;
+    DoubleBuffer<std::map<std::string, std::string>> mAgentAttrs;
+
+    Json::Value mFileTagsJson;
+
     mutable SpinLock mAppConfigLock;
 
     // ilogtail_config.json content for rebuild
@@ -88,8 +105,6 @@ private:
     // local config
     // std::string mMappingConfigPath;
 
-    bool mSendRandomSleep;
-    bool mSendFlowControl;
 
     int32_t mMaxMultiConfigSize;
     bool mAcceptMultiConfigFlag;
@@ -156,9 +171,6 @@ private:
     std::set<std::string> mDynamicPlugins;
     std::vector<std::string> mHostPathBlacklist;
 
-    Json::Value mFileTagsJson;
-    DoubleBuffer<std::vector<sls_logs::LogTag>> mFileTags;
-
     std::string mBindInterface;
 
     // /**
@@ -211,6 +223,7 @@ private:
      *
      */
     void ParseEnvToFlags();
+    std::map<std::string, std::string> GetEnvMapping();
 
     /**
      * @brief Load resource related configs such as cpu, memory, buffer size, thread number, send concurrency.
@@ -250,28 +263,103 @@ private:
     bool CheckAndResetProxyAddress(const char* envKey, std::string& address);
 
     static void InitEnvMapping(const std::string& envStr, std::map<std::string, std::string>& envMapping);
+    static void InitEnvMapping(const std::string& envStr, Json::Value& envJson);
     static void SetConfigFlag(const std::string& flagName, const std::string& value);
 
 public:
     AppConfig();
     ~AppConfig(){};
 
+    void LoadInstanceConfig(std::map<std::string, Json::Value>&);
+
     static AppConfig* GetInstance() {
         static AppConfig singleton;
         return &singleton;
     }
 
+    // 初始化配置
     void LoadAppConfig(const std::string& ilogtailConfigFile);
 
+    // 获取全局参数方法
+    const Json::Value& GetLocalConfig() { return mLocalConfig; };
+    const Json::Value& GetLocalInstanceConfig() { return mLocalInstanceConfig; };
+    const Json::Value& GetEnvConfig() { return mEnvConfig; };
+    const Json::Value& GetRemoteConfig() { return mRemoteConfig; };
+
+    static int32_t MergeInt32(int32_t defaultValue,
+                              const Json::Value& localConf,
+                              const Json::Value& envConfig,
+                              const Json::Value& remoteConf,
+                              const Json::Value& localInstanceConfig,
+                              const std::string name,
+                              const std::function<bool(const std::string key, const int32_t value)>& validateFn);
+
+    static int64_t MergeInt64(int64_t defaultValue,
+                              const Json::Value& localConf,
+                              const Json::Value& envConfig,
+                              const Json::Value& remoteConf,
+                              const Json::Value& localInstanceConfig,
+                              const std::string name,
+                              const std::function<bool(const std::string key, const int64_t value)>& validateFn);
+
+    static bool MergeBool(bool defaultValue,
+                          const Json::Value& localConf,
+                          const Json::Value& envConfig,
+                          const Json::Value& remoteConf,
+                          const Json::Value& localInstanceConfig,
+                          const std::string name,
+                          const std::function<bool(const std::string key, const bool value)>& validateFn);
+
+    static std::string
+    MergeString(const std::string& defaultValue,
+                const Json::Value& localConf,
+                const Json::Value& envConfig,
+                const Json::Value& remoteConf,
+                const Json::Value& localInstanceConfig,
+                const std::string name,
+                const std::function<bool(const std::string key, const std::string value)>& validateFn);
+
+    static double MergeDouble(double defaultValue,
+                              const Json::Value& localConf,
+                              const Json::Value& envConfig,
+                              const Json::Value& remoteConf,
+                              const Json::Value& localInstanceConfig,
+                              const std::string name,
+                              const std::function<bool(const std::string key, const double value)>& validateFn);
+
+
+    // 注册回调
+    void RegisterCallback(const std::string& key, std::function<bool(bool)> callback);
+
+    // 合并配置
+    std::string Merge(Json::Value& localConf,
+                      Json::Value& envConfig,
+                      Json::Value& remoteConf,
+                      std::string& name,
+                      std::function<bool(const std::string&, const std::string&)> validateFn);
+
+    // 获取特定配置
+    // CPU限制参数等仅与框架相关的参数，计算逻辑可以放在AppConfig
+    float GetMachineCpuUsageThreshold() const { return mMachineCpuUsageThreshold; }
+    float GetScaledCpuUsageUpLimit() const { return mScaledCpuUsageUpLimit; }
+    float GetCpuUsageUpLimit() const { return mCpuUsageUpLimit; }
+
+    // 文件标签相关，获取从文件中来的tags
+    std::vector<sls_logs::LogTag>& GetFileTags() { return mFileTags.getReadBuffer(); }
+    // 更新从文件中来的tags
+    void UpdateFileTags();
+
+    // Agent属性相关，获取从文件中来的attrs
+    std::map<std::string, std::string>& GetAgentAttrs() { return mAgentAttrs.getReadBuffer(); }
+    // 更新从文件中来的attrs
+    void UpdateAgentAttrs();
+
+    // Legacy:获取各种参数
     bool NoInotify() const { return mNoInotify; }
 
     bool IsInInotifyBlackList(const std::string& path) const;
 
     bool IsLogParseAlarmValid() const { return mLogParseAlarmFlag; }
-
-    bool IsSendRandomSleep() const { return mSendRandomSleep; }
-
-    bool IsSendFlowControl() const { return mSendFlowControl; }
 
     // std::string GetDefaultRegion() const;
 
@@ -306,12 +394,6 @@ public:
 
     bool IsResourceAutoScale() const { return mResourceAutoScale; }
 
-    float GetMachineCpuUsageThreshold() const { return mMachineCpuUsageThreshold; }
-
-    float GetScaledCpuUsageUpLimit() const { return mScaledCpuUsageUpLimit; }
-
-    float GetCpuUsageUpLimit() const { return mCpuUsageUpLimit; }
-
     int64_t GetMemUsageUpLimit() const { return mMemUsageUpLimit; }
 
     int32_t GetMaxHoldedDataSize() const { return mMaxHoldedDataSize; }
@@ -319,6 +401,8 @@ public:
     uint32_t GetMaxBufferNum() const { return mMaxBufferNum; }
 
     int32_t GetMaxBytePerSec() const { return mMaxBytePerSec; }
+
+    void SetMaxBytePerSec(int32_t maxBytePerSec) { mMaxBytePerSec = maxBytePerSec; }
 
     int32_t GetBytePerSec() const { return mBytePerSec; }
 
@@ -396,13 +480,9 @@ public:
     inline const std::set<std::string>& GetDynamicPlugins() const { return mDynamicPlugins; }
     bool IsHostPathMatchBlacklist(const std::string& dirPath) const;
 
-    const Json::Value& GetConfig() const { return mConfJson; }
+    const Json::Value& GetConfig() const { return mLocalConfig; }
 
     const std::string& GetBindInterface() const { return mBindInterface; }
-
-    std::vector<sls_logs::LogTag>& GetFileTags() { return mFileTags.getReadBuffer(); }
-
-    void UpdateFileTags();
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class SenderUnittest;

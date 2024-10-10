@@ -32,24 +32,25 @@
 #include "common/version.h"
 #include "config/ConfigDiff.h"
 #include "config/watcher/ConfigWatcher.h"
-#include "file_server/EventDispatcher.h"
-#include "file_server/event_handler/LogInput.h"
+#include "config/watcher/InstanceConfigWatcher.h"
 #include "file_server/ConfigManager.h"
+#include "file_server/EventDispatcher.h"
 #include "file_server/FileServer.h"
-#include "plugin/flusher/sls/DiskBufferWriter.h"
+#include "file_server/event_handler/LogInput.h"
 #include "go_pipeline/LogtailPlugin.h"
-#include "plugin/input/InputFeedbackInterfaceRegistry.h"
+#include "instance_config/InstanceConfigManager.h"
 #include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/MetricExportor.h"
 #include "monitor/Monitor.h"
-#include "pipeline/InstanceConfigManager.h"
 #include "pipeline/PipelineManager.h"
 #include "pipeline/plugin/PluginRegistry.h"
-#include "runner/LogProcess.h"
 #include "pipeline/queue/ExactlyOnceQueueManager.h"
 #include "pipeline/queue/SenderQueueManager.h"
+#include "plugin/flusher/sls/DiskBufferWriter.h"
+#include "plugin/input/InputFeedbackInterfaceRegistry.h"
 #include "runner/FlusherRunner.h"
+#include "runner/LogProcess.h"
 #include "runner/sink/http/HttpSink.h"
 #ifdef __ENTERPRISE__
 #include "config/provider/EnterpriseConfigProvider.h"
@@ -220,20 +221,7 @@ void Application::Start() { // GCOVR_EXCL_START
                         ("failed to create dir for local pipelineconfig",
                          "manual creation may be required")("error code", ec.value())("error msg", ec.message()));
         }
-        ConfigWatcher::GetInstance()->AddPipelineSource(localConfigPath.string());
-    }
-    {
-        // add local config dir
-        filesystem::path localConfigPath
-            = filesystem::path(AppConfig::GetInstance()->GetLogtailSysConfDir()) / "instanceconfig" / "local";
-        error_code ec;
-        filesystem::create_directories(localConfigPath, ec);
-        if (ec) {
-            LOG_WARNING(sLogger,
-                        ("failed to create dir for local instanceconfig",
-                         "manual creation may be required")("error code", ec.value())("error msg", ec.message()));
-        }
-        ConfigWatcher::GetInstance()->AddInstanceSource(localConfigPath.string());
+        InstanceConfigWatcher::GetInstance()->AddSource(localConfigPath.string());
     }
 
 #ifdef __ENTERPRISE__
@@ -283,11 +271,11 @@ void Application::Start() { // GCOVR_EXCL_START
             lastCheckTagsTime = curTime;
         }
         if (curTime - lastConfigCheckTime >= INT32_FLAG(config_scan_interval)) {
-            PipelineConfigDiff pipelineConfigDiff = ConfigWatcher::GetInstance()->CheckPipelineConfigDiff();
+            PipelineConfigDiff pipelineConfigDiff = ConfigWatcher::GetInstance()->CheckConfigDiff();
             if (!pipelineConfigDiff.IsEmpty()) {
                 PipelineManager::GetInstance()->UpdatePipelines(pipelineConfigDiff);
             }
-            InstanceConfigDiff instanceConfigDiff = ConfigWatcher::GetInstance()->CheckInstanceConfigDiff();
+            InstanceConfigDiff instanceConfigDiff = InstanceConfigWatcher::GetInstance()->CheckConfigDiff();
             if (!instanceConfigDiff.IsEmpty()) {
                 InstanceConfigManager::GetInstance()->UpdateInstanceConfigs(instanceConfigDiff);
             }
