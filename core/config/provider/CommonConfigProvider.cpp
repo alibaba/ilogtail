@@ -98,7 +98,7 @@ void CommonConfigProvider::Stop() {
 void CommonConfigProvider::CheckUpdateThread() {
     LOG_INFO(sLogger, ("common config provider", "started"));
     usleep((rand() % 10) * 100 * 1000);
-    int32_t lastCheckTime = 0;
+    int32_t lastCheckTime = time(NULL);
     unique_lock<mutex> lock(mThreadRunningMux);
     while (mIsThreadRunning) {
         int32_t curTime = time(NULL);

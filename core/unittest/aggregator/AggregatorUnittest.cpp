@@ -62,7 +62,7 @@ void AggregatorUnittest::TestLogstoreMergeTypeAdd() {
     ctx.SetConfigName("test_config");
     flusher.reset(new FlusherSLS());
     flusher->SetContext(ctx);
-    flusher->SetMetricsRecordRef(FlusherSLS::sName, "1");
+    flusher->SetMetricsRecordRef(FlusherSLS::sName, "1", "1", "1");
 
     FlusherSLS::Batch::MergeType mergeType = FlusherSLS::Batch::MergeType::LOGSTORE;
     std::string defaultRegion = "testRegion";
@@ -205,7 +205,7 @@ void AggregatorUnittest::TestLogstoreMergeTypeAddLargeGroup() {
     ctx.SetConfigName("test_config");
     flusher.reset(new FlusherSLS());
     flusher->SetContext(ctx);
-    flusher->SetMetricsRecordRef(FlusherSLS::sName, "1");
+    flusher->SetMetricsRecordRef(FlusherSLS::sName, "1", "1", "1");
 
     FlusherSLS::Batch::MergeType mergeType = FlusherSLS::Batch::MergeType::LOGSTORE;
     std::string defaultRegion = "testRegion";
@@ -294,7 +294,7 @@ void AggregatorUnittest::TestTopicMergeTypeAdd() {
     ctx.SetConfigName("test_config");
     flusher.reset(new FlusherSLS());
     flusher->SetContext(ctx);
-    flusher->SetMetricsRecordRef(FlusherSLS::sName, "1");
+    flusher->SetMetricsRecordRef(FlusherSLS::sName, "1", "1", "1");
 
     FlusherSLS::Batch::MergeType mergeType = FlusherSLS::Batch::MergeType::TOPIC;
     std::string defaultRegion = "testRegion";

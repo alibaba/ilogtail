@@ -34,13 +34,6 @@ var containerChan chan *protocol.LogGroup
 
 var mu sync.Mutex
 
-var (
-	RawLogCounter        int
-	ProcessedLogCounter  int
-	FlushLogCounter      int
-	FlushLogGroupCounter int
-)
-
 // AlarmLogs spec: map[project_{project}:logstore:{logstore}][{alarm_type}][{alarm_message}][{alarm_count}]
 var AlarmLogs = make(map[string]map[string]map[string]int)
 
@@ -156,10 +149,6 @@ func NewSystemValidator(name string, cfg map[string]interface{}) (SystemValidato
 }
 
 func ClearCounter() {
-	RawLogCounter = 0
-	ProcessedLogCounter = 0
-	FlushLogCounter = 0
-	FlushLogGroupCounter = 0
 	AlarmLogs = make(map[string]map[string]map[string]int)
 }
 
@@ -206,28 +195,6 @@ func InitCounter() {
 					AlarmLogs[key][alarmType] = make(map[string]int)
 				}
 				AlarmLogs[key][alarmType][alarmMsg] += num
-			}
-		}
-	}()
-	go func() {
-		for group := range counterChan {
-			for _, log := range group.Logs {
-				for _, content := range log.Contents {
-					switch content.Key {
-					case "raw_log":
-						num, _ := strconv.Atoi(content.Value)
-						RawLogCounter += num
-					case "processed_log":
-						num, _ := strconv.Atoi(content.Value)
-						ProcessedLogCounter += num
-					case "flush_log":
-						num, _ := strconv.Atoi(content.Value)
-						FlushLogCounter += num
-					case "flush_loggroup":
-						num, _ := strconv.Atoi(content.Value)
-						FlushLogGroupCounter += num
-					}
-				}
 			}
 		}
 	}()

@@ -55,13 +55,18 @@ public:
     // only for input_observer_network for compatability
     const std::vector<std::unique_ptr<InputInstance>>& GetInputs() const { return mInputs; }
 
+    std::string GetNowPluginID();
+    static std::string GenPluginTypeWithID(std::string pluginType, std::string pluginID);
+    PluginInstance::PluginMeta GenNextPluginMeta(bool lastOne);
+
 private:
-    bool handleInputFileProcessor(const InputFile* inputFile, int16_t& pluginIndex, const Config& config);
-    bool handleInputContainerStdioProcessor(const InputContainerStdio* inputContainerStdio,
-                                          int16_t& pluginIndex,
-                                          const Config& config);
+    bool handleInputFileProcessor(const InputFile* inputFile, const Config& config);
+    bool handleInputContainerStdioProcessor(const InputContainerStdio* inputContainerStdio, const Config& config);
     void MergeGoPipeline(const Json::Value& src, Json::Value& dst);
-    void AddPluginToGoPipeline(const Json::Value& plugin, const std::string& module, Json::Value& dst);
+    void AddPluginToGoPipeline(const std::string& type,
+                               const Json::Value& plugin,
+                               const std::string& module,
+                               Json::Value& dst);
     void CopyNativeGlobalParamToGoPipeline(Json::Value& root);
     bool ShouldAddPluginToGoPipelineWithInput() const { return mInputs.empty() && mProcessorLine.empty(); }
 
@@ -74,12 +79,15 @@ private:
     mutable PipelineContext mContext;
     std::unordered_map<std::string, std::unordered_map<std::string, uint32_t>> mPluginCntMap;
     std::unique_ptr<Json::Value> mConfig;
+    std::atomic_uint16_t mPluginID;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class PipelineMock;
     friend class PipelineUnittest;
+    friend class InputContainerStdioUnittest;
     friend class InputFileUnittest;
     friend class ProcessorTagNativeUnittest;
+    friend class FlusherSLSUnittest;
 #endif
 };
 

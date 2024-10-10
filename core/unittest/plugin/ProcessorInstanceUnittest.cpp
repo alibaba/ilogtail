@@ -30,13 +30,13 @@ public:
 
 void ProcessorInstanceUnittest::TestName() const {
     unique_ptr<ProcessorInstance> processor
-        = unique_ptr<ProcessorInstance>(new ProcessorInstance(new ProcessorMock(), "0"));
+        = unique_ptr<ProcessorInstance>(new ProcessorInstance(new ProcessorMock(), PluginInstance::PluginMeta("0", "0", "1")));
     APSARA_TEST_EQUAL(ProcessorMock::sName, processor->Name());
 }
 
 void ProcessorInstanceUnittest::TestInit() const {
     unique_ptr<ProcessorInstance> processor
-        = unique_ptr<ProcessorInstance>(new ProcessorInstance(new ProcessorMock(), "0"));
+        = unique_ptr<ProcessorInstance>(new ProcessorInstance(new ProcessorMock(), PluginInstance::PluginMeta("0", "0", "1")));
     Json::Value config;
     PipelineContext context;
     APSARA_TEST_TRUE(processor->Init(config, context));

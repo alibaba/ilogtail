@@ -31,25 +31,27 @@ public:
 };
 
 void InputInstanceUnittest::TestName() const {
-    unique_ptr<InputInstance> input = unique_ptr<InputInstance>(new InputInstance(new InputMock(), "0"));
+    unique_ptr<InputInstance> input = make_unique<InputInstance>(new InputMock(), PluginInstance::PluginMeta("0", "0", "1"));
     APSARA_TEST_EQUAL(InputMock::sName, input->Name());
 }
 
 void InputInstanceUnittest::TestInit() const {
-    unique_ptr<InputInstance> input = unique_ptr<InputInstance>(new InputInstance(new InputMock(), "0"));
+    unique_ptr<InputInstance> input = make_unique<InputInstance>(new InputMock(), PluginInstance::PluginMeta("0", "0", "1"));
     Json::Value config, opt;
+    Pipeline pipeline;
     PipelineContext context;
+    context.SetPipeline(pipeline);
     APSARA_TEST_TRUE(input->Init(config, context, opt));
     APSARA_TEST_EQUAL(&context, &input->GetPlugin()->GetContext());
 }
 
 void InputInstanceUnittest::TestStart() const {
-    unique_ptr<InputInstance> input = unique_ptr<InputInstance>(new InputInstance(new InputMock(), "0"));
+    unique_ptr<InputInstance> input = make_unique<InputInstance>(new InputMock(), PluginInstance::PluginMeta("0", "0", "1"));
     APSARA_TEST_TRUE(input->Start());
 }
 
 void InputInstanceUnittest::TestStop() const {
-    unique_ptr<InputInstance> input = unique_ptr<InputInstance>(new InputInstance(new InputMock(), "0"));
+    unique_ptr<InputInstance> input = make_unique<InputInstance>(new InputMock(), PluginInstance::PluginMeta("0", "0", "1"));
     APSARA_TEST_TRUE(input->Stop(true));
 }
 

@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"os"
 
+	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/test/config"
@@ -35,15 +36,11 @@ type ValidatorController struct {
 }
 
 type Report struct {
-	Pass               bool                                 `json:"pass"`
-	RowLogCount        int                                  `json:"row_log_count"`
-	ProcessedLogCount  int                                  `json:"processed_log_count"`
-	FlushLogCount      int                                  `json:"flush_log_count"`
-	FlushLogGroupCount int                                  `json:"flush_log_group"`
-	AlarmLogs          map[string]map[string]map[string]int `json:"alarm_logs"`
-	LogReports         map[string]*Reason                   `json:"log_reports"`
-	TagReports         map[string]*Reason                   `json:"tag_reports"`
-	TotalReports       map[string]*Reason                   `json:"total_reports"`
+	Pass         bool                                 `json:"pass"`
+	AlarmLogs    map[string]map[string]map[string]int `json:"alarm_logs"`
+	LogReports   map[string]*Reason                   `json:"log_reports"`
+	TagReports   map[string]*Reason                   `json:"tag_reports"`
+	TotalReports map[string]*Reason                   `json:"total_reports"`
 }
 
 type Reason struct {
@@ -106,14 +103,14 @@ func (c *ValidatorController) Start() error {
 	}()
 	go func() {
 		for group := range defaultSubscriberChan {
-			_, staticMatch := staticLogCheck(group.Logs[0])
+			_, staticMatch := staticLogGroupCheck(group)
 
 			switch {
 			case staticMatch:
 				validator.GetCounterChan() <- group
-			case alarmLogCheck(group.Logs[0]):
+			case alarmLogGroupCheck(group):
 				validator.GetAlarmLogChan() <- group
-			case containerLogCheck(group.Logs[0]):
+			case containerLogGroupCheck(group):
 				validator.GetContainerLogChan() <- group
 			default:
 				for _, log := range group.Logs {
@@ -168,10 +165,6 @@ func (c *ValidatorController) CancelChain() *CancelChain {
 
 // flushSummaryReport write the whole validator report to the `report/{case_home}.json`.
 func (c *ValidatorController) flushSummaryReport() {
-	c.report.RowLogCount = validator.RawLogCounter
-	c.report.ProcessedLogCount = validator.ProcessedLogCounter
-	c.report.FlushLogCount = validator.FlushLogCounter
-	c.report.FlushLogGroupCount = validator.FlushLogGroupCounter
 	c.report.AlarmLogs = validator.AlarmLogs
 	for _, sysValidator := range c.sysValidators {
 		result := sysValidator.FetchResult()
@@ -181,33 +174,41 @@ func (c *ValidatorController) flushSummaryReport() {
 	_ = os.WriteFile(config.ReportFile, bytes, 0600)
 }
 
-// staticLogCheck checks the log contents to find the static logs of the e2e test case.
-func staticLogCheck(log *protocol.Log) (projectMatch bool, typeMatch bool) {
-	for _, content := range log.Contents {
-		if content.Key == "raw_log" {
+// staticLogGroupCheck checks the log contents to find the static logs of the e2e test case.
+func staticLogGroupCheck(logGroup *protocol.LogGroup) (projectMatch bool, typeMatch bool) {
+	for _, log := range logGroup.Logs {
+		if helper.GetMetricName(log) == "raw_log" {
 			typeMatch = true
-		} else if content.Key == "project" && content.Value == E2EProjectName {
-			projectMatch = true
+		}
+
+		for _, content := range log.Contents {
+			if content.Key == "project" && content.Value == E2EProjectName {
+				projectMatch = true
+			}
 		}
 	}
 	return
 }
 
-// alarmLogCheck checks the log contents to find the alarm log.
-func alarmLogCheck(log *protocol.Log) bool {
-	for _, content := range log.Contents {
-		if content.Key == "alarm_count" {
-			return true
+// alarmLogGroupCheck checks the log contents to find the alarm log.
+func alarmLogGroupCheck(logGroup *protocol.LogGroup) bool {
+	for _, log := range logGroup.Logs {
+		for _, content := range log.Contents {
+			if content.Key == "alarm_count" {
+				return true
+			}
 		}
 	}
 	return false
 }
 
-// containerLogCheck checks the log contents to find the container log.
-func containerLogCheck(log *protocol.Log) bool {
-	for _, content := range log.Contents {
-		if content.Key == "input.type" || content.Key == "container_name" {
-			return true
+// containerLogGroupCheck checks the log contents to find the container log.
+func containerLogGroupCheck(logGroup *protocol.LogGroup) bool {
+	for _, log := range logGroup.Logs {
+		for _, content := range log.Contents {
+			if content.Key == "input.type" || content.Key == "container_name" {
+				return true
+			}
 		}
 	}
 	return false

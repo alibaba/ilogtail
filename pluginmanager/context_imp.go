@@ -24,14 +24,12 @@ import (
 	"github.com/alibaba/ilogtail/pkg/config"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
-	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
 )
 
 type ContextImp struct {
-	StringMetrics  map[string]pipeline.StringMetric
-	CounterMetrics map[string]pipeline.CounterMetric
-	LatencyMetrics map[string]pipeline.LatencyMetric
+	MetricsRecords             []*pipeline.MetricsRecord
+	logstoreConfigMetricRecord *pipeline.MetricsRecord
 
 	common      *pkg.LogtailContextMeta
 	pluginNames string
@@ -39,7 +37,7 @@ type ContextImp struct {
 	logstoreC   *LogstoreConfig
 }
 
-var contextMutex sync.Mutex
+var contextMutex sync.RWMutex
 
 func (p *ContextImp) GetRuntimeContext() context.Context {
 	return p.ctx
@@ -56,21 +54,21 @@ func (p *ContextImp) GetExtension(name string, cfg any) (pipeline.Extension, err
 	}
 
 	// if it's a naming extension, we won't do further create
-	if getPluginType(name) != getPluginTypeWithID(name) {
+	if isPluginTypeWithID(name) {
 		return nil, fmt.Errorf("not found extension: %s", name)
 	}
 
 	// create if not found
-	typeWithID := genEmbeddedPluginName(getPluginType(name))
-	err := loadExtension(typeWithID, p.logstoreC, cfg)
+	pluginMeta := p.logstoreC.genPluginMeta(name, false, false)
+	err := loadExtension(pluginMeta, p.logstoreC, cfg)
 	if err != nil {
 		return nil, err
 	}
 
 	// get the new created extension
-	exists, ok = p.logstoreC.PluginRunner.GetExtension(typeWithID)
+	exists, ok = p.logstoreC.PluginRunner.GetExtension(pluginMeta.PluginTypeWithID)
 	if !ok {
-		return nil, fmt.Errorf("failed to load extension: %s", typeWithID)
+		return nil, fmt.Errorf("failed to load extension: %s", pluginMeta.PluginTypeWithID)
 	}
 	return exists, nil
 }
@@ -102,62 +100,49 @@ func (p *ContextImp) InitContext(project, logstore, configName string) {
 	p.ctx, p.common = pkg.NewLogtailContextMeta(project, logstore, configName)
 }
 
-func (p *ContextImp) RegisterCounterMetric(metric pipeline.CounterMetric) {
+func (p *ContextImp) RegisterMetricRecord(labels []pipeline.LabelPair) *pipeline.MetricsRecord {
 	contextMutex.Lock()
 	defer contextMutex.Unlock()
-	if p.CounterMetrics == nil {
-		p.CounterMetrics = make(map[string]pipeline.CounterMetric)
-	}
-	p.CounterMetrics[metric.Name()] = metric
+
+	metricsRecord := &pipeline.MetricsRecord{Context: p, Labels: labels}
+
+	p.MetricsRecords = append(p.MetricsRecords, metricsRecord)
+	return metricsRecord
 }
 
-func (p *ContextImp) RegisterStringMetric(metric pipeline.StringMetric) {
-	contextMutex.Lock()
-	defer contextMutex.Unlock()
-	if p.StringMetrics == nil {
-		p.StringMetrics = make(map[string]pipeline.StringMetric)
+func (p *ContextImp) RegisterLogstoreConfigMetricRecord(labels []pipeline.LabelPair) *pipeline.MetricsRecord {
+	p.logstoreConfigMetricRecord = &pipeline.MetricsRecord{
+		Context: p,
+		Labels:  labels,
 	}
-	p.StringMetrics[metric.Name()] = metric
+	return p.logstoreConfigMetricRecord
 }
 
-func (p *ContextImp) RegisterLatencyMetric(metric pipeline.LatencyMetric) {
-	contextMutex.Lock()
-	defer contextMutex.Unlock()
-	if p.LatencyMetrics == nil {
-		p.LatencyMetrics = make(map[string]pipeline.LatencyMetric)
-	}
-	p.LatencyMetrics[metric.Name()] = metric
+func (p *ContextImp) GetLogstoreConfigMetricRecord() *pipeline.MetricsRecord {
+	return p.logstoreConfigMetricRecord
 }
 
-func (p *ContextImp) MetricSerializeToPB(log *protocol.Log) {
-	if log == nil {
-		return
+func (p *ContextImp) GetMetricRecord() *pipeline.MetricsRecord {
+	contextMutex.RLock()
+	if len(p.MetricsRecords) > 0 {
+		defer contextMutex.RUnlock()
+		return p.MetricsRecords[len(p.MetricsRecords)-1]
 	}
-	log.Contents = append(log.Contents, &protocol.Log_Content{Key: "project", Value: p.GetProject()})
-	log.Contents = append(log.Contents, &protocol.Log_Content{Key: "config_name", Value: p.GetConfigName()})
-	log.Contents = append(log.Contents, &protocol.Log_Content{Key: "plugins", Value: p.pluginNames})
-	log.Contents = append(log.Contents, &protocol.Log_Content{Key: "category", Value: p.GetLogstore()})
-	log.Contents = append(log.Contents, &protocol.Log_Content{Key: "source_ip", Value: util.GetIPAddress()})
-	contextMutex.Lock()
-	defer contextMutex.Unlock()
-	if p.CounterMetrics != nil {
-		for _, value := range p.CounterMetrics {
-			value.Serialize(log)
-			value.Clear(0)
-		}
+	contextMutex.RUnlock()
+	return p.RegisterMetricRecord(nil)
+}
+
+// ExportMetricRecords is used for exporting metrics records.
+// Each metric is a map[string]string
+func (p *ContextImp) ExportMetricRecords() []map[string]string {
+	contextMutex.RLock()
+	defer contextMutex.RUnlock()
+
+	records := make([]map[string]string, 0)
+	for _, metricsRecord := range p.MetricsRecords {
+		records = append(records, metricsRecord.ExportMetricRecords())
 	}
-	if p.StringMetrics != nil {
-		for _, value := range p.StringMetrics {
-			value.Serialize(log)
-			value.Set("")
-		}
-	}
-	if p.LatencyMetrics != nil {
-		for _, value := range p.LatencyMetrics {
-			value.Serialize(log)
-			value.Clear()
-		}
-	}
+	return records
 }
 
 func (p *ContextImp) SaveCheckPoint(key string, value []byte) error {

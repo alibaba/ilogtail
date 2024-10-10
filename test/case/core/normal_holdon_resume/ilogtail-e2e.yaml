@@ -46,7 +46,6 @@ verify:
           '[Resume] Resume:start': 1
           '[Resume] checkpoint:Resume': 1
           '[Resume] Resume:success': 1
-          '[Start] [shennong_log_profile,logtail_plugin_profile]	config start:success': 1
           '[Start] [logtail_alarm,logtail_alarm]	config start:success': 1
           '[Start] [mock-metric-case_0/1]	config start:success': 1
           # Holdon
@@ -54,8 +53,6 @@ verify:
           '[HoldOn] Hold on:start	flag:1': 1
           '[HoldOn] checkpoint:HoldOn': 1
           '[HoldOn] Hold on:success': 2
-          '[Stop] [shennong_log_profile,logtail_plugin_profile]	config stop:begin	exit:true': 1
-          '[Stop] [shennong_log_profile,logtail_plugin_profile]	config stop:success': 1
           '[Stop] [logtail_alarm,logtail_alarm]	config stop:begin	exit:true': 1
           '[Stop] [logtail_alarm,logtail_alarm]	config stop:success': 1
           '[mock-metric-case_0/1]	Stop config in goroutine:begin': 1

@@ -63,6 +63,11 @@ UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestProcessEventMicrosecondUn
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestApsaraEasyReadLogTimeParser);
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestApsaraLogLineParser);
 
+PluginInstance::PluginMeta getPluginMeta(){
+    PluginInstance::PluginMeta pluginMeta{"testgetPluginID", "testNodeID", "testNodeChildID"};
+    return pluginMeta;
+}
+
 void ProcessorParseApsaraNativeUnittest::TestApsaraEasyReadLogTimeParser() {
     // make config
     Json::Value config;
@@ -74,8 +79,7 @@ void ProcessorParseApsaraNativeUnittest::TestApsaraEasyReadLogTimeParser() {
     config["Timezone"] = "GMT+08:00";
     ProcessorParseApsaraNative* processor = new ProcessorParseApsaraNative;
     processor->SetContext(mContext);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(processor, pluginId);
+    ProcessorInstance processorInstance(processor, getPluginMeta());
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 
     StringView buffer = "[1378972170425093]\tA:B";
@@ -371,8 +375,7 @@ void ProcessorParseApsaraNativeUnittest::TestApsaraLogLineParser() {
     config["CopingRawLog"] = false;
     config["RenamedSourceKey"] = "rawLog";
     config["Timezone"] = "GMT+08:00";
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(new ProcessorParseApsaraNative, pluginId);
+    ProcessorInstance processorInstance(new ProcessorParseApsaraNative, getPluginMeta());
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 
     for (uint32_t i = 0; i < sizeof(logLine) / sizeof(logLine[0]); i++) {
@@ -534,7 +537,6 @@ void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
         config["RenamedSourceKey"] = "__raw__";
         config["AppendingLogPositionMeta"] = false;
 
-        std::string pluginId = "testID";
         // run function ProcessorSplitLogStringNative
         ProcessorSplitLogStringNative processorSplitLogStringNative;
         processorSplitLogStringNative.SetContext(mContext);
@@ -543,7 +545,7 @@ void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
 
         // run function ProcessorParseApsaraNative
         ProcessorParseApsaraNative& processor = *(new ProcessorParseApsaraNative);
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(&processor, getPluginMeta());
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         processor.Process(eventGroup);
 
@@ -570,18 +572,16 @@ void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
         config["UnmatchedContentTreatment"] = "single_line";
         config["AppendingLogPositionMeta"] = false;
 
-        std::string pluginId = "testID";
-
         // run function ProcessorSplitMultilineLogStringNative
         ProcessorSplitMultilineLogStringNative processorSplitMultilineLogStringNative;
         processorSplitMultilineLogStringNative.SetContext(mContext);
-        processorSplitMultilineLogStringNative.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
+        processorSplitMultilineLogStringNative.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1", "1", "1");
         APSARA_TEST_TRUE_FATAL(processorSplitMultilineLogStringNative.Init(config));
         processorSplitMultilineLogStringNative.Process(eventGroup);
 
         // run function ProcessorParseApsaraNative
         ProcessorParseApsaraNative& processor = *(new ProcessorParseApsaraNative);
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(&processor, getPluginMeta());
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         processor.Process(eventGroup);
 
@@ -604,8 +604,7 @@ void ProcessorParseApsaraNativeUnittest::TestInit() {
 
     ProcessorParseApsaraNative& processor = *(new ProcessorParseApsaraNative);
     processor.SetContext(mContext);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 }
 
@@ -654,8 +653,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessWholeLine() {
     // run function
     ProcessorParseApsaraNative& processor = *(new ProcessorParseApsaraNative);
     processor.SetContext(mContext);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
@@ -751,8 +749,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessWholeLinePart() {
     // run function
     ProcessorParseApsaraNative& processor = *(new ProcessorParseApsaraNative);
     processor.SetContext(mContext);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
@@ -834,8 +831,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessKeyOverwritten() {
     // run function
     ProcessorParseApsaraNative& processor = *(new ProcessorParseApsaraNative);
     processor.SetContext(mContext);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
@@ -909,8 +905,7 @@ void ProcessorParseApsaraNativeUnittest::TestUploadRawLog() {
     // run function
     ProcessorParseApsaraNative& processor = *(new ProcessorParseApsaraNative);
     processor.SetContext(mContext);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
@@ -958,8 +953,7 @@ void ProcessorParseApsaraNativeUnittest::TestAddLog() {
 
     ProcessorParseApsaraNative& processor = *(new ProcessorParseApsaraNative);
     processor.SetContext(mContext);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 
     auto eventGroup = PipelineEventGroup(std::make_shared<SourceBuffer>());
@@ -1031,8 +1025,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventKeepUnmatch() {
     eventGroup.FromJsonString(inJson);
     // run function
     ProcessorParseApsaraNative& processor = *(new ProcessorParseApsaraNative);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
@@ -1160,8 +1153,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventDiscardUnmatch() {
     eventGroup.FromJsonString(inJson);
     // run function
     ProcessorParseApsaraNative& processor = *(new ProcessorParseApsaraNative);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
@@ -1234,8 +1226,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventMicrosecondUnmatch() {
     eventGroup.FromJsonString(inJson);
     // run function
     ProcessorParseApsaraNative& processor = *(new ProcessorParseApsaraNative);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
