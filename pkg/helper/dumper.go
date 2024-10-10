@@ -58,6 +58,7 @@ type Dumper struct {
 }
 
 func (d *Dumper) Init() {
+	// 只有 service_http_server 插件会使用这个模块
 	_ = os.MkdirAll(path.Join(config.LoongcollectorGlobalConfig.LoongcollectorConfDir, "dump"), 0750)
 	d.input = make(chan *DumpData, 10)
 	d.stop = make(chan struct{})
