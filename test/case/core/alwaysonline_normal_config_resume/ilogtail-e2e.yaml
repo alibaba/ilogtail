@@ -144,7 +144,6 @@ verify:
           '[Resume] Resume:start': 3
           '[Resume] checkpoint:Resume': 3
           '[Resume] Resume:success': 3
-          '[Start] [shennong_log_profile,logtail_plugin_profile]	config start:success': 3
           '[Start] [logtail_alarm,logtail_alarm]	config start:success': 3
           '[Start] [nomal-case_0,e2e-test-logstore]	config start:success': 1
           # Holdon
@@ -152,9 +151,6 @@ verify:
           '[HoldOn] Hold on:start	flag:1': 1
           '[HoldOn] checkpoint:HoldOn': 3
           '[HoldOn] Hold on:success': 4
-          '[Stop] [shennong_log_profile,logtail_plugin_profile]	config stop:begin	exit:false': 2
-          '[Stop] [shennong_log_profile,logtail_plugin_profile]	config stop:begin	exit:true': 1
-          '[Stop] [shennong_log_profile,logtail_plugin_profile]	config stop:success': 3
           '[Stop] [logtail_alarm,logtail_alarm]	config stop:begin	exit:false': 2
           '[Stop] [logtail_alarm,logtail_alarm]	config stop:begin	exit:true': 1
           '[Stop] [logtail_alarm,logtail_alarm]	config stop:success': 3

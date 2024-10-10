@@ -34,32 +34,11 @@ var LastLogtailConfig map[string]*LogstoreConfig
 var ContainerConfig *LogstoreConfig
 
 // Two built-in logtail configs to report statistics and alarm (from system and other logtail configs).
-var StatisticsConfig *LogstoreConfig
 var AlarmConfig *LogstoreConfig
 
 // Configs that were disabled because of slow or hang config.
 var DisabledLogtailConfigLock sync.Mutex
 var DisabledLogtailConfig = make(map[string]*LogstoreConfig)
-
-var statisticsConfigJSON = `{
-    "global": {
-        "InputIntervalMs" :  60000,
-        "AggregatIntervalMs": 1000,
-        "FlushIntervalMs": 1000,
-        "DefaultLogQueueSize": 4,
-		"DefaultLogGroupQueueSize": 4,
-		"Tags" : {
-			"base_version" : "` + config.BaseVersion + `",
-			"logtail_version" : "` + config.BaseVersion + `"
-		}
-	},
-	"inputs" : [
-		{
-			"type" : "metric_statistics",
-			"detail" : null
-		}
-	]
-}`
 
 var alarmConfigJSON = `{
     "global": {
@@ -116,11 +95,6 @@ func Init() (err error) {
 	if err = CheckPointManager.Init(); err != nil {
 		return
 	}
-	// if StatisticsConfig, err = loadBuiltinConfig("statistics", "sls-admin", "logtail_plugin_profile",
-	// 	"shennong_log_profile", statisticsConfigJSON); err != nil {
-	// 	logger.Error(context.Background(), "LOAD_PLUGIN_ALARM", "load statistics config fail", err)
-	// 	return
-	// }
 	if AlarmConfig, err = loadBuiltinConfig("alarm", "sls-admin", "logtail_alarm",
 		"logtail_alarm", alarmConfigJSON); err != nil {
 		logger.Error(context.Background(), "LOAD_PLUGIN_ALARM", "load alarm config fail", err)
@@ -185,15 +159,6 @@ func HoldOn(exitFlag bool) error {
 			DisabledLogtailConfigLock.Unlock()
 		}
 	}
-	if StatisticsConfig != nil {
-		if *flags.ForceSelfCollect {
-			logger.Info(context.Background(), "force collect the static metrics")
-			control := pipeline.NewAsyncControl()
-			StatisticsConfig.PluginRunner.RunPlugins(pluginMetricInput, control)
-			control.WaitCancel()
-		}
-		_ = StatisticsConfig.Stop(exitFlag)
-	}
 	if AlarmConfig != nil {
 		if *flags.ForceSelfCollect {
 			logger.Info(context.Background(), "force collect the alarm metrics")
@@ -222,9 +187,6 @@ func HoldOn(exitFlag bool) error {
 // Resume starts all configs.
 func Resume() error {
 	defer panicRecover("Run plugin")
-	if StatisticsConfig != nil {
-		StatisticsConfig.Start()
-	}
 	if AlarmConfig != nil {
 		AlarmConfig.Start()
 	}
