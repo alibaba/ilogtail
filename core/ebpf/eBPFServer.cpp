@@ -204,7 +204,7 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
     UpdatePipelineName(type, pipeline_name);
 
     // init self monitor
-    mMonitorMgr->Init(type, pipeline_name, ref->GetLabels());
+    mMonitorMgr->Init(type, ref, pipeline_name);
 
     // step1: convert options to export type
     std::variant<nami::NetworkObserveConfig, nami::ProcessConfig, nami::NetworkSecurityConfig, nami::FileSecurityConfig> config;

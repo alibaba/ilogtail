@@ -22,7 +22,8 @@
 #include "monitor/PluginMetricManager.h"
 #include "common/Lock.h"
 #include "monitor/LoongCollectorMetricTypes.h"
-#include "monitor/MetricConstants.h"
+// #include "monitor/MetricConstants.h"
+#include "monitor/metric_constants/MetricConstants.h"
 
 namespace logtail {
 namespace ebpf {
@@ -47,8 +48,8 @@ public:
         return res;
     }
 protected:
-    BaseBPFMonitor(const std::string& name, PluginMetricManagerPtr mgr, const MetricLabelsPtr& labels, const nami::eBPFStatistics& lastStats) 
-        : mPipelineName(name), mPluginMetricMgr(mgr), mDefaultLabels(*labels.get()), mLastStat(lastStats) {}
+    BaseBPFMonitor(const std::string& name, PluginMetricManagerPtr mgr, MetricsRecordRef& ref, const nami::eBPFStatistics& lastStats) 
+        : mPipelineName(name), mPluginMetricMgr(mgr), mRef(ref), mLastStat(lastStats) {}
 
     std::string PluginTypeToString(const nami::PluginType pluginType);
 
@@ -62,11 +63,13 @@ protected:
     std::string mPipelineName;
     PluginMetricManagerPtr mPluginMetricMgr;
     mutable std::mutex mStatsMtx;
-    MetricLabels mDefaultLabels;
+    // MetricLabels mDefaultLabels;
+    MetricsRecordRef& mRef;
     nami::eBPFStatistics mLastStat;
 
     std::atomic_bool mMetricInited = false;
 
+    std::vector<std::pair<ReentrantMetricsRecordRef, MetricLabels>> mRefAndLabels;
     ReentrantMetricsRecordRef mReentrantMetricRecordRef;
     std::vector<ReentrantMetricsRecordRef> mRefs;
     CounterPtr mRecvKernelEventsTotal;
@@ -77,9 +80,9 @@ protected:
     IntGaugePtr mProcessCacheEntitiesNum;
     CounterPtr mProcessCacheMissTotal;
 
-    CounterPtr mPushLogsToQueueTotal;
-    CounterPtr mPushMetricsToQueueTotal;
-    CounterPtr mPushTracesToQueueTotal;
+    // CounterPtr mPushLogsToQueueTotal;
+    // CounterPtr mPushMetricsToQueueTotal;
+    // CounterPtr mPushTracesToQueueTotal;
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class eBPFServerUnittest;
 #endif
@@ -87,15 +90,14 @@ protected:
 
 class NetworkObserverSelfMonitor : public BaseBPFMonitor {
 public:
-    NetworkObserverSelfMonitor(const std::string& name, PluginMetricManagerPtr mgr, const MetricLabelsPtr& labels, const nami::eBPFStatistics& lastStats) 
-        : BaseBPFMonitor(name, mgr, labels, lastStats) {}
+    NetworkObserverSelfMonitor(const std::string& name, PluginMetricManagerPtr mgr, MetricsRecordRef& ref, const nami::eBPFStatistics& lastStats) 
+        : BaseBPFMonitor(name, mgr, ref, lastStats) {}
 
     void InitMetric() override;
 
     void HandleStatistic(nami::eBPFStatistics& stats) override;
 
 private:
-    std::vector<ReentrantMetricsRecordRef> mRefs;
 
     // recv kernel events metric
     CounterPtr mRecvConnStatsTotal;
@@ -118,8 +120,8 @@ private:
 
 class NetworkSecuritySelfMonitor : public BaseBPFMonitor {
 public:
-    NetworkSecuritySelfMonitor(const std::string& name, PluginMetricManagerPtr mgr, const MetricLabelsPtr& labels, const nami::eBPFStatistics& lastStats) 
-        : BaseBPFMonitor(name, mgr, labels, lastStats) {}
+    NetworkSecuritySelfMonitor(const std::string& name, PluginMetricManagerPtr mgr, MetricsRecordRef& ref, const nami::eBPFStatistics& lastStats) 
+        : BaseBPFMonitor(name, mgr, ref, lastStats) {}
 
     void HandleStatistic(nami::eBPFStatistics& stats) override {
         if (!stats.updated_) return;
@@ -130,14 +132,14 @@ public:
 
 class ProcessSecuritySelfMonitor : public BaseBPFMonitor {
 public:
-    ProcessSecuritySelfMonitor(const std::string& name, PluginMetricManagerPtr mgr, const MetricLabelsPtr& labels, const nami::eBPFStatistics& lastStats) 
-        : BaseBPFMonitor(name, mgr, labels, lastStats) {}
+    ProcessSecuritySelfMonitor(const std::string& name, PluginMetricManagerPtr mgr, MetricsRecordRef& ref, const nami::eBPFStatistics& lastStats) 
+        : BaseBPFMonitor(name, mgr, ref, lastStats) {}
 };
 
 class FileSecuritySelfMonitor : public BaseBPFMonitor {
 public:
-    FileSecuritySelfMonitor(const std::string& name, PluginMetricManagerPtr mgr, const MetricLabelsPtr& labels, const nami::eBPFStatistics& lastStats) 
-        : BaseBPFMonitor(name, mgr, labels, lastStats) {}
+    FileSecuritySelfMonitor(const std::string& name, PluginMetricManagerPtr mgr, MetricsRecordRef& ref, const nami::eBPFStatistics& lastStats) 
+        : BaseBPFMonitor(name, mgr, ref, lastStats) {}
 };
 
 /**
@@ -146,7 +148,7 @@ public:
 class eBPFSelfMonitorMgr {
 public:
     eBPFSelfMonitorMgr() : mSelfMonitors({}), mInited({}) {}
-    void Init(const nami::PluginType type, const std::string& name, const MetricLabelsPtr& labels);
+    void Init(const nami::PluginType type, MetricsRecordRef& ref, const std::string& name);
     void Release(const nami::PluginType type);
     void Suspend(const nami::PluginType type);
     void HandleStatistic(std::vector<nami::eBPFStatistics>&& stats);
