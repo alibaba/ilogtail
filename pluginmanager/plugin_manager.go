@@ -116,11 +116,11 @@ func Init() (err error) {
 	if err = CheckPointManager.Init(); err != nil {
 		return
 	}
-	if StatisticsConfig, err = loadBuiltinConfig("statistics", "sls-admin", "logtail_plugin_profile",
-		"shennong_log_profile", statisticsConfigJSON); err != nil {
-		logger.Error(context.Background(), "LOAD_PLUGIN_ALARM", "load statistics config fail", err)
-		return
-	}
+	// if StatisticsConfig, err = loadBuiltinConfig("statistics", "sls-admin", "logtail_plugin_profile",
+	// 	"shennong_log_profile", statisticsConfigJSON); err != nil {
+	// 	logger.Error(context.Background(), "LOAD_PLUGIN_ALARM", "load statistics config fail", err)
+	// 	return
+	// }
 	if AlarmConfig, err = loadBuiltinConfig("alarm", "sls-admin", "logtail_alarm",
 		"logtail_alarm", alarmConfigJSON); err != nil {
 		logger.Error(context.Background(), "LOAD_PLUGIN_ALARM", "load alarm config fail", err)
