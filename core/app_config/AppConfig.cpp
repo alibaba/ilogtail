@@ -383,7 +383,7 @@ string GetObserverEbpfHostPath() {
 #endif
 }
 
-static string GetBufferFileNamePrefix(){
+string GetBufferFileNamePrefix(){
 #if defined(__RUN_LOGTAIL__)
         return "logtail_buffer_file_";
 #else
