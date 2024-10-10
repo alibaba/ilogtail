@@ -16,6 +16,7 @@
 
 #include "common/FeedbackInterface.h"
 #include "models/PipelineEventGroup.h"
+#include "pipeline/PipelineManager.h"
 #include "pipeline/queue/BoundedProcessQueue.h"
 #include "pipeline/queue/SenderQueue.h"
 #include "unittest/Unittest.h"
@@ -30,6 +31,7 @@ public:
     void TestPush();
     void TestPop();
     void TestMetric();
+    void TestSetPipeline();
 
 protected:
     static void SetUpTestCase() { sCtx.SetConfigName("test_config"); }
@@ -44,6 +46,7 @@ protected:
         mFeedback1.reset(new FeedbackInterfaceMock);
         mFeedback2.reset(new FeedbackInterfaceMock);
         mQueue->SetUpStreamFeedbacks(vector<FeedbackInterface*>{mFeedback1.get(), mFeedback2.get()});
+        mQueue->EnablePop();
     }
 
 private:
@@ -91,9 +94,9 @@ void BoundedProcessQueueUnittest::TestPop() {
 
     mQueue->Push(GenerateItem());
     // invalidate pop
-    mQueue->InvalidatePop();
+    mQueue->DisablePop();
     APSARA_TEST_EQUAL(0, mQueue->Pop(item));
-    mQueue->ValidatePop();
+    mQueue->EnablePop();
 
     // downstream queues are not valid to push
     mSenderQueue1->mValidToPush = false;
@@ -116,9 +119,9 @@ void BoundedProcessQueueUnittest::TestPop() {
 
 void BoundedProcessQueueUnittest::TestMetric() {
     APSARA_TEST_EQUAL(4U, mQueue->mMetricsRecordRef->GetLabels()->size());
-    APSARA_TEST_TRUE(mQueue->mMetricsRecordRef.HasLabel(METRIC_LABEL_PROJECT, ""));
-    APSARA_TEST_TRUE(mQueue->mMetricsRecordRef.HasLabel(METRIC_LABEL_CONFIG_NAME, "test_config"));
-    APSARA_TEST_TRUE(mQueue->mMetricsRecordRef.HasLabel(METRIC_LABEL_KEY_COMPONENT_NAME, "process_queue"));
+    APSARA_TEST_TRUE(mQueue->mMetricsRecordRef.HasLabel(METRIC_LABEL_KEY_PROJECT, ""));
+    APSARA_TEST_TRUE(mQueue->mMetricsRecordRef.HasLabel(METRIC_LABEL_KEY_PIPELINE_NAME, "test_config"));
+    APSARA_TEST_TRUE(mQueue->mMetricsRecordRef.HasLabel(METRIC_LABEL_KEY_COMPONENT_NAME, METRIC_LABEL_VALUE_COMPONENT_NAME_PROCESS_QUEUE));
     APSARA_TEST_TRUE(mQueue->mMetricsRecordRef.HasLabel(METRIC_LABEL_KEY_QUEUE_TYPE, "bounded"));
 
     auto item = GenerateItem();
@@ -127,22 +130,43 @@ void BoundedProcessQueueUnittest::TestMetric() {
     auto dataSize = item->mEventGroup.DataSize();
     mQueue->Push(std::move(item));
 
-    APSARA_TEST_EQUAL(1U, mQueue->mInItemsCnt->GetValue());
+    APSARA_TEST_EQUAL(1U, mQueue->mInItemsTotal->GetValue());
     APSARA_TEST_EQUAL(dataSize, mQueue->mInItemDataSizeBytes->GetValue());
-    APSARA_TEST_EQUAL(1U, mQueue->mQueueSize->GetValue());
+    APSARA_TEST_EQUAL(1U, mQueue->mQueueSizeTotal->GetValue());
     APSARA_TEST_EQUAL(dataSize, mQueue->mQueueDataSizeByte->GetValue());
     APSARA_TEST_EQUAL(1U, mQueue->mValidToPushFlag->GetValue());
 
     mQueue->Pop(item);
-    APSARA_TEST_EQUAL(1U, mQueue->mOutItemsCnt->GetValue());
-    APSARA_TEST_EQUAL(0U, mQueue->mQueueSize->GetValue());
+    APSARA_TEST_EQUAL(1U, mQueue->mOutItemsTotal->GetValue());
+    APSARA_TEST_EQUAL(0U, mQueue->mQueueSizeTotal->GetValue());
     APSARA_TEST_EQUAL(0U, mQueue->mQueueDataSizeByte->GetValue());
     APSARA_TEST_EQUAL(1U, mQueue->mValidToPushFlag->GetValue());
+}
+
+void BoundedProcessQueueUnittest::TestSetPipeline() {
+    auto pipeline = make_shared<Pipeline>();
+    PipelineManager::GetInstance()->mPipelineNameEntityMap["test_config"] = pipeline;
+
+    auto item1 = GenerateItem();
+    auto p1 = item1.get();
+    auto pipelineTmp = make_shared<Pipeline>();
+    item1->mPipeline = pipelineTmp;
+
+    auto item2 = GenerateItem();
+    auto p2 = item2.get();
+
+    mQueue->Push(std::move(item1));
+    mQueue->Push(std::move(item2));
+    mQueue->SetPipelineForItems("test_config");
+
+    APSARA_TEST_EQUAL(pipelineTmp, p1->mPipeline);
+    APSARA_TEST_EQUAL(pipeline, p2->mPipeline);
 }
 
 UNIT_TEST_CASE(BoundedProcessQueueUnittest, TestPush)
 UNIT_TEST_CASE(BoundedProcessQueueUnittest, TestPop)
 UNIT_TEST_CASE(BoundedProcessQueueUnittest, TestMetric)
+UNIT_TEST_CASE(BoundedProcessQueueUnittest, TestSetPipeline)
 
 } // namespace logtail
 

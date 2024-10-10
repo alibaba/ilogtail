@@ -14,6 +14,8 @@
 
 #include "pipeline/queue/BoundedProcessQueue.h"
 
+#include "pipeline/PipelineManager.h"
+
 using namespace std;
 
 namespace logtail {
@@ -35,12 +37,12 @@ bool BoundedProcessQueue::Push(unique_ptr<ProcessQueueItem>&& item) {
     }
     item->mEnqueTime = chrono::system_clock::now();
     auto size = item->mEventGroup.DataSize();
-    mQueue.push(std::move(item));
+    mQueue.push_back(std::move(item));
     ChangeStateIfNeededAfterPush();
 
-    mInItemsCnt->Add(1);
+    mInItemsTotal->Add(1);
     mInItemDataSizeBytes->Add(size);
-    mQueueSize->Set(Size());
+    mQueueSizeTotal->Set(Size());
     mQueueDataSizeByte->Add(size);
     mValidToPushFlag->Set(IsValidToPush());
     return true;
@@ -51,18 +53,27 @@ bool BoundedProcessQueue::Pop(unique_ptr<ProcessQueueItem>& item) {
         return false;
     }
     item = std::move(mQueue.front());
-    mQueue.pop();
+    mQueue.pop_front();
     if (ChangeStateIfNeededAfterPop()) {
         GiveFeedback();
     }
 
-    mOutItemsCnt->Add(1);
+    mOutItemsTotal->Add(1);
     mTotalDelayMs->Add(
         chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - item->mEnqueTime).count());
-    mQueueSize->Set(Size());
+    mQueueSizeTotal->Set(Size());
     mQueueDataSizeByte->Sub(item->mEventGroup.DataSize());
     mValidToPushFlag->Set(IsValidToPush());
     return true;
+}
+
+void BoundedProcessQueue::SetPipelineForItems(const std::string& name) const {
+    auto p = PipelineManager::GetInstance()->FindConfigByName(name);
+    for (auto& item : mQueue) {
+        if (!item->mPipeline) {
+            item->mPipeline = p;
+        }
+    }
 }
 
 void BoundedProcessQueue::SetUpStreamFeedbacks(vector<FeedbackInterface*>&& feedbacks) {

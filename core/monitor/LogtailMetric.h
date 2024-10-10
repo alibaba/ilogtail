@@ -133,15 +133,7 @@ public:
         static WriteMetrics* ptr = new WriteMetrics();
         return ptr;
     }
-    void PreparePluginCommonLabels(const std::string& projectName,
-                                   const std::string& logstoreName,
-                                   const std::string& region,
-                                   const std::string& configName,
-                                   const std::string& pluginType,
-                                   const std::string& pluginID,
-                                   const std::string& nodeID,
-                                   const std::string& childNodeID,
-                                   MetricLabels& labels);
+
     void
     PrepareMetricsRecordRef(MetricsRecordRef& ref, MetricLabels&& labels, DynamicMetricLabels&& dynamicLabels = {});
     void CreateMetricsRecordRef(MetricsRecordRef& ref, MetricLabels&& labels, DynamicMetricLabels&& dynamicLabels = {});
@@ -168,7 +160,9 @@ public:
         static ReadMetrics* ptr = new ReadMetrics();
         return ptr;
     }
-    void ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup*>& logGroupMap) const;
+    void ReadAsLogGroup(const std::string& regionFieldName,
+                        const std::string& defaultRegion,
+                        std::map<std::string, sls_logs::LogGroup*>& logGroupMap) const;
     void ReadAsFileBuffer(std::string& metricsContent) const;
     void UpdateMetrics();
 
