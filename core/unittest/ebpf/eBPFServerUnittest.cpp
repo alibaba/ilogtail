@@ -593,7 +593,7 @@ void eBPFServerUnittest::TestEnableNetworkPlugin() {
     // observer_options.Init(ObserverType::NETWORK, configJson, &ctx, "test");
     auto input = new InputNetworkObserver();
     input->SetContext(ctx);
-    input->SetMetricsRecordRef("test", "1", "1", "1");
+    input->SetMetricsRecordRef("test", "1");
     std::cout << "1" << std::endl;
     res = ebpf::eBPFServer::GetInstance()->EnablePlugin(
         "test", 1,
@@ -639,7 +639,7 @@ void eBPFServerUnittest::TestEnableNetworkPlugin() {
     EXPECT_TRUE(ebpf::eBPFServer::GetInstance()->mSourceManager->mRunning[int(nami::PluginType::NETWORK_OBSERVE)]);
 
     // do update
-    input->SetMetricsRecordRef("test", "2", "2", "2");
+    input->SetMetricsRecordRef("test", "2");
     res = ebpf::eBPFServer::GetInstance()->EnablePlugin(
         "test", 8,
         nami::PluginType::NETWORK_OBSERVE,
@@ -685,7 +685,7 @@ void eBPFServerUnittest::TestEnableProcessPlugin() {
     security_options.Init(SecurityProbeType::PROCESS, configJson, &ctx, "input_process_security");
     auto input = new InputProcessSecurity();
     input->SetContext(ctx);
-    input->SetMetricsRecordRef("test", "1", "1", "1");
+    input->SetMetricsRecordRef("test", "1");
     bool res = ebpf::eBPFServer::GetInstance()->EnablePlugin(
         "test", 0,
         nami::PluginType::PROCESS_SECURITY,
@@ -707,7 +707,7 @@ void eBPFServerUnittest::TestEnableProcessPlugin() {
     EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mProcessSecureCB->mPluginIdx, -1);
     EXPECT_TRUE(ebpf::eBPFServer::GetInstance()->mSourceManager->mRunning[int(nami::PluginType::PROCESS_SECURITY)]);
 
-    input->SetMetricsRecordRef("test", "2", "2", "2");
+    input->SetMetricsRecordRef("test", "2");
     res = ebpf::eBPFServer::GetInstance()->EnablePlugin(
         "test", 0,
         nami::PluginType::PROCESS_SECURITY,
@@ -741,7 +741,7 @@ void eBPFServerUnittest::TestEnableNetworkSecurePlugin() {
     )";
     auto input = new InputNetworkSecurity();
     input->SetContext(ctx);
-    input->SetMetricsRecordRef("test", "1", "1", "1");
+    input->SetMetricsRecordRef("test", "1");
     
     std::string errorMsg;
     Json::Value configJson;
@@ -774,7 +774,7 @@ void eBPFServerUnittest::TestEnableNetworkSecurePlugin() {
     EXPECT_TRUE(ebpf::eBPFServer::GetInstance()->mSourceManager->mRunning[int(nami::PluginType::NETWORK_SECURITY)]);
 
     input->SetContext(ctx);
-    input->SetMetricsRecordRef("test", "2", "2", "2");
+    input->SetMetricsRecordRef("test", "2");
     res = ebpf::eBPFServer::GetInstance()->EnablePlugin(
         "input_network_security", 0,
         nami::PluginType::NETWORK_SECURITY,
@@ -811,7 +811,7 @@ void eBPFServerUnittest::TestEnableFileSecurePlugin() {
 
     auto input = new InputFileSecurity();
     input->SetContext(ctx);
-    input->SetMetricsRecordRef("test", "1", "1", "1");
+    input->SetMetricsRecordRef("test", "1");
 
     std::string errorMsg;
     Json::Value configJson;
@@ -843,7 +843,7 @@ void eBPFServerUnittest::TestEnableFileSecurePlugin() {
     EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mFileSecureCB->mPluginIdx, -1);
     EXPECT_TRUE(ebpf::eBPFServer::GetInstance()->mSourceManager->mRunning[int(nami::PluginType::FILE_SECURITY)]);
 
-    input->SetMetricsRecordRef("test", "2", "2", "2");
+    input->SetMetricsRecordRef("test", "2");
     res = ebpf::eBPFServer::GetInstance()->EnablePlugin(
         "input_file_security", 0,
         nami::PluginType::FILE_SECURITY,
