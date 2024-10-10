@@ -721,19 +721,26 @@ func initPluginRunner(lc *LogstoreConfig) (PluginRunner, error) {
 	}
 }
 
-func LoadLogstoreConfig(project string, logstore string, configName string, logstoreKey int64, jsonStr string) error {
+type LoadGoPipelineResp struct {
+	Code      int
+	InputMode int
+}
+
+func LoadLogstoreConfig(project string, logstore string, configName string, logstoreKey int64, jsonStr string) (LoadGoPipelineResp, error) {
 	if len(jsonStr) == 0 {
 		logger.Info(context.Background(), "delete config", configName, "logstore", logstore)
 		delete(LogtailConfig, configName)
-		return nil
+		return LoadGoPipelineResp{1, int(pipeline.UNKNOWN)}, nil
 	}
 	logger.Info(context.Background(), "load config", configName, "logstore", logstore)
 	logstoreC, err := createLogstoreConfig(project, logstore, configName, logstoreKey, jsonStr)
 	if err != nil {
-		return err
+		return LoadGoPipelineResp{1, int(pipeline.UNKNOWN)}, err
 	}
 	LogtailConfig[configName] = logstoreC
-	return nil
+
+	inputMode, err := logstoreC.PluginRunner.GetInputMode()
+	return LoadGoPipelineResp{0, int(inputMode)}, err
 }
 
 func loadBuiltinConfig(name string, project string, logstore string,

@@ -237,3 +237,7 @@ func init() {
 		return &InputMysqlBinlog{AutoMap: true, RowMode: true}
 	}
 }
+
+func (b *InputMysqlBinlog) GetMode() pipeline.InputModeType {
+	return pipeline.PUSH
+}

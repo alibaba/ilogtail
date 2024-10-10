@@ -70,3 +70,13 @@ func SendPbV2(configName string, logstore string, pbBuffer []byte, lines int, ha
 func IsValidToSend(logstoreKey int64) bool {
 	return C.LogtailIsValidToSend(C.longlong(logstoreKey)) == 0
 }
+
+func IsValidToProcess(configName string) bool {
+	return C.LogtailIsValidToProcess((*C.char)(util.StringPointer(configName)), C.int(len(configName))) == 0
+}
+
+func PushQueue(configName string, pbBuffer []byte) int {
+	rstVal := C.LogtailPushQueue((*C.char)(util.StringPointer(configName)), C.int(len(configName)),
+		(*C.char)(unsafe.Pointer(&pbBuffer[0])), C.int(len(pbBuffer)))
+	return int(rstVal)
+}

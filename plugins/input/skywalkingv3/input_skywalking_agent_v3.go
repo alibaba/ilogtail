@@ -117,3 +117,7 @@ func init() {
 		return &Input{MetricIntervalMs: 10000}
 	}
 }
+
+func (r *Input) GetMode() pipeline.InputModeType {
+	return pipeline.PUSH
+}

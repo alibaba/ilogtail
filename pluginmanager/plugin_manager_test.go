@@ -170,5 +170,6 @@ func LoadMockConfig(args ...string) error {
 		configStr = args[3]
 	}
 
-	return LoadLogstoreConfig(project, logstore, configName, 666, configStr)
+	_, err := LoadLogstoreConfig(project, logstore, configName, 666, configStr)
+	return err
 }

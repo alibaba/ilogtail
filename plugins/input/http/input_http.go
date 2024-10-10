@@ -329,3 +329,7 @@ func init() {
 		return &Response{}
 	}
 }
+
+func (h *Response) GetMode() pipeline.InputModeType {
+	return pipeline.PUSH
+}

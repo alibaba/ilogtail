@@ -92,3 +92,7 @@ func init() {
 		}
 	}
 }
+
+func (r *InputDebugFile) GetMode() pipeline.InputModeType {
+	return pipeline.PUSH
+}

@@ -59,6 +59,11 @@ struct containerMeta{
 	char** envsVal;
 };
 
+struct loadGoPipelineResp {
+    int Code;
+    int InputMode;
+};
+
 typedef struct {
     char* key;
     char* value;
@@ -89,6 +94,7 @@ static PluginMetric** makePluginMetricArray(int size) {
 static void setArrayPluginMetric(PluginMetric **a, PluginMetric *s, int n) {
     a[n] = s;
 }
+
 */
 import "C" //nolint:typecheck
 
@@ -132,11 +138,15 @@ func LoadGlobalConfig(jsonStr string) int {
 }
 
 //export LoadConfig
-func LoadConfig(project string, logstore string, configName string, logstoreKey int64, jsonStr string) int {
-	logger.Debug(context.Background(), "load config", configName, logstoreKey, "\n"+jsonStr)
+func LoadConfig(project string, logstore string, configName string, logstoreKey int64, jsonStr string) *C.struct_loadGoPipelineResp {
+	// my logger
+	logger.Info(context.Background(), "load config", configName, "config setting", "\n"+jsonStr)
+	returnStruct := (*C.struct_loadGoPipelineResp)(C.malloc(C.size_t(unsafe.Sizeof(C.struct_loadGoPipelineResp{}))))
+	returnStruct.Code = C.int(1)
+	returnStruct.InputMode = C.int(0)
 	if started {
 		logger.Error(context.Background(), "CONFIG_LOAD_ALARM", "cannot load config before hold on the running configs")
-		return 1
+		return returnStruct
 	}
 	defer func() {
 		if err := recover(); err != nil {
@@ -146,16 +156,18 @@ func LoadConfig(project string, logstore string, configName string, logstoreKey 
 		}
 	}()
 
-	err := pluginmanager.LoadLogstoreConfig(util.StringDeepCopy(project),
+	resp, err := pluginmanager.LoadLogstoreConfig(util.StringDeepCopy(project),
 		util.StringDeepCopy(logstore), util.StringDeepCopy(configName),
 		// Make deep copy if you want to save it in Go in the future.
 		logstoreKey, jsonStr)
 	if err != nil {
 		logger.Error(context.Background(), "CONFIG_LOAD_ALARM", "load config error, project",
 			project, "logstore", logstore, "config", configName, "error", err)
-		return 1
+		return returnStruct
 	}
-	return 0
+	returnStruct.Code = C.int(resp.Code)
+	returnStruct.InputMode = C.int(resp.InputMode)
+	return returnStruct
 }
 
 //export UnloadConfig
@@ -358,7 +370,7 @@ func initPluginBase(cfgStr string) int {
 // setGCPercentForSlowStart sets GC percent with a small value at startup
 // to avoid high RSS (caused by data catch-up) to trigger OOM-kill.
 func setGCPercentForSlowStart() {
-	gcPercent := 20
+	gcPercent := 300
 	_ = util.InitFromEnvInt("ALIYUN_LOGTAIL_GOLANG_GC_PERCENT", &gcPercent, gcPercent)
 	defaultGCPercent := debug.SetGCPercent(gcPercent)
 	logger.Infof(context.Background(), "set startup GC percent from %v to %v", defaultGCPercent, gcPercent)

@@ -39,6 +39,11 @@ type GlobalConfig struct {
 	UsingOldContentTag             bool
 	EnableContainerdUpperDirDetect bool
 	EnableSlsMetricsFormat         bool
+
+	// Go Input to Native Processor
+	GoInputToNativeProcessor bool
+	PushNativeMaxCachedSize  int
+	PushNativeTimeoutMs      int
 }
 
 // LogtailGlobalConfig is the singleton instance of GlobalConfig.
@@ -57,6 +62,8 @@ func newGlobalConfig() (cfg GlobalConfig) {
 		DefaultLogGroupQueueSize: 4,
 		LogtailSysConfDir:        ".",
 		DelayStopSec:             300,
+		PushNativeMaxCachedSize:  100,
+		PushNativeTimeoutMs:      1000,
 	}
 	return
 }

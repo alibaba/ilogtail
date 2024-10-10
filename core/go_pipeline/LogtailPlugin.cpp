@@ -30,7 +30,9 @@
 #include "monitor/LogtailAlarm.h"
 #include "pipeline/PipelineManager.h"
 #include "pipeline/queue/SenderQueueManager.h"
+#include "pipeline/queue/ProcessQueueManager.h"
 #include "provider/Provider.h"
+#include "protobuf/models/ProtocolConversion.h"
 
 DEFINE_FLAG_BOOL(enable_sls_metrics_format, "if enable format metrics in SLS metricstore log pattern", false);
 DEFINE_FLAG_BOOL(enable_containerd_upper_dir_detect,
@@ -73,7 +75,7 @@ LogtailPlugin::~LogtailPlugin() {
     DynamicLibLoader::CloseLib(mPluginAdapterPtr);
 }
 
-bool LogtailPlugin::LoadPipeline(const std::string& pipelineName,
+LoadGoPipelineResp LogtailPlugin::LoadPipeline(const std::string& pipelineName,
                                  const std::string& pipeline,
                                  const std::string& project,
                                  const std::string& logstore,
@@ -99,10 +101,10 @@ bool LogtailPlugin::LoadPipeline(const std::string& pipelineName,
         goLogstore.p = logstore.c_str();
         long long goLogStoreKey = static_cast<long long>(logstoreKey);
 
-        return mLoadConfigFun(goProject, goLogstore, goConfigName, goLogStoreKey, goPluginConfig) == 0;
+        return *mLoadConfigFun(goProject, goLogstore, goConfigName, goLogStoreKey, goPluginConfig);
     }
 
-    return false;
+    return LoadGoPipelineResp{false, LoadGoPipelineResp::InputModeType::UNKNOWN}; 
 }
 
 void LogtailPlugin::HoldOn(bool exitFlag) {
@@ -250,6 +252,46 @@ int LogtailPlugin::ExecPluginCmd(
     return 0;
 }
 
+int LogtailPlugin::IsValidToProcess(const char* configName, int configNameSize) {
+    string configNameStr(configName, configNameSize);
+    auto pipeline = PipelineManager::GetInstance()->FindConfigByName(configNameStr);
+    if (!pipeline) {
+        LOG_ERROR(sLogger,
+                    ("pipeline not found during IsValidToProcess, perhaps due to config deletion",
+                    "return invalid")("config", configName));
+        return -1;
+    }
+    auto processQueueKey = pipeline->GetContext().GetProcessQueueKey();
+    return ProcessQueueManager::GetInstance()->IsValidToPush(processQueueKey) ? 0 : -1;
+}
+
+int LogtailPlugin::PushQueue(const char* configName, int configNameSize, const char* pbBuffer, int pbSize) {
+    static logtail::models::PipelineEventGroup eventGroupSrc;
+    string configNameStr(configName, configNameSize);
+    auto pipeline = PipelineManager::GetInstance()->FindConfigByName(configNameStr);
+    if (!pipeline) {
+        LOG_ERROR(sLogger,
+                    ("pipeline not found during PushQueue, perhaps due to config deletion",
+                    "return invalid")("config", configName));
+        return -1;
+    }
+
+    string pbStr(pbBuffer, pbSize);
+    if (!eventGroupSrc.ParseFromString(pbStr)) {
+        LOG_ERROR(sLogger, ("parse pb failed in PushQueue", "invalid pb"));
+        return -1;
+    }
+    string errMsg;
+    logtail::PipelineEventGroup eventGroupDst(std::make_shared<SourceBuffer>());
+    if (!TransferPBToPipelineEventGroup(eventGroupSrc, eventGroupDst, errMsg)) {
+        LOG_ERROR(sLogger, ("transfer pb to pipeline_event_group failed", errMsg));
+        return -1;
+    }
+
+    auto processQueueKey = pipeline->GetContext().GetProcessQueueKey();
+    return ProcessQueueManager::GetInstance()->PushQueue(processQueueKey, std::make_unique<ProcessQueueItem>(std::move(eventGroupDst), 0xFFFFFFFF));
+}
+
 
 bool LogtailPlugin::LoadPluginBase() {
     if (mPluginValid) {
@@ -283,7 +325,9 @@ bool LogtailPlugin::LoadPluginBase() {
             registerV2Fun(LogtailPlugin::IsValidToSend,
                           LogtailPlugin::SendPb,
                           LogtailPlugin::SendPbV2,
-                          LogtailPlugin::ExecPluginCmd);
+                          LogtailPlugin::ExecPluginCmd,
+                          LogtailPlugin::IsValidToProcess,
+                          LogtailPlugin::PushQueue);
         } else {
             LOG_WARNING(sLogger, ("load RegisterLogtailCallBackV2 failed", error)("try to load V1", ""));
 
@@ -292,7 +336,7 @@ bool LogtailPlugin::LoadPluginBase() {
                 LOG_WARNING(sLogger, ("load RegisterLogtailCallBack failed", error));
                 return mPluginValid;
             }
-            registerFun(LogtailPlugin::IsValidToSend, LogtailPlugin::SendPb, LogtailPlugin::ExecPluginCmd);
+            registerFun(LogtailPlugin::IsValidToSend, LogtailPlugin::SendPb, LogtailPlugin::ExecPluginCmd, LogtailPlugin::IsValidToProcess, LogtailPlugin::PushQueue);
         }
 
         mPluginAdapterPtr = loader.Release();
@@ -451,6 +495,16 @@ void LogtailPlugin::ProcessLogGroup(const std::string& configName,
         return;
     }
     std::string realConfigName = configName + "/2";
+    auto pipeline = PipelineManager::GetInstance()->FindConfigByName(configName);
+    auto go_inputs_iter = pipeline->GetPluginStatistics().find("go_inputs");
+    if (go_inputs_iter != pipeline->GetPluginStatistics().end()) {
+        for (auto& go_input : go_inputs_iter->second) {
+            if (go_input.second > 0) {
+                realConfigName[realConfigName.size() - 1] = '1';
+                break;
+            }
+        }
+    }
     std::string packIdPrefix = ToHexString(HashString(packId));
     GoString goConfigName;
     GoSlice goLog;
@@ -563,3 +617,4 @@ K8sContainerMeta LogtailPlugin::GetContainerMeta(const string& containerID) {
     }
     return K8sContainerMeta();
 }
+

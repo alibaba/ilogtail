@@ -288,3 +288,7 @@ func init() {
 		}
 	}
 }
+
+func (k *InputKafka) GetMode() pipeline.InputModeType {
+	return pipeline.PUSH
+}
