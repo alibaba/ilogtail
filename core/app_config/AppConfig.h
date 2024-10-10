@@ -317,7 +317,7 @@ public:
                 const Json::Value& remoteConf,
                 const Json::Value& localInstanceConfig,
                 const std::string name,
-                const std::function<bool(const std::string key, const std::string& value)>& validateFn);
+                const std::function<bool(const std::string key, const std::string value)>& validateFn);
 
     static double MergeDouble(double defaultValue,
                               const Json::Value& localConf,

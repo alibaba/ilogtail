@@ -1636,7 +1636,7 @@ AppConfig::MergeString(const std::string& defaultValue,
                        const Json::Value& remoteConf,
                        const Json::Value& localInstanceConfig,
                        const std::string name,
-                       const std::function<bool(const std::string key, const std::string& value)>& validateFn) {
+                       const std::function<bool(const std::string key, const std::string value)>& validateFn) {
     std::string res = defaultValue;
     if (localConf.isMember(name) && localConf[name].isString() && validateFn(name, localConf[name].asString())) {
         res = localConf[name].asString();

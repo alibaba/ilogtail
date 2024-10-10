@@ -40,55 +40,56 @@ bool InstanceConfigManagerUnittest::LoadModuleConfig(bool isInit) {
     const auto& localConf = AppConfig::GetInstance()->GetLocalConfig();
     const auto& envConf = AppConfig::GetInstance()->GetEnvConfig();
     const auto& remoteConf = AppConfig::GetInstance()->GetRemoteConfig();
-    auto ValidateFn = [](const std::string& key, const auto value) -> bool { return true; };
+    const auto& localInstanceConfig = AppConfig::GetInstance()->GetLocalInstanceConfig();
+    auto ValidateFn = [](const std::string key, const auto value) -> bool { return true; };
 
     if (status == 0) {
         // Added
-        APSARA_TEST_EQUAL(AppConfig::MergeBool(false, localConf, envConf, remoteConf, "bool_true", ValidateFn), true);
-        APSARA_TEST_EQUAL(AppConfig::MergeInt32(0, localConf, envConf, remoteConf, "int32_true", ValidateFn), 1234);
-        APSARA_TEST_EQUAL(AppConfig::MergeInt64(0, localConf, envConf, remoteConf, "int64_true", ValidateFn),
+        APSARA_TEST_EQUAL(AppConfig::MergeBool(false, localConf, envConf, remoteConf, localInstanceConfig, "bool_true", ValidateFn), true);
+        APSARA_TEST_EQUAL(AppConfig::MergeInt32(0, localConf, envConf, remoteConf, localInstanceConfig, "int32_true", ValidateFn), 1234);
+        APSARA_TEST_EQUAL(AppConfig::MergeInt64(0, localConf, envConf, remoteConf, localInstanceConfig, "int64_true", ValidateFn),
                           1234567890);
-        APSARA_TEST_EQUAL(AppConfig::MergeDouble(0, localConf, envConf, remoteConf, "double_true", ValidateFn),
+        APSARA_TEST_EQUAL(AppConfig::MergeDouble(0, localConf, envConf, remoteConf, localInstanceConfig, "double_true", ValidateFn),
                           1234.56789);
-        APSARA_TEST_EQUAL(AppConfig::MergeString("", localConf, envConf, remoteConf, "string_true", ValidateFn),
+        APSARA_TEST_EQUAL(AppConfig::MergeString("", localConf, envConf, remoteConf, localInstanceConfig, "string_true", ValidateFn),
                           "string");
 
-        APSARA_TEST_EQUAL(AppConfig::MergeBool(false, localConf, envConf, remoteConf, "bool_false", ValidateFn), false);
-        APSARA_TEST_EQUAL(AppConfig::MergeInt32(0, localConf, envConf, remoteConf, "int32_false", ValidateFn), 0);
-        APSARA_TEST_EQUAL(AppConfig::MergeInt64(0, localConf, envConf, remoteConf, "int64_false", ValidateFn), 0);
-        APSARA_TEST_EQUAL(AppConfig::MergeDouble(0, localConf, envConf, remoteConf, "double_false", ValidateFn), 0);
-        APSARA_TEST_EQUAL(AppConfig::MergeString("", localConf, envConf, remoteConf, "string_false", ValidateFn), "");
+        APSARA_TEST_EQUAL(AppConfig::MergeBool(false, localConf, envConf, remoteConf, localInstanceConfig, "bool_false", ValidateFn), false);
+        APSARA_TEST_EQUAL(AppConfig::MergeInt32(0, localConf, envConf, remoteConf, localInstanceConfig, "int32_false", ValidateFn), 0);
+        APSARA_TEST_EQUAL(AppConfig::MergeInt64(0, localConf, envConf, remoteConf, localInstanceConfig, "int64_false", ValidateFn), 0);
+        APSARA_TEST_EQUAL(AppConfig::MergeDouble(0, localConf, envConf, remoteConf, localInstanceConfig, "double_false", ValidateFn), 0);
+        APSARA_TEST_EQUAL(AppConfig::MergeString("", localConf, envConf, remoteConf, localInstanceConfig, "string_false", ValidateFn), "");
     } else if (status == 1) {
         // Modified
-        APSARA_TEST_EQUAL(AppConfig::MergeBool(true, localConf, envConf, remoteConf, "bool_true", ValidateFn), false);
-        APSARA_TEST_EQUAL(AppConfig::MergeInt32(0, localConf, envConf, remoteConf, "int32_true", ValidateFn), 12340);
-        APSARA_TEST_EQUAL(AppConfig::MergeInt64(0, localConf, envConf, remoteConf, "int64_true", ValidateFn),
+        APSARA_TEST_EQUAL(AppConfig::MergeBool(true, localConf, envConf, remoteConf, localInstanceConfig, "bool_true", ValidateFn), false);
+        APSARA_TEST_EQUAL(AppConfig::MergeInt32(0, localConf, envConf, remoteConf, localInstanceConfig, "int32_true", ValidateFn), 12340);
+        APSARA_TEST_EQUAL(AppConfig::MergeInt64(0, localConf, envConf, remoteConf, localInstanceConfig, "int64_true", ValidateFn),
                           12345678900);
-        APSARA_TEST_EQUAL(AppConfig::MergeDouble(0, localConf, envConf, remoteConf, "double_true", ValidateFn),
+        APSARA_TEST_EQUAL(AppConfig::MergeDouble(0, localConf, envConf, remoteConf, localInstanceConfig, "double_true", ValidateFn),
                           12340.56789);
-        APSARA_TEST_EQUAL(AppConfig::MergeString("", localConf, envConf, remoteConf, "string_true", ValidateFn),
+        APSARA_TEST_EQUAL(AppConfig::MergeString("", localConf, envConf, remoteConf, localInstanceConfig, "string_true", ValidateFn),
                           "string0");
 
-        APSARA_TEST_EQUAL(AppConfig::MergeBool(true, localConf, envConf, remoteConf, "bool_false", ValidateFn), true);
-        APSARA_TEST_EQUAL(AppConfig::MergeInt32(10, localConf, envConf, remoteConf, "int32_false", ValidateFn), 10);
-        APSARA_TEST_EQUAL(AppConfig::MergeInt64(10, localConf, envConf, remoteConf, "int64_false", ValidateFn), 10);
-        APSARA_TEST_EQUAL(AppConfig::MergeDouble(10.1, localConf, envConf, remoteConf, "double_false", ValidateFn),
+        APSARA_TEST_EQUAL(AppConfig::MergeBool(true, localConf, envConf, remoteConf, localInstanceConfig, "bool_false", ValidateFn), true);
+        APSARA_TEST_EQUAL(AppConfig::MergeInt32(10, localConf, envConf, remoteConf, localInstanceConfig, "int32_false", ValidateFn), 10);
+        APSARA_TEST_EQUAL(AppConfig::MergeInt64(10, localConf, envConf, remoteConf, localInstanceConfig, "int64_false", ValidateFn), 10);
+        APSARA_TEST_EQUAL(AppConfig::MergeDouble(10.1, localConf, envConf, remoteConf, localInstanceConfig, "double_false", ValidateFn),
                           10.1);
-        APSARA_TEST_EQUAL(AppConfig::MergeString("10.1", localConf, envConf, remoteConf, "string_false", ValidateFn),
+        APSARA_TEST_EQUAL(AppConfig::MergeString("10.1", localConf, envConf, remoteConf, localInstanceConfig, "string_false", ValidateFn),
                           "10.1");
     } else if (status == 2) {
         status = 3;
-        APSARA_TEST_EQUAL(AppConfig::MergeBool(false, localConf, envConf, remoteConf, "bool_true", ValidateFn), false);
-        APSARA_TEST_EQUAL(AppConfig::MergeInt32(0, localConf, envConf, remoteConf, "int32_true", ValidateFn), 0);
-        APSARA_TEST_EQUAL(AppConfig::MergeInt64(0, localConf, envConf, remoteConf, "int64_true", ValidateFn), 0);
-        APSARA_TEST_EQUAL(AppConfig::MergeDouble(0, localConf, envConf, remoteConf, "double_true", ValidateFn), 0);
-        APSARA_TEST_EQUAL(AppConfig::MergeString("", localConf, envConf, remoteConf, "string_true", ValidateFn), "");
+        APSARA_TEST_EQUAL(AppConfig::MergeBool(false, localConf, envConf, remoteConf, localInstanceConfig, "bool_true", ValidateFn), false);
+        APSARA_TEST_EQUAL(AppConfig::MergeInt32(0, localConf, envConf, remoteConf, localInstanceConfig, "int32_true", ValidateFn), 0);
+        APSARA_TEST_EQUAL(AppConfig::MergeInt64(0, localConf, envConf, remoteConf, localInstanceConfig, "int64_true", ValidateFn), 0);
+        APSARA_TEST_EQUAL(AppConfig::MergeDouble(0, localConf, envConf, remoteConf, localInstanceConfig, "double_true", ValidateFn), 0);
+        APSARA_TEST_EQUAL(AppConfig::MergeString("", localConf, envConf, remoteConf, localInstanceConfig, "string_true", ValidateFn), "");
 
-        APSARA_TEST_EQUAL(AppConfig::MergeBool(false, localConf, envConf, remoteConf, "bool_false", ValidateFn), false);
-        APSARA_TEST_EQUAL(AppConfig::MergeInt32(0, localConf, envConf, remoteConf, "int32_false", ValidateFn), 0);
-        APSARA_TEST_EQUAL(AppConfig::MergeInt64(0, localConf, envConf, remoteConf, "int64_false", ValidateFn), 0);
-        APSARA_TEST_EQUAL(AppConfig::MergeDouble(0, localConf, envConf, remoteConf, "double_false", ValidateFn), 0);
-        APSARA_TEST_EQUAL(AppConfig::MergeString("", localConf, envConf, remoteConf, "string_false", ValidateFn), "");
+        APSARA_TEST_EQUAL(AppConfig::MergeBool(false, localConf, envConf, remoteConf, localInstanceConfig, "bool_false", ValidateFn), false);
+        APSARA_TEST_EQUAL(AppConfig::MergeInt32(0, localConf, envConf, remoteConf, localInstanceConfig, "int32_false", ValidateFn), 0);
+        APSARA_TEST_EQUAL(AppConfig::MergeInt64(0, localConf, envConf, remoteConf, localInstanceConfig, "int64_false", ValidateFn), 0);
+        APSARA_TEST_EQUAL(AppConfig::MergeDouble(0, localConf, envConf, remoteConf, localInstanceConfig, "double_false", ValidateFn), 0);
+        APSARA_TEST_EQUAL(AppConfig::MergeString("", localConf, envConf, remoteConf, localInstanceConfig, "string_false", ValidateFn), "");
     }
 
     return true;
