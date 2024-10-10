@@ -22,7 +22,6 @@
 #include "monitor/PluginMetricManager.h"
 #include "common/Lock.h"
 #include "monitor/LoongCollectorMetricTypes.h"
-// #include "monitor/MetricConstants.h"
 #include "monitor/metric_constants/MetricConstants.h"
 
 namespace logtail {
@@ -35,18 +34,6 @@ public:
     nami::eBPFStatistics GetLastStats() const;
     virtual void ReleaseMetric();
     virtual ~BaseBPFMonitor() = default;
-    CounterPtr GetOrCreateCounter(const MetricLabels& labels, const std::string& name) {
-        auto ref = mPluginMetricMgr->GetOrCreateReentrantMetricsRecordRef(labels);
-        auto res = ref->GetCounter(name);
-        mRefs.emplace_back(ref);
-        return res;
-    }
-    IntGaugePtr GetOrCreateIntGauge(const MetricLabels& labels, const std::string& name) {
-        auto ref = mPluginMetricMgr->GetOrCreateReentrantMetricsRecordRef(labels);
-        auto res = ref->GetIntGauge(name);
-        mRefs.emplace_back(ref);
-        return res;
-    }
 protected:
     BaseBPFMonitor(const std::string& name, PluginMetricManagerPtr mgr, MetricsRecordRef& ref, const nami::eBPFStatistics& lastStats) 
         : mPipelineName(name), mPluginMetricMgr(mgr), mRef(ref), mLastStat(lastStats) {}
@@ -63,15 +50,12 @@ protected:
     std::string mPipelineName;
     PluginMetricManagerPtr mPluginMetricMgr;
     mutable std::mutex mStatsMtx;
-    // MetricLabels mDefaultLabels;
     MetricsRecordRef& mRef;
-    nami::eBPFStatistics mLastStat;
+    std::vector<std::pair<ReentrantMetricsRecordRef, MetricLabels>> mRefAndLabels;
 
+    nami::eBPFStatistics mLastStat;
     std::atomic_bool mMetricInited = false;
 
-    std::vector<std::pair<ReentrantMetricsRecordRef, MetricLabels>> mRefAndLabels;
-    ReentrantMetricsRecordRef mReentrantMetricRecordRef;
-    std::vector<ReentrantMetricsRecordRef> mRefs;
     CounterPtr mRecvKernelEventsTotal;
     CounterPtr mLossKernelEventsTotal;
     CounterPtr mPushEventsTotal;
@@ -80,9 +64,6 @@ protected:
     IntGaugePtr mProcessCacheEntitiesNum;
     CounterPtr mProcessCacheMissTotal;
 
-    // CounterPtr mPushLogsToQueueTotal;
-    // CounterPtr mPushMetricsToQueueTotal;
-    // CounterPtr mPushTracesToQueueTotal;
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class eBPFServerUnittest;
 #endif
@@ -155,6 +136,7 @@ public:
 private:
     std::array<std::unique_ptr<BaseBPFMonitor>, int(nami::PluginType::MAX)> mSelfMonitors;
     std::array<std::atomic_bool, int(nami::PluginType::MAX)> mInited;
+    
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class eBPFServerUnittest;
 #endif

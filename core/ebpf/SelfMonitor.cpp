@@ -45,19 +45,6 @@ void BaseBPFMonitor::ReleaseMetric() {
         }
     }
 
-    // for (auto& ref : mRefs) {
-    //     if (!ref) continue;
-    //     auto labels = ref->GetLabels();
-    //     if (mPluginMetricMgr) {
-    //         mPluginMetricMgr->ReleaseReentrantMetricsRecordRef(*labels.get());
-    //     }
-    // }
-
-    // // release default
-    // // TODO @qianlu.kk
-    // if (mPluginMetricMgr) {
-    //     mPluginMetricMgr->ReleaseReentrantMetricsRecordRef(mDefaultLabels);
-    // }
     mMetricInited = false;
 }
 
@@ -90,8 +77,6 @@ std::string BaseBPFMonitor::PluginTypeToString(const nami::PluginType pluginType
 
 void BaseBPFMonitor::InitInnerMetric() {
     // init base metrics, only plugin relative
-    // MetricLabels pluginTypeLabels = {{METRIC_LABEL_KEY_PLUGIN_TYPE, "conn_stats"}};
-    // mReentrantMetricRecordRef = mPluginMetricMgr->GetOrCreateReentrantMetricsRecordRef();
     // poll kernel events
     MetricLabels pollKernelEventsLabels = {{METRIC_LABEL_KEY_RUNNER_RECV_EVENT_STAGE, METRIC_LABEL_VALUE_RUNNER_RECV_EVENT_STAGE_POLL_KERNEL}};
     auto ref = mPluginMetricMgr->GetOrCreateReentrantMetricsRecordRef(pollKernelEventsLabels);
@@ -127,19 +112,6 @@ void BaseBPFMonitor::InitInnerMetric() {
     ref = mPluginMetricMgr->GetOrCreateReentrantMetricsRecordRef(pushSpansLabels);
     mPushSpansTotal = ref->GetCounter(METRIC_RUNNER_IN_EVENTS_TOTAL);
     mRefAndLabels.emplace_back(std::make_pair<>(ref, pushSpansLabels));
-
-    
-    // mRecvKernelEventsTotal = mReentrantMetricRecordRef->GetCounter(METRIC_EBPF_RECV_KERNEL_EVENTS_TOTAL);
-    // mLossKernelEventsTotal = mReentrantMetricRecordRef->GetCounter(METRIC_EBPF_LOSS_KERNEL_EVENTS_TOTAL);
-    // mPushEventsTotal = mReentrantMetricRecordRef->GetCounter(METRIC_EBPF_PUSH_CALLBACK_EVENTS_TOTAL);
-    // mPushSpansTotal = mReentrantMetricRecordRef->GetCounter(METRIC_EBPF_PUSH_CALLBACK_SPANS_TOTAL);
-    // mPushMetricsTotal = mReentrantMetricRecordRef->GetCounter(METRIC_EBPF_PUSH_CALLBACK_METRICS_TOTAL);
-    // mProcessCacheEntitiesNum = mReentrantMetricRecordRef->GetIntGauge(METRIC_EBPF_PROCESS_CACHE_ENTRIES_NUM);
-    // mProcessCacheMissTotal = mReentrantMetricRecordRef->GetCounter(METRIC_EBPF_PROCESS_CACHE_MISS_TOTAL);
-
-    // mPushLogsToQueueTotal = mReentrantMetricRecordRef->GetCounter(METRIC_EBPF_PUSH_QUEUE_EVENTS_TOTAL);
-    // mPushTracesToQueueTotal = mReentrantMetricRecordRef->GetCounter(METRIC_EBPF_PUSH_QUEUE_EVENTS_TOTAL);
-    // mPushMetricsToQueueTotal = mReentrantMetricRecordRef->GetCounter(METRIC_EBPF_PUSH_QUEUE_EVENTS_TOTAL);
 }
 
 void BaseBPFMonitor::UpdateInnerMetric(nami::eBPFStatistics& currStat) {
@@ -184,7 +156,6 @@ void NetworkObserverSelfMonitor::InitMetric() {
     auto ref = mPluginMetricMgr->GetOrCreateReentrantMetricsRecordRef(eventTypeLabels);
     mRecvConnStatsTotal = ref->GetCounter(METRIC_RUNNER_EBPF_NETWORK_OBSERVER_WORKER_HANDLE_EVENTS_TOTAL);
     mRefAndLabels.emplace_back(std::make_pair<>(ref, eventTypeLabels));
-    // mRefs.emplace_back(ref);
 
     eventTypeLabels = {
         {METRIC_LABEL_KEY_RUNNER_RECV_EVENT_STAGE, METRIC_LABEL_VALUE_RUNNER_RECV_EVENT_STAGE_AFTER_PERF_WORKER},
