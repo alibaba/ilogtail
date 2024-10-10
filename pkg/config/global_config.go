@@ -47,8 +47,8 @@ type GlobalConfig struct {
 var LoongcollectorGlobalConfig = newGlobalConfig()
 
 // StatisticsConfigJson, AlarmConfigJson
-var BaseVersion = "0.1.0"                                                        // will be overwritten through ldflags at compile time
-var UserAgent = fmt.Sprintf("loongcollector/%v (%v)", BaseVersion, runtime.GOOS) // set in global config
+var BaseVersion = "0.1.0"                                                  // will be overwritten through ldflags at compile time
+var UserAgent = fmt.Sprintf("ilogtail/%v (%v)", BaseVersion, runtime.GOOS) // set in global config
 
 func newGlobalConfig() (cfg GlobalConfig) {
 	cfg = GlobalConfig{
