@@ -54,7 +54,6 @@ DEFINE_FLAG_INT32(check_handler_timeout_interval, "seconds", 180);
 DEFINE_FLAG_INT32(dump_inotify_watcher_interval, "seconds", 180);
 DEFINE_FLAG_INT32(clear_config_match_interval, "seconds", 600);
 DEFINE_FLAG_INT32(check_block_event_interval, "seconds", 1);
-DEFINE_FLAG_STRING(local_event_data_file_name, "local event data file name", "");
 DEFINE_FLAG_INT32(read_local_event_interval, "seconds", 60);
 DEFINE_FLAG_BOOL(force_close_file_on_container_stopped,
                  "whether close file handler immediately when associate container stopped",
@@ -64,14 +63,6 @@ DECLARE_FLAG_BOOL(send_prefer_real_ip);
 
 
 namespace logtail {
-
-static std::string GetLocalEventDataFileName() {
-    if (STRING_FLAG(local_event_data_file_name).empty()) {
-        return GetAgentConfDir() + "local_event.json";
-    }
-    return STRING_FLAG(local_event_data_file_name);
-}
-
 LogInput::LogInput() : mAccessMainThreadRWL(ReadWriteLock::PREFER_WRITER) {
     mCheckBaseDirInterval = INT32_FLAG(check_base_dir_interval);
     mCheckSymbolicLinkInterval = INT32_FLAG(check_symbolic_link_interval);
@@ -300,7 +291,7 @@ bool LogInput::ReadLocalEvents() {
 
 
     // after process event, clear the local file
-    FILE* pFile = fopen((GetLocalEventDataFileName()).c_str(), "w");
+    FILE* pFile = fopen(GetLocalEventDataFileName().c_str(), "w");
     if (pFile != NULL) {
         fclose(pFile);
     }

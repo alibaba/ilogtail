@@ -485,12 +485,12 @@ void LogtailMonitor::DumpToLocal(const sls_logs::LogGroup& logGroup) {
     }
     dumpStr += "####status     end####\n";
 
-    static auto gMonitorLogger = Logger::Instance().GetLogger("/apsara/loongcollector/status");
+    static auto gMonitorLogger = Logger::Instance().GetLogger(GetAgentLoggersPrefix() + "/status");
     LOG_INFO(gMonitorLogger, ("\n", dumpStr));
 }
 
 bool LogtailMonitor::DumpMonitorInfo(time_t monitorTime) {
-    string path = GetAgentLogDir() + "logtail_monitor_info";
+    string path = GetAgentLogDir() + "loongcollector_monitor_info";
     ofstream outfile(path.c_str(), ofstream::app);
     if (!outfile)
         return false;

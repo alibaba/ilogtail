@@ -31,7 +31,6 @@
 #include "pipeline/queue/QueueKeyManager.h"
 
 DEFINE_FLAG_INT32(profile_data_send_interval, "interval of send LogFile/DomainSocket profile data, seconds", 600);
-DEFINE_FLAG_STRING(logtail_profile_snapshot, "reader profile on local disk", "logtail_profile_snapshot");
 
 using namespace std;
 using namespace sls_logs;
@@ -51,13 +50,9 @@ LogFileProfiler::LogFileProfiler() {
     srand(time(NULL));
     mSendInterval = INT32_FLAG(profile_data_send_interval);
     mLastSendTime = time(NULL) - (rand() % (mSendInterval / 10)) * 10;
-#if defined(__RUN_LOGTAIL__)
-    mDumpFileName = GetProcessExecutionDir() + STRING_FLAG(logtail_profile_snapshot);
-    mBakDumpFileName = GetProcessExecutionDir() + STRING_FLAG(logtail_profile_snapshot) + "_bak";
-#else
-    mDumpFileName = STRING_FLAG(loongcollector_log_dir) + "profile_snapshot";
-    mBakDumpFileName = STRING_FLAG(loongcollector_log_dir) + "profile_snapshot_bak";
-#endif
+    mDumpFileName = GetDumpFileName();
+    mBakDumpFileName = GetDumpFileName() + "_bak";
+
     mHostname = GetHostName();
 #if defined(_MSC_VER)
     mHostname = EncodingConverter::GetInstance()->FromACPToUTF8(mHostname);
@@ -464,7 +459,7 @@ void LogFileProfiler::DumpToLocal(int32_t curTime, bool forceSend, Json::Value& 
                      ("rename profile snapshot fail, file", mDumpFileName)("error", ErrnoToString(GetErrno())));
     }
 
-    static auto gProfileLogger = Logger::Instance().GetLogger("/apsara/loongcollector/profile");
+    static auto gProfileLogger = Logger::Instance().GetLogger(GetAgentLoggersPrefix() + "/profile");
     LOG_INFO(gProfileLogger, ("\n", styledRoot));
 }
 

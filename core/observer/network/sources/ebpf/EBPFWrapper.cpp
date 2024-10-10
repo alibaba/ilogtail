@@ -36,7 +36,7 @@ DEFINE_FLAG_INT64(
     5004000000);
 DEFINE_FLAG_STRING(sls_observer_ebpf_host_path,
                    "the backup real host path for store libebpf.so",
-                   "");
+                   "/etc/ilogtail/ebpf/");
 
 static const std::string kLowkernelCentosName = "CentOS";
 static const uint16_t kLowkernelCentosMinVersion = 7006;
@@ -44,14 +44,6 @@ static const uint16_t kLowkernelSpecificVersion = 3010;
 
 
 namespace logtail {
-static std::string GetObserverEbpfHostPath() {
-    if (!STRING_FLAG(sls_observer_ebpf_host_path).empty()) {
-        return STRING_FLAG(sls_observer_ebpf_host_path);
-    } else {
-        return AppConfig::GetInstance()->GetLoongcollectorConfDir();
-    }
-}
-
 // copy from libbpf_print_level
 enum sls_libbpf_print_level {
     SLS_LIBBPF_WARN,

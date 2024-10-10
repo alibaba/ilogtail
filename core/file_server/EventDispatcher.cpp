@@ -84,7 +84,6 @@ DEFINE_FLAG_INT32(existed_file_active_timeout,
                   120);
 DEFINE_FLAG_INT32(checkpoint_find_max_cache_size, "", 100000);
 DEFINE_FLAG_INT32(max_watch_dir_count, "", 100 * 1000);
-DEFINE_FLAG_STRING(inotify_watcher_dirs_dump_filename, "", "inotify_watcher_dirs");
 DEFINE_FLAG_INT32(default_max_inotify_watch_num, "the max allowed inotify watch dir number", 3000);
 
 namespace logtail {
@@ -719,11 +718,7 @@ void EventDispatcher::RemoveOneToOneMapEntry(int wd) {
 }
 
 void EventDispatcher::DumpInotifyWatcherDirs() {
-#if defined(__RUN_LOGTAIL__)
-    string filename = GetAgentRuntimeDir() + STRING_FLAG(inotify_watcher_dirs_dump_filename);
-#else
-    string filename = GetAgentRuntimeDir() + "inotify_watcher_dirs";
-#endif
+    string filename = GetInotifyWatcherDirsDumpFileName();
     FILE* pFile = fopen(filename.c_str(), "w");
     if (pFile == NULL) {
         LOG_WARNING(sLogger, ("open file (dump inotify watcher dirs) failed", filename)("errno", errno));

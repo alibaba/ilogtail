@@ -33,6 +33,22 @@ std::string GetAgentDataDir();
 std::string GetAgentConfDir();
 std::string GetAgentRuntimeDir();
 
+std::string GetAgentConfigFile();
+std::string GetAgentAppInfoFile();
+std::string GetAdhocCheckpointDirPath();
+std::string GetCheckPointFileName();
+std::string GetCrashStackFileName();
+std::string GetLocalEventDataFileName();
+std::string GetInotifyWatcherDirsDumpFileName();
+std::string GetAgentLoggersPrefix();
+std::string GetAgentLogName();
+std::string GetAgentSnapshotDir();
+std::string GetAgentProfileLogName();
+std::string GetAgentStatusLogName();
+std::string GetDumpFileName();
+std::string GetObserverEbpfHostPath();
+std::string GetBufferFileNamePrefix();
+
 template <class T>
 class DoubleBuffer {
 public:

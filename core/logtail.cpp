@@ -92,8 +92,8 @@ void do_worker_process() {
     std::string processExecutionDir = GetProcessExecutionDir();
 #define PROCESSDIRFLAG(flag_name, env_name, dir_name) \
     if (STRING_FLAG(flag_name).empty()) { \
-        STRING_FLAG(flag_name) = processExecutionDir + #dir_name + "/"; \
-    } else if (STRING_FLAG(flag_name).at(0) != '/') { \
+        STRING_FLAG(flag_name) = processExecutionDir + #dir_name + PATH_SEPARATOR; \
+    } else { \
         STRING_FLAG(flag_name) = AbsolutePath(STRING_FLAG(flag_name), processExecutionDir); \
     } \
     if (!CheckExistance(STRING_FLAG(flag_name))) { \
@@ -109,7 +109,6 @@ void do_worker_process() {
     PROCESSDIRFLAG(loongcollector_log_dir, "ALIYUN_LOONGCOLLECTOR_LOG_DIR", log);
     PROCESSDIRFLAG(loongcollector_data_dir, "ALIYUN_LOONGCOLLECTOR_DATA_DIR", data);
     PROCESSDIRFLAG(loongcollector_run_dir, "ALIYUN_LOONGCOLLECTOR_RUN_DIR", run);
-    STRING_FLAG(check_point_filename) = STRING_FLAG(loongcollector_data_dir) + "/data/file_check_point";
 
     Logger::Instance().InitGlobalLoggers();
 

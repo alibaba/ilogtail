@@ -30,7 +30,6 @@
 #include "common/RuntimeUtil.h"
 #include "common/StringTools.h"
 
-DEFINE_FLAG_STRING(logtail_snapshot_dir, "snapshot dir on local disk", "snapshot");
 DEFINE_FLAG_BOOL(logtail_async_logger_enable, "", true);
 DEFINE_FLAG_INT32(logtail_async_logger_queue_size, "", 1024);
 DEFINE_FLAG_INT32(logtail_async_logger_thread_num, "", 1);
@@ -109,8 +108,9 @@ void Logger::LogMsg(const std::string& msg) {
 }
 
 void Logger::InitGlobalLoggers() {
-    if (!sLogger)
-        sLogger = GetLogger("/apsara/loongcollector");
+    if (!sLogger) {
+        sLogger = GetLogger(GetAgentLoggersPrefix());
+    }
 }
 
 Logger::logger Logger::CreateLogger(const std::string& loggerName,
@@ -326,7 +326,7 @@ void Logger::LoadConfig(const std::string& filePath) {
 
         spdlog::register_logger(logger);
         logger->set_pattern(DEFAULT_PATTERN);
-        if (name == "/apsara/loongcollector" && !aliyun_logtail_log_level.empty()) {
+        if (name == GetAgentLoggersPrefix() && !aliyun_logtail_log_level.empty()) {
             logger->set_level(envLogLevel);
             logger->flush_on(envLogLevel);
         } else {
@@ -407,25 +407,25 @@ void Logger::LoadDefaultConfig(std::map<std::string, LoggerConfig>& loggerCfgs,
     if (sinkCfgs.find("AsyncFileSink") != sinkCfgs.end())
         return;
     sinkCfgs.insert({"AsyncFileSink",
-                     SinkConfig{"AsyncFile", 10, 20000000, 300, GetAgentLogDir() + "loongcollector.LOG", "Gzip"}});
+                     SinkConfig{"AsyncFile", 10, 20000000, 300, GetAgentLogDir() + GetAgentLogName(), "Gzip"}});
 }
 
 void Logger::LoadAllDefaultConfigs(std::map<std::string, LoggerConfig>& loggerCfgs,
                                    std::map<std::string, SinkConfig>& sinkCfgs) {
     LoadDefaultConfig(loggerCfgs, sinkCfgs);
 
-    loggerCfgs.insert({"/apsara/loongcollector", LoggerConfig{"AsyncFileSink", level::info}});
-    loggerCfgs.insert({"/apsara/loongcollector/profile", LoggerConfig{"AsyncFileSinkProfile", level::info}});
-    loggerCfgs.insert({"/apsara/loongcollector/status", LoggerConfig{"AsyncFileSinkStatus", level::info}});
+    loggerCfgs.insert({GetAgentLoggersPrefix(), LoggerConfig{"AsyncFileSink", level::info}});
+    loggerCfgs.insert({GetAgentLoggersPrefix() + "/profile", LoggerConfig{"AsyncFileSinkProfile", level::info}});
+    loggerCfgs.insert({GetAgentLoggersPrefix() + "/status", LoggerConfig{"AsyncFileSinkStatus", level::info}});
 
-    std::string dirPath = GetAgentLogDir() + "snapshot";
+    std::string dirPath = GetAgentSnapshotDir();
     if (!Mkdir(dirPath)) {
         LogMsg(std::string("Create snapshot dir error ") + dirPath + ", error" + ErrnoToString(GetErrno()));
     }
     sinkCfgs.insert(
-        {"AsyncFileSinkProfile", SinkConfig{"AsyncFile", 61, 1, 1, dirPath + PATH_SEPARATOR + "loongcollector_profile.LOG"}});
+        {"AsyncFileSinkProfile", SinkConfig{"AsyncFile", 61, 1, 1, dirPath + PATH_SEPARATOR + GetAgentProfileLogName()}});
     sinkCfgs.insert(
-        {"AsyncFileSinkStatus", SinkConfig{"AsyncFile", 61, 1, 1, dirPath + PATH_SEPARATOR + "loongcollector_status.LOG"}});
+        {"AsyncFileSinkStatus", SinkConfig{"AsyncFile", 61, 1, 1, dirPath + PATH_SEPARATOR + GetAgentStatusLogName()}});
 }
 
 void Logger::EnsureSnapshotDirExist(std::map<std::string, SinkConfig>& sinkCfgs) {

@@ -15,7 +15,6 @@
 #include "PCAPWrapper.h"
 
 #include <utility>
-#include "app_config/AppConfig.h"
 #include "common/xxhash/xxhash.h"
 #include "common/MachineInfoUtil.h"
 #include "logger/Logger.h"
