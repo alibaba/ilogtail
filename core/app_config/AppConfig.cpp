@@ -391,6 +391,22 @@ string GetBufferFileNamePrefix(){
 #endif
 }
 
+string GetLegacyConfigFilePath() {
+#if defined(__RUN_LOGTAIL__)
+    return AppConfig::GetInstance()->GetProcessExecutionDir();
+#else
+    return AppConfig::GetInstance()->GetLoongcollectorConfDir();
+#endif
+}
+
+string GetAgentConfigName() {
+#if defined(__RUN_LOGTAIL__)
+    return STRING_FLAG(ilogtail_config);
+#else
+    return LOONGCOLLECTOR_CONFIG;
+#endif
+}
+
 AppConfig::AppConfig() {
     LOG_INFO(sLogger, ("AppConfig AppConfig", "success"));
     mSendRandomSleep = BOOL_FLAG(enable_send_tps_smoothing);

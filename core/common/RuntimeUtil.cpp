@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "app_config/AppConfig.h"
 #include "RuntimeUtil.h"
 #if defined(__linux__)
 #include <unistd.h>
@@ -88,10 +89,10 @@ bool RebuildExecutionDir(const std::string& ilogtailConfigJson,
     if (ilogtailConfigJson.empty())
         return true;
 
-    FILE* pFile = fopen((path + STRING_FLAG(ilogtail_config)).c_str(), "w");
+    FILE* pFile = fopen((path + GetAgentConfigName()).c_str(), "w");
     if (pFile == NULL) {
         std::stringstream ss;
-        ss << "open " << STRING_FLAG(ilogtail_config) << " to write failed, errno is " << errno;
+        ss << "open " << GetAgentConfigName() << " to write failed, errno is " << errno;
         errorMessage = ss.str();
         return false;
     }

@@ -48,6 +48,8 @@ std::string GetAgentStatusLogName();
 std::string GetDumpFileName();
 std::string GetObserverEbpfHostPath();
 std::string GetBufferFileNamePrefix();
+std::string GetLegacyConfigFilePath();
+std::string GetAgentConfigName();
 
 template <class T>
 class DoubleBuffer {
