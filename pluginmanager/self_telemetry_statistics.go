@@ -38,7 +38,6 @@ func (r *InputStatistics) Collect(collector pipeline.Collector) error {
 	for _, config := range LogtailConfig {
 		log := &protocol.Log{}
 		metricRecord := config.Context.GetLogstoreConfigMetricRecord()
-		statisticsMetricRecord := config.Statistics.MetricRecord
 
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "project", Value: config.Context.GetProject()})
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "config_name", Value: config.Context.GetConfigName()})
@@ -46,18 +45,6 @@ func (r *InputStatistics) Collect(collector pipeline.Collector) error {
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "source_ip", Value: util.GetIPAddress()})
 
 		for _, metricCollector := range metricRecord.MetricCollectors {
-			metrics := metricCollector.Collect()
-			for _, metric := range metrics {
-				record := metric.Export()
-				if len(record) == 0 {
-					continue
-				}
-				for k, v := range record {
-					log.Contents = append(log.Contents, &protocol.Log_Content{Key: k, Value: v})
-				}
-			}
-		}
-		for _, metricCollector := range statisticsMetricRecord.MetricCollectors {
 			metrics := metricCollector.Collect()
 			for _, metric := range metrics {
 				record := metric.Export()
