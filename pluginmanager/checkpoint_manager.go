@@ -85,6 +85,7 @@ func (p *checkPointManager) Init() error {
 	if err == nil && pathExist {
 		dbPath = filepath.Join(logtailConfigDir, *CheckPointFile)
 	} else {
+		// c++程序如果这个目录创建失败会直接exit，所以这里一般应该不会走进来
 		logger.Error(context.Background(), "CHECKPOINT_ALARM", "logtailConfigDir not exist", logtailConfigDir, "err", err)
 		return err
 	}
