@@ -231,7 +231,7 @@ bool TransferLogEventToPB(const logtail::LogEvent& src, logtail::models::LogEven
     // contents
     dst.mutable_contents()->Reserve(src.Size());
     for (auto iter = src.begin(); iter != src.end(); iter++) {
-        auto* content = dst.add_contents();
+        auto content = dst.add_contents();
         content->set_key(iter->first.to_string());
         content->set_value(iter->second.to_string());
     }
@@ -292,7 +292,7 @@ bool TransferSpanEventToPB(const logtail::SpanEvent& src, logtail::models::SpanE
 
     // inner events
     for (const auto& event : src.GetEvents()) {
-        auto* dstEvent = dst.add_events();
+        auto dstEvent = dst.add_events();
         dstEvent->set_timestamp(event.GetTimestampNs());
         dstEvent->set_name(event.GetName().to_string());
         for (auto iter = event.TagsBegin(); iter != event.TagsEnd(); iter++) {
@@ -302,7 +302,7 @@ bool TransferSpanEventToPB(const logtail::SpanEvent& src, logtail::models::SpanE
 
     // span links
     for (const auto& link : src.GetLinks()) {
-        auto* dstLink = dst.add_links();
+        auto dstLink = dst.add_links();
         dstLink->set_traceid(link.GetTraceId().to_string());
         dstLink->set_spanid(link.GetSpanId().to_string());
         dstLink->set_tracestate(link.GetTraceState().to_string());
