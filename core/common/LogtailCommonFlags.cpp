@@ -125,7 +125,7 @@ DEFINE_FLAG_STRING(default_container_host_path, "", "/logtail_host");
 #endif
 
 // dir
-DEFINE_FLAG_STRING(loongcollector_conf_dir, "loongcollector config dir", "");
-DEFINE_FLAG_STRING(loongcollector_log_dir, "loongcollector log dir", "");
-DEFINE_FLAG_STRING(loongcollector_data_dir, "loongcollector data dir", "");
-DEFINE_FLAG_STRING(loongcollector_run_dir, "loongcollector run dir", "");
+DEFINE_FLAG_STRING(loongcollector_conf_dir, "loongcollector config dir", "conf");
+DEFINE_FLAG_STRING(loongcollector_log_dir, "loongcollector log dir", "log");
+DEFINE_FLAG_STRING(loongcollector_data_dir, "loongcollector data dir", "data");
+DEFINE_FLAG_STRING(loongcollector_run_dir, "loongcollector run dir", "run");

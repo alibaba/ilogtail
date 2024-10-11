@@ -32,7 +32,7 @@ void CreateAgentDir();
 std::string GetAgentLogDir();
 std::string GetAgentDataDir();
 std::string GetAgentConfDir();
-std::string GetAgentRuntimeDir();
+std::string GetAgentRunDir();
 
 std::string GetAgentConfigFile();
 std::string GetAgentAppInfoFile();
@@ -46,10 +46,10 @@ std::string GetAgentLogName();
 std::string GetAgentSnapshotDir();
 std::string GetAgentProfileLogName();
 std::string GetAgentStatusLogName();
-std::string GetDumpFileName();
+std::string GetProfileSnapshotDumpFileName();
 std::string GetObserverEbpfHostPath();
-std::string GetBufferFileNamePrefix();
-std::string GetLegacyConfigFilePath();
+std::string GetSendBufferFileNamePrefix();
+std::string GetLegacyUserLocalConfigFilePath();
 std::string GetAgentConfigName();
 std::string GetExactlyOnceCheckpoint(); 
 

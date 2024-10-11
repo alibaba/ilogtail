@@ -25,15 +25,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
+	"github.com/alibaba/ilogtail/pkg/util"
 
-	"github.com/alibaba/ilogtail/pkg/config"
+	"github.com/stretchr/testify/require"
 )
 
 func TestServiceHTTP_doDumpFile(t *testing.T) {
-	_, err := os.Stat(path.Join(config.LoongcollectorGlobalConfig.LoongcollectorConfDir, "dump"))
+	_, err := os.Stat(path.Join(util.GetCurrentBinaryPath(), "exec_dir", "dump"))
 	if err == nil {
-		files, findErr := GetFileListByPrefix(path.Join(config.LoongcollectorGlobalConfig.LoongcollectorConfDir, "dump"), "custom", true, 0)
+		files, findErr := GetFileListByPrefix(path.Join(util.GetCurrentBinaryPath(), "exec_dir", "dump"), "custom", true, 0)
 		require.NoError(t, findErr)
 		for _, file := range files {
 			_ = os.Remove(file)

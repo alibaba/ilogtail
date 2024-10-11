@@ -50,8 +50,8 @@ LogFileProfiler::LogFileProfiler() {
     srand(time(NULL));
     mSendInterval = INT32_FLAG(profile_data_send_interval);
     mLastSendTime = time(NULL) - (rand() % (mSendInterval / 10)) * 10;
-    mDumpFileName = GetDumpFileName();
-    mBakDumpFileName = GetDumpFileName() + "_bak";
+    mDumpFileName = GetProfileSnapshotDumpFileName();
+    mBakDumpFileName = GetProfileSnapshotDumpFileName() + "_bak";
 
     mHostname = GetHostName();
 #if defined(_MSC_VER)

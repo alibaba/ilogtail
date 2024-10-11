@@ -31,6 +31,8 @@ type GlobalConfig struct {
 	LoongcollectorConfDir string
 	// Directory to store loongcollector log.
 	LoongcollectorLogDir string
+	// Directory to store loongcollector data.
+	LoongcollectorDataDir string
 	// Network identification from loongcollector.
 	HostIP       string
 	Hostname     string
@@ -59,6 +61,7 @@ func newGlobalConfig() (cfg GlobalConfig) {
 		DefaultLogGroupQueueSize: 4,
 		LoongcollectorConfDir:    "./conf/",
 		LoongcollectorLogDir:     "./log/",
+		LoongcollectorDataDir:    "./data/",
 		DelayStopSec:             300,
 	}
 	return

@@ -15,8 +15,8 @@
 package telegraf
 
 import (
-	global_config "github.com/alibaba/ilogtail/pkg/config"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
+	"github.com/alibaba/ilogtail/pkg/util"
 
 	"path"
 )
@@ -37,7 +37,7 @@ func (s *ServiceTelegraf) Init(ctx pipeline.Context) (int, error) {
 		Name:   ctx.GetConfigName(),
 		Detail: s.Detail,
 	}
-	s.tm = GetTelegrafManager(path.Join(global_config.LoongcollectorGlobalConfig.LoongcollectorConfDir, "telegraf"))
+	s.tm = GetTelegrafManager(path.Join(util.GetCurrentBinaryPath(), "exec_dir", "telegraf"))
 	return 0, nil
 }
 

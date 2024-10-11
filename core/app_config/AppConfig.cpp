@@ -101,8 +101,6 @@ DEFINE_FLAG_INT32(data_server_port, "", 80);
 // DEFINE_FLAG_STRING(alipay_zone, "", "ALIPAY_ZONE");
 // DEFINE_FLAG_STRING(alipay_zone_env_name, "", "");
 
-DECLARE_FLAG_STRING(ilogtail_config_env_name);
-
 DECLARE_FLAG_INT32(polling_max_stat_count);
 DECLARE_FLAG_INT32(polling_max_stat_count_per_dir);
 DECLARE_FLAG_INT32(polling_max_stat_count_per_config);
@@ -166,6 +164,7 @@ DEFINE_FLAG_STRING(local_event_data_file_name, "local event data file name", "lo
 DEFINE_FLAG_STRING(inotify_watcher_dirs_dump_filename, "", "inotify_watcher_dirs");
 DEFINE_FLAG_STRING(logtail_snapshot_dir, "snapshot dir on local disk", "snapshot");
 DEFINE_FLAG_STRING(logtail_profile_snapshot, "reader profile on local disk", "logtail_profile_snapshot");
+DEFINE_FLAG_STRING(ilogtail_config_env_name, "config file path", "ALIYUN_LOGTAIL_CONFIG");
 
 #if defined(__linux__)
 DEFINE_FLAG_STRING(adhoc_check_point_file_dir, "", "/tmp/logtail_adhoc_checkpoint");
@@ -187,10 +186,10 @@ void CreateAgentDir () {
 #endif
     std::string processExecutionDir = GetProcessExecutionDir();
     Json::Value emptyJson;
-#define PROCESSDIRFLAG(flag_name, env_name, dir_name) \
+#define PROCESSDIRFLAG(flag_name, env_name) \
     LoadStringParameter(STRING_FLAG(flag_name), emptyJson, #flag_name, env_name); \
     if (STRING_FLAG(flag_name).empty()) { \
-        STRING_FLAG(flag_name) = processExecutionDir + (dir_name) + PATH_SEPARATOR; \
+        STRING_FLAG(flag_name) = processExecutionDir + PATH_SEPARATOR; \
     } else { \
         STRING_FLAG(flag_name) = AbsolutePath(STRING_FLAG(flag_name), processExecutionDir); \
     } \
@@ -203,10 +202,10 @@ void CreateAgentDir () {
         } \
     }
 
-    PROCESSDIRFLAG(loongcollector_conf_dir, "ALIYUN_LOONGCOLLECTOR_CONF_DIR", "conf");
-    PROCESSDIRFLAG(loongcollector_log_dir, "ALIYUN_LOONGCOLLECTOR_LOG_DIR", "log");
-    PROCESSDIRFLAG(loongcollector_data_dir, "ALIYUN_LOONGCOLLECTOR_DATA_DIR", "data");
-    PROCESSDIRFLAG(loongcollector_run_dir, "ALIYUN_LOONGCOLLECTOR_RUN_DIR", "run");
+    PROCESSDIRFLAG(loongcollector_conf_dir, "ALIYUN_LOONGCOLLECTOR_CONF_DIR");
+    PROCESSDIRFLAG(loongcollector_log_dir, "ALIYUN_LOONGCOLLECTOR_LOG_DIR");
+    PROCESSDIRFLAG(loongcollector_data_dir, "ALIYUN_LOONGCOLLECTOR_DATA_DIR");
+    PROCESSDIRFLAG(loongcollector_run_dir, "ALIYUN_LOONGCOLLECTOR_RUN_DIR");
 }
 
 std::string GetAgentLogDir() {
@@ -248,7 +247,7 @@ std::string GetAgentConfDir() {
     return dir;
 }
 
-std::string GetAgentRuntimeDir() {
+std::string GetAgentRunDir() {
     static std::string dir;
     if (!dir.empty()) {
         return dir;
@@ -310,9 +309,9 @@ std::string GetAgentAppInfoFile() {
         return file;
     }
 #if defined(__RUN_LOGTAIL__)
-    file = GetAgentRuntimeDir() + STRING_FLAG(app_info_file);
+    file = GetAgentRunDir() + STRING_FLAG(app_info_file);
 #else
-    file = GetAgentRuntimeDir() + "app_info.json";
+    file = GetAgentRunDir() + "app_info.json";
 #endif
     return file;
 }
@@ -353,7 +352,7 @@ string GetInotifyWatcherDirsDumpFileName() {
 #if defined(__RUN_LOGTAIL__)
     return GetProcessExecutionDir() + STRING_FLAG(inotify_watcher_dirs_dump_filename);
 #else
-    return GetAgentRuntimeDir() + "inotify_watcher_dirs";
+    return GetAgentRunDir() + "inotify_watcher_dirs";
 #endif
 }
 
@@ -397,7 +396,7 @@ string GetAgentStatusLogName() {
 #endif
 }
 
-string GetDumpFileName() {
+string GetProfileSnapshotDumpFileName() {
 #if defined(__RUN_LOGTAIL__)
     return GetProcessExecutionDir() + STRING_FLAG(logtail_profile_snapshot);
 #else
@@ -410,11 +409,11 @@ string GetObserverEbpfHostPath() {
 #if defined(__RUN_LOGTAIL__)
         return STRING_FLAG(sls_observer_ebpf_host_path);
 #else
-        return AppConfig::GetInstance()->GetLoongcollectorConfDir();
+        return GetAgentDataDir();
 #endif
 }
 
-string GetBufferFileNamePrefix(){
+string GetSendBufferFileNamePrefix(){
 #if defined(__RUN_LOGTAIL__)
         return "logtail_buffer_file_";
 #else
@@ -422,7 +421,7 @@ string GetBufferFileNamePrefix(){
 #endif
 }
 
-string GetLegacyConfigFilePath() {
+string GetLegacyUserLocalConfigFilePath() {
 #if defined(__RUN_LOGTAIL__)
     return AppConfig::GetInstance()->GetProcessExecutionDir();
 #else

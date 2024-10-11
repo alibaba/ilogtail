@@ -63,6 +63,7 @@ LogtailPlugin::LogtailPlugin() {
 
     mPluginCfg["LoongcollectorConfDir"] = AppConfig::GetInstance()->GetLoongcollectorConfDir();
     mPluginCfg["LoongcollectorLogDir"] = GetAgentLogDir();
+    mPluginCfg["LoongcollectorDataDir"] = GetAgentDataDir();
     mPluginCfg["HostIP"] = LogFileProfiler::mIpAddr;
     mPluginCfg["Hostname"] = LogFileProfiler::mHostname;
     mPluginCfg["EnableContainerdUpperDirDetect"] = BOOL_FLAG(enable_containerd_upper_dir_detect);

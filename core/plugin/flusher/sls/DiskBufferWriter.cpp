@@ -261,9 +261,9 @@ bool DiskBufferWriter::LoadFileToSend(time_t timeLine, std::vector<std::string>&
     fsutil::Entry ent;
     while ((ent = dir.ReadNext())) {
         string filename = ent.Name();
-        if (filename.find(GetBufferFileNamePrefix()) == 0) {
+        if (filename.find(GetSendBufferFileNamePrefix()) == 0) {
             try {
-                int32_t filetime = StringTo<int32_t>(filename.substr(GetBufferFileNamePrefix().size()));
+                int32_t filetime = StringTo<int32_t>(filename.substr(GetSendBufferFileNamePrefix().size()));
                 if (filetime < timeLine)
                     filesToSend.push_back(filename);
             } catch (...) {
@@ -542,7 +542,7 @@ bool DiskBufferWriter::CreateNewFile() {
         }
     }
     mBufferDivideTime = currentTime;
-    SetBufferFileName(GetBufferFilePath() + GetBufferFileNamePrefix() + ToString(currentTime));
+    SetBufferFileName(GetBufferFilePath() + GetSendBufferFileNamePrefix() + ToString(currentTime));
     return true;
 }
 

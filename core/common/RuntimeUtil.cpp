@@ -76,7 +76,17 @@ std::string GetBinaryName(void) {
 bool RebuildExecutionDir(const std::string& ilogtailConfigJson,
                          std::string& errorMessage,
                          const std::string& executionDir) {
-    std::string path = executionDir.empty() ? GetProcessExecutionDir() : executionDir;
+    std::string path = GetAgentDataDir();
+    if (CheckExistance(path))
+        return true;
+    if (!Mkdirs(path)) {
+        std::stringstream ss;
+        ss << "create data dir failed, errno is " << errno;
+        errorMessage = ss.str();
+        return false;
+    }
+    #if defined(__RUN_LOGTAIL__) 
+    path = executionDir.empty() ? GetProcessExecutionDir() : executionDir;
     if (CheckExistance(path))
         return true;
     if (!Mkdir(path)) {
@@ -89,16 +99,17 @@ bool RebuildExecutionDir(const std::string& ilogtailConfigJson,
     if (ilogtailConfigJson.empty())
         return true;
 
-    FILE* pFile = fopen((path + GetAgentConfigName()).c_str(), "w");
+    FILE* pFile = fopen((path + STRING_FLAG(ilogtail_config)).c_str(), "w");
     if (pFile == NULL) {
         std::stringstream ss;
-        ss << "open " << GetAgentConfigName() << " to write failed, errno is " << errno;
+        ss << "open " << STRING_FLAG(ilogtail_config) << " to write failed, errno is " << errno;
         errorMessage = ss.str();
         return false;
     }
 
     fwrite(ilogtailConfigJson.c_str(), 1, ilogtailConfigJson.size(), pFile);
     fclose(pFile);
+    #endif
     return true;
 }
 

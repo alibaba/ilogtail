@@ -30,7 +30,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 )
 
-var CheckPointFile = flag.String("CheckPointFile", "checkpoint", "checkpoint file name, base dir(binary dir)")
+var CheckPointFile = flag.String("CheckPointFile", "go_plugin_checkpoint", "checkpoint file name, base dir(binary dir)")
 var CheckPointCleanInterval = flag.Int("CheckPointCleanInterval", 600, "checkpoint clean interval, second")
 var MaxCleanItemPerInterval = flag.Int("MaxCleanItemPerInterval", 1000, "max clean items per interval")
 
@@ -79,14 +79,14 @@ func (p *checkPointManager) Init() error {
 		return nil
 	}
 	p.shutdown = make(chan struct{}, 1)
-	logtailConfigDir := config.LoongcollectorGlobalConfig.LoongcollectorConfDir
-	pathExist, err := util.PathExists(logtailConfigDir)
+	logtailDataDir := config.LoongcollectorGlobalConfig.LoongcollectorDataDir
+	pathExist, err := util.PathExists(logtailDataDir)
 	var dbPath string
 	if err == nil && pathExist {
-		dbPath = filepath.Join(logtailConfigDir, *CheckPointFile)
+		dbPath = filepath.Join(logtailDataDir, *CheckPointFile)
 	} else {
 		// c++程序如果这个目录创建失败会直接exit，所以这里一般应该不会走进来
-		logger.Error(context.Background(), "CHECKPOINT_ALARM", "logtailConfigDir not exist", logtailConfigDir, "err", err)
+		logger.Error(context.Background(), "CHECKPOINT_ALARM", "logtailDataDir not exist", logtailDataDir, "err", err)
 		return err
 	}
 
