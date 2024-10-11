@@ -68,6 +68,6 @@ const string METRIC_COMPONENT_QUEUE_GET_ITEMS_TOTAL = "componet_queue_get_items_
 const string METRIC_COMPONENT_QUEUE_REJECTED_TOTAL_PREFIX = "component_queue_rejected_by_";
 const string METRIC_COMPONENT_QUEUE_REJECTED_TOTAL_SUFFIX = "_limiter_total";
 
-const string METRIC_COMPONENT_QUEUE_LIMIT_BY_RATE_LIMITER_TOTAL = "component_queue_limit_by_rate_limiter_total";
+const string METRIC_COMPONENT_QUEUE_REJECTED_BY_RATE_LIMITER_TOTAL = "component_queue_rejected_by_rate_limiter_total";
 
 } // namespace logtail

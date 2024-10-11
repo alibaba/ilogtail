@@ -192,7 +192,7 @@ extern const std::string METRIC_COMPONENT_QUEUE_GET_ITEMS_TIMES_TOTAL;
 extern const std::string METRIC_COMPONENT_QUEUE_GET_ITEMS_TOTAL;
 extern const std::string METRIC_COMPONENT_QUEUE_REJECTED_TOTAL_PREFIX;
 extern const std::string METRIC_COMPONENT_QUEUE_REJECTED_TOTAL_SUFFIX;
-extern const std::string METRIC_COMPONENT_QUEUE_LIMIT_BY_RATE_LIMITER_TOTAL;
+extern const std::string METRIC_COMPONENT_QUEUE_REJECTED_BY_RATE_LIMITER_TOTAL;
 
 
 //////////////////////////////////////////////////////////////////////////
