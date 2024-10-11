@@ -62,8 +62,8 @@ const string METRIC_COMPONENT_QUEUE_EXTRA_BUFFER_SIZE = "component_extra_buffer_
 const string METRIC_COMPONENT_QUEUE_EXTRA_BUFFER_SIZE_BYTES = "component_extra_buffer_size_bytes";
 const string METRIC_COMPONENT_QUEUE_DISCARDED_EVENTS_TOTAL = "component_discarded_events_total";
 
-const string METRIC_COMPONENT_QUEUE_GET_ITEMS_TIMES_TOTAL = "component_queue_get_items_times_total";
-const string METRIC_COMPONENT_QUEUE_GET_ITEMS_TOTAL = "componet_queue_get_items_total";
+const string METRIC_COMPONENT_QUEUE_FETCH_ITEMS_TIMES_TOTAL = "component_queue_fetch_items_times_total";
+const string METRIC_COMPONENT_QUEUE_FETCH_ITEMS_TOTAL = "componet_queue_fetch_items_total";
 
 const string METRIC_COMPONENT_QUEUE_REJECTED_TOTAL_PREFIX = "component_queue_rejected_by_";
 const string METRIC_COMPONENT_QUEUE_REJECTED_TOTAL_SUFFIX = "_limiter_total";

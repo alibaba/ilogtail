@@ -24,8 +24,8 @@ SenderQueue::SenderQueue(
     size_t cap, size_t low, size_t high, QueueKey key, const string& flusherId, const PipelineContext& ctx)
     : QueueInterface(key, cap, ctx), BoundedSenderQueueInterface(cap, low, high, key, flusherId, ctx) {
     mQueue.resize(cap);
-    mFetchTimesCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_QUEUE_GET_ITEMS_TIMES_TOTAL);
-    mFetchItemsCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_QUEUE_GET_ITEMS_TOTAL);    
+    mFetchTimesCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_QUEUE_FETCH_ITEMS_TIMES_TOTAL);
+    mFetchItemsCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_QUEUE_FETCH_ITEMS_TOTAL);    
     WriteMetrics::GetInstance()->CommitMetricsRecordRef(mMetricsRecordRef);    
 }
 
