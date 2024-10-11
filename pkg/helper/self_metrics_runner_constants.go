@@ -15,19 +15,19 @@
 package helper
 
 //////////////////////////////////////////////////////////////////////////
-// component
+// runner
 //////////////////////////////////////////////////////////////////////////
 
 /**********************************************************
 *   k8s meta
 **********************************************************/
 const (
-	MetricComponentK8sMetaAddEventTotal    = "component_k8s_meta_add_event_total"
-	MetricComponentK8sMetaUpdateEventTotal = "component_k8s_meta_update_event_total"
-	MetricComponentK8sMetaDeleteEventTotal = "component_k8s_meta_delete_event_total"
-	MetricComponentK8sMetaCacheSize        = "component_k8s_meta_cache_size"
-	MetricComponentK8sMetaQueueSize        = "component_k8s_meta_queue_size"
-	MetricComponentK8sMetaHTTPRequestTotal = "component_k8s_meta_http_request_total"
-	MetricComponentK8sMetaHTTPAvgDelayMs   = "component_k8s_meta_avg_delay_ms"
-	MetricComponentK8sMetaHTTPMaxDelayMs   = "component_k8s_meta_max_delay_ms"
+	MetricRunnerK8sMetaAddEventTotal    = "runner_k8s_meta_add_event_total"
+	MetricRunnerK8sMetaUpdateEventTotal = "runner_k8s_meta_update_event_total"
+	MetricRunnerK8sMetaDeleteEventTotal = "runner_k8s_meta_delete_event_total"
+	MetricRunnerK8sMetaCacheSize        = "runner_k8s_meta_cache_size"
+	MetricRunnerK8sMetaQueueSize        = "runner_k8s_meta_queue_size"
+	MetricRunnerK8sMetaHTTPRequestTotal = "runner_k8s_meta_http_request_total"
+	MetricRunnerK8sMetaHTTPAvgDelayMs   = "runner_k8s_meta_avg_delay_ms"
+	MetricRunnerK8sMetaHTTPMaxDelayMs   = "runner_k8s_meta_max_delay_ms"
 )

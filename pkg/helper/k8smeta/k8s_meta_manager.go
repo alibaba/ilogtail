@@ -100,14 +100,14 @@ func (m *MetaManager) Init(configPath string) (err error) {
 	m.clientset = clientset
 
 	m.metricRecord = pipeline.MetricsRecord{}
-	m.addEventCount = helper.NewCounterMetricAndRegister(&m.metricRecord, helper.MetricComponentK8sMetaAddEventTotal)
-	m.updateEventCount = helper.NewCounterMetricAndRegister(&m.metricRecord, helper.MetricComponentK8sMetaUpdateEventTotal)
-	m.deleteEventCount = helper.NewCounterMetricAndRegister(&m.metricRecord, helper.MetricComponentK8sMetaDeleteEventTotal)
-	m.cacheResourceGauge = helper.NewGaugeMetricAndRegister(&m.metricRecord, helper.MetricComponentK8sMetaCacheSize)
-	m.queueSizeGauge = helper.NewGaugeMetricAndRegister(&m.metricRecord, helper.MetricComponentK8sMetaQueueSize)
-	m.httpRequestCount = helper.NewCounterMetricAndRegister(&m.metricRecord, helper.MetricComponentK8sMetaHTTPRequestTotal)
-	m.httpAvgDelayMs = helper.NewAverageMetricAndRegister(&m.metricRecord, helper.MetricComponentK8sMetaHTTPAvgDelayMs)
-	m.httpMaxDelayMs = helper.NewMaxMetricAndRegister(&m.metricRecord, helper.MetricComponentK8sMetaHTTPMaxDelayMs)
+	m.addEventCount = helper.NewCounterMetricAndRegister(&m.metricRecord, helper.MetricRunnerK8sMetaAddEventTotal)
+	m.updateEventCount = helper.NewCounterMetricAndRegister(&m.metricRecord, helper.MetricRunnerK8sMetaUpdateEventTotal)
+	m.deleteEventCount = helper.NewCounterMetricAndRegister(&m.metricRecord, helper.MetricRunnerK8sMetaDeleteEventTotal)
+	m.cacheResourceGauge = helper.NewGaugeMetricAndRegister(&m.metricRecord, helper.MetricRunnerK8sMetaCacheSize)
+	m.queueSizeGauge = helper.NewGaugeMetricAndRegister(&m.metricRecord, helper.MetricRunnerK8sMetaQueueSize)
+	m.httpRequestCount = helper.NewCounterMetricAndRegister(&m.metricRecord, helper.MetricRunnerK8sMetaHTTPRequestTotal)
+	m.httpAvgDelayMs = helper.NewAverageMetricAndRegister(&m.metricRecord, helper.MetricRunnerK8sMetaHTTPAvgDelayMs)
+	m.httpMaxDelayMs = helper.NewMaxMetricAndRegister(&m.metricRecord, helper.MetricRunnerK8sMetaHTTPMaxDelayMs)
 
 	go func() {
 		startTime := time.Now()
