@@ -218,6 +218,7 @@ func GetMetaManagerMetrics() []map[string]string {
 	// set labels
 	manager.registerLock.RLock()
 	projectName := make([]string, 0)
+	projectName = append(projectName, *flags.DefaultLogProject)
 	for name := range manager.projectNames {
 		projectName = append(projectName, name)
 	}
