@@ -63,10 +63,11 @@ private:
 
     mutable std::mutex mLimiterMux;
     uint32_t mCurrenctConcurrency = 0;
-    uint32_t mRetryIntervalSecs = 0;
 
     uint32_t mMaxRetryIntervalSecs = 0;
     uint32_t mMinRetryIntervalSecs = 0;
+
+    uint32_t mRetryIntervalSecs = 0;
 
     double mRetryIntervalUpRatio = 0.0;
     double mConcurrencyDownRatio = 0.0;
