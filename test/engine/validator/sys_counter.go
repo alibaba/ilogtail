@@ -68,34 +68,6 @@ func (c *counterSystemValidator) FetchResult() (res []*Report) {
 		logger.Debugf(context.Background(), "want log number over %d, bug got %d", c.ExpectReceivedMinimumLogNum, c.logsCounter)
 		res = append(res, &Report{Validator: counterSysValidatorName, Name: "log_minimum_number", Want: strconv.Itoa(c.ExpectReceivedMinimumLogNum), Got: strconv.Itoa(c.logsCounter)})
 	}
-	if c.ExpectMinimumRawLogNum > RawLogCounter {
-		logger.Debugf(context.Background(), "want raw log number over %d, bug got %d", c.ExpectMinimumRawLogNum, RawLogCounter)
-		res = append(res, &Report{Validator: counterSysValidatorName, Name: "raw_log_minimum_number", Want: strconv.Itoa(c.ExpectMinimumRawLogNum), Got: strconv.Itoa(RawLogCounter)})
-	}
-	if c.ExpectMinimumProcessedLogNum > ProcessedLogCounter {
-		logger.Debugf(context.Background(), "want processed log number over %d, bug got %d", c.ExpectMinimumProcessedLogNum, ProcessedLogCounter)
-		res = append(res, &Report{Validator: counterSysValidatorName, Name: "processed_log_minimum_number", Want: strconv.Itoa(c.ExpectMinimumProcessedLogNum), Got: strconv.Itoa(ProcessedLogCounter)})
-	}
-	if c.ExpectMinimumFlushLogNum > FlushLogCounter {
-		logger.Debugf(context.Background(), "want flushed log number over %d, bug got %d", c.ExpectMinimumFlushLogNum, FlushLogCounter)
-		res = append(res, &Report{Validator: counterSysValidatorName, Name: "flushed_log_minimum_number", Want: strconv.Itoa(c.ExpectMinimumFlushLogNum), Got: strconv.Itoa(FlushLogCounter)})
-	}
-	if c.ExpectMinimumFlushLogGroupNum > FlushLogGroupCounter {
-		logger.Debugf(context.Background(), "want flushed log group  number over %d, bug got %d", c.ExpectMinimumFlushLogGroupNum, FlushLogGroupCounter)
-		res = append(res, &Report{Validator: counterSysValidatorName, Name: "flushed_log_group_minimum_number", Want: strconv.Itoa(c.ExpectMinimumFlushLogGroupNum), Got: strconv.Itoa(FlushLogGroupCounter)})
-	}
-	if c.ExpectEqualRawLog && c.logsCounter != RawLogCounter {
-		logger.Debugf(context.Background(), "want got raw log number %d, bug got %d", RawLogCounter, c.logsCounter)
-		res = append(res, &Report{Validator: counterSysValidatorName, Name: "equal_raw_log", Want: strconv.Itoa(RawLogCounter), Got: strconv.Itoa(c.logsCounter)})
-	}
-	if c.ExpectEqualProcessedLog && c.logsCounter != ProcessedLogCounter {
-		logger.Debugf(context.Background(), "want got processed log number %d, bug got %d", ProcessedLogCounter, c.logsCounter)
-		res = append(res, &Report{Validator: counterSysValidatorName, Name: "equal_processed_log", Want: strconv.Itoa(ProcessedLogCounter), Got: strconv.Itoa(c.logsCounter)})
-	}
-	if c.ExpectEqualFlushLog && c.logsCounter != FlushLogCounter {
-		logger.Debugf(context.Background(), "want got flush log number %d, bug got %d", FlushLogCounter, c.logsCounter)
-		res = append(res, &Report{Validator: counterSysValidatorName, Name: "equal_flush_log", Want: strconv.Itoa(FlushLogCounter), Got: strconv.Itoa(c.logsCounter)})
-	}
 	return
 }
 

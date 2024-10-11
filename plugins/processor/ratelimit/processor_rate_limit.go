@@ -33,7 +33,7 @@ type ProcessorRateLimit struct {
 	context         pipeline.Context
 }
 
-const pluginName = "processor_rate_limit"
+const pluginType = "processor_rate_limit"
 
 func (p *ProcessorRateLimit) Init(context pipeline.Context) error {
 	p.context = context
@@ -44,10 +44,9 @@ func (p *ProcessorRateLimit) Init(context pipeline.Context) error {
 		return err
 	}
 	p.Algorithm = newTokenBucket(limit)
-	p.limitMetric = helper.NewCounterMetric(fmt.Sprintf("%v_limited", pluginName))
-	p.context.RegisterCounterMetric(p.limitMetric)
-	p.processedMetric = helper.NewCounterMetric(fmt.Sprintf("%v_processed", pluginName))
-	p.context.RegisterCounterMetric(p.processedMetric)
+	metricsRecord := p.context.GetMetricRecord()
+	p.limitMetric = helper.NewCounterMetricAndRegister(metricsRecord, fmt.Sprintf("%v_limited", pluginType))
+	p.processedMetric = helper.NewCounterMetricAndRegister(metricsRecord, fmt.Sprintf("%v_processed", pluginType))
 	return nil
 }
 
@@ -100,7 +99,7 @@ func (p *ProcessorRateLimit) makeKey(log *protocol.Log) string {
 }
 
 func init() {
-	pipeline.Processors[pluginName] = func() pipeline.Processor {
+	pipeline.Processors[pluginType] = func() pipeline.Processor {
 		return &ProcessorRateLimit{}
 	}
 }

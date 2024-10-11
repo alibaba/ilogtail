@@ -76,7 +76,7 @@ protected:
 
 public:
     void TestHandleContainerStoppedEventWhenReadToEnd() {
-        LOG_INFO(sLogger, ("TestFindAllSubDirAndHandler() begin", time(NULL)));
+        LOG_INFO(sLogger, ("TestHandleContainerStoppedEventWhenReadToEnd() begin", time(NULL)));
         LogBuffer logbuf;
         APSARA_TEST_TRUE_FATAL(!mReaderPtr->ReadLog(logbuf)); // false means no more data
         APSARA_TEST_TRUE_FATAL(mReaderPtr->mLogFileOp.IsOpen());
@@ -88,7 +88,7 @@ public:
     }
 
     void TestHandleContainerStoppedEventWhenNotReadToEnd() {
-        LOG_INFO(sLogger, ("TestFindAllSubDirAndHandler() begin", time(NULL)));
+        LOG_INFO(sLogger, ("TestHandleContainerStoppedEventWhenNotReadToEnd() begin", time(NULL)));
         APSARA_TEST_TRUE_FATAL(mReaderPtr->mLogFileOp.IsOpen());
 
         // send event to close reader
@@ -99,7 +99,7 @@ public:
     }
 
     void TestHandleModifyEventWhenContainerStopped() {
-        LOG_INFO(sLogger, ("TestFindAllSubDirAndHandler() begin", time(NULL)));
+        LOG_INFO(sLogger, ("TestHandleModifyEventWhenContainerStopped() begin", time(NULL)));
         APSARA_TEST_TRUE_FATAL(mReaderPtr->mLogFileOp.IsOpen());
 
         // SetContainerStopped to reader

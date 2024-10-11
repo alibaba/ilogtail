@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/alibaba/ilogtail/pkg/config"
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
 )
@@ -373,4 +374,21 @@ func ReplaceInvalidChars(in *string) {
 			*in = (*in)[:charIndex] + "_" + (*in)[charIndex+1:]
 		}
 	}
+}
+
+func GetMetricName(log *protocol.Log) string {
+	for _, cnt := range log.Contents {
+		if cnt.GetKey() == pipeline.SelfMetricNameKey {
+			return cnt.GetValue()
+		}
+	}
+	return ""
+}
+
+func LogContentsToMap(contents []*protocol.Log_Content) map[string]string {
+	result := make(map[string]string)
+	for _, content := range contents {
+		result[content.GetKey()] = content.GetValue()
+	}
+	return result
 }

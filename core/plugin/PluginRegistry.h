@@ -44,9 +44,9 @@ public:
 
     void LoadPlugins();
     void UnloadPlugins();
-    std::unique_ptr<InputInstance> CreateInput(const std::string& name, const std::string& pluginId);
-    std::unique_ptr<ProcessorInstance> CreateProcessor(const std::string& name, const std::string& pluginId);
-    std::unique_ptr<FlusherInstance> CreateFlusher(const std::string& name, const std::string& pluginId);
+    std::unique_ptr<InputInstance> CreateInput(const std::string& name, const PluginInstance::PluginMeta& pluginMeta);
+    std::unique_ptr<ProcessorInstance> CreateProcessor(const std::string& name, const PluginInstance::PluginMeta& pluginMeta);
+    std::unique_ptr<FlusherInstance> CreateFlusher(const std::string& name, const PluginInstance::PluginMeta& pluginMeta);
     bool IsValidGoPlugin(const std::string& name) const;
     bool IsValidNativeInputPlugin(const std::string& name) const;
     bool IsValidNativeProcessorPlugin(const std::string& name) const;
@@ -76,9 +76,9 @@ private:
     void RegisterInputCreator(PluginCreator* creator);
     void RegisterProcessorCreator(PluginCreator* creator);
     void RegisterFlusherCreator(PluginCreator* creator);
-    PluginCreator* LoadProcessorPlugin(DynamicLibLoader& loader, const std::string pluginName);
+    PluginCreator* LoadProcessorPlugin(DynamicLibLoader& loader, const std::string pluginType);
     void RegisterCreator(PluginCat cat, PluginCreator* creator);
-    std::unique_ptr<PluginInstance> Create(PluginCat cat, const std::string& name, const std::string& pluginId);
+    std::unique_ptr<PluginInstance> Create(PluginCat cat, const std::string& name, const PluginInstance::PluginMeta& pluginMeta);
 
     std::unordered_map<PluginKey, std::shared_ptr<PluginCreator>, PluginKeyHash> mPluginDict;
     std::unordered_set<std::string> mGoPlugins;

@@ -24,13 +24,13 @@
 #include "flusher/FlusherSLS.h"
 #include "go_pipeline/LogtailPlugin.h"
 #include "plugin/PluginRegistry.h"
-#include "processor/inner/ProcessorMergeMultilineLogNative.h"
 #include "processor/ProcessorParseApsaraNative.h"
+#include "processor/daemon/LogProcess.h"
+#include "processor/inner/ProcessorMergeMultilineLogNative.h"
 #include "processor/inner/ProcessorParseContainerLogNative.h"
 #include "processor/inner/ProcessorSplitLogStringNative.h"
 #include "processor/inner/ProcessorSplitMultilineLogStringNative.h"
 #include "processor/inner/ProcessorTagNative.h"
-#include "processor/daemon/LogProcess.h"
 
 // for special treatment
 #include "file_server/MultilineOptions.h"
@@ -38,6 +38,26 @@
 DECLARE_FLAG_INT32(default_plugin_log_queue_size);
 
 using namespace std;
+
+
+namespace {
+class AggregatorDefaultConfig {
+public:
+    static AggregatorDefaultConfig& Instance() {
+        static AggregatorDefaultConfig instance;
+        return instance;
+    }
+
+    Json::Value* GetJsonConfig() { return &aggregatorDefault; }
+
+private:
+    Json::Value aggregatorDefault;
+    AggregatorDefaultConfig() { aggregatorDefault["Type"] = "aggregator_default"; }
+
+    AggregatorDefaultConfig(AggregatorDefaultConfig const&) = delete;
+    void operator=(AggregatorDefaultConfig const&) = delete;
+};
+} // namespace
 
 namespace logtail {
 
@@ -50,20 +70,18 @@ void AddExtendedGlobalParamToGoPipeline(const Json::Value& extendedParams, Json:
     }
 }
 
-bool Pipeline::handleInputFileProcessor(const logtail::InputFile* inputFile,
-                                        int16_t& pluginIndex,
-                                        const Config& config) {
+bool Pipeline::handleInputFileProcessor(const logtail::InputFile* inputFile, const Config& config) {
     unique_ptr<ProcessorInstance> processor;
     Json::Value detail;
     if (config.mIsFirstProcessorJson || inputFile->mMultiline.mMode == MultilineOptions::Mode::JSON) {
         mContext.SetRequiringJsonReaderFlag(true);
         processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitLogStringNative::sName,
-                                                                   to_string(++pluginIndex));
+                                                                   GenNextPluginMeta(false));
         detail["SplitChar"] = Json::Value('\0');
         detail["AppendingLogPositionMeta"] = Json::Value(inputFile->mFileReader.mAppendingLogPositionMeta);
     } else if (inputFile->mMultiline.IsMultiline()) {
         processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitMultilineLogStringNative::sName,
-                                                                   to_string(++pluginIndex));
+                                                                   GenNextPluginMeta(false));
         detail["Mode"] = Json::Value("custom");
         detail["StartPattern"] = Json::Value(inputFile->mMultiline.mStartPattern);
         detail["ContinuePattern"] = Json::Value(inputFile->mMultiline.mContinuePattern);
@@ -78,7 +96,7 @@ bool Pipeline::handleInputFileProcessor(const logtail::InputFile* inputFile,
         }
     } else {
         processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitLogStringNative::sName,
-                                                                   to_string(++pluginIndex));
+                                                                   GenNextPluginMeta(false));
         detail["AppendingLogPositionMeta"] = Json::Value(inputFile->mFileReader.mAppendingLogPositionMeta);
     }
     if (!processor->Init(detail, mContext)) {
@@ -90,14 +108,13 @@ bool Pipeline::handleInputFileProcessor(const logtail::InputFile* inputFile,
 }
 
 bool Pipeline::handleInputContainerStdioProcessor(const logtail::InputContainerStdio* inputContainerStdio,
-                                                int16_t& pluginIndex,
-                                                const Config& config) {
+                                                  const Config& config) {
     unique_ptr<ProcessorInstance> processor;
     // ProcessorSplitLogStringNative
     {
         Json::Value detail;
         processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitLogStringNative::sName,
-                                                                   to_string(++pluginIndex));
+                                                                   GenNextPluginMeta(false));
         detail["SplitChar"] = Json::Value('\n');
         if (!processor->Init(detail, mContext)) {
             return false;
@@ -108,7 +125,7 @@ bool Pipeline::handleInputContainerStdioProcessor(const logtail::InputContainerS
     {
         Json::Value detail;
         processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorParseContainerLogNative::sName,
-                                                                   to_string(++pluginIndex));
+                                                                   GenNextPluginMeta(false));
         detail["IgnoringStdout"] = Json::Value(inputContainerStdio->mIgnoringStdout);
         detail["IgnoringStderr"] = Json::Value(inputContainerStdio->mIgnoringStderr);
         detail["KeepingSourceWhenParseFail"] = Json::Value(inputContainerStdio->mKeepingSourceWhenParseFail);
@@ -122,7 +139,7 @@ bool Pipeline::handleInputContainerStdioProcessor(const logtail::InputContainerS
     {
         Json::Value detail;
         processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorMergeMultilineLogNative::sName,
-                                                                   to_string(++pluginIndex));
+                                                                   GenNextPluginMeta(false));
         detail["MergeType"] = Json::Value("flag");
         if (!processor->Init(detail, mContext)) {
             return false;
@@ -134,11 +151,11 @@ bool Pipeline::handleInputContainerStdioProcessor(const logtail::InputContainerS
         if (config.mIsFirstProcessorJson || inputContainerStdio->mMultiline.mMode == MultilineOptions::Mode::JSON) {
             mContext.SetRequiringJsonReaderFlag(true);
             processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitLogStringNative::sName,
-                                                                       to_string(++pluginIndex));
+                                                                       GenNextPluginMeta(false));
             detail["SplitChar"] = Json::Value('\0');
         } else {
             processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorMergeMultilineLogNative::sName,
-                                                                       to_string(++pluginIndex));
+                                                                       GenNextPluginMeta(false));
             detail["Mode"] = Json::Value("custom");
             detail["MergeType"] = Json::Value("regex");
             detail["StartPattern"] = Json::Value(inputContainerStdio->mMultiline.mStartPattern);
@@ -171,22 +188,25 @@ bool Pipeline::Init(Config&& config) {
     // for special treatment below
     const InputFile* inputFile = nullptr;
     const InputContainerStdio* inputContainerStdio = nullptr;
-#ifdef __ENTERPRISE__
-    // to send alarm before flusherSLS is built, a temporary object is made, which will be overriden shortly after.
-    unique_ptr<FlusherSLS> SLSTmp = unique_ptr<FlusherSLS>(new FlusherSLS());
-    SLSTmp->mProject = config.mProject;
-    SLSTmp->mLogstore = config.mLogstore;
-    SLSTmp->mRegion = config.mRegion;
-    mContext.SetSLSInfo(SLSTmp.get());
-#endif
 
-    int16_t pluginIndex = 0;
-    for (auto detail : config.mInputs) {
-        string name = (*detail)["Type"].asString();
-        unique_ptr<InputInstance> input = PluginRegistry::GetInstance()->CreateInput(name, to_string(++pluginIndex));
+    // to send alarm and init MetricsRecord before flusherSLS is built, a temporary object is made, which will be overriden shortly after.
+    unique_ptr<FlusherSLS> SLSTmp = unique_ptr<FlusherSLS>(new FlusherSLS());
+    if (!config.mProject.empty()) {
+        SLSTmp->mProject = config.mProject;
+        SLSTmp->mLogstore = config.mLogstore;
+        SLSTmp->mRegion = config.mRegion;
+        mContext.SetSLSInfo(SLSTmp.get());
+    }
+
+    mPluginID.store(0);
+    for (size_t i = 0; i < config.mInputs.size(); ++i) {
+        const Json::Value& detail = *config.mInputs[i];
+        string pluginType = detail["Type"].asString();
+        unique_ptr<InputInstance> input
+            = PluginRegistry::GetInstance()->CreateInput(pluginType, GenNextPluginMeta(false));
         if (input) {
             Json::Value optionalGoPipeline;
-            if (!input->Init(*detail, mContext, optionalGoPipeline)) {
+            if (!input->Init(detail, mContext, optionalGoPipeline)) {
                 return false;
             }
             mInputs.emplace_back(std::move(input));
@@ -194,21 +214,21 @@ bool Pipeline::Init(Config&& config) {
                 MergeGoPipeline(optionalGoPipeline, mGoPipelineWithInput);
             }
             // for special treatment below
-            if (name == InputFile::sName) {
+            if (pluginType == InputFile::sName) {
                 inputFile = static_cast<const InputFile*>(mInputs[0]->GetPlugin());
-            } else if (name == InputContainerStdio::sName) {
+            } else if (pluginType == InputContainerStdio::sName) {
                 inputContainerStdio = static_cast<const InputContainerStdio*>(mInputs[0]->GetPlugin());
             }
         } else {
-            AddPluginToGoPipeline(*detail, "inputs", mGoPipelineWithInput);
+            AddPluginToGoPipeline(pluginType, detail, "inputs", mGoPipelineWithInput);
         }
-        ++mPluginCntMap["inputs"][name];
+        ++mPluginCntMap["inputs"][pluginType];
     }
 
     if (config.IsProcessRunnerInvolved()) {
         Json::Value detail;
         unique_ptr<ProcessorInstance> processor
-            = PluginRegistry::GetInstance()->CreateProcessor(ProcessorTagNative::sName, to_string(++pluginIndex));
+            = PluginRegistry::GetInstance()->CreateProcessor(ProcessorTagNative::sName, GenNextPluginMeta(false));
         if (!processor->Init(detail, mContext)) {
             // should not happen
             return false;
@@ -217,52 +237,62 @@ bool Pipeline::Init(Config&& config) {
     }
 
     // add log split processor for input_file
-    if (inputFile && !handleInputFileProcessor(inputFile, pluginIndex, config)) {
+    if (inputFile && !handleInputFileProcessor(inputFile, config)) {
         return false;
     }
-    if (inputContainerStdio && !handleInputContainerStdioProcessor(inputContainerStdio, pluginIndex, config)) {
+    if (inputContainerStdio && !handleInputContainerStdioProcessor(inputContainerStdio, config)) {
         return false;
     }
 
     for (size_t i = 0; i < config.mProcessors.size(); ++i) {
-        string name = (*config.mProcessors[i])["Type"].asString();
+        const Json::Value& detail = *config.mProcessors[i];
+        string pluginType = detail["Type"].asString();
         unique_ptr<ProcessorInstance> processor
-            = PluginRegistry::GetInstance()->CreateProcessor(name, to_string(++pluginIndex));
+            = PluginRegistry::GetInstance()->CreateProcessor(pluginType, GenNextPluginMeta(false));
         if (processor) {
-            if (!processor->Init(*config.mProcessors[i], mContext)) {
+            if (!processor->Init(detail, mContext)) {
                 return false;
             }
             mProcessorLine.emplace_back(std::move(processor));
             // for special treatment of topicformat in apsara mode
-            if (i == 0 && name == ProcessorParseApsaraNative::sName) {
+            if (i == 0 && pluginType == ProcessorParseApsaraNative::sName) {
                 mContext.SetIsFirstProcessorApsaraFlag(true);
             }
         } else {
             if (ShouldAddPluginToGoPipelineWithInput()) {
-                AddPluginToGoPipeline(*config.mProcessors[i], "processors", mGoPipelineWithInput);
+                AddPluginToGoPipeline(pluginType, detail, "processors", mGoPipelineWithInput);
             } else {
-                AddPluginToGoPipeline(*config.mProcessors[i], "processors", mGoPipelineWithoutInput);
+                AddPluginToGoPipeline(pluginType, detail, "processors", mGoPipelineWithoutInput);
             }
         }
-        ++mPluginCntMap["processors"][name];
+        ++mPluginCntMap["processors"][pluginType];
     }
 
-    for (auto detail : config.mAggregators) {
+    if (config.mAggregators.empty() && config.IsFlushingThroughGoPipelineExisted()) {
+        // an aggregator_default plugin will be add to go pipeline when mAggregators is empty and need to send go data
+        // to cpp flusher.
+        config.mAggregators.push_back(AggregatorDefaultConfig::Instance().GetJsonConfig());
+    }
+    for (size_t i = 0; i < config.mAggregators.size(); ++i) {
+        const Json::Value& detail = *config.mAggregators[i];
+        string pluginType = detail["Type"].asString();
+        GenNextPluginMeta(false);
         if (ShouldAddPluginToGoPipelineWithInput()) {
-            AddPluginToGoPipeline(*detail, "aggregators", mGoPipelineWithInput);
+            AddPluginToGoPipeline(pluginType, detail, "aggregators", mGoPipelineWithInput);
         } else {
-            AddPluginToGoPipeline(*detail, "aggregators", mGoPipelineWithoutInput);
+            AddPluginToGoPipeline(pluginType, detail, "aggregators", mGoPipelineWithoutInput);
         }
-        ++mPluginCntMap["aggregators"][(*detail)["Type"].asString()];
+        ++mPluginCntMap["aggregators"][pluginType];
     }
 
-    for (auto detail : config.mFlushers) {
-        string name = (*detail)["Type"].asString();
+    for (size_t i = 0; i < config.mFlushers.size(); ++i) {
+        const Json::Value& detail = *config.mFlushers[i];
+        string pluginType = detail["Type"].asString();
         unique_ptr<FlusherInstance> flusher
-            = PluginRegistry::GetInstance()->CreateFlusher(name, to_string(++pluginIndex));
+            = PluginRegistry::GetInstance()->CreateFlusher(pluginType, GenNextPluginMeta(false));
         if (flusher) {
             Json::Value optionalGoPipeline;
-            if (!flusher->Init(*detail, mContext, optionalGoPipeline)) {
+            if (!flusher->Init(detail, mContext, optionalGoPipeline)) {
                 return false;
             }
             mFlushers.emplace_back(std::move(flusher));
@@ -273,27 +303,30 @@ bool Pipeline::Init(Config&& config) {
                     MergeGoPipeline(optionalGoPipeline, mGoPipelineWithoutInput);
                 }
             }
-            if (name == FlusherSLS::sName) {
+            if (pluginType == FlusherSLS::sName) {
                 mContext.SetSLSInfo(static_cast<const FlusherSLS*>(mFlushers[0]->GetPlugin()));
             }
         } else {
             if (ShouldAddPluginToGoPipelineWithInput()) {
-                AddPluginToGoPipeline(*detail, "flushers", mGoPipelineWithInput);
+                AddPluginToGoPipeline(pluginType, detail, "flushers", mGoPipelineWithInput);
             } else {
-                AddPluginToGoPipeline(*detail, "flushers", mGoPipelineWithoutInput);
+                AddPluginToGoPipeline(pluginType, detail, "flushers", mGoPipelineWithoutInput);
             }
         }
-        ++mPluginCntMap["flushers"][name];
+        ++mPluginCntMap["flushers"][pluginType];
     }
 
-    for (auto detail : config.mExtensions) {
+    for (size_t i = 0; i < config.mExtensions.size(); ++i) {
+        const Json::Value& detail = *config.mExtensions[i];
+        string pluginType = detail["Type"].asString();
+        GenNextPluginMeta(false);
         if (!mGoPipelineWithInput.isNull()) {
-            AddPluginToGoPipeline(*detail, "extensions", mGoPipelineWithInput);
+            AddPluginToGoPipeline(pluginType, detail, "extensions", mGoPipelineWithInput);
         }
         if (!mGoPipelineWithoutInput.isNull()) {
-            AddPluginToGoPipeline(*detail, "extensions", mGoPipelineWithoutInput);
+            AddPluginToGoPipeline(pluginType, detail, "extensions", mGoPipelineWithoutInput);
         }
-        ++mPluginCntMap["extensions"][(*detail)["Type"].asString()];
+        ++mPluginCntMap["extensions"][pluginType];
     }
 
     // global module must be initialized at last, since native input or flusher plugin may generate global param in Go
@@ -413,10 +446,18 @@ void Pipeline::MergeGoPipeline(const Json::Value& src, Json::Value& dst) {
     }
 }
 
-void Pipeline::AddPluginToGoPipeline(const Json::Value& plugin, const string& module, Json::Value& dst) {
+std::string Pipeline::GenPluginTypeWithID(std::string pluginType, std::string pluginID) {
+    return pluginType + "/" + pluginID;
+}
+
+// Rule: pluginTypeWithID=pluginType/pluginID#pluginPriority.
+void Pipeline::AddPluginToGoPipeline(const string& pluginType,
+                                     const Json::Value& plugin,
+                                     const string& module,
+                                     Json::Value& dst) {
     Json::Value res(Json::objectValue), detail = plugin;
     detail.removeMember("Type");
-    res["type"] = plugin["Type"];
+    res["type"] = GenPluginTypeWithID(pluginType, GetNowPluginID());
     res["detail"] = detail;
     dst[module].append(res);
 }
@@ -472,6 +513,22 @@ bool Pipeline::LoadGoPipelines() const {
         }
     }
     return true;
+}
+
+std::string Pipeline::GetNowPluginID() {
+    return std::to_string(mPluginID.load());
+}
+
+PluginInstance::PluginMeta Pipeline::GenNextPluginMeta(bool lastOne) {
+    mPluginID.fetch_add(1);
+    int32_t childNodeID = mPluginID.load();
+    if (lastOne) {
+        childNodeID = -1;
+    } else {
+        childNodeID += 1;
+    }
+    return PluginInstance::PluginMeta(
+        std::to_string(mPluginID.load()), std::to_string(mPluginID.load()), std::to_string(childNodeID));
 }
 
 } // namespace logtail

@@ -21,6 +21,7 @@
 #include "plugin/instance/FlusherInstance.h"
 #include "plugin/instance/InputInstance.h"
 #include "plugin/instance/ProcessorInstance.h"
+#include "pipeline/Pipeline.h"
 
 namespace logtail {
 

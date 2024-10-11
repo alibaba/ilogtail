@@ -39,14 +39,15 @@ func (p *timerRunner) Run(task func(state interface{}) error, cc *pipeline.Async
 	defer panicRecover(fmt.Sprint(p.state))
 	for {
 		exitFlag := util.RandomSleep(p.interval, 0.1, cc.CancelToken())
+		var begin time.Time
 		if p.latencyMetric != nil {
-			p.latencyMetric.Begin()
+			begin = time.Now()
 		}
 		if err := task(p.state); err != nil {
 			logger.Error(p.context.GetRuntimeContext(), "PLUGIN_RUN_ALARM", "task run", "error", err, "plugin", "state", fmt.Sprintf("%T", p.state))
 		}
 		if p.latencyMetric != nil {
-			p.latencyMetric.End()
+			p.latencyMetric.Observe(float64(time.Since(begin)))
 		}
 		if exitFlag {
 			logger.Info(p.context.GetRuntimeContext(), "task run", "exit", "state", fmt.Sprintf("%T", p.state))
@@ -55,7 +56,7 @@ func (p *timerRunner) Run(task func(state interface{}) error, cc *pipeline.Async
 	}
 }
 
-func flushOutStore[T FlushData, F pipeline.Flusher](lc *LogstoreConfig, store *FlushOutStore[T], flushers []F, flushFunc func(*LogstoreConfig, F, *FlushOutStore[T]) error) bool {
+func flushOutStore[T FlushData, F FlusherWrapperInterface](lc *LogstoreConfig, store *FlushOutStore[T], flushers []F, flushFunc func(*LogstoreConfig, F, *FlushOutStore[T]) error) bool {
 	for _, flusher := range flushers {
 		for waitCount := 0; !flusher.IsReady(lc.ProjectName, lc.LogstoreName, lc.LogstoreKey); waitCount++ {
 			if waitCount > maxFlushOutTime*100 {
@@ -66,12 +67,12 @@ func flushOutStore[T FlushData, F pipeline.Flusher](lc *LogstoreConfig, store *F
 			time.Sleep(time.Duration(10) * time.Millisecond)
 		}
 		lc.Statistics.FlushReadyMetric.Add(1)
-		lc.Statistics.FlushLatencyMetric.Begin()
+		startTime := time.Now()
 		err := flushFunc(lc, flusher, store)
 		if err != nil {
 			logger.Error(lc.Context.GetRuntimeContext(), "FLUSH_DATA_ALARM", "flush data error", lc.ProjectName, lc.LogstoreName, err)
 		}
-		lc.Statistics.FlushLatencyMetric.End()
+		lc.Statistics.FlushLatencyMetric.Observe(float64(time.Since(startTime).Nanoseconds()))
 	}
 	store.Reset()
 	return true
@@ -116,14 +117,14 @@ func GetConfigFlushers(runner PluginRunner) []pipeline.Flusher {
 		}
 	} else if r, ok := runner.(*pluginv2Runner); ok {
 		for _, f := range r.FlusherPlugins {
-			flushers = append(flushers, f)
+			flushers = append(flushers, f.Flusher)
 		}
 	}
 	return flushers
 }
 
-func pluginUnImplementError(category pluginCategory, version ConfigVersion, pluginName string) error {
-	return fmt.Errorf("plugin does not implement %s%s. pluginType: %s", category, strings.ToUpper(string(version)), pluginName)
+func pluginUnImplementError(category pluginCategory, version ConfigVersion, pluginType string) error {
+	return fmt.Errorf("plugin does not implement %s%s. pluginType: %s", category, strings.ToUpper(string(version)), pluginType)
 }
 
 func pluginCategoryUndefinedError(category pluginCategory) error {

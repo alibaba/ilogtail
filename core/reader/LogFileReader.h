@@ -34,6 +34,7 @@
 #include "event/Event.h"
 #include "file_server/FileDiscoveryOptions.h"
 #include "file_server/FileServer.h"
+#include "file_server/FileServer.h"
 #include "file_server/MultilineOptions.h"
 #include "log_pb/sls_logs.pb.h"
 #include "logger/Logger.h"
@@ -539,7 +540,7 @@ protected:
     std::string mRegion;
 
     MetricLabels mMetricLabels;
-    bool mMetricsEnabled;
+    bool mMetricInited;
     ReentrantMetricsRecordRef mMetricsRecordRef;
     CounterPtr mInputRecordsSizeBytesCounter;
     CounterPtr mInputReadTotalCounter;
