@@ -187,7 +187,14 @@ void CreateAgentDir () {
     std::string processExecutionDir = GetProcessExecutionDir();
     Json::Value emptyJson;
 #define PROCESSDIRFLAG(flag_name, env_name) \
-    LoadStringParameter(STRING_FLAG(flag_name), emptyJson, #flag_name, env_name); \
+    try { \
+        const char* value = getenv(env_name); \
+        if (value != NULL) { \
+            STRING_FLAG(flag_name) = StringTo<string>(value); \
+        } \
+    } catch (const exception& e) { \
+        std::cout << "load config from env error, env_name:" << (env_name) << "\terror:" << e.what() << std::endl; \
+    } \
     if (STRING_FLAG(flag_name).empty()) { \
         STRING_FLAG(flag_name) = processExecutionDir + PATH_SEPARATOR; \
     } else { \
