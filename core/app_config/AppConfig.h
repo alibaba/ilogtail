@@ -279,6 +279,7 @@ public:
 
     // 初始化配置
     void LoadAppConfig(const std::string& ilogtailConfigFile);
+    void LoadLocalInstanceConfig();
 
     // 获取全局参数方法
     const Json::Value& GetLocalConfig() { return mLocalConfig; };
@@ -287,43 +288,23 @@ public:
     const Json::Value& GetRemoteConfig() { return mRemoteConfig; };
 
     static int32_t MergeInt32(int32_t defaultValue,
-                              const Json::Value& localConf,
-                              const Json::Value& envConfig,
-                              const Json::Value& remoteConf,
-                              const Json::Value& localInstanceConfig,
                               const std::string name,
                               const std::function<bool(const std::string key, const int32_t value)>& validateFn);
 
     static int64_t MergeInt64(int64_t defaultValue,
-                              const Json::Value& localConf,
-                              const Json::Value& envConfig,
-                              const Json::Value& remoteConf,
-                              const Json::Value& localInstanceConfig,
                               const std::string name,
                               const std::function<bool(const std::string key, const int64_t value)>& validateFn);
 
     static bool MergeBool(bool defaultValue,
-                          const Json::Value& localConf,
-                          const Json::Value& envConfig,
-                          const Json::Value& remoteConf,
-                          const Json::Value& localInstanceConfig,
                           const std::string name,
                           const std::function<bool(const std::string key, const bool value)>& validateFn);
 
     static std::string
     MergeString(const std::string& defaultValue,
-                const Json::Value& localConf,
-                const Json::Value& envConfig,
-                const Json::Value& remoteConf,
-                const Json::Value& localInstanceConfig,
                 const std::string name,
                 const std::function<bool(const std::string key, const std::string value)>& validateFn);
 
     static double MergeDouble(double defaultValue,
-                              const Json::Value& localConf,
-                              const Json::Value& envConfig,
-                              const Json::Value& remoteConf,
-                              const Json::Value& localInstanceConfig,
                               const std::string name,
                               const std::function<bool(const std::string key, const double value)>& validateFn);
 

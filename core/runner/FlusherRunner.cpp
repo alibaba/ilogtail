@@ -57,15 +57,11 @@ bool FlusherRunner::Init() {
     mLastCheckSendClientTime = time(nullptr);
     LoadModuleConfig(true);
     AppConfig::GetInstance()->RegisterCallback(
-        "max_bytes_per_sec", std::bind(&FlusherRunner::LoadModuleConfig, this, std::placeholders::_1));
+        "max_bytes_per_sec", [this](auto && PH1) { return LoadModuleConfig(std::forward<decltype(PH1)>(PH1)); });
     return true;
 }
 
 bool FlusherRunner::LoadModuleConfig(bool isInit) {
-    const auto& localConf = AppConfig::GetInstance()->GetLocalConfig();
-    const auto& localInstanceConfig = AppConfig::GetInstance()->GetLocalInstanceConfig();
-    const auto& envConf = AppConfig::GetInstance()->GetEnvConfig();
-    const auto& remoteConf = AppConfig::GetInstance()->GetRemoteConfig();
     auto ValidateFn = [](const std::string& key, const int32_t value) -> bool {
         if (key == "max_bytes_per_sec") {
             if (value < (int32_t)(1024 * 1024)) {
@@ -77,10 +73,6 @@ bool FlusherRunner::LoadModuleConfig(bool isInit) {
     };
     if (isInit) {
         auto maxBytePerSec = AppConfig::MergeInt32(AppConfig::GetInstance()->GetMaxBytePerSec(),
-                                                   localConf,
-                                                   envConf,
-                                                   remoteConf,
-                                                   localInstanceConfig,
                                                    "max_bytes_per_sec",
                                                    ValidateFn);
         AppConfig::GetInstance()->SetMaxBytePerSec(maxBytePerSec);
@@ -88,10 +80,6 @@ bool FlusherRunner::LoadModuleConfig(bool isInit) {
         return true;
     }
     auto maxBytePerSec = AppConfig::MergeInt32(AppConfig::GetInstance()->GetMaxBytePerSec(),
-                                               localConf,
-                                               envConf,
-                                               remoteConf,
-                                               localInstanceConfig,
                                                "max_bytes_per_sec",
                                                ValidateFn);
     AppConfig::GetInstance()->SetMaxBytePerSec(maxBytePerSec);

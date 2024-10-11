@@ -49,7 +49,7 @@ DEFINE_FLAG_INT32(process_thread_count, "", 1);
 DEFINE_FLAG_INT32(send_request_concurrency, "max count keep in mem when async send", 10);
 DEFINE_FLAG_STRING(default_buffer_file_path, "set current execution dir in default", "");
 DEFINE_FLAG_STRING(buffer_file_path, "set buffer dir", "");
-
+// DEFINE_FLAG_STRING(default_mapping_config_path, "", "mapping_config.json");
 DEFINE_FLAG_DOUBLE(default_machine_cpu_usage_threshold, "machine level", 0.4);
 DEFINE_FLAG_BOOL(default_resource_auto_scale, "", false);
 DEFINE_FLAG_BOOL(default_input_flow_control, "", false);
@@ -62,15 +62,41 @@ DEFINE_FLAG_STRING(logtail_sys_conf_dir, "store machine-unique-id, user-defined-
 #elif defined(_MSC_VER)
 DEFINE_FLAG_STRING(logtail_sys_conf_dir, "store machine-unique-id, user-defined-id, aliuid", "C:\\LogtailData\\");
 #endif
+// const char* DEFAULT_ILOGTAIL_LOCAL_CONFIG_FLAG_VALUE = "user_local_config.json";
+// DEFINE_FLAG_STRING(ilogtail_local_config, "local ilogtail config file", DEFAULT_ILOGTAIL_LOCAL_CONFIG_FLAG_VALUE);
+// const char* DEFAULT_ILOGTAIL_LOCAL_CONFIG_DIR_FLAG_VALUE = "user_config.d";
+// DEFINE_FLAG_STRING(ilogtail_local_config_dir,
+//                    "local ilogtail config file dir",
+//                    DEFAULT_ILOGTAIL_LOCAL_CONFIG_DIR_FLAG_VALUE);
+// const char* DEFAULT_ILOGTAIL_LOCAL_YAML_CONFIG_DIR_FLAG_VALUE = "user_yaml_config.d";
+// DEFINE_FLAG_STRING(ilogtail_local_yaml_config_dir,
+//                    "local ilogtail yaml config file dir",
+//                    DEFAULT_ILOGTAIL_LOCAL_YAML_CONFIG_DIR_FLAG_VALUE);
+// const char* DEFAULT_ILOGTAIL_REMOTE_YAML_CONFIG_DIR_FLAG_VALUE = "remote_yaml_config.d";
+// DEFINE_FLAG_STRING(ilogtail_remote_yaml_config_dir,
+//                    "remote ilogtail yaml config file dir",
+//                    DEFAULT_ILOGTAIL_REMOTE_YAML_CONFIG_DIR_FLAG_VALUE);
 
+// DEFINE_FLAG_BOOL(default_global_fuse_mode, "default global fuse mode", false);
+// DEFINE_FLAG_BOOL(default_global_mark_offset_flag, "default global mark offset flag", false);
+
+// DEFINE_FLAG_STRING(default_container_mount_path, "", "container_mount.json");
 DEFINE_FLAG_STRING(default_include_config_path, "", "config.d");
 
 DEFINE_FLAG_INT32(default_oas_connect_timeout, "default (minimum) connect timeout for OSARequest", 5);
 DEFINE_FLAG_INT32(default_oas_request_timeout, "default (minimum) request timeout for OSARequest", 10);
-
+// DEFINE_FLAG_BOOL(rapid_retry_update_config, "", false);
 DEFINE_FLAG_BOOL(check_profile_region, "", false);
-
+// DEFINE_FLAG_BOOL(enable_collection_mark,
+//                  "enable collection mark function to override check_ulogfs_env in user config",
+//                  false);
+// DEFINE_FLAG_BOOL(enable_env_ref_in_config, "enable environment variable reference replacement in configuration",
+// false);
 DEFINE_FLAG_INT32(data_server_port, "", 80);
+
+// DEFINE_FLAG_STRING(alipay_app_zone, "", "ALIPAY_APP_ZONE");
+// DEFINE_FLAG_STRING(alipay_zone, "", "ALIPAY_ZONE");
+// DEFINE_FLAG_STRING(alipay_zone_env_name, "", "");
 
 DECLARE_FLAG_STRING(check_point_filename);
 
@@ -138,25 +164,28 @@ std::string AppConfig::sLocalConfigDir = "local";
 AppConfig::AppConfig() {
     LOG_INFO(sLogger, ("AppConfig AppConfig", "success"));
     SetIlogtailConfigJson("");
-
+    // mStreamLogAddress = "0.0.0.0";
+    // mIsOldPubRegion = false;
+    // mOpenStreamLog = false;
     mSendRequestConcurrency = INT32_FLAG(send_request_concurrency);
     mProcessThreadCount = INT32_FLAG(process_thread_count);
-
+    // mMappingConfigPath = STRING_FLAG(default_mapping_config_path);
     mMachineCpuUsageThreshold = DOUBLE_FLAG(default_machine_cpu_usage_threshold);
     mCpuUsageUpLimit = DOUBLE_FLAG(cpu_usage_up_limit);
     mScaledCpuUsageUpLimit = DOUBLE_FLAG(cpu_usage_up_limit);
     mMemUsageUpLimit = INT64_FLAG(memory_usage_up_limit);
     mResourceAutoScale = BOOL_FLAG(default_resource_auto_scale);
     mInputFlowControl = BOOL_FLAG(default_input_flow_control);
-
+    // mDefaultRegion = STRING_FLAG(default_region_name);
     mAcceptMultiConfigFlag = BOOL_FLAG(default_accept_multi_config);
     mMaxMultiConfigSize = INT32_FLAG(max_multi_config_size);
-
+    // mUserConfigPath = STRING_FLAG(user_log_config);
     mIgnoreDirInodeChanged = false;
     mLogParseAlarmFlag = true;
     mNoInotify = false;
     mSendDataPort = 80;
     mShennongSocket = true;
+    // mInotifyBlackList.insert("/tmp");
 
     mPurageContainerMode = false;
     mForceQuitReadTimeout = 7200;
@@ -236,19 +265,7 @@ void AppConfig::LoadIncludeConfig(Json::Value& confJson) {
     }
 }
 
-/**
- * @brief 加载应用程序配置
- *
- * 该函数从指定的配置文件加载Logtail的主要配置。
- * 它处理配置文件的解析、包含额外配置、设置系统目录等。
- *
- * @param ilogtailConfigFile 配置文件的路径
- */
-void AppConfig::LoadAppConfig(const std::string& ilogtailConfigFile) {
-    // 加载本地配置
-    loadLocalConfig(ilogtailConfigFile);
-
-    // 加载 本地instanceconfig
+void AppConfig::LoadLocalInstanceConfig() {
     // add local config dir
     filesystem::path localConfigPath
         = filesystem::path(AppConfig::GetInstance()->GetLogtailSysConfDir()) / "instanceconfig" / "local";
@@ -264,7 +281,23 @@ void AppConfig::LoadAppConfig(const std::string& ilogtailConfigFile) {
     if (!instanceConfigDiff.IsEmpty()) {
         InstanceConfigManager::GetInstance()->UpdateInstanceConfigs(instanceConfigDiff);
     }
+}
 
+
+/**
+ * @brief 加载应用程序配置
+ *
+ * 该函数从指定的配置文件加载Logtail的主要配置。
+ * 它处理配置文件的解析、包含额外配置、设置系统目录等。
+ *
+ * @param ilogtailConfigFile 配置文件的路径
+ */
+void AppConfig::LoadAppConfig(const std::string& ilogtailConfigFile) {
+    // 加载本地配置
+    loadLocalConfig(ilogtailConfigFile);
+
+    // 加载本地instanceconfig
+    LoadLocalInstanceConfig();
 
     // 加载环境变量配置
     loadEnvConfig();
@@ -1558,12 +1591,13 @@ void AppConfig::RegisterCallback(const std::string& key, std::function<bool(bool
 }
 
 int32_t AppConfig::MergeInt32(int32_t defaultValue,
-                              const Json::Value& localConf,
-                              const Json::Value& envConfig,
-                              const Json::Value& remoteConf,
-                              const Json::Value& localInstanceConfig,
                               const std::string name,
                               const std::function<bool(const std::string key, const int32_t value)>& validateFn) {
+    const auto& localConf = AppConfig::GetInstance()->GetLocalConfig();
+    const auto& localInstanceConfig = AppConfig::GetInstance()->GetLocalInstanceConfig();
+    const auto& envConfig = AppConfig::GetInstance()->GetEnvConfig();
+    const auto& remoteConfig = AppConfig::GetInstance()->GetRemoteConfig();
+
     int32_t res = defaultValue;
     if (localConf.isMember(name) && localConf[name].isInt() && validateFn(name, localConf[name].asInt())) {
         res = localConf[name].asInt();
@@ -1575,19 +1609,20 @@ int32_t AppConfig::MergeInt32(int32_t defaultValue,
     if (envConfig.isMember(name) && envConfig[name].isInt() && validateFn(name, envConfig[name].asInt())) {
         res = envConfig[name].asInt();
     }
-    if (remoteConf.isMember(name) && remoteConf[name].isInt() && validateFn(name, remoteConf[name].asInt())) {
-        res = remoteConf[name].asInt();
+    if (remoteConfig.isMember(name) && remoteConfig[name].isInt() && validateFn(name, remoteConfig[name].asInt())) {
+        res = remoteConfig[name].asInt();
     }
     return res;
 }
 
 int64_t AppConfig::MergeInt64(int64_t defaultValue,
-                              const Json::Value& localConf,
-                              const Json::Value& envConfig,
-                              const Json::Value& remoteConf,
-                              const Json::Value& localInstanceConfig,
                               const std::string name,
                               const std::function<bool(const std::string key, const int64_t value)>& validateFn) {
+    const auto& localConf = AppConfig::GetInstance()->GetLocalConfig();
+    const auto& localInstanceConfig = AppConfig::GetInstance()->GetLocalInstanceConfig();
+    const auto& envConfig = AppConfig::GetInstance()->GetEnvConfig();
+    const auto& remoteConfig = AppConfig::GetInstance()->GetRemoteConfig();
+
     int64_t res = defaultValue;
     if (localConf.isMember(name) && localConf[name].isInt64() && validateFn(name, localConf[name].asInt64())) {
         res = localConf[name].asInt64();
@@ -1599,19 +1634,19 @@ int64_t AppConfig::MergeInt64(int64_t defaultValue,
     if (envConfig.isMember(name) && envConfig[name].isInt64() && validateFn(name, envConfig[name].asInt64())) {
         res = envConfig[name].asInt64();
     }
-    if (remoteConf.isMember(name) && remoteConf[name].isInt64() && validateFn(name, remoteConf[name].asInt64())) {
-        res = remoteConf[name].asInt64();
+    if (remoteConfig.isMember(name) && remoteConfig[name].isInt64() && validateFn(name, remoteConfig[name].asInt64())) {
+        res = remoteConfig[name].asInt64();
     }
     return res;
 }
 
 bool AppConfig::MergeBool(bool defaultValue,
-                          const Json::Value& localConf,
-                          const Json::Value& envConfig,
-                          const Json::Value& remoteConf,
-                          const Json::Value& localInstanceConfig,
                           const std::string name,
                           const std::function<bool(const std::string key, const bool value)>& validateFn) {
+    const auto& localConf = AppConfig::GetInstance()->GetLocalConfig();
+    const auto& localInstanceConfig = AppConfig::GetInstance()->GetLocalInstanceConfig();
+    const auto& envConfig = AppConfig::GetInstance()->GetEnvConfig();
+    const auto& remoteConfig = AppConfig::GetInstance()->GetRemoteConfig();
     bool res = defaultValue;
     if (localConf.isMember(name) && localConf[name].isBool() && validateFn(name, localConf[name].asBool())) {
         res = localConf[name].asBool();
@@ -1623,20 +1658,20 @@ bool AppConfig::MergeBool(bool defaultValue,
     if (envConfig.isMember(name) && envConfig[name].isBool() && validateFn(name, envConfig[name].asBool())) {
         res = envConfig[name].asBool();
     }
-    if (remoteConf.isMember(name) && remoteConf[name].isBool() && validateFn(name, remoteConf[name].asBool())) {
-        res = remoteConf[name].asBool();
+    if (remoteConfig.isMember(name) && remoteConfig[name].isBool() && validateFn(name, remoteConfig[name].asBool())) {
+        res = remoteConfig[name].asBool();
     }
     return res;
 }
 
 std::string
 AppConfig::MergeString(const std::string& defaultValue,
-                       const Json::Value& localConf,
-                       const Json::Value& envConfig,
-                       const Json::Value& remoteConf,
-                       const Json::Value& localInstanceConfig,
                        const std::string name,
                        const std::function<bool(const std::string key, const std::string value)>& validateFn) {
+    const auto& localConf = AppConfig::GetInstance()->GetLocalConfig();
+    const auto& localInstanceConfig = AppConfig::GetInstance()->GetLocalInstanceConfig();
+    const auto& envConfig = AppConfig::GetInstance()->GetEnvConfig();
+    const auto& remoteConfig = AppConfig::GetInstance()->GetRemoteConfig();
     std::string res = defaultValue;
     if (localConf.isMember(name) && localConf[name].isString() && validateFn(name, localConf[name].asString())) {
         res = localConf[name].asString();
@@ -1648,19 +1683,19 @@ AppConfig::MergeString(const std::string& defaultValue,
     if (envConfig.isMember(name) && envConfig[name].isString() && validateFn(name, envConfig[name].asString())) {
         res = envConfig[name].asString();
     }
-    if (remoteConf.isMember(name) && remoteConf[name].isString() && validateFn(name, remoteConf[name].asString())) {
-        res = remoteConf[name].asString();
+    if (remoteConfig.isMember(name) && remoteConfig[name].isString() && validateFn(name, remoteConfig[name].asString())) {
+        res = remoteConfig[name].asString();
     }
     return res;
 }
 
 double AppConfig::MergeDouble(double defaultValue,
-                              const Json::Value& localConf,
-                              const Json::Value& envConfig,
-                              const Json::Value& remoteConf,
-                              const Json::Value& localInstanceConfig,
                               const std::string name,
                               const std::function<bool(const std::string key, const double value)>& validateFn) {
+    const auto& localConf = AppConfig::GetInstance()->GetLocalConfig();
+    const auto& localInstanceConfig = AppConfig::GetInstance()->GetLocalInstanceConfig();
+    const auto& envConfig = AppConfig::GetInstance()->GetEnvConfig();
+    const auto& remoteConfig = AppConfig::GetInstance()->GetRemoteConfig();
     double res = defaultValue;
     if (localConf.isMember(name) && localConf[name].isDouble() && validateFn(name, localConf[name].asDouble())) {
         res = localConf[name].asDouble();
@@ -1672,8 +1707,8 @@ double AppConfig::MergeDouble(double defaultValue,
     if (envConfig.isMember(name) && envConfig[name].isDouble() && validateFn(name, envConfig[name].asDouble())) {
         res = envConfig[name].asDouble();
     }
-    if (remoteConf.isMember(name) && remoteConf[name].isDouble() && validateFn(name, remoteConf[name].asDouble())) {
-        res = remoteConf[name].asDouble();
+    if (remoteConfig.isMember(name) && remoteConfig[name].isDouble() && validateFn(name, remoteConfig[name].asDouble())) {
+        res = remoteConfig[name].asDouble();
     }
     return res;
 }
