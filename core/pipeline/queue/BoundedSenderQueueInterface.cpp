@@ -47,8 +47,12 @@ void BoundedSenderQueueInterface::SetRateLimiter(uint32_t maxRate) {
 
 void BoundedSenderQueueInterface::SetConcurrencyLimiters(std::unordered_map<std::string, std::shared_ptr<ConcurrencyLimiter>>&& concurrencyLimitersMap) {
     mConcurrencyLimiters.clear();
-    for (const auto& pair : concurrencyLimitersMap) {
-        mConcurrencyLimiters.emplace_back(std::make_pair(pair.second, mMetricsRecordRef.CreateCounter(ConcurrencyLimiter::GetLimiterMetricName(pair.first))));
+    for (const auto& item : concurrencyLimitersMap) {
+        if (item.second == nullptr) {
+            // should not happen
+            continue;
+        }
+        mConcurrencyLimiters.emplace_back(item.second, mMetricsRecordRef.CreateCounter(ConcurrencyLimiter::GetLimiterMetricName(item.first)));
     }
 }
 

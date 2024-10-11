@@ -110,11 +110,25 @@ bool SenderQueue::Remove(SenderQueueItem* item) {
 }
 
 
-void SenderQueue::GetLimitAvailableItems(vector<SenderQueueItem*>& items, int32_t limit) {
+void SenderQueue::GetAvailableItems(vector<SenderQueueItem*>& items, int32_t limit) {
     mFetchTimesCnt->Add(1);
     if (Empty()) {
         return;
     }
+    if (limit == -1) {
+        for (auto index = mRead; index < mWrite; ++index) {
+            SenderQueueItem* item = mQueue[index % mCapacity].get();
+            if (item == nullptr) {
+                continue;
+            }
+            if (item->mStatus.Get() == SendingStatus::IDLE) {
+                item->mStatus.Set(SendingStatus::SENDING);
+                items.emplace_back(item);
+            }
+        }
+        return;
+    } 
+
     for (auto index = mRead; index < mWrite; ++index) {
         SenderQueueItem* item = mQueue[index % mCapacity].get();
         if (item == nullptr) {
@@ -131,7 +145,10 @@ void SenderQueue::GetLimitAvailableItems(vector<SenderQueueItem*>& items, int32_
                 return;
             }
         }
-        
+        --limit;
+        if (limit <= 0) {
+            return;
+        }
         if (item->mStatus.Get() == SendingStatus::IDLE) {
             item->mStatus.Set(SendingStatus::SENDING);
             items.emplace_back(item);
@@ -144,29 +161,7 @@ void SenderQueue::GetLimitAvailableItems(vector<SenderQueueItem*>& items, int32_
                 mRateLimiter->PostPop(item->mRawSize);
             }
         }
-        --limit;
-        if (limit <= 0) {
-            return;
-        }
     }
 }
-
-
-void SenderQueue::GetAllAvailableItems(vector<SenderQueueItem*>& items) {
-    if (Empty()) {
-        return;
-    }
-    for (auto index = mRead; index < mWrite; ++index) {
-        SenderQueueItem* item = mQueue[index % mCapacity].get();
-        if (item == nullptr) {
-            continue;
-        }
-        if (item->mStatus.Get() == SendingStatus::IDLE) {
-            item->mStatus.Set(SendingStatus::SENDING);
-            items.emplace_back(item);
-        }
-    }
-}
-
 
 } // namespace logtail

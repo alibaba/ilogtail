@@ -106,13 +106,17 @@ int SenderQueueManager::PushQueue(QueueKey key, unique_ptr<SenderQueueItem>&& it
     return 0;
 }
 
-void SenderQueueManager::GetAllAvailableItems(vector<SenderQueueItem*>& items, int32_t itemsCntLimit, bool withLimits) {
+void SenderQueueManager::GetAvailableItems(vector<SenderQueueItem*>& items, int32_t itemsCntLimit) {
     {
         lock_guard<mutex> lock(mQueueMux);
         if (mQueues.empty()) {
             return;
         }
-        if (withLimits) {
+        if (itemsCntLimit == -1) {
+            for (auto iter = mQueues.begin(); iter != mQueues.end(); ++iter) {         
+                iter->second.GetAvailableItems(items, -1);
+            }
+        } else {
             int cntLimitPerQueue = std::max((int)(mQueueParam.GetCapacity() * 0.3), (int)(itemsCntLimit/mQueues.size()));
             // must check index before moving iterator
             mSenderQueueBeginIndex = mSenderQueueBeginIndex % mQueues.size();
@@ -121,18 +125,14 @@ void SenderQueueManager::GetAllAvailableItems(vector<SenderQueueItem*>& items, i
             std::advance(beginIter, mSenderQueueBeginIndex++);
 
             for (auto iter = beginIter; iter != mQueues.end(); ++iter) {
-                iter->second.GetLimitAvailableItems(items, cntLimitPerQueue);
+                iter->second.GetAvailableItems(items, cntLimitPerQueue);
             }
             for (auto iter = mQueues.begin(); iter != beginIter; ++iter) {        
-                iter->second.GetLimitAvailableItems(items, cntLimitPerQueue);
-            }
-        } else {
-            for (auto iter = mQueues.begin(); iter != mQueues.end(); ++iter) {         
-                iter->second.GetAllAvailableItems(items);
+                iter->second.GetAvailableItems(items, cntLimitPerQueue);
             }
         }
     }
-    ExactlyOnceQueueManager::GetInstance()->GetAllAvailableSenderQueueItems(items, itemsCntLimit, withLimits);
+    ExactlyOnceQueueManager::GetInstance()->GetAvailableSenderQueueItems(items, itemsCntLimit);
 }
 
 bool SenderQueueManager::RemoveItem(QueueKey key, SenderQueueItem* item) {

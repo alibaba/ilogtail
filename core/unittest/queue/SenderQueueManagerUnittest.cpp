@@ -32,7 +32,7 @@ public:
     void TestDeleteQueue();
     void TestGetQueue();
     void TestPushQueue();
-    void TestGetAllAvailableItems();
+    void TestGetAvailableItems();
     void TestRemoveItem();
     void TestIsAllQueueEmpty();
 
@@ -182,7 +182,7 @@ void SenderQueueManagerUnittest::TestPushQueue() {
     APSARA_TEST_EQUAL(0, sManager->PushQueue(1, GenerateItem(true)));
 }
 
-void SenderQueueManagerUnittest::TestGetAllAvailableItems() {
+void SenderQueueManagerUnittest::TestGetAvailableItems() {
     // prepare nomal queue
     sManager->CreateQueue(
         0,
@@ -211,7 +211,7 @@ void SenderQueueManagerUnittest::TestGetAllAvailableItems() {
     {
         // no limits
         vector<SenderQueueItem*> items;
-        sManager->GetAllAvailableItems(items, 80, false);
+        sManager->GetAvailableItems(items, -1);
         APSARA_TEST_EQUAL(4U, items.size());
         for (auto& item : items) {
             item->mStatus.Set(SendingStatus::IDLE);
@@ -223,7 +223,7 @@ void SenderQueueManagerUnittest::TestGetAllAvailableItems() {
         regionConcurrencyLimiter->SetCurrentLimit(3);
         regionConcurrencyLimiter->SetInSendingCount(2);
         vector<SenderQueueItem*> items;
-        sManager->GetAllAvailableItems(items, 80);
+        sManager->GetAvailableItems(items, 80);
         APSARA_TEST_EQUAL(1U, items.size());
         APSARA_TEST_EQUAL(3U, regionConcurrencyLimiter->GetInSendingCount());
     }
@@ -297,7 +297,7 @@ UNIT_TEST_CASE(SenderQueueManagerUnittest, TestCreateQueue)
 UNIT_TEST_CASE(SenderQueueManagerUnittest, TestDeleteQueue)
 UNIT_TEST_CASE(SenderQueueManagerUnittest, TestGetQueue)
 UNIT_TEST_CASE(SenderQueueManagerUnittest, TestPushQueue)
-UNIT_TEST_CASE(SenderQueueManagerUnittest, TestGetAllAvailableItems)
+UNIT_TEST_CASE(SenderQueueManagerUnittest, TestGetAvailableItems)
 UNIT_TEST_CASE(SenderQueueManagerUnittest, TestRemoveItem)
 UNIT_TEST_CASE(SenderQueueManagerUnittest, TestIsAllQueueEmpty)
 

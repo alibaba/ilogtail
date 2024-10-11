@@ -181,14 +181,10 @@ int ExactlyOnceQueueManager::PushSenderQueue(QueueKey key, unique_ptr<SenderQueu
     return 0;
 }
 
-void ExactlyOnceQueueManager::GetAllAvailableSenderQueueItems(std::vector<SenderQueueItem*>& item, int32_t itemsCntLimit, bool withLimits) {
+void ExactlyOnceQueueManager::GetAvailableSenderQueueItems(std::vector<SenderQueueItem*>& item, int32_t itemsCntLimit) {
     lock_guard<mutex> lock(mSenderQueueMux);
     for (auto iter = mSenderQueues.begin(); iter != mSenderQueues.end(); ++iter) {
-        if (withLimits) {
-            iter->second.GetLimitAvailableItems(item, itemsCntLimit);
-        } else {
-            iter->second.GetAllAvailableItems(item);
-        }
+        iter->second.GetAvailableItems(item, itemsCntLimit);
     }
 }
 

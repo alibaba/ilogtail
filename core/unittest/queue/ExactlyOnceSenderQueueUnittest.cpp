@@ -26,7 +26,7 @@ class ExactlyOnceSenderQueueUnittest : public testing::Test {
 public:
     void TestPush();
     void TestRemove();
-    void TestGetAllAvailableItems();
+    void TestGetAvailableItems();
     void TestReset();
 
 protected:
@@ -121,14 +121,14 @@ void ExactlyOnceSenderQueueUnittest::TestRemove() {
     APSARA_TEST_TRUE(sFeedback.HasFeedback(0));
 }
 
-void ExactlyOnceSenderQueueUnittest::TestGetAllAvailableItems() {
+void ExactlyOnceSenderQueueUnittest::TestGetAvailableItems() {
     for (size_t i = 0; i <= sCheckpoints.size(); ++i) {
         mQueue->Push(GenerateItem());
     }
     {
         // no limits
         vector<SenderQueueItem*> items;
-        mQueue->GetAllAvailableItems(items);
+        mQueue->GetAvailableItems(items, -1);
         APSARA_TEST_EQUAL(2U, items.size());
         for (auto& item : items) {
             item->mStatus.Set(SendingStatus::IDLE);
@@ -140,7 +140,7 @@ void ExactlyOnceSenderQueueUnittest::TestGetAllAvailableItems() {
         mQueue->mConcurrencyLimiters[0].first->SetCurrentLimit(1);
         mQueue->mConcurrencyLimiters[0].first->SetInSendingCount(0);
         vector<SenderQueueItem*> items;
-        mQueue->GetLimitAvailableItems(items, 80);
+        mQueue->GetAvailableItems(items, 80);
         APSARA_TEST_EQUAL(1U, items.size());
         APSARA_TEST_EQUAL(sDataSize, mQueue->mRateLimiter->mLastSecondTotalBytes);
         APSARA_TEST_EQUAL(1, mQueue->mConcurrencyLimiters[0].first->GetInSendingCount());
@@ -155,7 +155,7 @@ void ExactlyOnceSenderQueueUnittest::TestGetAllAvailableItems() {
         mQueue->mConcurrencyLimiters[0].first->SetCurrentLimit(3);
         mQueue->mConcurrencyLimiters[0].first->SetInSendingCount(0);
         vector<SenderQueueItem*> items;
-        mQueue->GetLimitAvailableItems(items, 80);
+        mQueue->GetAvailableItems(items, 80);
         APSARA_TEST_EQUAL(1U, items.size());
         APSARA_TEST_EQUAL(sDataSize, mQueue->mRateLimiter->mLastSecondTotalBytes);
         APSARA_TEST_EQUAL(1, mQueue->mConcurrencyLimiters[0].first->GetInSendingCount());
@@ -167,7 +167,7 @@ void ExactlyOnceSenderQueueUnittest::TestGetAllAvailableItems() {
         mQueue->mConcurrencyLimiters[0].first->SetCurrentLimit(3);
         mQueue->mConcurrencyLimiters[0].first->SetInSendingCount(0);
         vector<SenderQueueItem*> items;
-        mQueue->GetLimitAvailableItems(items, 80);
+        mQueue->GetAvailableItems(items, 80);
         APSARA_TEST_EQUAL(1U, items.size());
         APSARA_TEST_EQUAL(sDataSize, mQueue->mRateLimiter->mLastSecondTotalBytes);
         APSARA_TEST_EQUAL(1, mQueue->mConcurrencyLimiters[0].first->GetInSendingCount());
@@ -220,7 +220,7 @@ unique_ptr<SenderQueueItem> ExactlyOnceSenderQueueUnittest::GenerateItem(int32_t
 
 UNIT_TEST_CASE(ExactlyOnceSenderQueueUnittest, TestPush)
 UNIT_TEST_CASE(ExactlyOnceSenderQueueUnittest, TestRemove)
-UNIT_TEST_CASE(ExactlyOnceSenderQueueUnittest, TestGetAllAvailableItems)
+UNIT_TEST_CASE(ExactlyOnceSenderQueueUnittest, TestGetAvailableItems)
 UNIT_TEST_CASE(ExactlyOnceSenderQueueUnittest, TestReset)
 
 } // namespace logtail

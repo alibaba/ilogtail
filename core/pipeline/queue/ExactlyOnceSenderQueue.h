@@ -34,8 +34,7 @@ public:
 
     bool Push(std::unique_ptr<SenderQueueItem>&& item) override;
     bool Remove(SenderQueueItem* item) override;
-    void GetAllAvailableItems(std::vector<SenderQueueItem*>& items) override;
-    void GetLimitAvailableItems(std::vector<SenderQueueItem*>& items, int32_t limit) override;
+    void GetAvailableItems(std::vector<SenderQueueItem*>& items, int32_t limit) override;
     void Reset(const std::vector<RangeCheckpointPtr>& checkpoints);
 
 private:

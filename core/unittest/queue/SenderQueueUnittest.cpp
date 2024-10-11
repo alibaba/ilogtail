@@ -24,7 +24,7 @@ class SenderQueueUnittest : public testing::Test {
 public:
     void TestPush();
     void TestRemove();
-    void TestGetAllAvailableItems();
+    void TestGetAvailableItems();
     void TestMetric();
 
 protected:
@@ -117,7 +117,7 @@ void SenderQueueUnittest::TestRemove() {
     APSARA_TEST_FALSE(mQueue->Remove(items[0]));
 }
 
-void SenderQueueUnittest::TestGetAllAvailableItems() {
+void SenderQueueUnittest::TestGetAvailableItems() {
     vector<SenderQueueItem*> items;
     for (size_t i = 0; i <= sCap; ++i) {
         auto item = GenerateItem();
@@ -127,7 +127,7 @@ void SenderQueueUnittest::TestGetAllAvailableItems() {
     {
         // no limits
         vector<SenderQueueItem*> items;
-        mQueue->GetAllAvailableItems(items);
+        mQueue->GetAvailableItems(items, -1);
         APSARA_TEST_EQUAL(2U, items.size());
         for (auto& item : items) {
             item->mStatus.Set(SendingStatus::IDLE);
@@ -139,7 +139,7 @@ void SenderQueueUnittest::TestGetAllAvailableItems() {
         sConcurrencyLimiter->SetCurrentLimit(1);
         sConcurrencyLimiter->SetInSendingCount(0);
         vector<SenderQueueItem*> items;
-        mQueue->GetLimitAvailableItems(items, 80);
+        mQueue->GetAvailableItems(items, 80);
         APSARA_TEST_EQUAL(1U, items.size());
         APSARA_TEST_EQUAL(sDataSize, mQueue->mRateLimiter->mLastSecondTotalBytes);
         APSARA_TEST_EQUAL(1, sConcurrencyLimiter->GetInSendingCount());
@@ -154,7 +154,7 @@ void SenderQueueUnittest::TestGetAllAvailableItems() {
         sConcurrencyLimiter->SetCurrentLimit(3);
         sConcurrencyLimiter->SetInSendingCount(0);
         vector<SenderQueueItem*> items;
-        mQueue->GetLimitAvailableItems(items, 80);
+        mQueue->GetAvailableItems(items, 80);
         APSARA_TEST_EQUAL(1U, items.size());
         APSARA_TEST_EQUAL(sDataSize, mQueue->mRateLimiter->mLastSecondTotalBytes);
         APSARA_TEST_EQUAL(1, sConcurrencyLimiter->GetInSendingCount());
@@ -166,7 +166,7 @@ void SenderQueueUnittest::TestGetAllAvailableItems() {
         sConcurrencyLimiter->SetCurrentLimit(3);
         sConcurrencyLimiter->SetInSendingCount(0);
         vector<SenderQueueItem*> items;
-        mQueue->GetLimitAvailableItems(items, 80);
+        mQueue->GetAvailableItems(items, 80);
         APSARA_TEST_EQUAL(1U, items.size());
         APSARA_TEST_EQUAL(sDataSize, mQueue->mRateLimiter->mLastSecondTotalBytes);
         APSARA_TEST_EQUAL(1, sConcurrencyLimiter->GetInSendingCount());
@@ -227,7 +227,7 @@ unique_ptr<SenderQueueItem> SenderQueueUnittest::GenerateItem() {
 
 UNIT_TEST_CASE(SenderQueueUnittest, TestPush)
 UNIT_TEST_CASE(SenderQueueUnittest, TestRemove)
-UNIT_TEST_CASE(SenderQueueUnittest, TestGetAllAvailableItems)
+UNIT_TEST_CASE(SenderQueueUnittest, TestGetAvailableItems)
 UNIT_TEST_CASE(SenderQueueUnittest, TestMetric)
 
 } // namespace logtail

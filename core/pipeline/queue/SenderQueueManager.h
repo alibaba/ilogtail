@@ -57,7 +57,7 @@ public:
     bool ReuseQueue(QueueKey key);
     // 0: success, 1: queue is full, 2: queue not found
     int PushQueue(QueueKey key, std::unique_ptr<SenderQueueItem>&& item);
-    void GetAllAvailableItems(std::vector<SenderQueueItem*>& items, int32_t itemsCntLimit, bool withLimits = true);
+    void GetAvailableItems(std::vector<SenderQueueItem*>& items, int32_t itemsCntLimit);
     bool RemoveItem(QueueKey key, SenderQueueItem* item);
     void DecreaseConcurrencyLimiterInSendingCnt(QueueKey key);
     bool IsAllQueueEmpty() const;

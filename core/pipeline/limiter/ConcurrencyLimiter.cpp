@@ -84,9 +84,8 @@ void ConcurrencyLimiter::OnSuccess() {
 void ConcurrencyLimiter::OnFail(time_t curTime) {
     lock_guard<mutex> lock(mLimiterMux);
     if (mCurrenctConcurrency != 0) {
-        mCurrenctConcurrency = max(0U, static_cast<uint32_t>(mCurrenctConcurrency * mConcurrencyDownRatio));
-    }
-    if (mCurrenctConcurrency <= 0) {
+        mCurrenctConcurrency = static_cast<uint32_t>(mCurrenctConcurrency * mConcurrencyDownRatio);
+    } else {
         if (mRetryIntervalSecs != mMaxRetryIntervalSecs) {
             mRetryIntervalSecs = min(mMaxRetryIntervalSecs, static_cast<uint32_t>(mRetryIntervalSecs * mRetryIntervalUpRatio));
         }

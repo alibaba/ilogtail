@@ -36,7 +36,7 @@ public:
     void TestPushProcessQueue();
     void TestIsAllProcessQueueEmpty();
     void TestPushSenderQueue();
-    void TestGetAllAvailableSenderQueueItems();
+    void TestGetAvailableSenderQueueItems();
     void TestRemoveSenderItem();
     void TestIsAllSenderQueueEmpty();
     void OnPipelineUpdate();
@@ -202,7 +202,7 @@ void ExactlyOnceQueueManagerUnittest::TestPushSenderQueue() {
     APSARA_TEST_EQUAL(2, sManager->PushSenderQueue(1, GenerateSenderItem()));
 }
 
-void ExactlyOnceQueueManagerUnittest::TestGetAllAvailableSenderQueueItems() {
+void ExactlyOnceQueueManagerUnittest::TestGetAvailableSenderQueueItems() {
     vector<RangeCheckpointPtr> checkpoints1;
     for (size_t i = 0; i < 2; ++i) {
         auto cpt = make_shared<RangeCheckpoint>();
@@ -232,7 +232,7 @@ void ExactlyOnceQueueManagerUnittest::TestGetAllAvailableSenderQueueItems() {
     {
         // no limits
         vector<SenderQueueItem*> items;
-        sManager->GetAllAvailableSenderQueueItems(items, 80, false);
+        sManager->GetAvailableSenderQueueItems(items, -1);
         APSARA_TEST_EQUAL(4U, items.size());
         for (auto& item : items) {
             item->mStatus.Set(SendingStatus::IDLE);
@@ -244,7 +244,7 @@ void ExactlyOnceQueueManagerUnittest::TestGetAllAvailableSenderQueueItems() {
         regionConcurrencyLimiter.first->SetCurrentLimit(3);
         regionConcurrencyLimiter.first->SetInSendingCount(0);
         vector<SenderQueueItem*> items;
-        sManager->GetAllAvailableSenderQueueItems(items, 80);
+        sManager->GetAvailableSenderQueueItems(items, -1);
         APSARA_TEST_EQUAL(3U, items.size());
         APSARA_TEST_EQUAL(3, regionConcurrencyLimiter.first->GetInSendingCount());
     }
@@ -358,7 +358,7 @@ UNIT_TEST_CASE(ExactlyOnceQueueManagerUnittest, TestDeleteQueue)
 UNIT_TEST_CASE(ExactlyOnceQueueManagerUnittest, TestPushProcessQueue)
 UNIT_TEST_CASE(ExactlyOnceQueueManagerUnittest, TestIsAllProcessQueueEmpty)
 UNIT_TEST_CASE(ExactlyOnceQueueManagerUnittest, TestPushSenderQueue)
-UNIT_TEST_CASE(ExactlyOnceQueueManagerUnittest, TestGetAllAvailableSenderQueueItems)
+UNIT_TEST_CASE(ExactlyOnceQueueManagerUnittest, TestGetAvailableSenderQueueItems)
 UNIT_TEST_CASE(ExactlyOnceQueueManagerUnittest, TestRemoveSenderItem)
 UNIT_TEST_CASE(ExactlyOnceQueueManagerUnittest, TestIsAllSenderQueueEmpty)
 UNIT_TEST_CASE(ExactlyOnceQueueManagerUnittest, OnPipelineUpdate)
