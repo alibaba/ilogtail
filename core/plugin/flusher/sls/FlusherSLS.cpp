@@ -602,7 +602,9 @@ unique_ptr<HttpSinkRequest> FlusherSLS::BuildRequest(SenderQueueItem* item) cons
             lastResetEndpointTime = curTime;
         }
     }
-    mPushHttpCnt->Add(1);
+    if (mPushHttpCnt) {
+        mPushHttpCnt->Add(1);
+    }
     if (BOOL_FLAG(send_prefer_real_ip)) {
         if (curTime - sendClient->GetSlsRealIpUpdateTime() >= INT32_FLAG(send_check_real_ip_interval)) {
             SLSClientManager::GetInstance()->UpdateSendClientRealIp(sendClient, mRegion);
@@ -650,7 +652,9 @@ unique_ptr<HttpSinkRequest> FlusherSLS::BuildRequest(SenderQueueItem* item) cons
 }
 
 void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item) {
-    mSendDoneCnt->Add(1);
+    if (mSendDoneCnt) {
+        mSendDoneCnt->Add(1);
+    }
     SLSResponse slsResponse;
     if (AppConfig::GetInstance()->IsResponseVerificationEnabled() && !IsSLSResponse(response)) {
         slsResponse.mStatusCode = 0;
@@ -694,7 +698,9 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
         GetLogstoreConcurrencyLimiter(mProject, mLogstore)->OnSuccess();                                                                                       
         SenderQueueManager::GetInstance()->DecreaseConcurrencyLimiterInSendingCnt(item->mQueueKey);
         DealSenderQueueItemAfterSend(item, false);
-        mSuccessCnt->Add(1);
+        if (mSuccessCnt) {
+            mSuccessCnt->Add(1);
+        }
     } else {
         OperationOnFail operation;
         SendResult sendResult = ConvertErrorCode(slsResponse.mErrorCode);
@@ -703,10 +709,14 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
         if (sendResult == SEND_NETWORK_ERROR || sendResult == SEND_SERVER_ERROR) {
             if (sendResult == SEND_NETWORK_ERROR) {
                 failDetail << "network error";
-                mNetworkErrorCnt->Add(1);
+                if (mNetworkErrorCnt) {
+                    mNetworkErrorCnt->Add(1);
+                }
             } else {
                 failDetail << "server error";
-                mServerErrorCnt->Add(1);
+                if (mServerErrorCnt) {
+                    mServerErrorCnt->Add(1);
+                }
             }
             suggestion << "check network connection to endpoint";
             if (BOOL_FLAG(send_prefer_real_ip) && data->mRealIpFlag) {
@@ -737,7 +747,9 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
                 GetLogstoreConcurrencyLimiter(mProject, mLogstore)->OnFail(time(nullptr));
                 GetRegionConcurrencyLimiter(mRegion)->OnSuccess();
                 GetProjectConcurrencyLimiter(mProject)->OnSuccess();
-                mShardWriteQuotaErrorCnt->Add(1);
+                if (mShardWriteQuotaErrorCnt) {
+                    mShardWriteQuotaErrorCnt->Add(1);
+                }
             } else {
                 failDetail << "project write quota exceed";
                 suggestion << "Submit quota modification request. "
@@ -745,7 +757,9 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
                 GetProjectConcurrencyLimiter(mProject)->OnFail(time(nullptr));
                 GetRegionConcurrencyLimiter(mRegion)->OnSuccess();
                 GetLogstoreConcurrencyLimiter(mProject, mLogstore)->OnSuccess();
-                mProjectQuotaErrorCnt->Add(1);
+                if (mProjectQuotaErrorCnt) {
+                    mProjectQuotaErrorCnt->Add(1);
+                }
             }
             LogtailAlarm::GetInstance()->SendAlarm(SEND_QUOTA_EXCEED_ALARM,
                                                    "error_code: " + slsResponse.mErrorCode
@@ -779,15 +793,21 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
                 }
 #endif
             }
-            mUnauthErrorCnt->Add(1);
+            if (mUnauthErrorCnt) {
+                mUnauthErrorCnt->Add(1);
+            }
         } else if (sendResult == SEND_PARAMETER_INVALID) {
             failDetail << "invalid paramters";
             suggestion << "check input parameters";
             operation = DefaultOperation(item->mTryCnt);
-            mParamsErrorCnt->Add(1);
+            if (mParamsErrorCnt) {
+                mParamsErrorCnt->Add(1);
+            }
         } else if (sendResult == SEND_INVALID_SEQUENCE_ID) {
             failDetail << "invalid exactly-once sequence id";
-            mSequenceIDErrorCnt->Add(1);
+            if (mSequenceIDErrorCnt) {
+                mSequenceIDErrorCnt->Add(1);
+            }
             do {
                 auto& cpt = data->mExactlyOnceCheckpoint;
                 if (!cpt) {
@@ -826,7 +846,9 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
             failDetail << "write request expired, will retry";
             suggestion << "check local system time";
             operation = OperationOnFail::RETRY_IMMEDIATELY;
-            mRequestExpiredErrorCnt->Add(1);
+            if (mRequestExpiredErrorCnt) {
+                mRequestExpiredErrorCnt->Add(1);
+            }
         } else {
             failDetail << "other error";
             suggestion << "no suggestion";
@@ -835,7 +857,9 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
             // then we record error and retry latter
             // when retry times > unknow_error_try_max, we will drop this data
             operation = DefaultOperation(item->mTryCnt);
-            mOtherErrorCnt->Add(1);
+            if (mOtherErrorCnt) {
+                mOtherErrorCnt->Add(1);
+            }
         }
         if (chrono::duration_cast<chrono::seconds>(curSystemTime - item->mEnqueTime).count()
             > INT32_FLAG(discard_send_fail_interval)) {
