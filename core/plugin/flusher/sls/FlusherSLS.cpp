@@ -116,8 +116,8 @@ unordered_map<string, weak_ptr<ConcurrencyLimiter>> FlusherSLS::sRegionConcurren
 unordered_map<string, weak_ptr<ConcurrencyLimiter>> FlusherSLS::sLogstoreConcurrencyLimiterMap;
 
 
-shared_ptr<ConcurrencyLimiter> GetConcurrencyLimiter(LimiterLabel limiterLabel) {
-    return make_shared<ConcurrencyLimiter>(limiterLabel, AppConfig::GetInstance()->GetSendRequestConcurrency());
+shared_ptr<ConcurrencyLimiter> GetConcurrencyLimiter() {
+    return make_shared<ConcurrencyLimiter>(AppConfig::GetInstance()->GetSendRequestConcurrency());
 }
 
 shared_ptr<ConcurrencyLimiter> FlusherSLS::GetLogstoreConcurrencyLimiter(const std::string& project, const std::string& logstore) {
@@ -126,12 +126,12 @@ shared_ptr<ConcurrencyLimiter> FlusherSLS::GetLogstoreConcurrencyLimiter(const s
 
     auto iter = sLogstoreConcurrencyLimiterMap.find(key);
     if (iter == sLogstoreConcurrencyLimiterMap.end()) {
-        auto limiter = GetConcurrencyLimiter(LimiterLabel::LOGSTORE);
+        auto limiter = GetConcurrencyLimiter();
         sLogstoreConcurrencyLimiterMap.try_emplace(key, limiter);
         return limiter;
     }
     if (iter->second.expired()) {
-        auto limiter = GetConcurrencyLimiter(LimiterLabel::LOGSTORE);
+        auto limiter = GetConcurrencyLimiter();
         iter->second = limiter;
         return limiter;
     }
@@ -142,12 +142,12 @@ shared_ptr<ConcurrencyLimiter> FlusherSLS::GetProjectConcurrencyLimiter(const st
     lock_guard<mutex> lock(sMux);
     auto iter = sProjectConcurrencyLimiterMap.find(project);
     if (iter == sProjectConcurrencyLimiterMap.end()) {
-        auto limiter = GetConcurrencyLimiter(LimiterLabel::PROJECT);
+        auto limiter = GetConcurrencyLimiter();
         sProjectConcurrencyLimiterMap.try_emplace(project, limiter);
         return limiter;
     }
     if (iter->second.expired()) {
-        auto limiter = GetConcurrencyLimiter(LimiterLabel::PROJECT);
+        auto limiter = GetConcurrencyLimiter();
         iter->second = limiter;
         return limiter;
     }
@@ -158,12 +158,12 @@ shared_ptr<ConcurrencyLimiter> FlusherSLS::GetRegionConcurrencyLimiter(const str
     lock_guard<mutex> lock(sMux);
     auto iter = sRegionConcurrencyLimiterMap.find(region);
     if (iter == sRegionConcurrencyLimiterMap.end()) {
-        auto limiter = GetConcurrencyLimiter(LimiterLabel::REGION);
+        auto limiter = GetConcurrencyLimiter();
         sRegionConcurrencyLimiterMap.try_emplace(region, limiter);
         return limiter;
     }
     if (iter->second.expired()) {
-        auto limiter = GetConcurrencyLimiter(LimiterLabel::REGION);
+        auto limiter = GetConcurrencyLimiter();
         iter->second = limiter;
         return limiter;
     }
@@ -508,9 +508,11 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
             mQueueKey,
             mPluginID,
             *mContext,
-            vector<shared_ptr<ConcurrencyLimiter>>{GetRegionConcurrencyLimiter(mRegion),
-                                                   GetProjectConcurrencyLimiter(mProject),
-                                                   GetLogstoreConcurrencyLimiter(mProject, mLogstore)},
+            {
+                {"region", GetRegionConcurrencyLimiter(mRegion)},
+                {"project", GetProjectConcurrencyLimiter(mProject)},
+                {"logstore", GetLogstoreConcurrencyLimiter(mProject, mLogstore)}
+            },
             mMaxSendRate);
     }
 
@@ -914,7 +916,7 @@ bool FlusherSLS::Send(string&& data, const string& shardHashKey, const string& l
         key = QueueKeyManager::GetInstance()->GetKey(mProject + "-" + mLogstore);
         if (SenderQueueManager::GetInstance()->GetQueue(key) == nullptr) {
             PipelineContext ctx;
-            SenderQueueManager::GetInstance()->CreateQueue(key, "", ctx, vector<shared_ptr<ConcurrencyLimiter>>());
+            SenderQueueManager::GetInstance()->CreateQueue(key, "", ctx, std::unordered_map<std::string, std::shared_ptr<ConcurrencyLimiter>>());
         }
     }
     return Flusher::PushToQueue(make_unique<SLSSenderQueueItem>(std::move(compressedData),

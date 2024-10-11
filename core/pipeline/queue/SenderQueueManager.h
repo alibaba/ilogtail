@@ -49,8 +49,8 @@ public:
     bool CreateQueue(QueueKey key,
                      const std::string& flusherId,
                      const PipelineContext& ctx,
-                     std::vector<std::shared_ptr<ConcurrencyLimiter>>&& concurrencyLimiters
-                     = std::vector<std::shared_ptr<ConcurrencyLimiter>>(),
+                     std::unordered_map<std::string, std::shared_ptr<ConcurrencyLimiter>>&& concurrencyLimitersMap
+                     = std::unordered_map<std::string, std::shared_ptr<ConcurrencyLimiter>>(),
                      uint32_t maxRate = 0);
     SenderQueue* GetQueue(QueueKey key);
     bool DeleteQueue(QueueKey key);

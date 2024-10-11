@@ -20,6 +20,7 @@
 #include <optional>
 #include <queue>
 #include <vector>
+#include <unordered_map>
 
 #include "common/FeedbackInterface.h"
 #include "pipeline/limiter/ConcurrencyLimiter.h"
@@ -50,11 +51,11 @@ public:
     void DecreaseSendingCnt();
     void OnSendingSuccess();
     void SetRateLimiter(uint32_t maxRate);
-    void SetConcurrencyLimiters(std::vector<std::shared_ptr<ConcurrencyLimiter>>&& limiters);
+    void SetConcurrencyLimiters(std::unordered_map<std::string, std::shared_ptr<ConcurrencyLimiter>>&& concurrencyLimitersMap);
 
 #ifdef APSARA_UNIT_TEST_MAIN
     std::optional<RateLimiter>& GetRateLimiter() { return mRateLimiter; }
-    std::vector<std::shared_ptr<ConcurrencyLimiter>>& GetConcurrencyLimiters() { return mConcurrencyLimiters; }
+    std::vector<std::pair<std::shared_ptr<ConcurrencyLimiter>, CounterPtr>>& GetConcurrencyLimiters() { return mConcurrencyLimiters; }
 #endif
 
 protected:
@@ -64,12 +65,13 @@ protected:
     void Reset(size_t cap, size_t low, size_t high);
 
     std::optional<RateLimiter> mRateLimiter;
-    std::vector<std::shared_ptr<ConcurrencyLimiter>> mConcurrencyLimiters;
+    std::vector<std::pair<std::shared_ptr<ConcurrencyLimiter>, CounterPtr>> mConcurrencyLimiters;
 
     std::queue<std::unique_ptr<SenderQueueItem>> mExtraBuffer;
 
     IntGaugePtr mExtraBufferSize;
     IntGaugePtr mExtraBufferDataSizeBytes;
+    CounterPtr mLimitByRateLimiterCnt;
 };
 
 } // namespace logtail

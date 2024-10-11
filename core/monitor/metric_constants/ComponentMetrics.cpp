@@ -64,9 +64,10 @@ const string METRIC_COMPONENT_QUEUE_DISCARDED_EVENTS_TOTAL = "component_discarde
 
 const string METRIC_COMPONENT_QUEUE_GET_ITEMS_TIMES_TOTAL = "component_queue_get_items_times_total";
 const string METRIC_COMPONENT_QUEUE_GET_ITEMS_TOTAL = "componet_queue_get_items_total";
-const string METRIC_COMPONENT_QUEUE_LIMIT_BY_REGION_LIMITER_TOTAL = "component_queue_limit_by_region_limiter_total";
-const string METRIC_COMPONENT_QUEUE_LIMIT_BY_PROJECT_LIMITER_TOTAL = "component_queue_limit_by_project_limiter_total";
-const string METRIC_COMPONENT_QUEUE_LIMIT_BY_LOGTORE_LIMITER_TOTAL = "component_queue_limit_by_logtore_limiter_total";
+
+const string METRIC_COMPONENT_QUEUE_REJECTED_TOTAL_PREFIX = "component_queue_rejected_by_";
+const string METRIC_COMPONENT_QUEUE_REJECTED_TOTAL_SUFFIX = "_limiter_total";
+
 const string METRIC_COMPONENT_QUEUE_LIMIT_BY_RATE_LIMITER_TOTAL = "component_queue_limit_by_rate_limiter_total";
 
 } // namespace logtail

@@ -29,20 +29,20 @@ public:
 
 protected:
     static void SetUpTestCase() {
-        sConcurrencyLimiter = make_shared<ConcurrencyLimiter>(LimiterLabel::REGION, 80);
+        sConcurrencyLimiter = make_shared<ConcurrencyLimiter>(80);
         sCtx.SetConfigName("test_config");
     }
 
     void SetUp() override {
         mQueue.reset(new SenderQueue(sCap, sLowWatermark, sHighWatermark, sKey, sFlusherId, sCtx));
-        mQueue->SetConcurrencyLimiters(vector<shared_ptr<ConcurrencyLimiter>>{sConcurrencyLimiter});
+        mQueue->SetConcurrencyLimiters({{"region", sConcurrencyLimiter}});
         mQueue->mRateLimiter = RateLimiter(100);
         mQueue->SetFeedback(&sFeedback);
     }
 
     void TearDown() override {
         sFeedback.Clear();
-        sConcurrencyLimiter = make_shared<ConcurrencyLimiter>(LimiterLabel::REGION, 80);
+        sConcurrencyLimiter = make_shared<ConcurrencyLimiter>(80);
     }
 
 private:

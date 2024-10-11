@@ -24,13 +24,8 @@ SenderQueue::SenderQueue(
     size_t cap, size_t low, size_t high, QueueKey key, const string& flusherId, const PipelineContext& ctx)
     : QueueInterface(key, cap, ctx), BoundedSenderQueueInterface(cap, low, high, key, flusherId, ctx) {
     mQueue.resize(cap);
-    // TODO:: taiye
-    mGetTimesCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_QUEUE_GET_ITEMS_TIMES_TOTAL);
-    mGetItemsCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_QUEUE_GET_ITEMS_TOTAL);
-    mLimitByRegionLimiterCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_QUEUE_LIMIT_BY_REGION_LIMITER_TOTAL);
-    mLimitByProjectLimiterCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_QUEUE_LIMIT_BY_PROJECT_LIMITER_TOTAL);
-    mLimitByLogstoreLimiterCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_QUEUE_LIMIT_BY_LOGTORE_LIMITER_TOTAL);
-    mLimitByReteLimiterCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_QUEUE_LIMIT_BY_RATE_LIMITER_TOTAL); 
+    mFetchTimesCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_QUEUE_GET_ITEMS_TIMES_TOTAL);
+    mFetchItemsCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_QUEUE_GET_ITEMS_TOTAL);    
     WriteMetrics::GetInstance()->CommitMetricsRecordRef(mMetricsRecordRef);    
 }
 
@@ -116,36 +111,23 @@ bool SenderQueue::Remove(SenderQueueItem* item) {
 
 
 void SenderQueue::GetLimitAvailableItems(vector<SenderQueueItem*>& items, int32_t limit) {
-    mGetTimesCnt->Add(1);
+    mFetchTimesCnt->Add(1);
     if (Empty()) {
         return;
     }
-    int itemsCnt = 0;
     for (auto index = mRead; index < mWrite; ++index) {
         SenderQueueItem* item = mQueue[index % mCapacity].get();
         if (item == nullptr) {
             continue;
         }
-        mGetItemsCnt->Add(1);
+        mFetchItemsCnt->Add(1);
         if (mRateLimiter && !mRateLimiter->IsValidToPop()) {
-            mLimitByReteLimiterCnt->Add(1);
+            mLimitByRateLimiterCnt->Add(1);
             return;
         }
         for (auto& limiter : mConcurrencyLimiters) {
-            if (!limiter->IsValidToPop()) {
-                switch (limiter->GetLimiterLabel()) {
-                    case LimiterLabel::REGION:
-                        mLimitByRegionLimiterCnt->Add(1);
-                        break;
-                    case LimiterLabel::PROJECT:
-                        mLimitByProjectLimiterCnt->Add(1);
-                        break;
-                    case LimiterLabel::LOGSTORE:
-                        mLimitByLogstoreLimiterCnt->Add(1);
-                        break;
-                    default:
-                        break;
-                }
+            if (!limiter.first->IsValidToPop()) {
+                limiter.second->Add(1);
                 return;
             }
         }
@@ -154,16 +136,16 @@ void SenderQueue::GetLimitAvailableItems(vector<SenderQueueItem*>& items, int32_
             item->mStatus.Set(SendingStatus::SENDING);
             items.emplace_back(item);
             for (auto& limiter : mConcurrencyLimiters) {
-                if (limiter != nullptr) {
-                    limiter->PostPop();
+                if (limiter.first != nullptr) {
+                    limiter.first->PostPop();
                 }
             }
             if (mRateLimiter) {
                 mRateLimiter->PostPop(item->mRawSize);
             }
         }
-        ++itemsCnt;
-        if (itemsCnt >= limit) {
+        --limit;
+        if (limit <= 0) {
             return;
         }
     }

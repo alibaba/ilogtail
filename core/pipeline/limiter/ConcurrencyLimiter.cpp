@@ -20,19 +20,18 @@ using namespace std;
 
 namespace logtail {
 
+#ifdef APSARA_UNIT_TEST_MAIN
 uint32_t ConcurrencyLimiter::GetCurrentLimit() const { 
-    lock_guard<mutex> lock(mCurrenctConcurrencyMux);
+    lock_guard<mutex> lock(mLimiterMux);
     return mCurrenctConcurrency; 
 }
 
 uint32_t ConcurrencyLimiter::GetCurrentInterval() const { 
-    lock_guard<mutex> lock(mIntervalMux);
+    lock_guard<mutex> lock(mLimiterMux);
     return mRetryIntervalSecs; 
 }
-
-#ifdef APSARA_UNIT_TEST_MAIN
 void ConcurrencyLimiter::SetCurrentLimit(uint32_t limit) { 
-    lock_guard<mutex> lock(mCurrenctConcurrencyMux);
+    lock_guard<mutex> lock(mLimiterMux);
     mCurrenctConcurrency = limit;
 }
 
@@ -48,16 +47,17 @@ bool ConcurrencyLimiter::IsValidToPop() {
     if (mLastCheckTime.time_since_epoch().count()  == 0) {
         mLastCheckTime = std::chrono::system_clock::now();
     }
-    if (GetCurrentLimit() <= mMinConcurrency) {
-        std::chrono::system_clock::time_point curTime = std::chrono::system_clock::now();
-        if (chrono::duration_cast<chrono::seconds>(curTime - mLastCheckTime).count() > GetCurrentInterval()) {
+    lock_guard<mutex> lock(mLimiterMux);
+    if (mCurrenctConcurrency <= 0) {
+        auto curTime = std::chrono::system_clock::now();
+        if (chrono::duration_cast<chrono::seconds>(curTime - mLastCheckTime).count() > mRetryIntervalSecs) {
             mLastCheckTime = curTime;
             return true;
         } else {
             return false;
         }
     }
-    if (GetCurrentLimit() > mInSendingCnt.load()) {
+    if (mCurrenctConcurrency > mInSendingCnt.load()) {
         return true;
     } 
     return false;
@@ -72,32 +72,23 @@ void ConcurrencyLimiter::OnSendDone() {
 }
 
 void ConcurrencyLimiter::OnSuccess() {
-    {
-        lock_guard<mutex> lock(mCurrenctConcurrencyMux);        
-        if (mCurrenctConcurrency != mMaxConcurrency) {
-            ++mCurrenctConcurrency;
-        }
-    }
-    {
-        // 只要成功，interval就设置成最小值
-        lock_guard<mutex> lock(mIntervalMux);
+    lock_guard<mutex> lock(mLimiterMux);    
+    if (mCurrenctConcurrency <= 0) {
         mRetryIntervalSecs = mMinRetryIntervalSecs;
+    }    
+    if (mCurrenctConcurrency != mMaxConcurrency) {
+        ++mCurrenctConcurrency;
     }
 }
 
 void ConcurrencyLimiter::OnFail(time_t curTime) {
-    {
-        lock_guard<mutex> lock(mCurrenctConcurrencyMux);
-        if (mCurrenctConcurrency != mMinConcurrency) {
-            mCurrenctConcurrency = max(mMinConcurrency, static_cast<uint32_t>(mCurrenctConcurrency * mDownRatio));
-        }
+    lock_guard<mutex> lock(mLimiterMux);
+    if (mCurrenctConcurrency != 0) {
+        mCurrenctConcurrency = max(0U, static_cast<uint32_t>(mCurrenctConcurrency * mConcurrencyDownRatio));
     }
-    {
-        lock_guard<mutex> lock(mIntervalMux);
-        if (GetCurrentLimit() <= mMinConcurrency) {
-            if (mRetryIntervalSecs != mMaxRetryIntervalSecs) {
-                mRetryIntervalSecs = min(mMaxRetryIntervalSecs, static_cast<uint32_t>(mRetryIntervalSecs * mUpRatio));
-            }
+    if (mCurrenctConcurrency <= 0) {
+        if (mRetryIntervalSecs != mMaxRetryIntervalSecs) {
+            mRetryIntervalSecs = min(mMaxRetryIntervalSecs, static_cast<uint32_t>(mRetryIntervalSecs * mRetryIntervalUpRatio));
         }
     }
 }

@@ -46,9 +46,9 @@ bool ExactlyOnceSenderQueue::Push(unique_ptr<SenderQueueItem>&& item) {
         if (f->mMaxSendRate > 0) {
             mRateLimiter = RateLimiter(f->mMaxSendRate);
         }
-        mConcurrencyLimiters.emplace_back(FlusherSLS::GetRegionConcurrencyLimiter(f->mRegion));
-        mConcurrencyLimiters.emplace_back(FlusherSLS::GetProjectConcurrencyLimiter(f->mProject));
-        mConcurrencyLimiters.emplace_back(FlusherSLS::GetLogstoreConcurrencyLimiter(f->mProject, f->mLogstore));
+        mConcurrencyLimiters.emplace_back(std::make_pair(FlusherSLS::GetRegionConcurrencyLimiter(f->mRegion), mMetricsRecordRef.CreateCounter(ConcurrencyLimiter::GetLimiterMetricName("region"))));
+        mConcurrencyLimiters.emplace_back(std::make_pair(FlusherSLS::GetProjectConcurrencyLimiter(f->mProject), mMetricsRecordRef.CreateCounter(ConcurrencyLimiter::GetLimiterMetricName("project"))));
+        mConcurrencyLimiters.emplace_back(std::make_pair(FlusherSLS::GetLogstoreConcurrencyLimiter(f->mProject, f->mLogstore), mMetricsRecordRef.CreateCounter(ConcurrencyLimiter::GetLimiterMetricName("logstore"))));
         mIsInitialised = true;
     }
 
@@ -117,7 +117,6 @@ void ExactlyOnceSenderQueue::GetLimitAvailableItems(vector<SenderQueueItem*>& it
     if (Empty()) {
         return;
     }
-    int itemsCnt = 0;
     for (size_t index = 0; index < mCapacity; ++index) {
         SenderQueueItem* item = mQueue[index].get();
         if (item == nullptr) {
@@ -127,7 +126,7 @@ void ExactlyOnceSenderQueue::GetLimitAvailableItems(vector<SenderQueueItem*>& it
             return;
         }
         for (auto& limiter : mConcurrencyLimiters) {
-            if (!limiter->IsValidToPop()) {
+            if (!limiter.first->IsValidToPop()) {
                 return;
             }
         }
@@ -136,8 +135,8 @@ void ExactlyOnceSenderQueue::GetLimitAvailableItems(vector<SenderQueueItem*>& it
             item->mStatus.Set(SendingStatus::SENDING);
             items.emplace_back(item);
             for (auto& limiter : mConcurrencyLimiters) {
-                if (limiter != nullptr) {
-                    limiter->PostPop();
+                if (limiter.first != nullptr) {
+                    limiter.first->PostPop();
                 }
             }
             if (mRateLimiter) {
@@ -145,8 +144,8 @@ void ExactlyOnceSenderQueue::GetLimitAvailableItems(vector<SenderQueueItem*>& it
             }
             
         }
-        ++ itemsCnt;
-        if (itemsCnt >= limit) {
+        --limit;
+        if (limit <= 0) {
             return;
         }
     }

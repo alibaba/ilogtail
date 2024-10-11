@@ -31,7 +31,7 @@ public:
 };
 
 void ConcurrencyLimiterUnittest::TestLimiter() const {
-    shared_ptr<ConcurrencyLimiter> sConcurrencyLimiter = make_shared<ConcurrencyLimiter>(LimiterLabel::REGION, 80);
+    shared_ptr<ConcurrencyLimiter> sConcurrencyLimiter = make_shared<ConcurrencyLimiter>(80);
     // comcurrency = 10, count = 0
     APSARA_TEST_EQUAL(true, sConcurrencyLimiter->IsValidToPop());
     sConcurrencyLimiter->PostPop();

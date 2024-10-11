@@ -31,7 +31,7 @@ SenderQueueManager::SenderQueueManager() : mQueueParam(INT32_FLAG(sender_queue_c
 bool SenderQueueManager::CreateQueue(QueueKey key,
                                      const string& flusherId,
                                      const PipelineContext& ctx,
-                                     vector<shared_ptr<ConcurrencyLimiter>>&& concurrencyLimiters,
+                                     std::unordered_map<std::string, std::shared_ptr<ConcurrencyLimiter>>&& concurrencyLimitersMap,
                                      uint32_t maxRate) {
     lock_guard<mutex> lock(mQueueMux);
     auto iter = mQueues.find(key);
@@ -45,7 +45,7 @@ bool SenderQueueManager::CreateQueue(QueueKey key,
                             ctx);
         iter = mQueues.find(key);
     }
-    iter->second.SetConcurrencyLimiters(std::move(concurrencyLimiters));
+    iter->second.SetConcurrencyLimiters(std::move(concurrencyLimitersMap));
     iter->second.SetRateLimiter(maxRate);
     return true;
 }

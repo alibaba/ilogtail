@@ -42,31 +42,28 @@ void BoundedSenderQueueInterface::SetRateLimiter(uint32_t maxRate) {
     if (maxRate > 0) {
         mRateLimiter = RateLimiter(maxRate);
     }
+    mLimitByRateLimiterCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_QUEUE_LIMIT_BY_RATE_LIMITER_TOTAL); 
 }
 
-void BoundedSenderQueueInterface::SetConcurrencyLimiters(std::vector<std::shared_ptr<ConcurrencyLimiter>>&& limiters) {
+void BoundedSenderQueueInterface::SetConcurrencyLimiters(std::unordered_map<std::string, std::shared_ptr<ConcurrencyLimiter>>&& concurrencyLimitersMap) {
     mConcurrencyLimiters.clear();
-    for (auto& item : limiters) {
-        if (item == nullptr) {
-            // should not happen
-            continue;
-        }
-        mConcurrencyLimiters.emplace_back(item);
+    for (const auto& pair : concurrencyLimitersMap) {
+        mConcurrencyLimiters.emplace_back(std::make_pair(pair.second, mMetricsRecordRef.CreateCounter(ConcurrencyLimiter::GetLimiterMetricName(pair.first))));
     }
 }
 
 void BoundedSenderQueueInterface::OnSendingSuccess() {
     for (auto& limiter : mConcurrencyLimiters) {
-        if (limiter != nullptr) {
-            limiter->OnSuccess();
+        if (limiter.first != nullptr) {
+            limiter.first->OnSuccess();
         }
     }
 }
 
 void BoundedSenderQueueInterface::DecreaseSendingCnt() {
     for (auto& limiter : mConcurrencyLimiters) {
-        if (limiter != nullptr) {
-            limiter->OnSendDone();
+        if (limiter.first != nullptr) {
+            limiter.first->OnSendDone();
         }
     }
 }
