@@ -31,9 +31,9 @@ import (
 )
 
 func TestServiceHTTP_doDumpFile(t *testing.T) {
-	_, err := os.Stat(path.Join(util.GetCurrentBinaryPath(), "exec_dir", "dump"))
+	_, err := os.Stat(path.Join(util.GetCurrentBinaryPath(), "dump"))
 	if err == nil {
-		files, findErr := GetFileListByPrefix(path.Join(util.GetCurrentBinaryPath(), "exec_dir", "dump"), "custom", true, 0)
+		files, findErr := GetFileListByPrefix(path.Join(util.GetCurrentBinaryPath(), "dump"), "custom", true, 0)
 		require.NoError(t, findErr)
 		for _, file := range files {
 			_ = os.Remove(file)
