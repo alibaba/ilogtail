@@ -27,6 +27,7 @@
 #include "protobuf/sls/sls_logs.pb.h"
 
 namespace logtail {
+void CreateAgentDir();
 
 std::string GetAgentLogDir();
 std::string GetAgentDataDir();
@@ -50,6 +51,7 @@ std::string GetObserverEbpfHostPath();
 std::string GetBufferFileNamePrefix();
 std::string GetLegacyConfigFilePath();
 std::string GetAgentConfigName();
+std::string GetExactlyOnceCheckpoint(); 
 
 template <class T>
 class DoubleBuffer {

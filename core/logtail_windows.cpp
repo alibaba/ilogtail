@@ -16,20 +16,14 @@
 #include <Winsock2.h>
 #include <direct.h>
 
-#include <iostream>
-
-#include "RuntimeUtil.h"
+#include "app_config/AppConfig.h"
 #include "application/Application.h"
-#include "common/FileSystemUtil.h"
 #include "common/Flags.h"
 #include "logger/Logger.h"
 #include "monitor/LogtailAlarm.h"
 
 using namespace logtail;
 
-DECLARE_FLAG_STRING(loongcollector_conf_dir);
-DECLARE_FLAG_STRING(loongcollector_log_dir);
-DECLARE_FLAG_STRING(loongcollector_data_dir);
 DECLARE_FLAG_STRING(logtail_sys_conf_dir);
 DECLARE_FLAG_STRING(check_point_filename);
 DECLARE_FLAG_STRING(default_buffer_file_path);
@@ -50,26 +44,7 @@ static void overwrite_community_edition_flags() {
 }
 
 void do_worker_process() {
-    std::string processExecutionDir = GetProcessExecutionDir();
-#define PROCESSDIRFLAG(flag_name, env_name, dir_name) \
-    if (STRING_FLAG(flag_name).empty()) { \
-        STRING_FLAG(flag_name) = processExecutionDir + #dir_name + PATH_SEPARATOR; \
-    } else { \
-        STRING_FLAG(flag_name) = AbsolutePath(STRING_FLAG(flag_name), processExecutionDir); \
-    } \
-    if (!CheckExistance(STRING_FLAG(flag_name))) { \
-        if (Mkdirs(STRING_FLAG(flag_name))) { \
-            std::cout << STRING_FLAG(flag_name) + " dir is not existing, create done" << std::endl; \
-        } else { \
-            std::cout << STRING_FLAG(flag_name) + " dir is not existing, create failed" << std::endl; \
-            exit(0); \
-        } \
-    }
-
-    PROCESSDIRFLAG(loongcollector_conf_dir, "ALIYUN_LOONGCOLLECTOR_CONF_DIR", conf);
-    PROCESSDIRFLAG(loongcollector_log_dir, "ALIYUN_LOONGCOLLECTOR_LOG_DIR", log);
-    PROCESSDIRFLAG(loongcollector_data_dir, "ALIYUN_LOONGCOLLECTOR_DATA_DIR", data);
-    PROCESSDIRFLAG(loongcollector_run_dir, "ALIYUN_LOONGCOLLECTOR_RUN_DIR", run);
+    CreateAgentDir();
 
     Logger::Instance().InitGlobalLoggers();
 

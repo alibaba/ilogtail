@@ -16,12 +16,9 @@
 #include <sys/socket.h>
 #include <sys/wait.h>
 
-#include <iostream>
-
-#include "RuntimeUtil.h"
+#include "app_config/AppConfig.h"
 #include "application/Application.h"
 #include "common/ErrorUtil.h"
-#include "common/FileSystemUtil.h"
 #include "common/Flags.h"
 #include "common/version.h"
 #include "logger/Logger.h"
@@ -38,9 +35,6 @@ void* __wrap_memcpy(void* dest, const void* src, size_t n) {
 }
 #endif
 
-DECLARE_FLAG_STRING(loongcollector_conf_dir);
-DECLARE_FLAG_STRING(loongcollector_log_dir);
-DECLARE_FLAG_STRING(loongcollector_data_dir);
 DECLARE_FLAG_BOOL(ilogtail_disable_core);
 DECLARE_FLAG_INT32(max_open_files_limit);
 DECLARE_FLAG_INT32(max_reader_open_files);
@@ -89,26 +83,7 @@ static void overwrite_community_edition_flags() {
 
 // Main routine of worker process.
 void do_worker_process() {
-    std::string processExecutionDir = GetProcessExecutionDir();
-#define PROCESSDIRFLAG(flag_name, env_name, dir_name) \
-    if (STRING_FLAG(flag_name).empty()) { \
-        STRING_FLAG(flag_name) = processExecutionDir + #dir_name + PATH_SEPARATOR; \
-    } else { \
-        STRING_FLAG(flag_name) = AbsolutePath(STRING_FLAG(flag_name), processExecutionDir); \
-    } \
-    if (!CheckExistance(STRING_FLAG(flag_name))) { \
-        if (Mkdirs(STRING_FLAG(flag_name))) { \
-            std::cout << STRING_FLAG(flag_name) + " dir is not existing, create done" << std::endl; \
-        } else { \
-            std::cout << STRING_FLAG(flag_name) + " dir is not existing, create failed" << std::endl; \
-            exit(0); \
-        } \
-    }
-
-    PROCESSDIRFLAG(loongcollector_conf_dir, "ALIYUN_LOONGCOLLECTOR_CONF_DIR", conf);
-    PROCESSDIRFLAG(loongcollector_log_dir, "ALIYUN_LOONGCOLLECTOR_LOG_DIR", log);
-    PROCESSDIRFLAG(loongcollector_data_dir, "ALIYUN_LOONGCOLLECTOR_DATA_DIR", data);
-    PROCESSDIRFLAG(loongcollector_run_dir, "ALIYUN_LOONGCOLLECTOR_RUN_DIR", run);
+    CreateAgentDir();
 
     Logger::Instance().InitGlobalLoggers();
 

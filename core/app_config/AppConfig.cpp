@@ -15,18 +15,21 @@
 #include "AppConfig.h"
 
 #include <algorithm>
+#include <boost/filesystem.hpp>
+#include <iostream>
 
+#include "RuntimeUtil.h"
 #include "common/EnvUtil.h"
 #include "common/FileSystemUtil.h"
 #include "common/JsonUtil.h"
 #include "common/LogtailCommonFlags.h"
 #include "common/RuntimeUtil.h"
 #include "file_server/ConfigManager.h"
+#include "file_server/reader/LogFileReader.h"
 #include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/LogtailAlarm.h"
 #include "monitor/Monitor.h"
-#include "file_server/reader/LogFileReader.h"
 #ifdef __ENTERPRISE__
 #include "config/provider/EnterpriseConfigProvider.h"
 #endif
@@ -177,6 +180,34 @@ DEFINE_FLAG_STRING(check_point_filename, "", "C:\\LogtailData\\logtail_check_poi
 #endif
 
 namespace logtail {
+
+void CreateAgentDir () {
+#if defined(__RUN_LOGTAIL__)
+    return;
+#endif
+    std::string processExecutionDir = GetProcessExecutionDir();
+    Json::Value emptyJson;
+#define PROCESSDIRFLAG(flag_name, env_name, dir_name) \
+    LoadStringParameter(STRING_FLAG(flag_name), emptyJson, #flag_name, env_name); \
+    if (STRING_FLAG(flag_name).empty()) { \
+        STRING_FLAG(flag_name) = processExecutionDir + (dir_name) + PATH_SEPARATOR; \
+    } else { \
+        STRING_FLAG(flag_name) = AbsolutePath(STRING_FLAG(flag_name), processExecutionDir); \
+    } \
+    if (!CheckExistance(STRING_FLAG(flag_name))) { \
+        if (Mkdirs(STRING_FLAG(flag_name))) { \
+            std::cout << STRING_FLAG(flag_name) + " dir is not existing, create done" << std::endl; \
+        } else { \
+            std::cout << STRING_FLAG(flag_name) + " dir is not existing, create failed" << std::endl; \
+            exit(0); \
+        } \
+    }
+
+    PROCESSDIRFLAG(loongcollector_conf_dir, "ALIYUN_LOONGCOLLECTOR_CONF_DIR", "conf");
+    PROCESSDIRFLAG(loongcollector_log_dir, "ALIYUN_LOONGCOLLECTOR_LOG_DIR", "log");
+    PROCESSDIRFLAG(loongcollector_data_dir, "ALIYUN_LOONGCOLLECTOR_DATA_DIR", "data");
+    PROCESSDIRFLAG(loongcollector_run_dir, "ALIYUN_LOONGCOLLECTOR_RUN_DIR", "run");
+}
 
 std::string GetAgentLogDir() {
     static std::string dir;
@@ -404,6 +435,16 @@ string GetAgentConfigName() {
     return STRING_FLAG(ilogtail_config);
 #else
     return LOONGCOLLECTOR_CONFIG;
+#endif
+}
+
+string GetExactlyOnceCheckpoint() {
+#if defined(__RUN_LOGTAIL__)
+    auto fp = boost::filesystem::path(AppConfig::GetInstance()->GetLogtailSysConfDir());
+    return (fp / "checkpoint_v2").string();
+#else
+    auto fp = boost::filesystem::path(GetAgentDataDir());
+    return (fp / "exactly_once_checkpoint").string();
 #endif
 }
 
