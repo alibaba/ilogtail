@@ -45,7 +45,8 @@ public:
 
     // input plugin update
     void UpdateScrapeInput(std::shared_ptr<TargetSubscriberScheduler> targetSubscriber,
-                           const MetricLabels& defaultLabels);
+                           const MetricLabels& defaultLabels,
+                           const std::string& projectName);
     void RemoveScrapeInput(const std::string& jobName);
 
     // target discover and scrape
@@ -59,6 +60,8 @@ private:
 
     void CancelAllTargetSubscriber();
     void SubscribeOnce();
+
+    std::string GetAllProjects();
 
     bool mIsStarted = false;
     std::mutex mStartMutex;
@@ -80,9 +83,12 @@ private:
     std::atomic<uint64_t> mUnRegisterMs;
 
     // self monitor
+    ReadWriteLock mProjectRWLock;
+    std::map<std::string, std::string> mJobNameToProjectNameMap;
     MetricsRecordRef mMetricsRecordRef;
-    std::unordered_map<std::string, CounterPtr> mCounters;
-    std::unordered_map<std::string, IntGaugePtr> mIntGauges;
+    CounterPtr mPromRegisterRetryTotal;
+    IntGaugePtr mPromRegisterState;
+    IntGaugePtr mPromJobNum;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class PrometheusInputRunnerUnittest;

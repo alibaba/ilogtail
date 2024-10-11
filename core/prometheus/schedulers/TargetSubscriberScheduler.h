@@ -87,6 +87,7 @@ private:
     std::shared_ptr<PromSelfMonitor> mSelfMonitor;
     MetricsRecordRef mMetricsRecordRef;
     IntGaugePtr mPromSubscriberTargets;
+    CounterPtr mTotalDelayMs;
     MetricLabels mDefaultLabels;
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class TargetSubscriberSchedulerUnittest;

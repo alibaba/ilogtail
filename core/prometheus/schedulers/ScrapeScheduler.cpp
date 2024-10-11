@@ -61,8 +61,8 @@ ScrapeScheduler::ScrapeScheduler(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
 }
 
 void ScrapeScheduler::OnMetricResult(const HttpResponse& response, uint64_t timestampMilliSec) {
-    mSelfMonitor->CounterAdd(METRIC_PLUGIN_PROM_SCRAPE_TOTAL, response.mStatusCode);
-    mSelfMonitor->CounterAdd(METRIC_PLUGIN_PROM_SCRAPE_BYTES_TOTAL, response.mStatusCode, response.mBody.size());
+    mSelfMonitor->CounterAdd(METRIC_PLUGIN_OUT_EVENTS_TOTAL, response.mStatusCode);
+    mSelfMonitor->CounterAdd(METRIC_PLUGIN_OUT_SIZE_BYTES, response.mStatusCode, response.mBody.size());
     mSelfMonitor->CounterAdd(
         METRIC_PLUGIN_PROM_SCRAPE_TIME_MS, response.mStatusCode, GetCurrentTimeInMilliSeconds() - timestampMilliSec);
 
@@ -84,6 +84,7 @@ void ScrapeScheduler::OnMetricResult(const HttpResponse& response, uint64_t time
     SetAutoMetricMeta(eventGroup);
     SetTargetLabels(eventGroup);
     PushEventGroup(std::move(eventGroup));
+    mPluginTotalDelayMs->Add(GetCurrentTimeInMilliSeconds() - timestampMilliSec);
 }
 
 void ScrapeScheduler::SetAutoMetricMeta(PipelineEventGroup& eGroup) {
@@ -209,8 +210,8 @@ void ScrapeScheduler::InitSelfMonitor(const MetricLabels& defaultLabels) {
     labels.emplace_back(METRIC_LABEL_KEY_INSTANCE, mInstance);
 
     static const std::unordered_map<std::string, MetricType> sScrapeMetricKeys = {
-        {METRIC_PLUGIN_PROM_SCRAPE_TOTAL, MetricType::METRIC_TYPE_COUNTER},
-        {METRIC_PLUGIN_PROM_SCRAPE_BYTES_TOTAL, MetricType::METRIC_TYPE_COUNTER},
+        {METRIC_PLUGIN_OUT_EVENTS_TOTAL, MetricType::METRIC_TYPE_COUNTER},
+        {METRIC_PLUGIN_OUT_SIZE_BYTES, MetricType::METRIC_TYPE_COUNTER},
         {METRIC_PLUGIN_PROM_SCRAPE_TIME_MS, MetricType::METRIC_TYPE_COUNTER},
     };
 
@@ -218,6 +219,7 @@ void ScrapeScheduler::InitSelfMonitor(const MetricLabels& defaultLabels) {
 
     WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, std::move(labels));
     mPromDelayTotal = mMetricsRecordRef.CreateCounter(METRIC_PLUGIN_PROM_SCRAPE_DELAY_TOTAL);
+    mPluginTotalDelayMs = mMetricsRecordRef.CreateCounter(METRIC_PLUGIN_TOTAL_DELAY_MS);
 }
 
 } // namespace logtail

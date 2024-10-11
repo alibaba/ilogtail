@@ -60,20 +60,20 @@ PrometheusInputRunner::PrometheusInputRunner()
     labels.emplace_back(METRIC_LABEL_KEY_SERVICE_PORT, ToString(mServicePort));
 
     DynamicMetricLabels dynamicLabels;
-    dynamicLabels.emplace_back(METRIC_LABEL_KEY_PROJECT, []() -> std::string { return FlusherSLS::GetAllProjects(); });
+    dynamicLabels.emplace_back(METRIC_LABEL_KEY_PROJECT, [this]() -> std::string { return this->GetAllProjects(); });
 
     WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
         mMetricsRecordRef, std::move(labels), std::move(dynamicLabels));
 
-    mIntGauges[METRIC_RUNNER_PROM_REGISTER_STATE] = mMetricsRecordRef.CreateIntGauge(METRIC_RUNNER_PROM_REGISTER_STATE);
-    mIntGauges[METRIC_RUNNER_PROM_JOB_NUM] = mMetricsRecordRef.CreateIntGauge(METRIC_RUNNER_PROM_JOB_NUM);
-    mCounters[METRIC_RUNNER_PROM_REGISTER_RETRY_TOTAL]
-        = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_PROM_REGISTER_RETRY_TOTAL);
+    mPromRegisterState = mMetricsRecordRef.CreateIntGauge(METRIC_RUNNER_PROM_REGISTER_STATE);
+    mPromJobNum = mMetricsRecordRef.CreateIntGauge(METRIC_RUNNER_PROM_JOB_NUM);
+    mPromRegisterRetryTotal = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_PROM_REGISTER_RETRY_TOTAL);
 }
 
 /// @brief receive scrape jobs from input plugins and update scrape jobs
 void PrometheusInputRunner::UpdateScrapeInput(std::shared_ptr<TargetSubscriberScheduler> targetSubscriber,
-                                              const MetricLabels& defaultLabels) {
+                                              const MetricLabels& defaultLabels,
+                                              const string& projectName) {
     RemoveScrapeInput(targetSubscriber->GetId());
 
     targetSubscriber->mServiceHost = mServiceHost;
@@ -95,15 +95,31 @@ void PrometheusInputRunner::UpdateScrapeInput(std::shared_ptr<TargetSubscriberSc
     }
     // 2. build Ticker Event and add it to Timer
     targetSubscriber->ScheduleNext();
-    mIntGauges[METRIC_RUNNER_PROM_JOB_NUM]->Set(mTargetSubscriberSchedulerMap.size());
+    {
+        ReadLock lock(mSubscriberMapRWLock);
+        mPromJobNum->Set(mTargetSubscriberSchedulerMap.size());
+    }
+    // 3. add project name to mJobNameToProjectNameMap for self monitor
+    {
+        WriteLock lock(mProjectRWLock);
+        mJobNameToProjectNameMap[targetSubscriber->GetId()] = projectName;
+    }
 }
 
 void PrometheusInputRunner::RemoveScrapeInput(const std::string& jobName) {
-    WriteLock lock(mSubscriberMapRWLock);
-    if (mTargetSubscriberSchedulerMap.count(jobName)) {
-        mTargetSubscriberSchedulerMap[jobName]->Cancel();
-        mTargetSubscriberSchedulerMap.erase(jobName);
-        mIntGauges[METRIC_RUNNER_PROM_JOB_NUM]->Set(mTargetSubscriberSchedulerMap.size());
+    {
+        WriteLock lock(mSubscriberMapRWLock);
+        if (mTargetSubscriberSchedulerMap.count(jobName)) {
+            mTargetSubscriberSchedulerMap[jobName]->Cancel();
+            mTargetSubscriberSchedulerMap.erase(jobName);
+            mPromJobNum->Set(mTargetSubscriberSchedulerMap.size());
+        }
+    }
+    {
+        WriteLock lock(mProjectRWLock);
+        if (mJobNameToProjectNameMap.count(jobName)) {
+            mJobNameToProjectNameMap.erase(jobName);
+        }
     }
 }
 
@@ -132,7 +148,7 @@ void PrometheusInputRunner::Init() {
                 ++retry;
                 sdk::HttpMessage httpResponse = SendRegisterMessage(prometheus::REGISTER_COLLECTOR_PATH);
                 if (httpResponse.statusCode != 200) {
-                    mCounters[METRIC_RUNNER_PROM_REGISTER_RETRY_TOTAL]->Add(1);
+                    mPromRegisterRetryTotal->Add(1);
                     if (retry % 10 == 0) {
                         LOG_INFO(sLogger, ("register failed, retried", retry)("statusCode", httpResponse.statusCode));
                     }
@@ -157,7 +173,7 @@ void PrometheusInputRunner::Init() {
                             }
                         }
                     }
-                    mIntGauges[METRIC_RUNNER_PROM_REGISTER_STATE]->Set(1);
+                    mPromRegisterState->Set(1);
                     LOG_INFO(sLogger, ("Register Success", mPodName));
                     // subscribe immediately
                     SubscribeOnce();
@@ -203,7 +219,7 @@ void PrometheusInputRunner::Stop() {
                     LOG_ERROR(sLogger, ("unregister failed, statusCode", httpResponse.statusCode));
                 } else {
                     LOG_INFO(sLogger, ("Unregister Success", mPodName));
-                    mIntGauges[METRIC_RUNNER_PROM_REGISTER_STATE]->Set(0);
+                    mPromRegisterState->Set(0);
                     break;
                 }
                 std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -260,4 +276,19 @@ void PrometheusInputRunner::SubscribeOnce() {
     }
 }
 
+string PrometheusInputRunner::GetAllProjects() {
+    string result;
+    set<string> existProjects;
+    ReadLock lock(mProjectRWLock);
+    for (auto& [k, v] : mJobNameToProjectNameMap) {
+        if (existProjects.find(v) == existProjects.end()) {
+            if (!result.empty()) {
+                result += " ";
+            }
+            existProjects.insert(v);
+            result += v;
+        }
+    }
+    return result;
+}
 }; // namespace logtail

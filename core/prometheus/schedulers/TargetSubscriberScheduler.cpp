@@ -80,6 +80,7 @@ void TargetSubscriberScheduler::OnSubscription(const HttpResponse& response, uin
         = BuildScrapeSchedulerSet(targetGroup);
     UpdateScrapeScheduler(newScrapeSchedulerSet);
     mPromSubscriberTargets->Set(mScrapeSchedulerMap.size());
+    mTotalDelayMs->Add(GetCurrentTimeInMilliSeconds() - timestampMilliSec);
 }
 
 void TargetSubscriberScheduler::UpdateScrapeScheduler(
@@ -335,6 +336,7 @@ void TargetSubscriberScheduler::InitSelfMonitor(const MetricLabels& defaultLabel
 
     WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, std::move(mDefaultLabels));
     mPromSubscriberTargets = mMetricsRecordRef.CreateIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS);
+    mTotalDelayMs = mMetricsRecordRef.CreateCounter(METRIC_PLUGIN_TOTAL_DELAY_MS);
 }
 
 } // namespace logtail

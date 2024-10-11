@@ -57,8 +57,6 @@ const std::string METRIC_LABEL_KEY_INSTANCE = "instance";
 const std::string METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS = "plugin_prom_subscribe_targets";
 const std::string METRIC_PLUGIN_PROM_SUBSCRIBE_TOTAL = "plugin_prom_subscribe_total";
 const std::string METRIC_PLUGIN_PROM_SUBSCRIBE_TIME_MS = "plugin_prom_subscribe_time_ms";
-const std::string METRIC_PLUGIN_PROM_SCRAPE_TOTAL = "plugin_prom_scrape_total";
-const std::string METRIC_PLUGIN_PROM_SCRAPE_BYTES_TOTAL = "plugin_prom_scrape_bytes_total";
 const std::string METRIC_PLUGIN_PROM_SCRAPE_TIME_MS = "plugin_prom_scrape_time_ms";
 const std::string METRIC_PLUGIN_PROM_SCRAPE_DELAY_TOTAL = "plugin_prom_scrape_delay_total";
 
