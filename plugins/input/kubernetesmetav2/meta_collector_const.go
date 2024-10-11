@@ -14,9 +14,10 @@ const (
 	entityLastObservedTimeFieldName  = "__last_observed_time__"
 	entityKeepAliveSecondsFieldName  = "__keep_alive_seconds__"
 
-	entityCategoryFieldName   = "__category__"
-	defaultEntityCategory     = "entity"
-	defaultEntityLinkCategory = "entity_link"
+	entityCategoryFieldName      = "__category__"
+	entityCategorySelfMetricName = "category"
+	defaultEntityCategory        = "entity"
+	defaultEntityLinkCategory    = "entity_link"
 
 	entityLinkSrcDomainFieldName      = "__src_domain__"
 	entityLinkSrcEntityTypeFieldName  = "__src_entity_type__"

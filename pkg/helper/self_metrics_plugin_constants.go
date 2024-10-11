@@ -67,11 +67,18 @@ const (
 /**********************************************************
 *   service_mysql
 *   service_rdb
-*   service_kubernetes_meta
 **********************************************************/
 const (
 	MetricPluginCollectAvgCostTimeMs = "plugin_collect_avg_cost_time_ms"
 	MetricPluginCollectTotal         = "plugin_collect_total"
+)
+
+/**********************************************************
+*   service_k8s_meta
+**********************************************************/
+const (
+	MetricCollectEntityTotal = "plugin_collect_entity_total"
+	MetricCollectLinkTotal   = "plugin_collect_link_total"
 )
 
 /**********************************************************

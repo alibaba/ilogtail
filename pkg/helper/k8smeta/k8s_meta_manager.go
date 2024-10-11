@@ -13,6 +13,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	controllerConfig "sigs.k8s.io/controller-runtime/pkg/client/config"
 
+	"github.com/alibaba/ilogtail/pkg/flags"
 	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
@@ -44,13 +45,14 @@ type MetaManager struct {
 
 	ready atomic.Bool
 
-	metadataHandler  *metadataHandler
-	cacheMap         map[string]MetaCache
-	linkGenerator    *LinkGenerator
-	linkRegisterMap  map[string][]string
-	linkRegisterLock sync.RWMutex
+	metadataHandler *metadataHandler
+	cacheMap        map[string]MetaCache
+	linkGenerator   *LinkGenerator
+	linkRegisterMap map[string][]string
+	registerLock    sync.RWMutex
 
 	// self metrics
+	projectNames       map[string]int
 	metricRecord       pipeline.MetricsRecord
 	addEventCount      pipeline.CounterMetric
 	updateEventCount   pipeline.CounterMetric
@@ -74,6 +76,7 @@ func GetMetaManagerInstance() *MetaManager {
 		}
 		metaManager.linkGenerator = NewK8sMetaLinkGenerator(metaManager.cacheMap)
 		metaManager.linkRegisterMap = make(map[string][]string)
+		metaManager.projectNames = make(map[string]int)
 	})
 	return metaManager
 }
@@ -126,16 +129,16 @@ func (m *MetaManager) IsReady() bool {
 	return m.ready.Load()
 }
 
-func (m *MetaManager) RegisterSendFunc(configName string, resourceType string, sendFunc SendFunc, interval int) {
+func (m *MetaManager) RegisterSendFunc(projectName, configName, resourceType string, sendFunc SendFunc, interval int) {
 	if cache, ok := m.cacheMap[resourceType]; ok {
 		cache.RegisterSendFunc(configName, func(events []*K8sMetaEvent) {
 			sendFunc(events)
 			linkTypeList := make([]string, 0)
-			m.linkRegisterLock.RLock()
+			m.registerLock.RLock()
 			if m.linkRegisterMap[configName] != nil {
 				linkTypeList = append(linkTypeList, m.linkRegisterMap[configName]...)
 			}
-			m.linkRegisterLock.RUnlock()
+			m.registerLock.RUnlock()
 			for _, linkType := range linkTypeList {
 				linkEvents := m.linkGenerator.GenerateLinks(events, linkType)
 				if linkEvents != nil {
@@ -143,23 +146,55 @@ func (m *MetaManager) RegisterSendFunc(configName string, resourceType string, s
 				}
 			}
 		}, interval)
+		m.registerLock.Lock()
+		if cnt, ok := m.projectNames[projectName]; ok {
+			m.projectNames[projectName] = cnt + 1
+		} else {
+			m.projectNames[projectName] = 1
+		}
+		m.registerLock.Unlock()
 		return
 	}
+	// register link
 	if !isEntity(resourceType) {
-		m.linkRegisterLock.Lock()
+		m.registerLock.Lock()
 		if _, ok := m.linkRegisterMap[configName]; !ok {
 			m.linkRegisterMap[configName] = make([]string, 0)
 		}
 		m.linkRegisterMap[configName] = append(m.linkRegisterMap[configName], resourceType)
-		m.linkRegisterLock.Unlock()
+		m.registerLock.Unlock()
 	} else {
 		logger.Error(context.Background(), "ENTITY_PIPELINE_REGISTER_ERROR", "resourceType not support", resourceType)
 	}
 }
 
-func (m *MetaManager) UnRegisterSendFunc(configName string, resourceType string) {
+func (m *MetaManager) UnRegisterSendFunc(projectName, configName, resourceType string) {
 	if cache, ok := m.cacheMap[resourceType]; ok {
 		cache.UnRegisterSendFunc(configName)
+		m.registerLock.Lock()
+		if cnt, ok := m.projectNames[projectName]; ok {
+			if cnt == 1 {
+				delete(m.projectNames, projectName)
+			} else {
+				m.projectNames[projectName] = cnt - 1
+			}
+		}
+		// unregister link
+		if !isEntity(resourceType) {
+			if registeredLink, ok := m.linkRegisterMap[configName]; ok {
+				idx := -1
+				for i, v := range registeredLink {
+					if resourceType == v {
+						idx = i
+						break
+					}
+				}
+				if idx != -1 {
+					m.linkRegisterMap[configName] = append(registeredLink[:idx], registeredLink[idx+1:]...)
+				}
+			}
+		}
+		m.registerLock.Unlock()
 	} else {
 		logger.Error(context.Background(), "ENTITY_PIPELINE_UNREGISTER_ERROR", "resourceType not support", resourceType)
 	}
@@ -180,6 +215,28 @@ func GetMetaManagerMetrics() []map[string]string {
 	}
 	manager.queueSizeGauge.Set(float64(queueSize))
 	manager.cacheResourceGauge.Set(float64(cacheSize))
+	// set labels
+	manager.registerLock.RLock()
+	projectName := make([]string, 0)
+	for name := range manager.projectNames {
+		projectName = append(projectName, name)
+	}
+	manager.registerLock.RUnlock()
+	manager.metricRecord.Labels = []pipeline.Label{
+		{
+			Key:   "cluster_id",
+			Value: *flags.ClusterID,
+		},
+		{
+			Key:   "runner_name",
+			Value: "k8s_meta_manager",
+		},
+		{
+			Key:   "project",
+			Value: strings.Join(projectName, " "),
+		},
+	}
+
 	return []map[string]string{
 		manager.metricRecord.ExportMetricRecords(),
 	}

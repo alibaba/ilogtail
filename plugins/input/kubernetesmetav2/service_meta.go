@@ -6,7 +6,6 @@ import (
 	"github.com/alibaba/ilogtail/pkg/helper/k8smeta"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
-	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
 type ProcessFunc func(data *k8smeta.ObjectWrapper, method string) []models.PipelineEvent
@@ -55,14 +54,8 @@ func (s *ServiceK8sMeta) Init(context pipeline.Context) (int, error) {
 	s.initDomain()
 
 	metricRecord := s.context.GetMetricRecord()
-	s.entityCount = helper.NewCounterMetricAndRegister(metricRecord, helper.MetricPluginCollectTotal, &protocol.Log_Content{
-		Key:   "category",
-		Value: "entity",
-	})
-	s.linkCount = helper.NewCounterMetricAndRegister(metricRecord, helper.MetricPluginCollectTotal, &protocol.Log_Content{
-		Key:   "category",
-		Value: "link",
-	})
+	s.entityCount = helper.NewCounterMetricAndRegister(metricRecord, helper.MetricCollectEntityTotal)
+	s.linkCount = helper.NewCounterMetricAndRegister(metricRecord, helper.MetricCollectLinkTotal)
 	return 0, nil
 }
 
