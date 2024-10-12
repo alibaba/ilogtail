@@ -117,7 +117,7 @@ void ExactlyOnceSenderQueue::GetAvailableItems(vector<SenderQueueItem*>& items, 
     if (Empty()) {
         return;
     }
-    if (limit == -1) {
+    if (limit < 0) {
         for (size_t index = 0; index < mCapacity; ++index) {
             SenderQueueItem* item = mQueue[index].get();
             if (item == nullptr) {
@@ -135,6 +135,9 @@ void ExactlyOnceSenderQueue::GetAvailableItems(vector<SenderQueueItem*>& items, 
         if (item == nullptr) {
             continue;
         }
+        if (limit == 0) {
+            return;
+        }
         if (mRateLimiter && !mRateLimiter->IsValidToPop()) {
             return;
         }
@@ -143,11 +146,8 @@ void ExactlyOnceSenderQueue::GetAvailableItems(vector<SenderQueueItem*>& items, 
                 return;
             }
         }
-        --limit;
-        if (limit <= 0) {
-            return;
-        }
         if (item->mStatus.Get() == SendingStatus::IDLE) {
+            --limit;
             item->mStatus.Set(SendingStatus::SENDING);
             items.emplace_back(item);
             for (auto& limiter : mConcurrencyLimiters) {

@@ -115,7 +115,7 @@ void SenderQueue::GetAvailableItems(vector<SenderQueueItem*>& items, int32_t lim
     if (Empty()) {
         return;
     }
-    if (limit == -1) {
+    if (limit < 0) {
         for (auto index = mRead; index < mWrite; ++index) {
             SenderQueueItem* item = mQueue[index % mCapacity].get();
             if (item == nullptr) {
@@ -134,7 +134,9 @@ void SenderQueue::GetAvailableItems(vector<SenderQueueItem*>& items, int32_t lim
         if (item == nullptr) {
             continue;
         }
-        mFetchItemsCnt->Add(1);
+        if (limit == 0) {
+            return;
+        }
         if (mRateLimiter && !mRateLimiter->IsValidToPop()) {
             mLimitByRateLimiterCnt->Add(1);
             return;
@@ -145,11 +147,9 @@ void SenderQueue::GetAvailableItems(vector<SenderQueueItem*>& items, int32_t lim
                 return;
             }
         }
-        --limit;
-        if (limit <= 0) {
-            return;
-        }
         if (item->mStatus.Get() == SendingStatus::IDLE) {
+            mFetchItemsCnt->Add(1);
+            --limit;
             item->mStatus.Set(SendingStatus::SENDING);
             items.emplace_back(item);
             for (auto& limiter : mConcurrencyLimiters) {
