@@ -48,7 +48,7 @@ func init() {
 }
 
 func clean() {
-	_ = os.Remove(path.Join(config.LoongcollectorGlobalConfig.LoongcollectorLogDir, "plugin_logger.xml"))
+	_ = os.Remove(path.Join(config.LoongcollectorGlobalConfig.LoongcollectorDataDir, "plugin_logger.xml"))
 	_ = os.Remove(path.Join(config.LoongcollectorGlobalConfig.LoongcollectorLogDir, "go_plugin.LOG"))
 }
 

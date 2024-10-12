@@ -91,9 +91,8 @@ Logger::Logger() {
                                  INT32_FLAG(logtail_async_logger_thread_num));
     }
 
-    auto execDir = GetAgentLogDir();
-    mInnerLogger.open(execDir + "logger_initialization.log");
-    LoadConfig(execDir + "apsara_log_conf.json");
+    mInnerLogger.open(GetAgentLogDir() + "logger_initialization.log");
+    LoadConfig(GetAgentDataDir() + "apsara_log_conf.json");
     mInnerLogger.close();
 }
 
