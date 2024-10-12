@@ -110,7 +110,7 @@ func InitLogger() {
 func InitTestLogger(options ...ConfigOption) {
 	once.Do(func() {
 		config.LoongcollectorGlobalConfig.LoongcollectorLogDir = "./"
-		config.LoongcollectorGlobalConfig.LoongcollectorDataDir = "./"
+		config.LoongcollectorGlobalConfig.LoongcollectorConfDir = "./"
 		initTestLogger(options...)
 		catchStandardOutput()
 	})
@@ -123,7 +123,7 @@ func initNormalLogger() {
 	for _, option := range defaultProductionOptions {
 		option()
 	}
-	setLogConf(path.Join(config.LoongcollectorGlobalConfig.LoongcollectorDataDir, "plugin_logger.xml"))
+	setLogConf(path.Join(config.LoongcollectorGlobalConfig.LoongcollectorConfDir, "plugin_logger.xml"))
 }
 
 // initTestLogger extracted from Init method for unit test.
@@ -136,7 +136,7 @@ func initTestLogger(options ...ConfigOption) {
 	for _, option := range options {
 		option()
 	}
-	setLogConf(path.Join(config.LoongcollectorGlobalConfig.LoongcollectorDataDir, "plugin_logger.xml"))
+	setLogConf(path.Join(config.LoongcollectorGlobalConfig.LoongcollectorConfDir, "plugin_logger.xml"))
 }
 
 func Debug(ctx context.Context, kvPairs ...interface{}) {
@@ -266,7 +266,7 @@ func Flush() {
 
 func setLogConf(logConfig string) {
 	if !retainFlag {
-		_ = os.Remove(path.Join(config.LoongcollectorGlobalConfig.LoongcollectorDataDir, "plugin_logger.xml"))
+		_ = os.Remove(path.Join(config.LoongcollectorGlobalConfig.LoongcollectorConfDir, "plugin_logger.xml"))
 	}
 	debugFlag = 0
 	logtailLogger = seelog.Disabled

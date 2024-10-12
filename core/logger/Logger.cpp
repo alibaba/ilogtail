@@ -92,7 +92,7 @@ Logger::Logger() {
     }
 
     mInnerLogger.open(GetAgentLogDir() + "logger_initialization.log");
-    LoadConfig(GetAgentDataDir() + "apsara_log_conf.json");
+    LoadConfig(AppConfig::GetInstance()->GetLoongcollectorConfDir() + "apsara_log_conf.json");
     mInnerLogger.close();
 }
 
