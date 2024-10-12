@@ -213,6 +213,20 @@ void CreateAgentDir () {
     PROCESSDIRFLAG(loongcollector_log_dir);
     PROCESSDIRFLAG(loongcollector_data_dir);
     PROCESSDIRFLAG(loongcollector_run_dir);
+    PROCESSDIRFLAG(loongcollector_third_party_dir);
+}
+
+std::string GetAgentThirdPartyDir() {
+    static std::string dir;
+    if (!dir.empty()) {
+        return dir;
+    }
+#if defined(__RUN_LOGTAIL__)
+    dir = AppConfig::GetInstance()->GetLoongcollectorConfDir();
+#else
+    dir = STRING_FLAG(loongcollector_third_party_dir) + PATH_SEPARATOR;
+#endif
+    return dir;
 }
 
 std::string GetAgentLogDir() {
@@ -438,7 +452,7 @@ string GetLegacyUserLocalConfigFilePath() {
 
 string GetExactlyOnceCheckpoint() {
 #if defined(__RUN_LOGTAIL__)
-    auto fp = boost::filesystem::path(AppConfig::GetInstance()->GetLogtailSysConfDir());
+    auto fp = boost::filesystem::path(AppConfig::GetInstance()->GetLoongcollectorConfDir());
     return (fp / "checkpoint_v2").string();
 #else
     auto fp = boost::filesystem::path(GetAgentDataDir());

@@ -60,3 +60,4 @@ DECLARE_FLAG_STRING(loongcollector_conf_dir);
 DECLARE_FLAG_STRING(loongcollector_log_dir);
 DECLARE_FLAG_STRING(loongcollector_data_dir);
 DECLARE_FLAG_STRING(loongcollector_run_dir);
+DECLARE_FLAG_STRING(loongcollector_third_party_dir);

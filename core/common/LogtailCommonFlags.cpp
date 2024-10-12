@@ -129,3 +129,4 @@ DEFINE_FLAG_STRING(loongcollector_conf_dir, "loongcollector config dir", "conf")
 DEFINE_FLAG_STRING(loongcollector_log_dir, "loongcollector log dir", "log");
 DEFINE_FLAG_STRING(loongcollector_data_dir, "loongcollector data dir", "data");
 DEFINE_FLAG_STRING(loongcollector_run_dir, "loongcollector run dir", "run");
+DEFINE_FLAG_STRING(loongcollector_third_party_dir, "loongcollector third party dir", "thirdparty");

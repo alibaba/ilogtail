@@ -33,6 +33,10 @@ type GlobalConfig struct {
 	LoongcollectorLogDir string
 	// Directory to store loongcollector data.
 	LoongcollectorDataDir string
+	// Directory to store loongcollector debug data.
+	LoongcollectorDebugDir string
+	// Directory to store loongcollector third party data.
+	LoongcollectorThirdPartyDir string
 	// Network identification from loongcollector.
 	HostIP       string
 	Hostname     string
@@ -54,15 +58,17 @@ var UserAgent = fmt.Sprintf("ilogtail/%v (%v)", BaseVersion, runtime.GOOS) // se
 
 func newGlobalConfig() (cfg GlobalConfig) {
 	cfg = GlobalConfig{
-		InputIntervalMs:          1000,
-		AggregatIntervalMs:       3000,
-		FlushIntervalMs:          3000,
-		DefaultLogQueueSize:      1000,
-		DefaultLogGroupQueueSize: 4,
-		LoongcollectorConfDir:    "./conf/",
-		LoongcollectorLogDir:     "./log/",
-		LoongcollectorDataDir:    "./data/",
-		DelayStopSec:             300,
+		InputIntervalMs:             1000,
+		AggregatIntervalMs:          3000,
+		FlushIntervalMs:             3000,
+		DefaultLogQueueSize:         1000,
+		DefaultLogGroupQueueSize:    4,
+		LoongcollectorConfDir:       "./conf/",
+		LoongcollectorLogDir:        "./log/",
+		LoongcollectorDataDir:       "./data/",
+		LoongcollectorDebugDir:      "./debug/",
+		LoongcollectorThirdPartyDir: "./thirdparty/",
+		DelayStopSec:                300,
 	}
 	return
 }
