@@ -41,9 +41,18 @@ public:
     void OnFail(time_t curTime);
 
     static std::string GetLimiterMetricName(std::string limiterLabel) {
-        std::ostringstream oss;
-        oss << METRIC_COMPONENT_QUEUE_REJECTED_TOTAL_PREFIX << limiterLabel << METRIC_COMPONENT_QUEUE_REJECTED_TOTAL_SUFFIX;
-        return oss.str();
+        switch (limiterLabel)
+        {
+        case "region":
+            return  METRIC_COMPONENT_QUEUE_LIMIT_BY_REGION_LIMITER_TOTAL;
+        case "project":
+            return  METRIC_COMPONENT_QUEUE_LIMIT_BY_PROJECT_LIMITER_TOTAL;
+        case "logstore":
+            return  METRIC_COMPONENT_QUEUE_LIMIT_BY_LOGSTORE_LIMITER_TOTAL;
+        default:
+            break;
+        }
+        return limiterLabel;
     }
 
 #ifdef APSARA_UNIT_TEST_MAIN

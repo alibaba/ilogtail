@@ -531,18 +531,18 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
 
     GenerateGoPlugin(config, optionalGoPipeline);
 
-    mPushHttpCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_PUSH_CURL_TOTAL);
-    mSendDoneCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_CURL_SEND_DONE_TOTAL);
-    mSuccessCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_CURL_SUCCESS_TOTAL);
-    mNetworkErrorCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_CURL_NETWORK_ERROR_TOTAL);
-    mServerErrorCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_CURL_SERVER_ERROR_TOTAL);
-    mShardWriteQuotaErrorCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_CURL_SHARD_WRITE_QUOTA_ERROR_TOTAL);
-    mProjectQuotaErrorCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_CURL_PROJECT_QUOTA_ERROR_TOTAL);
-    mUnauthErrorCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_CURL_UNAUTH_ERROR_TOTAL);
-    mParamsErrorCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_CURL_PARAMS_ERROR_TOTAL);
-    mSequenceIDErrorCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_CURL_SEQUENCE_ID_ERROR_TOTAL);
-    mRequestExpiredErrorCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_CURL_REQUEST_EXPRIRED_ERROR_TOTAL);
-    mOtherErrorCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_CURL_OTHER_ERROR_TOTAL);
+    mPushHttpCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_PUSH_HTTP_TOTAL);
+    mSendDoneCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_HTTP_SEND_DONE_TOTAL);
+    mSuccessCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_HTTP_SUCCESS_TOTAL);
+    mNetworkErrorCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_HTTP_NETWORK_ERROR_TOTAL);
+    mServerErrorCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_HTTP_SERVER_ERROR_TOTAL);
+    mShardWriteQuotaErrorCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_HTTP_SHARD_WRITE_QUOTA_ERROR_TOTAL);
+    mProjectQuotaErrorCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_HTTP_PROJECT_QUOTA_ERROR_TOTAL);
+    mUnauthErrorCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_HTTP_UNAUTH_ERROR_TOTAL);
+    mParamsErrorCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_HTTP_PARAMS_ERROR_TOTAL);
+    mSequenceIDErrorCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_HTTP_SEQUENCE_ID_ERROR_TOTAL);
+    mRequestExpiredErrorCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_HTTP_REQUEST_EXPRIRED_ERROR_TOTAL);
+    mOtherErrorCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_HTTP_OTHER_ERROR_TOTAL);
 
     return true;
 }

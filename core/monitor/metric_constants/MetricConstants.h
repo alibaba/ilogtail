@@ -125,18 +125,18 @@ extern const std::string METRIC_PLUGIN_PARSE_STDOUT_TOTAL;
 /**********************************************************
  *   flusher_sls
  **********************************************************/
-extern const std::string METRIC_PLUGIN_PUSH_CURL_TOTAL;
-extern const std::string METRIC_PLUGIN_CURL_SUCCESS_TOTAL;
-extern const std::string METRIC_PLUGIN_CURL_SEND_DONE_TOTAL;
-extern const std::string METRIC_PLUGIN_CURL_NETWORK_ERROR_TOTAL;
-extern const std::string METRIC_PLUGIN_CURL_SERVER_ERROR_TOTAL;
-extern const std::string METRIC_PLUGIN_CURL_SHARD_WRITE_QUOTA_ERROR_TOTAL;
-extern const std::string METRIC_PLUGIN_CURL_PROJECT_QUOTA_ERROR_TOTAL;
-extern const std::string METRIC_PLUGIN_CURL_UNAUTH_ERROR_TOTAL;
-extern const std::string METRIC_PLUGIN_CURL_PARAMS_ERROR_TOTAL;
-extern const std::string METRIC_PLUGIN_CURL_SEQUENCE_ID_ERROR_TOTAL;
-extern const std::string METRIC_PLUGIN_CURL_REQUEST_EXPRIRED_ERROR_TOTAL;
-extern const std::string METRIC_PLUGIN_CURL_OTHER_ERROR_TOTAL;
+extern const std::string METRIC_PLUGIN_PUSH_HTTP_TOTAL;
+extern const std::string METRIC_PLUGIN_HTTP_SUCCESS_TOTAL;
+extern const std::string METRIC_PLUGIN_HTTP_SEND_DONE_TOTAL;
+extern const std::string METRIC_PLUGIN_HTTP_NETWORK_ERROR_TOTAL;
+extern const std::string METRIC_PLUGIN_HTTP_SERVER_ERROR_TOTAL;
+extern const std::string METRIC_PLUGIN_HTTP_SHARD_WRITE_QUOTA_ERROR_TOTAL;
+extern const std::string METRIC_PLUGIN_HTTP_PROJECT_QUOTA_ERROR_TOTAL;
+extern const std::string METRIC_PLUGIN_HTTP_UNAUTH_ERROR_TOTAL;
+extern const std::string METRIC_PLUGIN_HTTP_PARAMS_ERROR_TOTAL;
+extern const std::string METRIC_PLUGIN_HTTP_SEQUENCE_ID_ERROR_TOTAL;
+extern const std::string METRIC_PLUGIN_HTTP_REQUEST_EXPRIRED_ERROR_TOTAL;
+extern const std::string METRIC_PLUGIN_HTTP_OTHER_ERROR_TOTAL;
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -190,8 +190,9 @@ extern const std::string METRIC_COMPONENT_QUEUE_DISCARDED_EVENTS_TOTAL;
 
 extern const std::string METRIC_COMPONENT_QUEUE_FETCH_ITEMS_TIMES_TOTAL;
 extern const std::string METRIC_COMPONENT_QUEUE_FETCH_ITEMS_TOTAL;
-extern const std::string METRIC_COMPONENT_QUEUE_REJECTED_TOTAL_PREFIX;
-extern const std::string METRIC_COMPONENT_QUEUE_REJECTED_TOTAL_SUFFIX;
+extern const std::string METRIC_COMPONENT_QUEUE_LIMIT_BY_REGION_LIMITER_TOTAL;
+extern const std::string METRIC_COMPONENT_QUEUE_LIMIT_BY_PROJECT_LIMITER_TOTAL;
+extern const std::string METRIC_COMPONENT_QUEUE_LIMIT_BY_LOGSTORE_LIMITER_TOTAL;
 extern const std::string METRIC_COMPONENT_QUEUE_REJECTED_BY_RATE_LIMITER_TOTAL;
 
 

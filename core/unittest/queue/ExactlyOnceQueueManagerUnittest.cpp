@@ -244,7 +244,7 @@ void ExactlyOnceQueueManagerUnittest::TestGetAvailableSenderQueueItems() {
         regionConcurrencyLimiter.first->SetCurrentLimit(3);
         regionConcurrencyLimiter.first->SetInSendingCount(0);
         vector<SenderQueueItem*> items;
-        sManager->GetAvailableSenderQueueItems(items, -1);
+        sManager->GetAvailableSenderQueueItems(items, 80);
         APSARA_TEST_EQUAL(3U, items.size());
         APSARA_TEST_EQUAL(3, regionConcurrencyLimiter.first->GetInSendingCount());
     }
