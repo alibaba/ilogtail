@@ -129,7 +129,7 @@ public:
 class eBPFSelfMonitorMgr {
 public:
     eBPFSelfMonitorMgr() : mSelfMonitors({}), mInited({}) {}
-    void Init(const nami::PluginType type, MetricsRecordRef& ref, const std::string& name);
+    void Init(const nami::PluginType type, MetricsRecordRef& ref, const std::string& name, const std::string& logstore);
     void Release(const nami::PluginType type);
     void Suspend(const nami::PluginType type);
     void HandleStatistic(std::vector<nami::eBPFStatistics>&& stats);

@@ -78,7 +78,9 @@ std::string BaseBPFMonitor::PluginTypeToString(const nami::PluginType pluginType
 void BaseBPFMonitor::InitInnerMetric() {
     // init base metrics, only plugin relative
     // poll kernel events
-    MetricLabels pollKernelEventsLabels = {{METRIC_LABEL_KEY_RUNNER_RECV_EVENT_STAGE, METRIC_LABEL_VALUE_RUNNER_RECV_EVENT_STAGE_POLL_KERNEL}};
+    MetricLabels pollKernelEventsLabels = {
+        {METRIC_LABEL_KEY_RUNNER_RECV_EVENT_STAGE, METRIC_LABEL_VALUE_RUNNER_RECV_EVENT_STAGE_POLL_KERNEL}
+    };
     auto ref = mPluginMetricMgr->GetOrCreateReentrantMetricsRecordRef(pollKernelEventsLabels);
     mRecvKernelEventsTotal = ref->GetCounter(METRIC_RUNNER_IN_EVENTS_TOTAL);
     mRefAndLabels.emplace_back(std::make_pair<>(ref, pollKernelEventsLabels));
@@ -240,7 +242,7 @@ void NetworkObserverSelfMonitor::HandleStatistic(nami::eBPFStatistics& stats) {
     mLastStat = stats;
 }
 
-void eBPFSelfMonitorMgr::Init(const nami::PluginType type, MetricsRecordRef& ref, const std::string& name) {
+void eBPFSelfMonitorMgr::Init(const nami::PluginType type, MetricsRecordRef& ref, const std::string& name, const std::string& logstore) {
     if (mInited[int(type)]) {
         return;
     }
@@ -257,6 +259,13 @@ void eBPFSelfMonitorMgr::Init(const nami::PluginType type, MetricsRecordRef& ref
         lastStats = mSelfMonitors[int(type)]->GetLastStats();
     }
 
+    // Add project to labels
+    // Add Runner Name to labels
+    MetricLabelsPtr labelsPtr = ref.GetLabels();
+    labelsPtr->push_back({METRIC_LABEL_KEY_RUNNER_NAME, METRIC_LABEL_VALUE_RUNNER_NAME_EBPF_SERVER});
+    labelsPtr->push_back({METRIC_LABEL_KEY_LOGSTORE, logstore});
+
+
     switch (type)
     {
     case nami::PluginType::NETWORK_OBSERVE: {
@@ -266,25 +275,25 @@ void eBPFSelfMonitorMgr::Init(const nami::PluginType type, MetricsRecordRef& ref
         keys.insert({METRIC_RUNNER_EBPF_NETWORK_OBSERVER_WORKER_HANDLE_EVENTS_TOTAL, MetricType::METRIC_TYPE_COUNTER});
         keys.insert({METRIC_RUNNER_EBPF_NETWORK_OBSERVER_PROTOCOL_PARSE_RECORDS_TOTAL, MetricType::METRIC_TYPE_COUNTER});
         auto pluginMetricManager
-            = std::make_shared<PluginMetricManager>(ref.GetLabels(), keys);
+            = std::make_shared<PluginMetricManager>(labelsPtr, keys);
         mSelfMonitors[int(type)] = std::make_unique<NetworkObserverSelfMonitor>(name, pluginMetricManager, ref, lastStats);
         break;
     }
     case nami::PluginType::NETWORK_SECURITY: {
         auto pluginMetricManager
-            = std::make_shared<PluginMetricManager>(ref.GetLabels(), metricKeys);
+            = std::make_shared<PluginMetricManager>(labelsPtr, metricKeys);
         mSelfMonitors[int(type)] = std::make_unique<NetworkSecuritySelfMonitor>(name, pluginMetricManager, ref, lastStats);
         break;
     }
     case nami::PluginType::FILE_SECURITY: {
         auto pluginMetricManager
-            = std::make_shared<PluginMetricManager>(ref.GetLabels(), metricKeys);
+            = std::make_shared<PluginMetricManager>(labelsPtr, metricKeys);
         mSelfMonitors[int(type)] = std::make_unique<FileSecuritySelfMonitor>(name, pluginMetricManager, ref, lastStats);
         break;
     }
     case nami::PluginType::PROCESS_SECURITY: {
         auto pluginMetricManager
-            = std::make_shared<PluginMetricManager>(ref.GetLabels(), metricKeys);
+            = std::make_shared<PluginMetricManager>(labelsPtr, metricKeys);
         mSelfMonitors[int(type)] = std::make_unique<ProcessSecuritySelfMonitor>(name, pluginMetricManager, ref, lastStats);
         break;
     }
