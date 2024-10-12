@@ -127,7 +127,7 @@ private:
     std::unique_ptr<EventGroupSerializer> mGroupSerializer;
     std::unique_ptr<Serializer<std::vector<CompressedLogGroup>>> mGroupListSerializer;
 
-    CounterPtr mPushToRunnerCnt;
+    CounterPtr mSendCnt;
     CounterPtr mSendDoneCnt;
     CounterPtr mSuccessCnt;
     CounterPtr mNetworkErrorCnt;

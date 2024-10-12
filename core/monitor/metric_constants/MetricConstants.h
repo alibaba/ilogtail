@@ -101,7 +101,7 @@ extern const std::string METRIC_PLUGIN_OUT_SUCCESSFUL_EVENTS_TOTAL;
 /**********************************************************
  *   all flusher （所有发送插件通用指标）
  **********************************************************/
-extern const std::string METRIC_PLUGIN_FLUSHER_PUSH_TO_RUNNER_TOTAL;
+extern const std::string METRIC_PLUGIN_FLUSHER_OUT_EVENT_GROUPS_TOTAL;
 extern const std::string METRIC_PLUGIN_FLUSHER_SEND_DONE_TOTAL;
 extern const std::string METRIC_PLUGIN_FLUSHER_SUCCESS_TOTAL;
 extern const std::string METRIC_PLUGIN_FLUSHER_NETWORK_ERROR_TOTAL;

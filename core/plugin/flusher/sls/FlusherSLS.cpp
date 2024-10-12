@@ -531,7 +531,7 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
 
     GenerateGoPlugin(config, optionalGoPipeline);
 
-    mPushToRunnerCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_FLUSHER_PUSH_TO_RUNNER_TOTAL);
+    mSendCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_FLUSHER_OUT_EVENT_GROUPS_TOTAL);
     mSendDoneCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_FLUSHER_SEND_DONE_TOTAL);
     mSuccessCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_FLUSHER_SUCCESS_TOTAL);
     mNetworkErrorCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_FLUSHER_NETWORK_ERROR_TOTAL);
@@ -602,8 +602,8 @@ unique_ptr<HttpSinkRequest> FlusherSLS::BuildRequest(SenderQueueItem* item) cons
             lastResetEndpointTime = curTime;
         }
     }
-    if (mPushToRunnerCnt) {
-        mPushToRunnerCnt->Add(1);
+    if (mSendCnt) {
+        mSendCnt->Add(1);
     }
     if (BOOL_FLAG(send_prefer_real_ip)) {
         if (curTime - sendClient->GetSlsRealIpUpdateTime() >= INT32_FLAG(send_check_real_ip_interval)) {
