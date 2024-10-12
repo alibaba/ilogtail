@@ -97,6 +97,19 @@ extern const std::string METRIC_PLUGIN_OUT_FAILED_EVENTS_TOTAL;
 extern const std::string METRIC_PLUGIN_OUT_KEY_NOT_FOUND_EVENTS_TOTAL;
 extern const std::string METRIC_PLUGIN_OUT_SUCCESSFUL_EVENTS_TOTAL;
 
+
+/**********************************************************
+ *   all flusher （所有发送插件通用指标）
+ **********************************************************/
+extern const std::string METRIC_PLUGIN_FLUSHER_PUSH_TO_RUNNER_TOTAL;
+extern const std::string METRIC_PLUGIN_FLUSHER_SEND_DONE_TOTAL;
+extern const std::string METRIC_PLUGIN_FLUSHER_SUCCESS_TOTAL;
+extern const std::string METRIC_PLUGIN_FLUSHER_NETWORK_ERROR_TOTAL;
+extern const std::string METRIC_PLUGIN_FLUSHER_SERVER_ERROR_TOTAL;
+extern const std::string METRIC_PLUGIN_FLUSHER_UNAUTH_ERROR_TOTAL;
+extern const std::string METRIC_PLUGIN_FLUSHER_PARAMS_ERROR_TOTAL;
+extern const std::string METRIC_PLUGIN_FLUSHER_OTHER_ERROR_TOTAL;
+
 /**********************************************************
  *   processor_parse_apsara_native
  *   processor_parse_timestamp_native
@@ -122,22 +135,14 @@ extern const std::string METRIC_PLUGIN_UNMATCHED_EVENTS_TOTAL;
 extern const std::string METRIC_PLUGIN_PARSE_STDERR_TOTAL;
 extern const std::string METRIC_PLUGIN_PARSE_STDOUT_TOTAL;
 
+
 /**********************************************************
  *   flusher_sls
  **********************************************************/
-extern const std::string METRIC_PLUGIN_PUSH_HTTP_TOTAL;
-extern const std::string METRIC_PLUGIN_HTTP_SUCCESS_TOTAL;
-extern const std::string METRIC_PLUGIN_HTTP_SEND_DONE_TOTAL;
-extern const std::string METRIC_PLUGIN_HTTP_NETWORK_ERROR_TOTAL;
-extern const std::string METRIC_PLUGIN_HTTP_SERVER_ERROR_TOTAL;
-extern const std::string METRIC_PLUGIN_HTTP_SHARD_WRITE_QUOTA_ERROR_TOTAL;
-extern const std::string METRIC_PLUGIN_HTTP_PROJECT_QUOTA_ERROR_TOTAL;
-extern const std::string METRIC_PLUGIN_HTTP_UNAUTH_ERROR_TOTAL;
-extern const std::string METRIC_PLUGIN_HTTP_PARAMS_ERROR_TOTAL;
-extern const std::string METRIC_PLUGIN_HTTP_SEQUENCE_ID_ERROR_TOTAL;
-extern const std::string METRIC_PLUGIN_HTTP_REQUEST_EXPRIRED_ERROR_TOTAL;
-extern const std::string METRIC_PLUGIN_HTTP_OTHER_ERROR_TOTAL;
-
+extern const std::string METRIC_PLUGIN_FLUSHER_SLS_SHARD_WRITE_QUOTA_ERROR_TOTAL;
+extern const std::string METRIC_PLUGIN_FLUSHER_SLS_PROJECT_QUOTA_ERROR_TOTAL;
+extern const std::string METRIC_PLUGIN_FLUSHER_SLS_SEQUENCE_ID_ERROR_TOTAL;
+extern const std::string METRIC_PLUGIN_FLUSHER_SLS_REQUEST_EXPRIRED_ERROR_TOTAL;
 
 //////////////////////////////////////////////////////////////////////////
 // component
