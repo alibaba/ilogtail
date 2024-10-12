@@ -436,14 +436,6 @@ string GetLegacyUserLocalConfigFilePath() {
 #endif
 }
 
-string GetAgentConfigName() {
-#if defined(__RUN_LOGTAIL__)
-    return STRING_FLAG(ilogtail_config);
-#else
-    return LOONGCOLLECTOR_CONFIG;
-#endif
-}
-
 string GetExactlyOnceCheckpoint() {
 #if defined(__RUN_LOGTAIL__)
     auto fp = boost::filesystem::path(AppConfig::GetInstance()->GetLogtailSysConfDir());

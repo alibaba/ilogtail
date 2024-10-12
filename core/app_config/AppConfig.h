@@ -50,7 +50,6 @@ std::string GetProfileSnapshotDumpFileName();
 std::string GetObserverEbpfHostPath();
 std::string GetSendBufferFileNamePrefix();
 std::string GetLegacyUserLocalConfigFilePath();
-std::string GetAgentConfigName();
 std::string GetExactlyOnceCheckpoint(); 
 
 template <class T>
