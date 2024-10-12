@@ -24,8 +24,8 @@ SenderQueue::SenderQueue(
     size_t cap, size_t low, size_t high, QueueKey key, const string& flusherId, const PipelineContext& ctx)
     : QueueInterface(key, cap, ctx), BoundedSenderQueueInterface(cap, low, high, key, flusherId, ctx) {
     mQueue.resize(cap);
-    mFetchTimesCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_QUEUE_FETCH_ITEMS_TIMES_TOTAL);
-    mFetchItemsCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_QUEUE_FETCH_ITEMS_TOTAL);    
+    mFetchedTimesCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_QUEUE_FETCHED_ITEMS_TIMES_TOTAL);
+    mFetchedItemsCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_QUEUE_FETCHED_ITEMS_TOTAL);    
     WriteMetrics::GetInstance()->CommitMetricsRecordRef(mMetricsRecordRef);    
 }
 
@@ -111,7 +111,7 @@ bool SenderQueue::Remove(SenderQueueItem* item) {
 
 
 void SenderQueue::GetAvailableItems(vector<SenderQueueItem*>& items, int32_t limit) {
-    mFetchTimesCnt->Add(1);
+    mFetchedTimesCnt->Add(1);
     if (Empty()) {
         return;
     }
@@ -138,7 +138,7 @@ void SenderQueue::GetAvailableItems(vector<SenderQueueItem*>& items, int32_t lim
             return;
         }
         if (mRateLimiter && !mRateLimiter->IsValidToPop()) {
-            mLimitByRateLimiterCnt->Add(1);
+            mRejectedByRateLimiterCnt->Add(1);
             return;
         }
         for (auto& limiter : mConcurrencyLimiters) {
@@ -148,7 +148,7 @@ void SenderQueue::GetAvailableItems(vector<SenderQueueItem*>& items, int32_t lim
             }
         }
         if (item->mStatus.Get() == SendingStatus::IDLE) {
-            mFetchItemsCnt->Add(1);
+            mFetchedItemsCnt->Add(1);
             --limit;
             item->mStatus.Set(SendingStatus::SENDING);
             items.emplace_back(item);

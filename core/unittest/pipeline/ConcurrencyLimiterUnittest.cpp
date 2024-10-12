@@ -36,7 +36,7 @@ void ConcurrencyLimiterUnittest::TestLimiter() const {
     APSARA_TEST_EQUAL(true, sConcurrencyLimiter->IsValidToPop());
     sConcurrencyLimiter->PostPop();
     APSARA_TEST_EQUAL(1U, sConcurrencyLimiter->GetInSendingCount());
-    sConcurrencyLimiter->OnFail(time(NULL));
+    sConcurrencyLimiter->OnFail();
     sConcurrencyLimiter->OnSendDone();
     APSARA_TEST_EQUAL(40U, sConcurrencyLimiter->GetCurrentLimit());
     APSARA_TEST_EQUAL(0U, sConcurrencyLimiter->GetInSendingCount());
@@ -67,7 +67,7 @@ void ConcurrencyLimiterUnittest::TestLimiter() const {
     }
     APSARA_TEST_EQUAL(7U, sConcurrencyLimiter->GetInSendingCount());
     for (int i = 0; i < num; i++) {
-        sConcurrencyLimiter->OnFail(time(NULL));
+        sConcurrencyLimiter->OnFail();
         sConcurrencyLimiter->OnSendDone();
     }
     APSARA_TEST_EQUAL(0U, sConcurrencyLimiter->GetInSendingCount());

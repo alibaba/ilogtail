@@ -17,9 +17,10 @@
 #pragma once
 
 #include <atomic>
-#include <ctime>
 #include <mutex>
-#include <sstream>
+#include <cstdint>
+#include <string>
+#include <chrono>
 
 #include "monitor/metric_constants/MetricConstants.h"
 
@@ -38,17 +39,17 @@ public:
     void OnSendDone();
 
     void OnSuccess();
-    void OnFail(time_t curTime);
+    void OnFail();
 
     static std::string GetLimiterMetricName(const std::string& limiter) {
-        if (limiterLabel == "region") {
+        if (limiter == "region") {
             return  METRIC_COMPONENT_QUEUE_REJECTED_BY_REGION_LIMITER_TOTAL;
-        } else if (limiterLabel == "project") {
+        } else if (limiter == "project") {
             return  METRIC_COMPONENT_QUEUE_REJECTED_BY_PROJECT_LIMITER_TOTAL;
-        } else if (limiterLabel == "logstore") {
+        } else if (limiter == "logstore") {
             return  METRIC_COMPONENT_QUEUE_REJECTED_BY_LOGSTORE_LIMITER_TOTAL;
         } 
-        return limiterLabel;
+        return limiter;
     }
 
 #ifdef APSARA_UNIT_TEST_MAIN
@@ -62,7 +63,7 @@ public:
 #endif
 
 private:
-    std::atomic<uint32_t> mInSendingCnt = 0;
+    std::atomic_uint32_t mInSendingCnt = 0U;
 
     uint32_t mMaxConcurrency = 0;
 

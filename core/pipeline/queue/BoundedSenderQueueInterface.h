@@ -70,7 +70,7 @@ protected:
 
     IntGaugePtr mExtraBufferSize;
     IntGaugePtr mExtraBufferDataSizeBytes;
-    CounterPtr mLimitByRateLimiterCnt;
+    CounterPtr mRejectedByRateLimiterCnt;
 };
 
 } // namespace logtail

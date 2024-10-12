@@ -13,8 +13,6 @@
 // limitations under the License.
 
 #include "pipeline/limiter/ConcurrencyLimiter.h"
-#include "app_config/AppConfig.h"
-#include "common/TimeUtil.h"
 
 using namespace std;
 
@@ -48,7 +46,7 @@ bool ConcurrencyLimiter::IsValidToPop() {
         mLastCheckTime = std::chrono::system_clock::now();
     }
     lock_guard<mutex> lock(mLimiterMux);
-    if (mCurrenctConcurrency <= 0) {
+    if (mCurrenctConcurrency == 0) {
         auto curTime = std::chrono::system_clock::now();
         if (chrono::duration_cast<chrono::seconds>(curTime - mLastCheckTime).count() > mRetryIntervalSecs) {
             mLastCheckTime = curTime;
@@ -81,7 +79,7 @@ void ConcurrencyLimiter::OnSuccess() {
     }
 }
 
-void ConcurrencyLimiter::OnFail(time_t curTime) {
+void ConcurrencyLimiter::OnFail() {
     lock_guard<mutex> lock(mLimiterMux);
     if (mCurrenctConcurrency != 0) {
         mCurrenctConcurrency = static_cast<uint32_t>(mCurrenctConcurrency * mConcurrencyDownRatio);

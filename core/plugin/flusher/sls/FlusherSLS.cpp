@@ -736,7 +736,7 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
                 }
             }
             operation = data->mBufferOrNot ? OperationOnFail::RETRY_LATER : OperationOnFail::DISCARD;
-            GetRegionConcurrencyLimiter(mRegion)->OnFail(time(nullptr));
+            GetRegionConcurrencyLimiter(mRegion)->OnFail();
             GetProjectConcurrencyLimiter(mProject)->OnSuccess();
             GetLogstoreConcurrencyLimiter(mProject, mLogstore)->OnSuccess();
         } else if (sendResult == SEND_QUOTA_EXCEED) {
@@ -744,7 +744,7 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
             if (slsResponse.mErrorCode == sdk::LOGE_SHARD_WRITE_QUOTA_EXCEED) {
                 failDetail << "shard write quota exceed";
                 suggestion << "Split logstore shards. https://help.aliyun.com/zh/sls/user-guide/expansion-of-resources";
-                GetLogstoreConcurrencyLimiter(mProject, mLogstore)->OnFail(time(nullptr));
+                GetLogstoreConcurrencyLimiter(mProject, mLogstore)->OnFail();
                 GetRegionConcurrencyLimiter(mRegion)->OnSuccess();
                 GetProjectConcurrencyLimiter(mProject)->OnSuccess();
                 if (mShardWriteQuotaErrorCnt) {
@@ -754,7 +754,7 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
                 failDetail << "project write quota exceed";
                 suggestion << "Submit quota modification request. "
                               "https://help.aliyun.com/zh/sls/user-guide/expansion-of-resources";
-                GetProjectConcurrencyLimiter(mProject)->OnFail(time(nullptr));
+                GetProjectConcurrencyLimiter(mProject)->OnFail();
                 GetRegionConcurrencyLimiter(mRegion)->OnSuccess();
                 GetLogstoreConcurrencyLimiter(mProject, mLogstore)->OnSuccess();
                 if (mProjectQuotaErrorCnt) {
