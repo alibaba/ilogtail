@@ -45,7 +45,7 @@ public:
         if (limiter == "region") {
             return  METRIC_COMPONENT_FETCH_REJECTED_BY_REGION_LIMITER_TIMES_TOTAL;
         } else if (limiter == "project") {
-            return  METRIC_COMPONENT_FETCH_REJECTED_BY_PROJECT_LIMITER_TIMES_TOTAL;gi
+            return  METRIC_COMPONENT_FETCH_REJECTED_BY_PROJECT_LIMITER_TIMES_TOTAL;
         } else if (limiter == "logstore") {
             return  METRIC_COMPONENT_FETCH_REJECTED_BY_LOGSTORE_LIMITER_TIMES_TOTAL;
         } 
