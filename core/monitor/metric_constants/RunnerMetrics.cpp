@@ -36,6 +36,9 @@ const string METRIC_RUNNER_IN_ITEMS_TOTAL = "runner_in_items_total";
 const string METRIC_RUNNER_LAST_RUN_TIME = "runner_last_run_time";
 const string METRIC_RUNNER_OUT_ITEMS_TOTAL = "runner_out_items_total";
 const string METRIC_RUNNER_TOTAL_DELAY_MS = "runner_total_delay_ms";
+const string METRIC_RUNNER_CLIENT_REGISTER_STATE = "runner_client_register_state";
+const string METRIC_RUNNER_CLIENT_REGISTER_RETRY_TOTAL = "runner_client_register_retry_total";
+const string METRIC_RUNNER_JOB_NUM = "runner_job_num";
 
 /**********************************************************
  *   http sink
@@ -61,12 +64,5 @@ const string METRIC_RUNNER_FILE_ENABLE_FILE_INCLUDED_BY_MULTI_CONFIGS_FLAG
 const string METRIC_RUNNER_FILE_POLLING_MODIFY_CACHE_SIZE = "runner_polling_modify_cache_size";
 const string METRIC_RUNNER_FILE_POLLING_DIR_CACHE_SIZE = "runner_polling_dir_cache_size";
 const string METRIC_RUNNER_FILE_POLLING_FILE_CACHE_SIZE = "runner_polling_file_cache_size";
-
-/**********************************************************
- *   prometheus server
- **********************************************************/
-const std::string METRIC_RUNNER_CLIENT_REGISTER_STATE = "runner_client_register_state";
-const std::string METRIC_RUNNER_REGISTER_RETRY_TOTAL = "runner_register_retry_total";
-const std::string METRIC_RUNNER_JOB_NUM = "runner_job_num";
 
 } // namespace logtail

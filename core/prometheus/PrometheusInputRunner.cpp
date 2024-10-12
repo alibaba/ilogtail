@@ -67,7 +67,7 @@ PrometheusInputRunner::PrometheusInputRunner()
 
     mPromRegisterState = mMetricsRecordRef.CreateIntGauge(METRIC_RUNNER_CLIENT_REGISTER_STATE);
     mPromJobNum = mMetricsRecordRef.CreateIntGauge(METRIC_RUNNER_JOB_NUM);
-    mPromRegisterRetryTotal = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_REGISTER_RETRY_TOTAL);
+    mPromRegisterRetryTotal = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_CLIENT_REGISTER_RETRY_TOTAL);
 }
 
 /// @brief receive scrape jobs from input plugins and update scrape jobs

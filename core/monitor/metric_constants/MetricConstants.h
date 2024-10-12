@@ -208,6 +208,9 @@ extern const std::string METRIC_RUNNER_IN_ITEMS_TOTAL;
 extern const std::string METRIC_RUNNER_LAST_RUN_TIME;
 extern const std::string METRIC_RUNNER_OUT_ITEMS_TOTAL;
 extern const std::string METRIC_RUNNER_TOTAL_DELAY_MS;
+extern const std::string METRIC_RUNNER_CLIENT_REGISTER_STATE;
+extern const std::string METRIC_RUNNER_CLIENT_REGISTER_RETRY_TOTAL;
+extern const std::string METRIC_RUNNER_JOB_NUM;
 
 /**********************************************************
  *   http sink
@@ -232,12 +235,5 @@ extern const std::string METRIC_RUNNER_FILE_ENABLE_FILE_INCLUDED_BY_MULTI_CONFIG
 extern const std::string METRIC_RUNNER_FILE_POLLING_MODIFY_CACHE_SIZE;
 extern const std::string METRIC_RUNNER_FILE_POLLING_DIR_CACHE_SIZE;
 extern const std::string METRIC_RUNNER_FILE_POLLING_FILE_CACHE_SIZE;
-
-/**********************************************************
- *   prometheus runner
- **********************************************************/
-extern const std::string METRIC_RUNNER_CLIENT_REGISTER_STATE;
-extern const std::string METRIC_RUNNER_REGISTER_RETRY_TOTAL;
-extern const std::string METRIC_RUNNER_JOB_NUM;
 
 } // namespace logtail
