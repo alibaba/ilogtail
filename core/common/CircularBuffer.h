@@ -16,8 +16,10 @@
 
 #pragma once
 #include <atomic>
+
 #include "MemoryBarrier.h"
 #include "Semaphore.h"
+#include "common/TimeUtil.h"
 
 namespace logtail {
 

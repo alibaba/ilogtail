@@ -231,6 +231,10 @@ func (p *pluginv1Runner) runProcessor() {
 func (p *pluginv1Runner) runProcessorInternal(cc *pipeline.AsyncControl) {
 	defer panicRecover(p.LogstoreConfig.ConfigName)
 	var logCtx *pipeline.LogWithContext
+	processorTag := ProcessorTag{
+		PipelineMetaTagKey: p.LogstoreConfig.GlobalConfig.PipelineMetaTagKey,
+		AgentEnvMetaTagKey: p.LogstoreConfig.GlobalConfig.AgentEnvMetaTagKey,
+	}
 	for {
 		select {
 		case <-cc.CancelToken():
@@ -238,6 +242,7 @@ func (p *pluginv1Runner) runProcessorInternal(cc *pipeline.AsyncControl) {
 				return
 			}
 		case logCtx = <-p.LogsChan:
+			processorTag.ProcessV1(logCtx, p.LogstoreConfig.GlobalConfig)
 			logs := []*protocol.Log{logCtx.Log}
 			p.LogstoreConfig.Statistics.RawLogMetric.Add(int64(len(logs)))
 			for _, processor := range p.ProcessorPlugins {
@@ -315,17 +320,12 @@ func (p *pluginv1Runner) runFlusherInternal(cc *pipeline.AsyncControl) {
 			}
 			p.LogstoreConfig.Statistics.FlushLogGroupMetric.Add(int64(len(logGroups)))
 
-			// Add tags for each non-empty LogGroup, includes: default hostname tag,
-			// env tags and global tags in config.
 			for _, logGroup := range logGroups {
 				if len(logGroup.Logs) == 0 {
 					continue
 				}
 				p.LogstoreConfig.Statistics.FlushLogMetric.Add(int64(len(logGroup.Logs)))
 				logGroup.Source = util.GetIPAddress()
-				for key, value := range loadAdditionalTags(p.LogstoreConfig.GlobalConfig).Iterator() {
-					logGroup.LogTags = append(logGroup.LogTags, &protocol.LogTag{Key: key, Value: value})
-				}
 			}
 
 			// Flush LogGroups to all flushers.

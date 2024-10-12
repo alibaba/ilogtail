@@ -21,10 +21,10 @@
 #include "app_config/AppConfig.h"
 #include "common/JsonUtil.h"
 #include "file_server/FileServer.h"
-#include "plugin/input/InputFile.h"
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineContext.h"
 #include "pipeline/plugin/PluginRegistry.h"
+#include "plugin/input/InputFile.h"
 #include "plugin/processor/inner/ProcessorSplitLogStringNative.h"
 #include "plugin/processor/inner/ProcessorSplitMultilineLogStringNative.h"
 #include "plugin/processor/inner/ProcessorTagNative.h"
@@ -257,7 +257,6 @@ void InputFileUnittest::TestCreateInnerProcessors() {
         auto plugin = static_cast<ProcessorSplitLogStringNative*>(input->mInnerProcessors[0]->mPlugin.get());
         APSARA_TEST_EQUAL(DEFAULT_CONTENT_KEY, plugin->mSourceKey);
         APSARA_TEST_EQUAL('\n', plugin->mSplitChar);
-        APSARA_TEST_TRUE(plugin->mAppendingLogPositionMeta);
         APSARA_TEST_EQUAL(ProcessorTagNative::sName, input->mInnerProcessors[1]->Name());
     }
     {
@@ -292,7 +291,6 @@ void InputFileUnittest::TestCreateInnerProcessors() {
         APSARA_TEST_TRUE(plugin->mMultiline.mIgnoringUnmatchWarning);
         APSARA_TEST_EQUAL(MultilineOptions::UnmatchedContentTreatment::DISCARD,
                           plugin->mMultiline.mUnmatchedContentTreatment);
-        APSARA_TEST_TRUE(plugin->mAppendingLogPositionMeta);
         APSARA_TEST_EQUAL(ProcessorTagNative::sName, input->mInnerProcessors[1]->Name());
     }
     {
@@ -316,7 +314,6 @@ void InputFileUnittest::TestCreateInnerProcessors() {
         auto plugin = static_cast<ProcessorSplitLogStringNative*>(input->mInnerProcessors[0]->mPlugin.get());
         APSARA_TEST_EQUAL(DEFAULT_CONTENT_KEY, plugin->mSourceKey);
         APSARA_TEST_EQUAL('\0', plugin->mSplitChar);
-        APSARA_TEST_TRUE(plugin->mAppendingLogPositionMeta);
         APSARA_TEST_EQUAL(ProcessorTagNative::sName, input->mInnerProcessors[1]->Name());
         ctx.SetIsFirstProcessorJsonFlag(false);
     }
@@ -344,7 +341,6 @@ void InputFileUnittest::TestCreateInnerProcessors() {
         auto plugin = static_cast<ProcessorSplitLogStringNative*>(input->mInnerProcessors[0]->mPlugin.get());
         APSARA_TEST_EQUAL(DEFAULT_CONTENT_KEY, plugin->mSourceKey);
         APSARA_TEST_EQUAL('\0', plugin->mSplitChar);
-        APSARA_TEST_TRUE(plugin->mAppendingLogPositionMeta);
         APSARA_TEST_EQUAL(ProcessorTagNative::sName, input->mInnerProcessors[1]->Name());
         ctx.SetIsFirstProcessorJsonFlag(false);
     }

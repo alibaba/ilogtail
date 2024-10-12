@@ -285,4 +285,6 @@ bool IsValidList(const Json::Value& config, const std::string& key, std::string&
 
 bool IsValidMap(const Json::Value& config, const std::string& key, std::string& errorMsg);
 
+bool IsKeyExist(const Json::Value& config, const std::string& key);
+
 } // namespace logtail

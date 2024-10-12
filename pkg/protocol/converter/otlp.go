@@ -65,8 +65,8 @@ func (c *Converter) ConvertToOtlpResourseLogs(logGroup *protocol.LogGroup, targe
 	for i, log := range logGroup.Logs {
 		logRecord := scopeLog.LogRecords().AppendEmpty()
 
-		contents, tags := convertLogToMap(log, logGroup.LogTags, logGroup.Source, logGroup.Topic, c.TagKeyRenameMap)
-		desiredValue, err := findTargetValues(targetFields, contents, tags, c.TagKeyRenameMap)
+		contents, tags := convertLogToMap(log, logGroup.LogTags, logGroup.Source, logGroup.Topic)
+		desiredValue, err := findTargetValues(targetFields, contents, tags)
 		if err != nil {
 			return rsLogs, nil, err
 		}

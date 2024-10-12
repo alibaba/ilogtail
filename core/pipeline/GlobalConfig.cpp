@@ -151,6 +151,30 @@ bool GlobalConfig::Init(const Json::Value& config, const PipelineContext& ctx, J
         }
     }
 
+    // PipelineMetaTagKey
+    if (!GetOptionalMapParam(config, "PipelineMetaTagKey", mPipelineMetaTagKey, errorMsg)) {
+        PARAM_WARNING_IGNORE(ctx.GetLogger(),
+                             ctx.GetAlarm(),
+                             errorMsg,
+                             moduleName,
+                             ctx.GetConfigName(),
+                             ctx.GetProjectName(),
+                             ctx.GetLogstoreName(),
+                             ctx.GetRegion());
+    }
+
+    // AgentEnvMetaTagKey
+    if (!GetOptionalMapParam(config, "AgentEnvMetaTagKey", mAgentEnvMetaTagKey, errorMsg)) {
+        PARAM_WARNING_IGNORE(ctx.GetLogger(),
+                             ctx.GetAlarm(),
+                             errorMsg,
+                             moduleName,
+                             ctx.GetConfigName(),
+                             ctx.GetProjectName(),
+                             ctx.GetLogstoreName(),
+                             ctx.GetRegion());
+    }
+
     return true;
 }
 

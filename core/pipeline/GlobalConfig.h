@@ -38,6 +38,8 @@ struct GlobalConfig {
     uint32_t mProcessPriority = 0;
     bool mEnableTimestampNanosecond = false;
     bool mUsingOldContentTag = false;
+    Json::Value mPipelineMetaTagKey;
+    Json::Value mAgentEnvMetaTagKey;
 };
 
 } // namespace logtail

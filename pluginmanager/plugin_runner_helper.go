@@ -79,7 +79,7 @@ func flushOutStore[T FlushData, F FlusherWrapperInterface](lc *LogstoreConfig, s
 }
 
 func loadAdditionalTags(globalConfig *config.GlobalConfig) models.Tags {
-	tags := models.NewTagsWithKeyValues("__hostname__", util.GetHostName())
+	tags := models.NewTagsWithKeyValues()
 	for i := 0; i < len(helper.EnvTags); i += 2 {
 		tags.Add(helper.EnvTags[i], helper.EnvTags[i+1])
 	}
