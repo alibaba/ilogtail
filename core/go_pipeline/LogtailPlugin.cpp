@@ -264,7 +264,7 @@ bool LogtailPlugin::LoadPluginBase() {
         DynamicLibLoader loader;
         std::string error;
         // load plugin adapter
-        if (!loader.LoadDynLib("PluginAdapter", error, AppConfig::GetInstance()->GetWorkingDir())) {
+        if (!loader.LoadDynLib("GoPluginAdapter", error, AppConfig::GetInstance()->GetWorkingDir())) {
             LOG_ERROR(sLogger, ("open adapter lib error, Message", error));
             return mPluginValid;
         }
@@ -281,7 +281,7 @@ bool LogtailPlugin::LoadPluginBase() {
         }
         LOG_INFO(sLogger, ("valid plugin adapter version, version", version));
 
-        // Be compatible with old libPluginAdapter.so, V2 -> V1.
+        // Be compatible with old libGoPluginAdapter.so, V2 -> V1.
         auto registerV2Fun = (RegisterLogtailCallBackV2)loader.LoadMethod("RegisterLogtailCallBackV2", error);
         if (error.empty()) {
             registerV2Fun(LogtailPlugin::IsValidToSend,
@@ -309,7 +309,7 @@ bool LogtailPlugin::LoadPluginBase() {
         DynamicLibLoader loader;
         std::string error;
         // load plugin base
-        if (!loader.LoadDynLib("PluginBase", error, AppConfig::GetInstance()->GetWorkingDir())) {
+        if (!loader.LoadDynLib("GoPluginBase", error, AppConfig::GetInstance()->GetWorkingDir())) {
             LOG_ERROR(sLogger, ("open plugin base dl error, Message", error));
             return mPluginValid;
         }

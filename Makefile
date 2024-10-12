@@ -137,8 +137,8 @@ upgrade_adapter_lib:
 .PHONY: plugin_main
 plugin_main: clean
 	./scripts/plugin_build.sh mod default $(OUT_DIR) $(VERSION) $(PLUGINS_CONFIG_FILE) $(GO_MOD_FILE)
-	cp pkg/logtail/libPluginAdapter.so $(OUT_DIR)/libPluginAdapter.so
-	cp pkg/logtail/PluginAdapter.dll $(OUT_DIR)/PluginAdapter.dll
+	cp pkg/logtail/libGoPluginAdapter.so $(OUT_DIR)/libGoPluginAdapter.so
+	cp pkg/logtail/GoPluginAdapter.dll $(OUT_DIR)/GoPluginAdapter.dll
 
 .PHONY: plugin_local
 plugin_local:
@@ -190,8 +190,8 @@ unittest_e2e_engine: clean gocdocker
 
 .PHONY: unittest_plugin
 unittest_plugin: clean import_plugins
-	cp pkg/logtail/libPluginAdapter.so ./plugin_main
-	cp pkg/logtail/PluginAdapter.dll ./plugin_main
+	cp pkg/logtail/libGoPluginAdapter.so ./plugin_main
+	cp pkg/logtail/GoPluginAdapter.dll ./plugin_main
 	mv ./plugins/input/prometheus/input_prometheus.go ./plugins/input/prometheus/input_prometheus.go.bak
 	go test $$(go list ./...|grep -Ev "telegraf|external|envconfig|(input\/prometheus)|(input\/syslog)"| grep -Ev "plugin_main|pluginmanager") -coverprofile .testCoverage.txt
 	mv ./plugins/input/prometheus/input_prometheus.go.bak ./plugins/input/prometheus/input_prometheus.go
@@ -203,9 +203,9 @@ unittest_core:
 
 .PHONY: unittest_pluginmanager
 unittest_pluginmanager: clean import_plugins
-	cp pkg/logtail/libPluginAdapter.so ./plugin_main
-	cp pkg/logtail/PluginAdapter.dll ./plugin_main
-	cp pkg/logtail/libPluginAdapter.so ./pluginmanager
+	cp pkg/logtail/libGoPluginAdapter.so ./plugin_main
+	cp pkg/logtail/GoPluginAdapter.dll ./plugin_main
+	cp pkg/logtail/libGoPluginAdapter.so ./pluginmanager
 	mv ./plugins/input/prometheus/input_prometheus.go ./plugins/input/prometheus/input_prometheus.go.bak
 	go test $$(go list ./...|grep -Ev "telegraf|external|envconfig"| grep -E "plugin_main|pluginmanager") -coverprofile .coretestCoverage.txt
 	mv ./plugins/input/prometheus/input_prometheus.go.bak ./plugins/input/prometheus/input_prometheus.go

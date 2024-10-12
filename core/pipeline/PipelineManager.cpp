@@ -159,7 +159,7 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
         if (isInputObserverStarted) {
             ObserverManager::GetInstance()->Resume();
         } else {
-            // input_observer_network always relies on PluginBase
+            // input_observer_network always relies on GoPluginBase
             LogtailPlugin::GetInstance()->LoadPluginBase();
             ObserverManager::GetInstance()->Reload();
             isInputObserverStarted = true;
