@@ -76,7 +76,11 @@ void ConcurrencyLimiterUnittest::TestLimiter() const {
 
     num = 3;
     for (int i = 0; i < num; i++) {
-        APSARA_TEST_EQUAL(false, sConcurrencyLimiter->IsValidToPop());
+        if (i == 0) {
+            APSARA_TEST_EQUAL(true, sConcurrencyLimiter->IsValidToPop());
+        } else {
+            APSARA_TEST_EQUAL(false, sConcurrencyLimiter->IsValidToPop());
+        }
     }
 
     sConcurrencyLimiter->PostPop();

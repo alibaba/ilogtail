@@ -42,9 +42,6 @@ uint32_t ConcurrencyLimiter::GetInSendingCount() const { return mInSendingCnt.lo
 
 
 bool ConcurrencyLimiter::IsValidToPop() {
-    if (mLastCheckTime.time_since_epoch().count()  == 0) {
-        mLastCheckTime = std::chrono::system_clock::now();
-    }
     lock_guard<mutex> lock(mLimiterMux);
     if (mCurrenctConcurrency == 0) {
         auto curTime = std::chrono::system_clock::now();
