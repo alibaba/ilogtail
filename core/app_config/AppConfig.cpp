@@ -186,14 +186,14 @@ void CreateAgentDir () {
 #endif
     std::string processExecutionDir = GetProcessExecutionDir();
     Json::Value emptyJson;
-#define PROCESSDIRFLAG(flag_name, env_name) \
+#define PROCESSDIRFLAG(flag_name) \
     try { \
-        const char* value = getenv(env_name); \
+        const char* value = getenv(#flag_name); \
         if (value != NULL) { \
             STRING_FLAG(flag_name) = StringTo<string>(value); \
         } \
     } catch (const exception& e) { \
-        std::cout << "load config from env error, env_name:" << (env_name) << "\terror:" << e.what() << std::endl; \
+        std::cout << "load config from env error, env_name:" << #flag_name << "\terror:" << e.what() << std::endl; \
     } \
     if (STRING_FLAG(flag_name).empty()) { \
         STRING_FLAG(flag_name) = processExecutionDir + PATH_SEPARATOR; \
@@ -209,10 +209,10 @@ void CreateAgentDir () {
         } \
     }
 
-    PROCESSDIRFLAG(loongcollector_conf_dir, "ALIYUN_LOONGCOLLECTOR_CONF_DIR");
-    PROCESSDIRFLAG(loongcollector_log_dir, "ALIYUN_LOONGCOLLECTOR_LOG_DIR");
-    PROCESSDIRFLAG(loongcollector_data_dir, "ALIYUN_LOONGCOLLECTOR_DATA_DIR");
-    PROCESSDIRFLAG(loongcollector_run_dir, "ALIYUN_LOONGCOLLECTOR_RUN_DIR");
+    PROCESSDIRFLAG(loongcollector_conf_dir);
+    PROCESSDIRFLAG(loongcollector_log_dir);
+    PROCESSDIRFLAG(loongcollector_data_dir);
+    PROCESSDIRFLAG(loongcollector_run_dir);
 }
 
 std::string GetAgentLogDir() {
