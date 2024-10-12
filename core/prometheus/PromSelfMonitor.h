@@ -9,16 +9,16 @@
 
 namespace logtail {
 
-// manage status metrics
-class PromSelfMonitor {
+// manage status metrics, thread unsafe
+class PromSelfMonitorUnsafe {
 public:
-    PromSelfMonitor() = default;
+    PromSelfMonitorUnsafe() = default;
 
     void InitMetricManager(const std::unordered_map<std::string, MetricType>& metricKeys, const MetricLabels& labels);
 
-    void CounterAdd(const std::string& metricName, uint64_t status, uint64_t val = 1);
+    void AddCounter(const std::string& metricName, uint64_t status, uint64_t val = 1);
 
-    void IntGaugeSet(const std::string& metricName, uint64_t status, uint64_t value);
+    void SetIntGauge(const std::string& metricName, uint64_t status, uint64_t value);
 
 private:
     ReentrantMetricsRecordRef GetOrCreateReentrantMetricsRecordRef(const std::string& status);

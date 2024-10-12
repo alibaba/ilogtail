@@ -84,7 +84,7 @@ private:
     std::string mETag;
 
     // self monitor
-    std::shared_ptr<PromSelfMonitor> mSelfMonitor;
+    std::shared_ptr<PromSelfMonitorUnsafe> mSelfMonitor;
     MetricsRecordRef mMetricsRecordRef;
     IntGaugePtr mPromSubscriberTargets;
     CounterPtr mTotalDelayMs;

@@ -61,9 +61,9 @@ ScrapeScheduler::ScrapeScheduler(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
 }
 
 void ScrapeScheduler::OnMetricResult(const HttpResponse& response, uint64_t timestampMilliSec) {
-    mSelfMonitor->CounterAdd(METRIC_PLUGIN_OUT_EVENTS_TOTAL, response.mStatusCode);
-    mSelfMonitor->CounterAdd(METRIC_PLUGIN_OUT_SIZE_BYTES, response.mStatusCode, response.mBody.size());
-    mSelfMonitor->CounterAdd(
+    mSelfMonitor->AddCounter(METRIC_PLUGIN_OUT_EVENTS_TOTAL, response.mStatusCode);
+    mSelfMonitor->AddCounter(METRIC_PLUGIN_OUT_SIZE_BYTES, response.mStatusCode, response.mBody.size());
+    mSelfMonitor->AddCounter(
         METRIC_PLUGIN_PROM_SCRAPE_TIME_MS, response.mStatusCode, GetCurrentTimeInMilliSeconds() - timestampMilliSec);
 
     mScrapeTimestampMilliSec = timestampMilliSec;
@@ -205,7 +205,7 @@ void ScrapeScheduler::SetTimer(std::shared_ptr<Timer> timer) {
 }
 
 void ScrapeScheduler::InitSelfMonitor(const MetricLabels& defaultLabels) {
-    mSelfMonitor = std::make_shared<PromSelfMonitor>();
+    mSelfMonitor = std::make_shared<PromSelfMonitorUnsafe>();
     MetricLabels labels = defaultLabels;
     labels.emplace_back(METRIC_LABEL_KEY_INSTANCE, mInstance);
 

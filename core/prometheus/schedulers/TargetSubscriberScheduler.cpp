@@ -58,8 +58,8 @@ bool TargetSubscriberScheduler::operator<(const TargetSubscriberScheduler& other
 }
 
 void TargetSubscriberScheduler::OnSubscription(const HttpResponse& response, uint64_t timestampMilliSec) {
-    mSelfMonitor->CounterAdd(METRIC_PLUGIN_PROM_SUBSCRIBE_TOTAL, response.mStatusCode);
-    mSelfMonitor->CounterAdd(
+    mSelfMonitor->AddCounter(METRIC_PLUGIN_PROM_SUBSCRIBE_TOTAL, response.mStatusCode);
+    mSelfMonitor->AddCounter(
         METRIC_PLUGIN_PROM_SUBSCRIBE_TIME_MS, response.mStatusCode, GetCurrentTimeInMilliSeconds() - timestampMilliSec);
     if (response.mStatusCode == 304) {
         // not modified
@@ -331,7 +331,7 @@ void TargetSubscriberScheduler::InitSelfMonitor(const MetricLabels& defaultLabel
         {METRIC_PLUGIN_PROM_SUBSCRIBE_TIME_MS, MetricType::METRIC_TYPE_COUNTER},
     };
 
-    mSelfMonitor = std::make_shared<PromSelfMonitor>();
+    mSelfMonitor = std::make_shared<PromSelfMonitorUnsafe>();
     mSelfMonitor->InitMetricManager(sSubscriberMetricKeys, mDefaultLabels);
 
     WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, std::move(mDefaultLabels));

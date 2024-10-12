@@ -65,8 +65,8 @@ const string METRIC_RUNNER_FILE_POLLING_FILE_CACHE_SIZE = "runner_polling_file_c
 /**********************************************************
  *   prometheus server
  **********************************************************/
-const std::string METRIC_RUNNER_PROM_REGISTER_STATE = "runner_prom_register_state";
-const std::string METRIC_RUNNER_PROM_REGISTER_RETRY_TOTAL = "runner_prom_register_retry_total";
-const std::string METRIC_RUNNER_PROM_JOB_NUM = "runner_prom_job_num";
+const std::string METRIC_RUNNER_CLIENT_REGISTER_STATE = "runner_client_register_state";
+const std::string METRIC_RUNNER_REGISTER_RETRY_TOTAL = "runner_register_retry_total";
+const std::string METRIC_RUNNER_JOB_NUM = "runner_job_num";
 
 } // namespace logtail

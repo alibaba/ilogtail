@@ -86,7 +86,7 @@ private:
     bool mUpState = true;
 
     // self monitor
-    std::shared_ptr<PromSelfMonitor> mSelfMonitor;
+    std::shared_ptr<PromSelfMonitorUnsafe> mSelfMonitor;
     MetricsRecordRef mMetricsRecordRef;
     CounterPtr mPromDelayTotal;
     CounterPtr mPluginTotalDelayMs;

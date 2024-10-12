@@ -236,8 +236,8 @@ extern const std::string METRIC_RUNNER_FILE_POLLING_FILE_CACHE_SIZE;
 /**********************************************************
  *   prometheus runner
  **********************************************************/
-extern const std::string METRIC_RUNNER_PROM_REGISTER_STATE;
-extern const std::string METRIC_RUNNER_PROM_REGISTER_RETRY_TOTAL;
-extern const std::string METRIC_RUNNER_PROM_JOB_NUM;
+extern const std::string METRIC_RUNNER_CLIENT_REGISTER_STATE;
+extern const std::string METRIC_RUNNER_REGISTER_RETRY_TOTAL;
+extern const std::string METRIC_RUNNER_JOB_NUM;
 
 } // namespace logtail

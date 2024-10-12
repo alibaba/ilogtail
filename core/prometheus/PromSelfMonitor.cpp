@@ -10,13 +10,13 @@ using namespace std;
 
 namespace logtail {
 
-void PromSelfMonitor::InitMetricManager(const std::unordered_map<std::string, MetricType>& metricKeys,
+void PromSelfMonitorUnsafe::InitMetricManager(const std::unordered_map<std::string, MetricType>& metricKeys,
                                         const MetricLabels& labels) {
     auto metricLabels = std::make_shared<MetricLabels>(labels);
     mPluginMetricManagerPtr = std::make_shared<PluginMetricManager>(metricLabels, metricKeys);
 }
 
-void PromSelfMonitor::CounterAdd(const std::string& metricName, uint64_t statusCode, uint64_t val) {
+void PromSelfMonitorUnsafe::AddCounter(const std::string& metricName, uint64_t statusCode, uint64_t val) {
     auto& status = StatusToString(statusCode);
     if (!mMetricsCounterMap.count(metricName) || !mMetricsCounterMap[metricName].count(status)) {
         mMetricsCounterMap[metricName][status] = GetOrCreateReentrantMetricsRecordRef(status)->GetCounter(metricName);
@@ -24,7 +24,7 @@ void PromSelfMonitor::CounterAdd(const std::string& metricName, uint64_t statusC
     mMetricsCounterMap[metricName][status]->Add(val);
 }
 
-void PromSelfMonitor::IntGaugeSet(const std::string& metricName, uint64_t statusCode, uint64_t value) {
+void PromSelfMonitorUnsafe::SetIntGauge(const std::string& metricName, uint64_t statusCode, uint64_t value) {
     auto& status = StatusToString(statusCode);
     if (!mMetricsIntGaugeMap.count(metricName) || !mMetricsIntGaugeMap[metricName].count(status)) {
         mMetricsIntGaugeMap[metricName][status] = GetOrCreateReentrantMetricsRecordRef(status)->GetIntGauge(metricName);
@@ -32,7 +32,7 @@ void PromSelfMonitor::IntGaugeSet(const std::string& metricName, uint64_t status
     mMetricsIntGaugeMap[metricName][status]->Set(value);
 }
 
-ReentrantMetricsRecordRef PromSelfMonitor::GetOrCreateReentrantMetricsRecordRef(const std::string& status) {
+ReentrantMetricsRecordRef PromSelfMonitorUnsafe::GetOrCreateReentrantMetricsRecordRef(const std::string& status) {
     if (mPluginMetricManagerPtr == nullptr) {
         return nullptr;
     }
@@ -43,7 +43,7 @@ ReentrantMetricsRecordRef PromSelfMonitor::GetOrCreateReentrantMetricsRecordRef(
     return mPromStatusMap[status];
 }
 
-std::string& PromSelfMonitor::StatusToString(uint64_t status) {
+std::string& PromSelfMonitorUnsafe::StatusToString(uint64_t status) {
     static string sHttp0XX = "0XX";
     static string sHttp1XX = "1XX";
     static string sHttp2XX = "2XX";
