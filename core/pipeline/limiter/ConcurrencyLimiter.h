@@ -41,17 +41,13 @@ public:
     void OnFail(time_t curTime);
 
     static std::string GetLimiterMetricName(std::string limiterLabel) {
-        switch (limiterLabel)
-        {
-        case "region":
+        if (limiterLabel == "region") {
             return  METRIC_COMPONENT_QUEUE_LIMIT_BY_REGION_LIMITER_TOTAL;
-        case "project":
+        } else if (limiterLabel == "project") {
             return  METRIC_COMPONENT_QUEUE_LIMIT_BY_PROJECT_LIMITER_TOTAL;
-        case "logstore":
+        } else if (limiterLabel == "logstore") {
             return  METRIC_COMPONENT_QUEUE_LIMIT_BY_LOGSTORE_LIMITER_TOTAL;
-        default:
-            break;
-        }
+        } 
         return limiterLabel;
     }
 
