@@ -222,14 +222,10 @@ extern const std::string METRIC_RUNNER_IN_ITEMS_TOTAL;
 extern const std::string METRIC_RUNNER_LAST_RUN_TIME;
 extern const std::string METRIC_RUNNER_OUT_ITEMS_TOTAL;
 extern const std::string METRIC_RUNNER_TOTAL_DELAY_MS;
-
-/**********************************************************
- *   http sink
- **********************************************************/
-extern const std::string METRIC_RUNNER_HTTP_SINK_OUT_SUCCESSFUL_ITEMS_TOTAL;
-extern const std::string METRIC_RUNNER_HTTP_SINK_OUT_FAILED_ITEMS_TOTAL;
-extern const std::string METRIC_RUNNER_HTTP_SINK_SENDING_ITEMS_TOTAL;
-extern const std::string METRIC_RUNNER_HTTP_SINK_SEND_CONCURRENCY;
+extern const std::string METRIC_RUNNER_SINK_OUT_SUCCESSFUL_ITEMS_TOTAL;
+extern const std::string METRIC_RUNNER_SINK_OUT_FAILED_ITEMS_TOTAL;
+extern const std::string METRIC_RUNNER_SINK_SENDING_ITEMS_TOTAL;
+extern const std::string METRIC_RUNNER_SINK_SEND_CONCURRENCY;
 
 /**********************************************************
  *   flusher runner
