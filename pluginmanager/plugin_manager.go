@@ -50,7 +50,7 @@ var statisticsConfigJSON = `{
 		"DefaultLogGroupQueueSize": 4,
 		"Tags" : {
 			"base_version" : "` + config.BaseVersion + `",
-			"logtail_version" : "` + config.BaseVersion + `"
+			"loongcollector_version" : "` + config.BaseVersion + `"
 		}
 	},
 	"inputs" : [
@@ -70,7 +70,7 @@ var alarmConfigJSON = `{
 		"DefaultLogGroupQueueSize": 4,
 		"Tags" : {
 			"base_version" : "` + config.BaseVersion + `",
-			"logtail_version" : "` + config.BaseVersion + `"
+			"loongcollector_version" : "` + config.BaseVersion + `"
 		}
     },
 	"inputs" : [
@@ -90,7 +90,7 @@ var containerConfigJSON = `{
 		"DefaultLogGroupQueueSize": 4,
 		"Tags" : {
 			"base_version" : "` + config.BaseVersion + `",
-			"logtail_version" : "` + config.BaseVersion + `"
+			"loongcollector_version" : "` + config.BaseVersion + `"
 		}
     },
 	"inputs" : [
