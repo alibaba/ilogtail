@@ -269,6 +269,13 @@ void Application::Start() { // GCOVR_EXCL_START
         LogtailPlugin::GetInstance()->LoadPluginBase();
     }
 
+    const char* deployMode = getenv("DEPLOY_MODE");
+    const char* enableK8sMeta = getenv("ENABLE_KUBERNETES_META");
+    if (deployMode != NULL && strlen(deployMode) > 0 && strcmp(deployMode, "singleton") == 0
+        && strcmp(enableK8sMeta, "true") == 0) {
+        LogtailPlugin::GetInstance()->LoadPluginBase();
+    }
+
     ProcessorRunner::GetInstance()->Init();
 
     time_t curTime = 0, lastProfilingCheckTime = 0, lastConfigCheckTime = 0, lastUpdateMetricTime = 0,
