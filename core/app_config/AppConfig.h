@@ -33,6 +33,7 @@ std::string GetAgentLogDir();
 std::string GetAgentDataDir();
 std::string GetAgentConfDir();
 std::string GetAgentRunDir();
+std::string GetAgentThirdPartyDir();
 
 std::string GetAgentConfigFile();
 std::string GetAgentAppInfoFile();
