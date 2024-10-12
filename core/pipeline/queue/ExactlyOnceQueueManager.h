@@ -67,6 +67,7 @@ public:
     void GetAvailableSenderQueueItems(std::vector<SenderQueueItem*>& item, int32_t itemsCntLimit);
     bool RemoveSenderQueueItem(QueueKey key, SenderQueueItem* item);
     bool IsAllSenderQueueEmpty() const;
+    void SetPipelineForSenderItems(QueueKey key, const std::shared_ptr<Pipeline>& p);
 
     void ClearTimeoutQueues();
 
