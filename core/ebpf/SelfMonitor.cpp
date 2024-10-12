@@ -20,7 +20,6 @@ namespace ebpf {
 
 void BaseBPFMonitor::HandleStatistic(nami::eBPFStatistics& stats) {
     if (!stats.updated_) return;
-    std::lock_guard<std::mutex> lk(mStatsMtx);
     UpdateInnerMetric(stats);
 }
 

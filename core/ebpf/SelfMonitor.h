@@ -45,10 +45,8 @@ protected:
     // attention: not thread safe!!
     void UpdateInnerMetric(nami::eBPFStatistics& currStat);
 
-    mutable ReadWriteLock mMonitorMtx;
     std::string mPipelineName;
     PluginMetricManagerPtr mPluginMetricMgr;
-    mutable std::mutex mStatsMtx;
     MetricsRecordRef& mRef;
     std::vector<std::pair<ReentrantMetricsRecordRef, MetricLabels>> mRefAndLabels;
 
@@ -104,7 +102,6 @@ public:
 
     void HandleStatistic(nami::eBPFStatistics& stats) override {
         if (!stats.updated_) return;
-        std::lock_guard<std::mutex> lk(mStatsMtx);
         UpdateInnerMetric(stats);
     }
 };
