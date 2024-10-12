@@ -204,12 +204,12 @@ void Application::Start() { // GCOVR_EXCL_START
     {
         // add local config dir
         filesystem::path localConfigPath
-            = filesystem::path(AppConfig::GetInstance()->GetLoongcollectorConfDir()) / "pipelineconfig" / "local";
+            = filesystem::path(AppConfig::GetInstance()->GetLoongcollectorConfDir()) / "pipeline_config" / "local";
         error_code ec;
         filesystem::create_directories(localConfigPath, ec);
         if (ec) {
             LOG_WARNING(sLogger,
-                        ("failed to create dir for local pipelineconfig",
+                        ("failed to create dir for local pipeline_config",
                          "manual creation may be required")("error code", ec.value())("error msg", ec.message()));
         }
         ConfigWatcher::GetInstance()->AddPipelineSource(localConfigPath.string());
@@ -217,12 +217,12 @@ void Application::Start() { // GCOVR_EXCL_START
     {
         // add local config dir
         filesystem::path localConfigPath
-            = filesystem::path(AppConfig::GetInstance()->GetLoongcollectorConfDir()) / "instanceconfig" / "local";
+            = filesystem::path(AppConfig::GetInstance()->GetLoongcollectorConfDir()) / "instance_config" / "local";
         error_code ec;
         filesystem::create_directories(localConfigPath, ec);
         if (ec) {
             LOG_WARNING(sLogger,
-                        ("failed to create dir for local instanceconfig",
+                        ("failed to create dir for local instance_config",
                          "manual creation may be required")("error code", ec.value())("error msg", ec.message()));
         }
         ConfigWatcher::GetInstance()->AddInstanceSource(localConfigPath.string());
