@@ -22,12 +22,6 @@ void BaseBPFMonitor::HandleStatistic(nami::eBPFStatistics& stats) {
     if (!stats.updated_) return;
     std::lock_guard<std::mutex> lk(mStatsMtx);
     UpdateInnerMetric(stats);
-    mLastStat = stats;
-}
-
-nami::eBPFStatistics BaseBPFMonitor::GetLastStats() const {
-    std::lock_guard<std::mutex> lk(mStatsMtx);
-    return mLastStat;
 }
 
 void BaseBPFMonitor::InitMetric() {
@@ -119,24 +113,12 @@ void BaseBPFMonitor::InitInnerMetric() {
 void BaseBPFMonitor::UpdateInnerMetric(nami::eBPFStatistics& currStat) {
     if (!currStat.updated_) return;
     mProcessCacheEntitiesNum->Set(currStat.process_cache_entities_num_);
-    if (currStat.recv_kernel_events_total_ > mLastStat.recv_kernel_events_total_) {
-        mRecvKernelEventsTotal->Add(currStat.recv_kernel_events_total_ - mLastStat.recv_kernel_events_total_);
-    }
-    if (currStat.loss_kernel_events_total_ > mLastStat.loss_kernel_events_total_) {
-        mLossKernelEventsTotal->Add(currStat.loss_kernel_events_total_ - mLastStat.loss_kernel_events_total_);
-    }
-    if (currStat.miss_process_cache_total_ > mLastStat.miss_process_cache_total_) {
-        mProcessCacheMissTotal->Add(currStat.miss_process_cache_total_ - mLastStat.miss_process_cache_total_);
-    }
-    if (currStat.push_metrics_total_ > mLastStat.push_metrics_total_) {
-        mPushMetricsTotal->Add(currStat.push_metrics_total_ - mLastStat.push_metrics_total_);
-    }
-    if (currStat.push_spans_total_ > mLastStat.push_spans_total_) {
-        mPushSpansTotal->Add(currStat.push_spans_total_ - mLastStat.push_spans_total_);
-    }
-    if (currStat.push_events_total_ > mLastStat.push_events_total_) {
-        mPushEventsTotal->Add(currStat.push_events_total_ - mLastStat.push_events_total_);
-    }
+    mRecvKernelEventsTotal->Add(currStat.recv_kernel_events_total_);
+    mLossKernelEventsTotal->Add(currStat.loss_kernel_events_total_);
+    mProcessCacheMissTotal->Add(currStat.miss_process_cache_total_);
+    mPushMetricsTotal->Add(currStat.push_metrics_total_);
+    mPushSpansTotal->Add(currStat.push_spans_total_);
+    mPushEventsTotal->Add(currStat.push_events_total_);
 }
 
 /////////////////////////// NetworkObserverSelfMonitor ///////////////////////////
@@ -201,45 +183,22 @@ void NetworkObserverSelfMonitor::InitMetric() {
 
 void NetworkObserverSelfMonitor::HandleStatistic(nami::eBPFStatistics& stats) {
     if (!stats.updated_) return;
-    std::lock_guard<std::mutex> lk(mStatsMtx);
+    // std::lock_guard<std::mutex> lk(mStatsMtx);
     UpdateInnerMetric(stats);
     // recv kernel events metric
     assert(stats.plugin_type_ == nami::PluginType::NETWORK_OBSERVE);
+    nami::NetworkObserverStatistics* currNetworkStatsPtr = static_cast<nami::NetworkObserverStatistics*>(&stats);
 
-    nami::NetworkObserverStatistics* currNetworkStatsPtr = dynamic_cast<nami::NetworkObserverStatistics*>(&stats);
-    nami::NetworkObserverStatistics* lastNetworkStatsPtr = dynamic_cast<nami::NetworkObserverStatistics*>(&mLastStat);
-    nami::NetworkObserverStatistics currNetworkStats, lastNetworkStats;
-    if (lastNetworkStatsPtr) {
-        lastNetworkStats = *lastNetworkStatsPtr;
-    }
-    if (currNetworkStatsPtr) currNetworkStats = *currNetworkStatsPtr;
-    // update conn tracker num
-    if (mRecvConnStatsTotal && (currNetworkStats.recv_conn_stat_events_total_ > lastNetworkStats.recv_conn_stat_events_total_)) {
-        mRecvConnStatsTotal->Add(currNetworkStats.recv_conn_stat_events_total_ - lastNetworkStats.recv_conn_stat_events_total_);
-    }
-    if (mRecvCtrlEventsTotal && (currNetworkStats.recv_ctrl_events_total_ > lastNetworkStats.recv_ctrl_events_total_)) {
-        mRecvCtrlEventsTotal->Add(currNetworkStats.recv_ctrl_events_total_ - lastNetworkStats.recv_ctrl_events_total_);
-    }
-    if (mRecvHTTPDataEventsTotal && (currNetworkStats.recv_http_data_events_total_ > lastNetworkStats.recv_http_data_events_total_)) {
-        mRecvHTTPDataEventsTotal->Add(currNetworkStats.recv_http_data_events_total_ - lastNetworkStats.recv_http_data_events_total_);
-    }
+    mRecvConnStatsTotal->Add(currNetworkStatsPtr->recv_conn_stat_events_total_);
+    mRecvCtrlEventsTotal->Add(currNetworkStatsPtr->recv_ctrl_events_total_);
+    mRecvHTTPDataEventsTotal->Add(currNetworkStatsPtr->recv_http_data_events_total_);
 
     // cache relative metric
-    mConnTrackerNum->Set(currNetworkStats.conntracker_num_);
+    mConnTrackerNum->Set(currNetworkStatsPtr->conntracker_num_);
 
-    // protocol parsing metric
-    if (currNetworkStats.parse_http_records_success_total_ > lastNetworkStats.parse_http_records_success_total_) {
-        mParseHTTPEventsSuccessTotal->Add(currNetworkStats.parse_http_records_success_total_ - lastNetworkStats.parse_http_records_success_total_);
-    }
-    if (currNetworkStats.parse_http_records_failed_total_ > lastNetworkStats.parse_http_records_failed_total_) {
-        mParseHTTPEventsFailTotal->Add(currNetworkStats.parse_http_records_failed_total_ - lastNetworkStats.parse_http_records_failed_total_);
-    }
-
-    // aggregation relative metric
-    mAggMapEntitiesNum->Set(currNetworkStats.agg_map_entities_num_);
-
-    // update
-    mLastStat = stats;
+    mParseHTTPEventsSuccessTotal->Add(currNetworkStatsPtr->parse_http_records_success_total_);
+    mParseHTTPEventsFailTotal->Add(currNetworkStatsPtr->parse_http_records_failed_total_);
+    mAggMapEntitiesNum->Set(currNetworkStatsPtr->agg_map_entities_num_);
 }
 
 void eBPFSelfMonitorMgr::Init(const nami::PluginType type, MetricsRecordRef& ref, const std::string& name, const std::string& logstore) {
@@ -253,11 +212,6 @@ void eBPFSelfMonitorMgr::Init(const nami::PluginType type, MetricsRecordRef& ref
         {METRIC_RUNNER_EBPF_PROCESS_CACHE_ENTRIES_NUM, MetricType::METRIC_TYPE_INT_GAUGE},
         {METRIC_RUNNER_EBPF_PROCESS_CACHE_MISS_TOTAL, MetricType::METRIC_TYPE_COUNTER},
     };
-
-    nami::eBPFStatistics lastStats;
-    if (mSelfMonitors[int(type)]) {
-        lastStats = mSelfMonitors[int(type)]->GetLastStats();
-    }
 
     // Add project to labels
     // Add Runner Name to labels
@@ -276,25 +230,25 @@ void eBPFSelfMonitorMgr::Init(const nami::PluginType type, MetricsRecordRef& ref
         keys.insert({METRIC_RUNNER_EBPF_NETWORK_OBSERVER_PROTOCOL_PARSE_RECORDS_TOTAL, MetricType::METRIC_TYPE_COUNTER});
         auto pluginMetricManager
             = std::make_shared<PluginMetricManager>(labelsPtr, keys);
-        mSelfMonitors[int(type)] = std::make_unique<NetworkObserverSelfMonitor>(name, pluginMetricManager, ref, lastStats);
+        mSelfMonitors[int(type)] = std::make_unique<NetworkObserverSelfMonitor>(name, pluginMetricManager, ref);
         break;
     }
     case nami::PluginType::NETWORK_SECURITY: {
         auto pluginMetricManager
             = std::make_shared<PluginMetricManager>(labelsPtr, metricKeys);
-        mSelfMonitors[int(type)] = std::make_unique<NetworkSecuritySelfMonitor>(name, pluginMetricManager, ref, lastStats);
+        mSelfMonitors[int(type)] = std::make_unique<NetworkSecuritySelfMonitor>(name, pluginMetricManager, ref);
         break;
     }
     case nami::PluginType::FILE_SECURITY: {
         auto pluginMetricManager
             = std::make_shared<PluginMetricManager>(labelsPtr, metricKeys);
-        mSelfMonitors[int(type)] = std::make_unique<FileSecuritySelfMonitor>(name, pluginMetricManager, ref, lastStats);
+        mSelfMonitors[int(type)] = std::make_unique<FileSecuritySelfMonitor>(name, pluginMetricManager, ref);
         break;
     }
     case nami::PluginType::PROCESS_SECURITY: {
         auto pluginMetricManager
             = std::make_shared<PluginMetricManager>(labelsPtr, metricKeys);
-        mSelfMonitors[int(type)] = std::make_unique<ProcessSecuritySelfMonitor>(name, pluginMetricManager, ref, lastStats);
+        mSelfMonitors[int(type)] = std::make_unique<ProcessSecuritySelfMonitor>(name, pluginMetricManager, ref);
         break;
     }
     default:

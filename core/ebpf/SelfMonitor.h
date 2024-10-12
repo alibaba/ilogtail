@@ -31,12 +31,11 @@ class BaseBPFMonitor {
 public:
     virtual void HandleStatistic(nami::eBPFStatistics& stats);
     virtual void InitMetric();
-    nami::eBPFStatistics GetLastStats() const;
     virtual void ReleaseMetric();
     virtual ~BaseBPFMonitor() = default;
 protected:
-    BaseBPFMonitor(const std::string& name, PluginMetricManagerPtr mgr, MetricsRecordRef& ref, const nami::eBPFStatistics& lastStats) 
-        : mPipelineName(name), mPluginMetricMgr(mgr), mRef(ref), mLastStat(lastStats) {}
+    BaseBPFMonitor(const std::string& name, PluginMetricManagerPtr mgr, MetricsRecordRef& ref) 
+        : mPipelineName(name), mPluginMetricMgr(mgr), mRef(ref) {}
 
     std::string PluginTypeToString(const nami::PluginType pluginType);
 
@@ -53,7 +52,6 @@ protected:
     MetricsRecordRef& mRef;
     std::vector<std::pair<ReentrantMetricsRecordRef, MetricLabels>> mRefAndLabels;
 
-    nami::eBPFStatistics mLastStat;
     std::atomic_bool mMetricInited = false;
 
     CounterPtr mRecvKernelEventsTotal;
@@ -71,8 +69,8 @@ protected:
 
 class NetworkObserverSelfMonitor : public BaseBPFMonitor {
 public:
-    NetworkObserverSelfMonitor(const std::string& name, PluginMetricManagerPtr mgr, MetricsRecordRef& ref, const nami::eBPFStatistics& lastStats) 
-        : BaseBPFMonitor(name, mgr, ref, lastStats) {}
+    NetworkObserverSelfMonitor(const std::string& name, PluginMetricManagerPtr mgr, MetricsRecordRef& ref) 
+        : BaseBPFMonitor(name, mgr, ref) {}
 
     void InitMetric() override;
 
@@ -101,8 +99,8 @@ private:
 
 class NetworkSecuritySelfMonitor : public BaseBPFMonitor {
 public:
-    NetworkSecuritySelfMonitor(const std::string& name, PluginMetricManagerPtr mgr, MetricsRecordRef& ref, const nami::eBPFStatistics& lastStats) 
-        : BaseBPFMonitor(name, mgr, ref, lastStats) {}
+    NetworkSecuritySelfMonitor(const std::string& name, PluginMetricManagerPtr mgr, MetricsRecordRef& ref) 
+        : BaseBPFMonitor(name, mgr, ref) {}
 
     void HandleStatistic(nami::eBPFStatistics& stats) override {
         if (!stats.updated_) return;
@@ -113,14 +111,14 @@ public:
 
 class ProcessSecuritySelfMonitor : public BaseBPFMonitor {
 public:
-    ProcessSecuritySelfMonitor(const std::string& name, PluginMetricManagerPtr mgr, MetricsRecordRef& ref, const nami::eBPFStatistics& lastStats) 
-        : BaseBPFMonitor(name, mgr, ref, lastStats) {}
+    ProcessSecuritySelfMonitor(const std::string& name, PluginMetricManagerPtr mgr, MetricsRecordRef& ref) 
+        : BaseBPFMonitor(name, mgr, ref) {}
 };
 
 class FileSecuritySelfMonitor : public BaseBPFMonitor {
 public:
-    FileSecuritySelfMonitor(const std::string& name, PluginMetricManagerPtr mgr, MetricsRecordRef& ref, const nami::eBPFStatistics& lastStats) 
-        : BaseBPFMonitor(name, mgr, ref, lastStats) {}
+    FileSecuritySelfMonitor(const std::string& name, PluginMetricManagerPtr mgr, MetricsRecordRef& ref) 
+        : BaseBPFMonitor(name, mgr, ref) {}
 };
 
 /**
