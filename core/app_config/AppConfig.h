@@ -72,10 +72,9 @@ private:
 class AppConfig {
 private:
     static std::string sLocalConfigDir;
-    void loadLocalConfig(const std::string& ilogtailConfigFile);
+    void loadAppConfigLogtailMode(const std::string& ilogtailConfigFile);
     Json::Value mergeAllConfigs();
 
-    Json::Value mLocalConfig;
     Json::Value mLocalInstanceConfig;
     Json::Value mEnvConfig;
     Json::Value mRemoteConfig;
@@ -305,7 +304,6 @@ public:
     void LoadLocalInstanceConfig();
 
     // 获取全局参数方法
-    const Json::Value& GetLocalConfig() { return mLocalConfig; };
     const Json::Value& GetLocalInstanceConfig() { return mLocalInstanceConfig; };
     const Json::Value& GetEnvConfig() { return mEnvConfig; };
     const Json::Value& GetRemoteConfig() { return mRemoteConfig; };
@@ -484,7 +482,7 @@ public:
     inline const std::set<std::string>& GetDynamicPlugins() const { return mDynamicPlugins; }
     bool IsHostPathMatchBlacklist(const std::string& dirPath) const;
 
-    const Json::Value& GetConfig() const { return mLocalConfig; }
+    const Json::Value& GetConfig() const { return mLocalInstanceConfig; }
 
     const std::string& GetBindInterface() const { return mBindInterface; }
 

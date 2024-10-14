@@ -522,29 +522,13 @@ AppConfig::AppConfig() {
     CheckPurageContainerMode();
 }
 
-/**
- * @brief 合并两个JSON对象
- *
- * 该函数将子JSON对象的所有成员合并到主JSON对象中。
- * 如果存在相同的键，子对象的值将覆盖主对象的值。
- *
- * @param mainConfJson 主JSON对象，将被修改
- * @param subConfJson 子JSON对象，其成员将被合并到主对象中
- */
 void AppConfig::MergeJson(Json::Value& mainConfJson, const Json::Value& subConfJson) {
     for (auto subkey : subConfJson.getMemberNames()) {
         mainConfJson[subkey] = subConfJson[subkey];
     }
 }
 
-/**
- * @brief 加载包含的配置文件
- *
- * 该函数从指定目录加载额外的JSON配置文件，并将其合并到主配置中。
- * 配置文件按字母顺序加载，只处理.json后缀的文件。
- *
- * @param confJson 主配置JSON对象，将被修改以包含额外的配置
- */
+// 只有 logtail 模式才使用
 void AppConfig::LoadIncludeConfig(Json::Value& confJson) {
     // New default value of the flag is renamed from /etc/ilogtail/config.d/
     // to config.d, be compatible with old default value.
@@ -597,7 +581,7 @@ void AppConfig::LoadIncludeConfig(Json::Value& confJson) {
 void AppConfig::LoadLocalInstanceConfig() {
     // add local config dir
     filesystem::path localConfigPath
-        = filesystem::path(AppConfig::GetInstance()->GetLoongcollectorConfDir()) / "instanceconfig" / "local";
+        = filesystem::path(AppConfig::GetInstance()->GetLoongcollectorConfDir()) / "instance_config" / "local";
     error_code ec;
     filesystem::create_directories(localConfigPath, ec);
     if (ec) {
@@ -612,35 +596,28 @@ void AppConfig::LoadLocalInstanceConfig() {
     }
 }
 
-
-/**
- * @brief 加载应用程序配置
- *
- * 该函数从指定的配置文件加载Logtail的主要配置。
- * 它处理配置文件的解析、包含额外配置、设置系统目录等。
- *
- * @param ilogtailConfigFile 配置文件的路径
- */
 void AppConfig::LoadAppConfig(const std::string& ilogtailConfigFile) {
-    // 加载本地配置
-    loadLocalConfig(ilogtailConfigFile);
+    if (BOOL_FLAG(logtail_mode)) {
+        loadAppConfigLogtailMode(ilogtailConfigFile);
+    } else {
+        std::string confDir  = GetAgentConfDir();
+        SetLoongcollectorConfDir(AbsolutePath(confDir, mProcessExecutionDir));
+        // 加载本地instanceconfig
+        LoadLocalInstanceConfig();
+    }
 
-    // 加载本地instanceconfig
-    LoadLocalInstanceConfig();
-
-    ParseJsonToFlags(mLocalConfig);
-
+    ParseJsonToFlags(mLocalInstanceConfig);
     ParseEnvToFlags();
 
-    LoadResourceConf(mLocalConfig);
-
-    LoadOtherConf(mLocalConfig);
+    LoadResourceConf(mLocalInstanceConfig);
+    // load addr will init sender, sender param depend on LoadResourceConf
+    // LoadAddrConfig(mLocalInstanceConfig);
+    LoadOtherConf(mLocalInstanceConfig);
 
     CheckAndResetProxyEnv();
 }
 
-void AppConfig::loadLocalConfig(const std::string& ilogtailConfigFile) {
-    std::string processExecutionDir = GetProcessExecutionDir();
+void AppConfig::loadAppConfigLogtailMode(const std::string& ilogtailConfigFile) {
     mDockerFilePathConfig = GetAgentDockerPathConfig();
 
     Json::Value confJson(Json::objectValue);
@@ -678,21 +655,20 @@ void AppConfig::loadLocalConfig(const std::string& ilogtailConfigFile) {
     newConfDir = GetAgentConfDir(res, confJson);
     SetLoongcollectorConfDir(AbsolutePath(newConfDir, mProcessExecutionDir));
 
-    // 加载 本地配置
     LoadIncludeConfig(confJson);
     string configJsonString = confJson.toStyledString();
     SetIlogtailConfigJson(configJsonString);
     LOG_INFO(sLogger, ("load logtail config file, path", ilogtailConfigFile));
     LOG_INFO(sLogger, ("load logtail config file, detail", configJsonString));
 
-    mLocalConfig = confJson;
+    mLocalInstanceConfig = confJson;
 }
 
 /**
- * @brief 从环境变量加载标签
+ * @brief 从环境变量加载Tag
  *
- * 该函数从环境变量中加载预定义的标签。
- * 标签键从环境变量中获取，对应的值也从环境变量中读取。
+ * 该函数从环境变量中加载预定义的Tag。
+ * Tag键从环境变量中获取，对应的值也从环境变量中读取。
  */
 void AppConfig::LoadEnvTags() {
     char* envTagKeys = getenv(STRING_FLAG(default_env_tag_keys).c_str());
@@ -764,13 +740,6 @@ void LoadEnvValueIfExisting(const char* envKey, T& cfgValue) {
     }
 }
 
-/**
- * @brief 从环境变量加载资源限制配置
- *
- * 该函数从环境变量中加载各种资源限制相关的配置，
- * 包括CPU使用限制、内存使用限制、最大字节数/秒、
- * 处理线程数和发送请求并发数。
- */
 void AppConfig::LoadEnvResourceLimit() {
     LoadSingleValueEnvConfig("cpu_usage_limit", mCpuUsageUpLimit, (float)0.4);
     LoadSingleValueEnvConfig("mem_usage_limit", mMemUsageUpLimit, (int64_t)384);
@@ -805,27 +774,6 @@ void AppConfig::CheckPurageContainerMode() {
     LOG_INFO(sLogger, ("purage container mode", mPurageContainerMode));
 }
 
-/**
- * @brief 加载资源配置
- *
- * @param confJson JSON格式的配置数据
- *
- * 该函数从JSON配置中加载各种资源相关的设置，包括但不限于：
- * - 批量发送间隔
- * - 最大发送字节数
- * - 缓冲文件数量和大小
- * - CPU和内存使用限制
- * - 自动缩放和流量控制设置
- * - 检查点文件路径
- * - Docker相关配置
- * - Inotify黑名单
- * - 数据服务器端口
- *
- * 函数会根据配置更新相应的成员变量和全局标志。
- * 对于某些设置，如果配置中未指定，会使用默认值或从环境变量中加载。
- *
- * @note 该函数较长，包含了大量的配置项处理逻辑
- */
 void AppConfig::LoadResourceConf(const Json::Value& confJson) {
     LoadInt32Parameter(
         INT32_FLAG(batch_send_interval), confJson, "batch_send_interval", "ALIYUN_LOGTAIL_BATCH_SEND_INTERVAL");
@@ -1829,9 +1777,6 @@ void AppConfig::UpdateFileTags() {
 
 Json::Value AppConfig::mergeAllConfigs() {
     Json::Value mergedConfig;
-    for (const auto& key : mLocalConfig.getMemberNames()) {
-        mergedConfig[key] = Json::Value(mLocalConfig[key]);
-    }
     for (const auto& key : mLocalInstanceConfig.getMemberNames()) {
         mergedConfig[key] = Json::Value(mLocalInstanceConfig[key]);
     }
@@ -1880,15 +1825,11 @@ void AppConfig::RegisterCallback(const std::string& key, std::function<bool(bool
 int32_t AppConfig::MergeInt32(int32_t defaultValue,
                               const std::string name,
                               const std::function<bool(const std::string key, const int32_t value)>& validateFn) {
-    const auto& localConf = AppConfig::GetInstance()->GetLocalConfig();
     const auto& localInstanceConfig = AppConfig::GetInstance()->GetLocalInstanceConfig();
     const auto& envConfig = AppConfig::GetInstance()->GetEnvConfig();
     const auto& remoteConfig = AppConfig::GetInstance()->GetRemoteConfig();
 
     int32_t res = defaultValue;
-    if (localConf.isMember(name) && localConf[name].isInt() && validateFn(name, localConf[name].asInt())) {
-        res = localConf[name].asInt();
-    }
     if (localInstanceConfig.isMember(name) && localInstanceConfig[name].isInt()
         && validateFn(name, localInstanceConfig[name].asInt())) {
         res = localInstanceConfig[name].asInt();
@@ -1905,15 +1846,11 @@ int32_t AppConfig::MergeInt32(int32_t defaultValue,
 int64_t AppConfig::MergeInt64(int64_t defaultValue,
                               const std::string name,
                               const std::function<bool(const std::string key, const int64_t value)>& validateFn) {
-    const auto& localConf = AppConfig::GetInstance()->GetLocalConfig();
     const auto& localInstanceConfig = AppConfig::GetInstance()->GetLocalInstanceConfig();
     const auto& envConfig = AppConfig::GetInstance()->GetEnvConfig();
     const auto& remoteConfig = AppConfig::GetInstance()->GetRemoteConfig();
 
     int64_t res = defaultValue;
-    if (localConf.isMember(name) && localConf[name].isInt64() && validateFn(name, localConf[name].asInt64())) {
-        res = localConf[name].asInt64();
-    }
     if (localInstanceConfig.isMember(name) && localInstanceConfig[name].isInt64()
         && validateFn(name, localInstanceConfig[name].asInt64())) {
         res = localInstanceConfig[name].asInt64();
@@ -1930,14 +1867,10 @@ int64_t AppConfig::MergeInt64(int64_t defaultValue,
 bool AppConfig::MergeBool(bool defaultValue,
                           const std::string name,
                           const std::function<bool(const std::string key, const bool value)>& validateFn) {
-    const auto& localConf = AppConfig::GetInstance()->GetLocalConfig();
     const auto& localInstanceConfig = AppConfig::GetInstance()->GetLocalInstanceConfig();
     const auto& envConfig = AppConfig::GetInstance()->GetEnvConfig();
     const auto& remoteConfig = AppConfig::GetInstance()->GetRemoteConfig();
     bool res = defaultValue;
-    if (localConf.isMember(name) && localConf[name].isBool() && validateFn(name, localConf[name].asBool())) {
-        res = localConf[name].asBool();
-    }
     if (localInstanceConfig.isMember(name) && localInstanceConfig[name].isBool()
         && validateFn(name, localInstanceConfig[name].asBool())) {
         res = localInstanceConfig[name].asBool();
@@ -1955,14 +1888,10 @@ std::string
 AppConfig::MergeString(const std::string& defaultValue,
                        const std::string name,
                        const std::function<bool(const std::string key, const std::string value)>& validateFn) {
-    const auto& localConf = AppConfig::GetInstance()->GetLocalConfig();
     const auto& localInstanceConfig = AppConfig::GetInstance()->GetLocalInstanceConfig();
     const auto& envConfig = AppConfig::GetInstance()->GetEnvConfig();
     const auto& remoteConfig = AppConfig::GetInstance()->GetRemoteConfig();
     std::string res = defaultValue;
-    if (localConf.isMember(name) && localConf[name].isString() && validateFn(name, localConf[name].asString())) {
-        res = localConf[name].asString();
-    }
     if (localInstanceConfig.isMember(name) && localInstanceConfig[name].isString()
         && validateFn(name, localInstanceConfig[name].asString())) {
         res = localInstanceConfig[name].asString();
@@ -1980,14 +1909,10 @@ AppConfig::MergeString(const std::string& defaultValue,
 double AppConfig::MergeDouble(double defaultValue,
                               const std::string name,
                               const std::function<bool(const std::string key, const double value)>& validateFn) {
-    const auto& localConf = AppConfig::GetInstance()->GetLocalConfig();
     const auto& localInstanceConfig = AppConfig::GetInstance()->GetLocalInstanceConfig();
     const auto& envConfig = AppConfig::GetInstance()->GetEnvConfig();
     const auto& remoteConfig = AppConfig::GetInstance()->GetRemoteConfig();
     double res = defaultValue;
-    if (localConf.isMember(name) && localConf[name].isDouble() && validateFn(name, localConf[name].asDouble())) {
-        res = localConf[name].asDouble();
-    }
     if (localInstanceConfig.isMember(name) && localInstanceConfig[name].isDouble()
         && validateFn(name, localInstanceConfig[name].asDouble())) {
         res = localInstanceConfig[name].asDouble();
