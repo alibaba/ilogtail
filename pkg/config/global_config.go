@@ -27,9 +27,17 @@ type GlobalConfig struct {
 	DefaultLogQueueSize      int
 	DefaultLogGroupQueueSize int
 	Tags                     map[string]string
-	// Directory to store logtail data, such as checkpoint, etc.
-	LogtailSysConfDir string
-	// Network identification from logtail.
+	// Directory to store loongcollector data, such as checkpoint, etc.
+	LoongcollectorConfDir string
+	// Directory to store loongcollector log.
+	LoongcollectorLogDir string
+	// Directory to store loongcollector data.
+	LoongcollectorDataDir string
+	// Directory to store loongcollector debug data.
+	LoongcollectorDebugDir string
+	// Directory to store loongcollector third party data.
+	LoongcollectorThirdPartyDir string
+	// Network identification from loongcollector.
 	HostIP       string
 	Hostname     string
 	AlwaysOnline bool
@@ -46,8 +54,8 @@ type GlobalConfig struct {
 	PushNativeTimeoutMs      int
 }
 
-// LogtailGlobalConfig is the singleton instance of GlobalConfig.
-var LogtailGlobalConfig = newGlobalConfig()
+// LoongcollectorGlobalConfig is the singleton instance of GlobalConfig.
+var LoongcollectorGlobalConfig = newGlobalConfig()
 
 // StatisticsConfigJson, AlarmConfigJson
 var BaseVersion = "0.1.0"                                                  // will be overwritten through ldflags at compile time
@@ -55,15 +63,19 @@ var UserAgent = fmt.Sprintf("ilogtail/%v (%v)", BaseVersion, runtime.GOOS) // se
 
 func newGlobalConfig() (cfg GlobalConfig) {
 	cfg = GlobalConfig{
-		InputIntervalMs:          1000,
-		AggregatIntervalMs:       3000,
-		FlushIntervalMs:          3000,
-		DefaultLogQueueSize:      1000,
-		DefaultLogGroupQueueSize: 4,
-		LogtailSysConfDir:        ".",
-		DelayStopSec:             300,
-		PushNativeMaxCachedSize:  100,
-		PushNativeTimeoutMs:      1000,
+		InputIntervalMs:             1000,
+		AggregatIntervalMs:          3000,
+		FlushIntervalMs:             3000,
+		DefaultLogQueueSize:         1000,
+		DefaultLogGroupQueueSize:    4,
+		LoongcollectorConfDir:       "./conf/",
+		LoongcollectorLogDir:        "./log/",
+		LoongcollectorDataDir:       "./data/",
+		LoongcollectorDebugDir:      "./debug/",
+		LoongcollectorThirdPartyDir: "./thirdparty/",
+		DelayStopSec:                300,
+		PushNativeMaxCachedSize:     100,
+		PushNativeTimeoutMs:         1000,
 	}
 	return
 }

@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"github.com/alibaba/ilogtail/pkg/helper"
+	"github.com/alibaba/ilogtail/pkg/helper/k8smeta"
 )
 
 const (
@@ -52,6 +53,8 @@ func GetGoDirectMetrics() []map[string]string {
 	metrics := make([]map[string]string, 0)
 	// go plugin metrics
 	metrics = append(metrics, GetGoPluginMetrics()...)
+	// k8s meta metrics
+	metrics = append(metrics, k8smeta.GetMetaManagerMetrics()...)
 	return metrics
 }
 
@@ -73,9 +76,11 @@ func GetGoCppProvidedMetrics() []map[string]string {
 // go 插件指标，直接输出
 func GetGoPluginMetrics() []map[string]string {
 	metrics := make([]map[string]string, 0)
+	LogtailConfigLock.RLock()
 	for _, config := range LogtailConfig {
 		metrics = append(metrics, config.Context.ExportMetricRecords()...)
 	}
+	LogtailConfigLock.RUnlock()
 	return metrics
 }
 

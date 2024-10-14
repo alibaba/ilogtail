@@ -47,6 +47,17 @@ public:
     bool Send(std::vector<PipelineEventGroup>&& groupList);
     bool FlushBatch();
     void RemoveProcessQueue() const;
+    // Should add before or when item pop from ProcessorQueue, must be called in the lock of ProcessorQueue
+    void AddInProcessCnt() { mInProcessCnt.fetch_add(1); }
+    // Should sub when or after item push to SenderQueue
+    void SubInProcessCnt() {
+        if (mInProcessCnt.load() == 0) {
+            // should never happen
+            LOG_ERROR(sLogger, ("in processing count error", "sub when 0")("config", mName));
+            return;
+        }
+        mInProcessCnt.fetch_sub(1);
+    }
 
     const std::string& Name() const { return mName; }
     PipelineContext& GetContext() const { return mContext; }
@@ -56,7 +67,6 @@ public:
     const std::unordered_map<std::string, std::unordered_map<std::string, uint32_t>>& GetPluginStatistics() const {
         return mPluginCntMap;
     }
-    LoadGoPipelineResp LoadGoPipelines() const; // 应当放在private，过渡期间放在public
 
     // only for input_observer_network for compatability
     const std::vector<std::unique_ptr<InputInstance>>& GetInputs() const { return mInputs; }
@@ -65,7 +75,13 @@ public:
     static std::string GenPluginTypeWithID(std::string pluginType, std::string pluginID);
     PluginInstance::PluginMeta GenNextPluginMeta(bool lastOne);
 
+    bool HasGoPipelineWithInput() const { return !mGoPipelineWithInput.isNull(); }
+    bool HasGoPipelineWithoutInput() const { return !mGoPipelineWithoutInput.isNull(); }
+    std::string GetConfigNameOfGoPipelineWithInput() const { return mName + "/1"; }
+    std::string GetConfigNameOfGoPipelineWithoutInput() const { return mName + "/2"; }
+
 private:
+    LoadGoPipelineResp LoadGoPipelines() const;
     void MergeGoPipeline(const Json::Value& src, Json::Value& dst);
     void AddPluginToGoPipeline(const std::string& type,
                                const Json::Value& plugin,
@@ -73,6 +89,7 @@ private:
                                Json::Value& dst);
     void CopyNativeGlobalParamToGoPipeline(Json::Value& root);
     bool ShouldAddPluginToGoPipelineWithInput() const;
+    void WaitAllItemsInProcessFinished();
 
     std::string mName;
     std::vector<std::unique_ptr<InputInstance>> mInputs;
@@ -85,6 +102,7 @@ private:
     std::unordered_map<std::string, std::unordered_map<std::string, uint32_t>> mPluginCntMap;
     std::unique_ptr<Json::Value> mConfig;
     std::atomic_uint16_t mPluginID;
+    std::atomic_int16_t mInProcessCnt;
 
     mutable MetricsRecordRef mMetricsRecordRef;
     IntGaugePtr mStartTime;
@@ -94,7 +112,7 @@ private:
     CounterPtr mProcessorsTotalProcessTimeMs;
 
 #ifdef APSARA_UNIT_TEST_MAIN
-        friend class PipelineMock;
+    friend class PipelineMock;
     friend class PipelineUnittest;
     friend class InputContainerStdioUnittest;
     friend class InputFileUnittest;

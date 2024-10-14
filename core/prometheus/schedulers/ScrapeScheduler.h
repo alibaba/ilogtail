@@ -23,9 +23,11 @@
 #include "common/http/HttpResponse.h"
 #include "common/timer/Timer.h"
 #include "models/PipelineEventGroup.h"
+#include "monitor/LoongCollectorMetricTypes.h"
+#include "pipeline/queue/QueueKey.h"
+#include "prometheus/PromSelfMonitor.h"
 #include "prometheus/labels/TextParser.h"
 #include "prometheus/schedulers/ScrapeConfig.h"
-#include "pipeline/queue/QueueKey.h"
 
 #ifdef APSARA_UNIT_TEST_MAIN
 #include "pipeline/queue/ProcessQueueItem.h"
@@ -52,10 +54,12 @@ public:
     void ScheduleNext() override;
     void ScrapeOnce(std::chrono::steady_clock::time_point execTime);
     void Cancel() override;
+    void InitSelfMonitor(const MetricLabels&);
 
 private:
     void PushEventGroup(PipelineEventGroup&&);
     void SetAutoMetricMeta(PipelineEventGroup& eGroup);
+    void SetTargetLabels(PipelineEventGroup& eGroup);
 
     PipelineEventGroup BuildPipelineEventGroup(const std::string& content);
 
@@ -67,7 +71,7 @@ private:
     std::string mHost;
     int32_t mPort;
     std::string mInstance;
-    Labels mLabels;
+    Labels mTargetLabels;
 
     std::unique_ptr<TextParser> mParser;
 
@@ -80,6 +84,12 @@ private:
     double mScrapeDurationSeconds = 0;
     uint64_t mScrapeResponseSizeBytes = 0;
     bool mUpState = true;
+
+    // self monitor
+    std::shared_ptr<PromSelfMonitorUnsafe> mSelfMonitor;
+    MetricsRecordRef mMetricsRecordRef;
+    CounterPtr mPromDelayTotal;
+    CounterPtr mPluginTotalDelayMs;
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorParsePrometheusMetricUnittest;
     friend class ScrapeSchedulerUnittest;
