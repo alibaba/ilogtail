@@ -50,7 +50,6 @@
 #include "plugin/flusher/sls/DiskBufferWriter.h"
 #include "plugin/input/InputFeedbackInterfaceRegistry.h"
 #include "runner/FlusherRunner.h"
-#include "runner/LogProcess.h"
 #include "runner/ProcessorRunner.h"
 #include "runner/sink/http/HttpSink.h"
 #ifdef __ENTERPRISE__

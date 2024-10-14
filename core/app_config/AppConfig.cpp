@@ -568,7 +568,7 @@ void AppConfig::LoadIncludeConfig(Json::Value& confJson) {
 void AppConfig::LoadLocalInstanceConfig() {
     // add local config dir
     filesystem::path localConfigPath
-        = filesystem::path(AppConfig::GetInstance()->GetLogtailSysConfDir()) / "instanceconfig" / "local";
+        = filesystem::path(AppConfig::GetInstance()->GetLoongcollectorConfDir()) / "instanceconfig" / "local";
     error_code ec;
     filesystem::create_directories(localConfigPath, ec);
     if (ec) {
@@ -1740,8 +1740,8 @@ bool AppConfig::IsInInotifyBlackList(const std::string& path) const {
  *
  * @param dirPath 要设置的配置目录路径
  */
-void AppConfig::SetLogtailSysConfDir(const std::string& dirPath) {
-    mLogtailSysConfDir = dirPath;
+void AppConfig::SetLoongcollectorConfDir(const std::string& dirPath) {
+    mLoongcollectorConfDir = dirPath;
     if (dirPath.back() != '/' || dirPath.back() != '\\') {
         mLoongcollectorConfDir += PATH_SEPARATOR;
     }
