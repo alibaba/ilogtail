@@ -36,4 +36,3 @@ your changes, such as:
 - [public] [both] [updated] add a new feature
 
 ## [Unreleased]
-- [inner] [both] [updated] Support SLS Metricstore output
