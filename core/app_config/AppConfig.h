@@ -27,6 +27,31 @@
 #include "protobuf/sls/sls_logs.pb.h"
 
 namespace logtail {
+void CreateAgentDir();
+
+std::string GetAgentLogDir();
+std::string GetAgentDataDir();
+std::string GetAgentConfDir();
+std::string GetAgentRunDir();
+std::string GetAgentThirdPartyDir();
+
+std::string GetAgentConfigFile();
+std::string GetAgentAppInfoFile();
+std::string GetAdhocCheckpointDirPath();
+std::string GetCheckPointFileName();
+std::string GetCrashStackFileName();
+std::string GetLocalEventDataFileName();
+std::string GetInotifyWatcherDirsDumpFileName();
+std::string GetAgentLoggersPrefix();
+std::string GetAgentLogName();
+std::string GetAgentSnapshotDir();
+std::string GetAgentProfileLogName();
+std::string GetAgentStatusLogName();
+std::string GetProfileSnapshotDumpFileName();
+std::string GetObserverEbpfHostPath();
+std::string GetSendBufferFileNamePrefix();
+std::string GetLegacyUserLocalConfigFilePath();
+std::string GetExactlyOnceCheckpoint(); 
 
 template <class T>
 class DoubleBuffer {
@@ -66,7 +91,7 @@ private:
 
     mutable SpinLock mAppConfigLock;
 
-    // ilogtail_config.json content for rebuild
+    // loongcollector_config.json content for rebuild
     std::string mIlogtailConfigJson;
 
     // syslog
@@ -146,7 +171,7 @@ private:
     // logtail will force quit, 7200s by default.
     int32_t mForceQuitReadTimeout;
 
-    std::string mLogtailSysConfDir; // MUST ends with path separator
+    std::string mLoongcollectorConfDir; // MUST ends with path separator
 
     // For such security case: logtail -> proxy server + firewall (domain rule).
     // By default, logtail will construct HTTP request URL by concating host IP with
@@ -253,7 +278,7 @@ private:
     void LoadEnvTags();
 
     // LoadEnvResourceLimit loads resource limit from env config.
-    // Read values will replace corresponding configs in ilogtail_config.json.
+    // Read values will replace corresponding configs in loongcollector_config.json.
     void LoadEnvResourceLimit();
 
     // logtail is in purage container mode when STRING_FLAG(ilogtail_user_defined_id_env_name) exist and /logtail_host
@@ -444,9 +469,9 @@ public:
     // const std::string& GetAlipayZone() const { return mAlipayZone; }
 
     // If @dirPath is not accessible, GetProcessExecutionDir will be set.
-    void SetLogtailSysConfDir(const std::string& dirPath);
+    void SetLoongcollectorConfDir(const std::string& dirPath);
 
-    const std::string& GetLogtailSysConfDir() const { return mLogtailSysConfDir; }
+    const std::string& GetLoongcollectorConfDir() const { return mLoongcollectorConfDir; }
 
     inline bool IsHostIPReplacePolicyEnabled() const { return mEnableHostIPReplace; }
 

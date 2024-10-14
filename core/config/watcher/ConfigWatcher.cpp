@@ -19,6 +19,7 @@
 
 #include "PipelineConfig.h"
 #include "logger/Logger.h"
+#include "pipeline/InstanceConfigManager.h"
 #include "pipeline/PipelineManager.h"
 
 using namespace std;
@@ -43,12 +44,14 @@ PipelineConfigDiff ConfigWatcher::CheckConfigDiff() {
             continue;
         }
         if (!filesystem::exists(s)) {
-            LOG_WARNING(sLogger, ("config dir path not existed", "skip current object")("dir path", dir.string()));
+            LOG_WARNING(sLogger,
+                        ("config dir path not existed", "skip current object")("dir path", dir.string()));
             continue;
         }
         if (!filesystem::is_directory(s)) {
             LOG_WARNING(sLogger,
-                        ("config dir path is not a directory", "skip current object")("dir path", dir.string()));
+                        ("config dir path is not a directory",
+                         "skip current object")("dir path", dir.string()));
             continue;
         }
         for (auto const& entry : filesystem::directory_iterator(dir, ec)) {
@@ -64,13 +67,15 @@ PipelineConfigDiff ConfigWatcher::CheckConfigDiff() {
             const string& configName = path.stem().string();
             const string& filepath = path.string();
             if (!filesystem::is_regular_file(entry.status(ec))) {
-                LOG_DEBUG(sLogger, ("config file is not a regular file", "skip current object")("filepath", filepath));
+                LOG_DEBUG(sLogger,
+                          ("config file is not a regular file",
+                           "skip current object")("filepath", filepath));
                 continue;
             }
             if (configSet.find(configName) != configSet.end()) {
-                LOG_WARNING(
-                    sLogger,
-                    ("more than 1 config with the same name is found", "skip current config")("filepath", filepath));
+                LOG_WARNING(sLogger,
+                            ("more than 1 config with the same name is found",
+                             "skip current config")("filepath", filepath));
                 continue;
             }
             configSet.insert(configName);
@@ -85,12 +90,16 @@ PipelineConfigDiff ConfigWatcher::CheckConfigDiff() {
                     continue;
                 }
                 if (!IsConfigEnabled(configName, *detail)) {
-                    LOG_INFO(sLogger, ("new config found and disabled", "skip current object")("config", configName));
+                    LOG_INFO(sLogger,
+                             ("new config found and disabled",
+                              "skip current object")("config", configName));
                     continue;
                 }
                 PipelineConfig config(configName, std::move(detail));
                 if (!config.Parse()) {
-                    LOG_ERROR(sLogger, ("new config found but invalid", "skip current object")("config", configName));
+                    LOG_ERROR(sLogger,
+                              ("new config found but invalid",
+                               "skip current object")("config", configName));
                     LogtailAlarm::GetInstance()->SendAlarm(CATEGORY_CONFIG_ALARM,
                                                            "new config found but invalid: skip current object, config: "
                                                                + configName,
@@ -100,29 +109,27 @@ PipelineConfigDiff ConfigWatcher::CheckConfigDiff() {
                     continue;
                 }
                 diff.mAdded.push_back(std::move(config));
-                LOG_INFO(
-                    sLogger,
-                    ("new config found and passed topology check", "prepare to build pipeline")("config", configName));
+                LOG_INFO(sLogger,
+                         ("new config found and passed topology check",
+                          "prepare to build config")("config", configName));
             } else if (iter->second.first != size || iter->second.second != mTime) {
                 // for config currently running, we leave it untouched if new config is invalid
                 mFileInfoMap[filepath] = make_pair(size, mTime);
                 unique_ptr<Json::Value> detail = make_unique<Json::Value>(new Json::Value());
                 if (!LoadConfigDetailFromFile(path, *detail)) {
-                    if (mPipelineManager->FindConfigByName(configName)) {
-                        diff.mUnchanged.push_back(configName);
-                    }
                     continue;
                 }
                 if (!IsConfigEnabled(configName, *detail)) {
                     if (mPipelineManager->FindConfigByName(configName)) {
                         diff.mRemoved.push_back(configName);
-                        LOG_INFO(sLogger,
-                                 ("existing valid config modified and disabled",
-                                  "prepare to stop current running pipeline")("config", configName));
+                        LOG_INFO(
+                            sLogger,
+                            ("existing valid config modified and disabled",
+                             "prepare to stop current running config")("config", configName));
                     } else {
                         LOG_INFO(sLogger,
-                                 ("existing invalid config modified and disabled", "skip current object")("config",
-                                                                                                          configName));
+                                 ("existing invalid config modified and disabled",
+                                  "skip current object")("config", configName));
                     }
                     continue;
                 }
@@ -149,7 +156,6 @@ PipelineConfigDiff ConfigWatcher::CheckConfigDiff() {
                 } else if (*detail != p->GetConfig()) {
                     PipelineConfig config(configName, std::move(detail));
                     if (!config.Parse()) {
-                        diff.mUnchanged.push_back(configName);
                         LOG_ERROR(sLogger,
                                   ("existing valid config modified and becomes invalid",
                                    "keep current pipeline running")("config", configName));
@@ -167,15 +173,11 @@ PipelineConfigDiff ConfigWatcher::CheckConfigDiff() {
                              ("existing valid config modified and passed topology check",
                               "prepare to rebuild pipeline")("config", configName));
                 } else {
-                    diff.mUnchanged.push_back(configName);
                     LOG_DEBUG(sLogger,
-                              ("existing valid config file modified, but no change found", "skip current object"));
+                              ("existing valid config file modified, but no change found",
+                               "skip current object"));
                 }
             } else {
-                // 为了插件系统过渡使用
-                if (mPipelineManager->FindConfigByName(configName)) {
-                    diff.mUnchanged.push_back(configName);
-                }
                 LOG_DEBUG(sLogger, ("existing config file unchanged", "skip current object"));
             }
         }
@@ -184,7 +186,8 @@ PipelineConfigDiff ConfigWatcher::CheckConfigDiff() {
         if (configSet.find(name) == configSet.end()) {
             diff.mRemoved.push_back(name);
             LOG_INFO(sLogger,
-                     ("existing valid config is removed", "prepare to stop current running pipeline")("config", name));
+                     ("existing valid config is removed",
+                      "prepare to stop current running config")("config", name));
         }
     }
     for (const auto& item : mFileInfoMap) {
