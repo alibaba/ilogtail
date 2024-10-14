@@ -26,8 +26,6 @@ namespace logtail {
 
 class PipelineConfigDiff {
 public:
-    bool IsEmpty() { return mRemoved.empty() && mAdded.empty() && mModified.empty(); }
-
     std::vector<PipelineConfig> mAdded;
     std::vector<PipelineConfig> mModified;
     std::vector<std::string> mRemoved;
@@ -36,8 +34,6 @@ public:
 
 class InstanceConfigDiff {
 public:
-    bool IsEmpty() { return mRemoved.empty() && mAdded.empty() && mModified.empty(); }
-
     std::vector<InstanceConfig> mAdded;
     std::vector<InstanceConfig> mModified;
     std::vector<std::string> mRemoved;
