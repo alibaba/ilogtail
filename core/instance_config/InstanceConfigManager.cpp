@@ -16,8 +16,6 @@
 
 #include "instance_config/InstanceConfigManager.h"
 
-#include <unordered_map>
-
 #include "app_config/AppConfig.h"
 #include "config/feedbacker/ConfigFeedbackReceiver.h"
 

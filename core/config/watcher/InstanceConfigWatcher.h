@@ -52,7 +52,6 @@ private:
     ~InstanceConfigWatcher() = default;
 
     std::vector<std::filesystem::path> mSourceDir;
-    std::vector<std::filesystem::path> mLocalSourceDir;
     std::unordered_map<std::string, std::mutex*> mDirMutexMap;
     std::map<std::string, std::pair<uintmax_t, std::filesystem::file_time_type>> mFileInfoMap;
     const InstanceConfigManager* mInstanceConfigManager = nullptr;

@@ -19,7 +19,6 @@
 
 #include "config/InstanceConfig.h"
 #include "logger/Logger.h"
-#include "monitor/LogtailAlarm.h"
 
 using namespace std;
 
@@ -175,7 +174,6 @@ void InstanceConfigWatcher::AddSource(const string& dir, mutex* mux) {
 void InstanceConfigWatcher::ClearEnvironment() {
     mSourceDir.clear();
     mFileInfoMap.clear();
-    mLocalSourceDir.clear();
 }
 
 } // namespace logtail

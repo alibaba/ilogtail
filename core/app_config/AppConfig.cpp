@@ -482,6 +482,14 @@ string GetExactlyOnceCheckpoint() {
     }
 }
 
+string GetFileTagsDir() {
+    if (BOOL_FLAG(logtail_mode)) {
+        return STRING_FLAG(ALIYUN_LOG_FILE_TAGS);
+    } else {
+        return AbsolutePath(STRING_FLAG(ALIYUN_LOG_FILE_TAGS), AppConfig::GetInstance()->GetLoongcollectorConfDir());
+    }
+}
+
 AppConfig::AppConfig() {
     LOG_INFO(sLogger, ("AppConfig AppConfig", "success"));
     SetIlogtailConfigJson("");
@@ -619,9 +627,6 @@ void AppConfig::LoadAppConfig(const std::string& ilogtailConfigFile) {
 
     // 加载本地instanceconfig
     LoadLocalInstanceConfig();
-
-    // 加载环境变量配置
-    loadEnvConfig();
 
     ParseJsonToFlags(mLocalConfig);
 
@@ -1456,7 +1461,7 @@ void AppConfig::InitEnvMapping(const std::string& envStr, std::map<std::string, 
  */
 void AppConfig::SetConfigFlag(const std::string& flagName, const std::string& value) {
     static set<string> sIgnoreFlagSet
-        = {"loongcollector_conf_dir", "loongcollector_log_dir", "loongcollector_data_dir", "loongcollector_run_dir"};
+        = {"loongcollector_conf_dir", "loongcollector_log_dir", "loongcollector_data_dir", "loongcollector_run_dir", "logtail_mode"};
     if (sIgnoreFlagSet.find(flagName) != sIgnoreFlagSet.end()) {
         return;
     }
@@ -1478,7 +1483,7 @@ void AppConfig::SetConfigFlag(const std::string& flagName, const std::string& va
 #include "processenv.h"
 #endif
 
-std::map<std::string, std::string> AppConfig::GetEnvMapping() {
+void AppConfig::ParseEnvToFlags() {
     std::map<std::string, std::string> envMapping;
 
 #if defined(__linux__) || defined(__APPLE__)
@@ -1503,61 +1508,43 @@ std::map<std::string, std::string> AppConfig::GetEnvMapping() {
         }
     }
 #endif
-    return envMapping;
-}
-
-void AppConfig::ParseEnvToFlags() {
-    std::map<std::string, std::string> envMapping = GetEnvMapping();
-
-    for (auto& iter : envMapping) {
+    for (const auto & iter : envMapping) {
         const std::string& key = iter.first;
         const std::string& value = iter.second;
         SetConfigFlag(key, value);
-    }
-}
-
-void AppConfig::loadEnvConfig() {
-    std::map<std::string, std::string> envMapping = GetEnvMapping();
-    mEnvConfig.clear();
-    for (const auto& iter : envMapping) {
-        const std::string& flagName = iter.first;
-        const std::string& strValue = iter.second;
-        GFLAGS_NAMESPACE::CommandLineFlagInfo info;
-        bool rst = GetCommandLineFlagInfo(flagName.c_str(), &info);
-        if (rst) {
-            // 尝试解析为 double
-            char* end;
-            double doubleValue = strtod(strValue.c_str(), &end);
-            if (*end == '\0') {
-                mEnvConfig[flagName] = doubleValue;
-                continue;
-            }
-
-            // 尝试解析为 int64_t
-            int64_t int64Value = strtoll(strValue.c_str(), &end, 10);
-            if (*end == '\0' && errno != ERANGE) {
-                mEnvConfig[flagName] = Json::Int64(int64Value);
-                continue;
-            }
-
-            // 尝试解析为 int32_t
-            int32_t int32Value = static_cast<int32_t>(strtol(strValue.c_str(), &end, 10));
-            if (*end == '\0' && errno != ERANGE && static_cast<int64_t>(int32Value) == int64Value) {
-                mEnvConfig[flagName] = int32Value;
-                continue;
-            }
-
-            // 检查是否为 bool
-            if (strValue == "true" || strValue == "false") {
-                mEnvConfig[flagName] = (strValue == "true");
-                continue;
-            }
-
-            // 如果以上都不是，则作为 string 存储
-            mEnvConfig[flagName] = strValue;
+        // 尝试解析为 double
+        char* end;
+        double doubleValue = strtod(value.c_str(), &end);
+        if (*end == '\0') {
+            mEnvConfig[key] = doubleValue;
+            continue;
         }
+
+        // 尝试解析为 int64_t
+        int64_t int64Value = strtoll(value.c_str(), &end, 10);
+        if (*end == '\0' && errno != ERANGE) {
+            mEnvConfig[key] = Json::Int64(int64Value);
+            continue;
+        }
+
+        // 尝试解析为 int32_t
+        auto int32Value = static_cast<int32_t>(strtol(value.c_str(), &end, 10));
+        if (*end == '\0' && errno != ERANGE && static_cast<int64_t>(int32Value) == int64Value) {
+            mEnvConfig[key] = int32Value;
+            continue;
+        }
+
+        // 检查是否为 bool
+        if (value == "true") {
+            mEnvConfig[key] = true;
+            continue;
+        }
+        if (value == "false") {
+            mEnvConfig[key] = false;
+            continue;
+        }
+        mEnvConfig[key] = value;
     }
-    LOG_INFO(sLogger, ("Loaded environment config", mEnvConfig.toStyledString()));
 }
 
 void AppConfig::DumpAllFlagsToMap(std::unordered_map<std::string, std::string>& flagMap) {
@@ -1580,9 +1567,9 @@ void AppConfig::ReadFlagsFromMap(const std::unordered_map<std::string, std::stri
 }
 
 /**
- * @brief 递归解析JSON配置到标志
+ * @brief 递归解析JSON配置到gflag
  *
- * 该函数递归地遍历JSON对象，将其键值对转换为配置标志。
+ * 该函数递归地遍历JSON对象，将其键值对转换为gflag
  *
  * @param confJson 要解析的JSON对象
  * @param prefix 当前键的前缀，用于构建完整的标志名
@@ -1626,33 +1613,10 @@ void AppConfig::RecurseParseJsonToFlags(const Json::Value& confJson, std::string
     }
 }
 
-/**
- * @brief 将JSON配置解析为标志
- *
- * 该函数将传入的JSON配置对象解析为标志。
- * 它调用RecurseParseJsonToFlags函数来递归地解析JSON对象,
- * 将JSON中的键值对转换为相应的配置标志。
- *
- * @param confJson 要解析的JSON配置对象
- */
 void AppConfig::ParseJsonToFlags(const Json::Value& confJson) {
     RecurseParseJsonToFlags(confJson, "");
 }
 
-/**
- * @brief 检查并调整参数
- *
- * 该函数用于检查和调整Logtail的各项参数,主要包括:
- * 1. 限制缓冲文件的大小和数量
- * 2. 根据内存限制动态调整各项参数,如最大统计数、缓存大小等
- * 3. 调整发送相关的参数
- * 4. 当流量超过一定阈值时,禁用流量控制和随机延迟发送
- *
- * 具体调整逻辑如下:
- * - 限制缓冲文件总大小不超过4GB
- * - 根据内存限制按比例调整各项参数,但不超过默认最大值
- * - 当发送流量超过30MB/s时,禁用流量控制和随机延迟发送
- */
 void AppConfig::CheckAndAdjustParameters() {
     // the max buffer size is 4GB
     // if "fileNum * fileSize" from config more than 4GB, logtail will do restrictions
@@ -1833,7 +1797,7 @@ void AppConfig::UpdateFileTags() {
     }
     // read local config
     Json::Value localFileTagsJson;
-    const char* file_tags_dir = STRING_FLAG(ALIYUN_LOG_FILE_TAGS).c_str();
+    string file_tags_dir = GetFileTagsDir();
     ParseConfResult userLogRes = ParseConfig(file_tags_dir, localFileTagsJson);
     if (userLogRes != CONFIG_OK) {
         if (userLogRes == CONFIG_NOT_EXIST)

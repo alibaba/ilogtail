@@ -73,7 +73,6 @@ class AppConfig {
 private:
     static std::string sLocalConfigDir;
     void loadLocalConfig(const std::string& ilogtailConfigFile);
-    void loadEnvConfig();
     Json::Value mergeAllConfigs();
 
     Json::Value mLocalConfig;
@@ -248,7 +247,6 @@ private:
      *
      */
     void ParseEnvToFlags();
-    std::map<std::string, std::string> GetEnvMapping();
 
     /**
      * @brief Load resource related configs such as cpu, memory, buffer size, thread number, send concurrency.
