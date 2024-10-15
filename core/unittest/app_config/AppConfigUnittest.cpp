@@ -43,6 +43,7 @@ private:
         } else {
             CreateAgentDir();
             std::string conf  = GetAgentConfDir() + "/instance_config/local/loongcollector_config.json";
+            AppConfig::GetInstance()->LoadAppConfig(conf);
             OverwriteFile(conf, v.toStyledString());
         }
     }
