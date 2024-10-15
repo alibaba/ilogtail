@@ -30,39 +30,21 @@ namespace logtail {
 struct InstanceConfig {
     std::string mConfigName;
     std::string mDirName;
-    std::unique_ptr<Json::Value> mDetail;
+    Json::Value mDetail;
 
-    // for alarm only
+    InstanceConfig(const std::string& name, const Json::Value& detail, const std::string& dirName)
+        : mConfigName(name), mDirName(dirName), mDetail(detail) {}
 
-    InstanceConfig(const std::string& name, std::unique_ptr<Json::Value>&& detail, const std::string& dirName)
-        : mConfigName(name), mDirName(dirName), mDetail(std::move(detail)) {}
-    InstanceConfig(const logtail::InstanceConfig& config) : mConfigName(config.mConfigName), mDirName(config.mDirName) {
-        mDetail = std::make_unique<Json::Value>(*config.mDetail);
-    }
+    InstanceConfig(const InstanceConfig& config) = default;
 
-    InstanceConfig& operator=(InstanceConfig&& other) {
-        if (this != &other) {
-            mConfigName = std::move(other.mConfigName);
-            mDetail = std::move(other.mDetail);
-            mDirName = std::move(other.mDirName);
-        }
-        return *this;
-    }
+    InstanceConfig& operator=(InstanceConfig&& other) = default;
+    InstanceConfig& operator=(const InstanceConfig& other) = default;
 
-    InstanceConfig& operator=(const InstanceConfig& other) {
-        if (this != &other) {
-            mConfigName = other.mConfigName;
-            mDetail = std::make_unique<Json::Value>(*other.mDetail);
-            mDirName = other.mDirName;
-        }
-        return *this;
-    }
-
-    const Json::Value& GetConfig() const { return *mDetail; }
+    const Json::Value& GetConfig() const { return mDetail; }
 };
 
 inline bool operator==(const InstanceConfig& lhs, const InstanceConfig& rhs) {
-    return (lhs.mConfigName == rhs.mConfigName) && (*lhs.mDetail == *rhs.mDetail) && (lhs.mDirName == rhs.mDirName);
+    return (lhs.mConfigName == rhs.mConfigName) && (lhs.mDetail == rhs.mDetail) && (lhs.mDirName == rhs.mDirName);
 }
 
 inline bool operator!=(const InstanceConfig& lhs, const InstanceConfig& rhs) {

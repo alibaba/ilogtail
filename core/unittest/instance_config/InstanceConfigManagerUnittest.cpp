@@ -117,10 +117,10 @@ void InstanceConfigManagerUnittest::TestUpdateInstanceConfigs() {
                 "max_bytes_per_sec": 1234
             })";
             std::string errorMsg;
-            unique_ptr<Json::Value> detail = unique_ptr<Json::Value>(new Json::Value());
-            APSARA_TEST_TRUE(ParseJsonTable(content, *detail, errorMsg));
+            Json::Value detail;
+            APSARA_TEST_TRUE(ParseJsonTable(content, detail, errorMsg));
             APSARA_TEST_TRUE(errorMsg.empty());
-            InstanceConfig config("test0", std::move(detail), "dir");
+            InstanceConfig config("test0", detail, "dir");
             configDiff.mAdded.emplace_back(config);
         }
         {
@@ -132,10 +132,10 @@ void InstanceConfigManagerUnittest::TestUpdateInstanceConfigs() {
                 "string_true": "string"
             })";
             std::string errorMsg;
-            unique_ptr<Json::Value> detail = unique_ptr<Json::Value>(new Json::Value());
-            APSARA_TEST_TRUE(ParseJsonTable(content, *detail, errorMsg));
+            Json::Value detail;
+            APSARA_TEST_TRUE(ParseJsonTable(content, detail, errorMsg));
             APSARA_TEST_TRUE(errorMsg.empty());
-            InstanceConfig config("test1", std::move(detail), "dir");
+            InstanceConfig config("test1", detail, "dir");
             configDiff.mAdded.emplace_back(config);
         }
         {
@@ -147,10 +147,10 @@ void InstanceConfigManagerUnittest::TestUpdateInstanceConfigs() {
                 "string_false": false
             })";
             std::string errorMsg;
-            unique_ptr<Json::Value> detail = unique_ptr<Json::Value>(new Json::Value());
-            APSARA_TEST_TRUE(ParseJsonTable(content, *detail, errorMsg));
+            Json::Value detail;
+            APSARA_TEST_TRUE(ParseJsonTable(content, detail, errorMsg));
             APSARA_TEST_TRUE(errorMsg.empty());
-            InstanceConfig config("test2", std::move(detail), "dir");
+            InstanceConfig config("test2", detail, "dir");
             configDiff.mAdded.emplace_back(config);
         }
         InstanceConfigManager::GetInstance()->UpdateInstanceConfigs(configDiff);
@@ -172,10 +172,10 @@ void InstanceConfigManagerUnittest::TestUpdateInstanceConfigs() {
                 "max_bytes_per_sec": 31457280
             })";
             std::string errorMsg;
-            unique_ptr<Json::Value> detail = unique_ptr<Json::Value>(new Json::Value());
-            APSARA_TEST_TRUE(ParseJsonTable(content, *detail, errorMsg));
+            Json::Value detail;
+            APSARA_TEST_TRUE(ParseJsonTable(content, detail, errorMsg));
             APSARA_TEST_TRUE(errorMsg.empty());
-            InstanceConfig config("test0", std::move(detail), "dir");
+            InstanceConfig config("test0", detail, "dir");
             configDiff.mAdded.emplace_back(config);
         }
         {
@@ -187,10 +187,10 @@ void InstanceConfigManagerUnittest::TestUpdateInstanceConfigs() {
                 "string_true": "string0"
             })";
             std::string errorMsg;
-            unique_ptr<Json::Value> detail = unique_ptr<Json::Value>(new Json::Value());
-            APSARA_TEST_TRUE(ParseJsonTable(content, *detail, errorMsg));
+            Json::Value detail;
+            APSARA_TEST_TRUE(ParseJsonTable(content, detail, errorMsg));
             APSARA_TEST_TRUE(errorMsg.empty());
-            InstanceConfig config("test1", std::move(detail), "dir");
+            InstanceConfig config("test1", detail, "dir");
             configDiff.mModified.emplace_back(config);
         }
         {
@@ -202,10 +202,10 @@ void InstanceConfigManagerUnittest::TestUpdateInstanceConfigs() {
                 "string_false": false
             })";
             std::string errorMsg;
-            unique_ptr<Json::Value> detail = unique_ptr<Json::Value>(new Json::Value());
-            APSARA_TEST_TRUE(ParseJsonTable(content, *detail, errorMsg));
+            Json::Value detail;
+            APSARA_TEST_TRUE(ParseJsonTable(content, detail, errorMsg));
             APSARA_TEST_TRUE(errorMsg.empty());
-            InstanceConfig config("test2", std::move(detail), "dir");
+            InstanceConfig config("test2", detail, "dir");
             configDiff.mModified.emplace_back(config);
         }
         InstanceConfigManager::GetInstance()->UpdateInstanceConfigs(configDiff);

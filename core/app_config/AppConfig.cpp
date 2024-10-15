@@ -187,9 +187,6 @@ namespace logtail {
 
 std::string AppConfig::sLocalConfigDir = "local";
 void CreateAgentDir() {
-    if (BOOL_FLAG(logtail_mode)) {
-        return;
-    }
     try {
         const char* value = getenv("logtail_mode");
         if (value != NULL) {
