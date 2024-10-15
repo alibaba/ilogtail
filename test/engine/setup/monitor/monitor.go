@@ -49,11 +49,11 @@ func StartMonitor(ctx context.Context, containerName string) (context.Context, e
 	return ctx, err
 }
 
-func StopMonitor(ctx context.Context) (context.Context, error) {
+func StopMonitor() error {
 	if isMonitoring.Load() {
 		stopCh <- true
 	}
-	return ctx, nil
+	return nil
 }
 
 func monitoring(client *client.Client, containerName string) {
