@@ -162,10 +162,8 @@ private:
     CpuStat mRealtimeCpuStat;
     // Use to calculate CPU limit, updated regularly (30s by default).
     CpuStat mCpuStat;
-    DoubleGaugePtr mAgentCpuGauge;
     // Memory usage statistics.
     MemStat mMemStat;
-    IntGaugePtr mAgentMemoryGauge;
 
     // Current scale up level, updated by CheckScaledCpuUsageUpLimit.
     float mScaledCpuUsageUpLimit;
@@ -194,17 +192,16 @@ public:
     void Init();
     void Stop();
 
-    CounterPtr GetCounter(std::string key);
-    IntGaugePtr GetIntGauge(std::string key);
-    DoubleGaugePtr GetDoubleGauge(std::string key);
+    DoubleGaugePtr mAgentCpu;
+    IntGaugePtr mAgentMemory;
+    IntGaugePtr mAgentGoMemory;
+    IntGaugePtr mAgentGoRoutinesTotal;
+    IntGaugePtr mAgentOpenFdTotal;
+    IntGaugePtr mAgentConfigTotal;
 
 private:
     // MetricRecord
     MetricsRecordRef mMetricsRecordRef;
-    // metrics
-    std::unordered_map<std::string, CounterPtr> mCounters;
-    std::unordered_map<std::string, IntGaugePtr> mIntGauges;
-    std::unordered_map<std::string, DoubleGaugePtr> mDoubleGauges;
 };
 
 } // namespace logtail
