@@ -607,14 +607,15 @@ void AppConfig::LoadLocalInstanceConfig() {
 }
 
 void AppConfig::LoadAppConfig(const std::string& ilogtailConfigFile) {
+    mDockerFilePathConfig = GetAgentDockerPathConfig();
     if (BOOL_FLAG(logtail_mode)) {
         loadAppConfigLogtailMode(ilogtailConfigFile);
     } else {
         std::string confDir  = GetAgentConfDir();
         SetLoongcollectorConfDir(AbsolutePath(confDir, mProcessExecutionDir));
-        // 加载本地instanceconfig
-        LoadLocalInstanceConfig();
     }
+    // 加载本地instanceconfig
+    LoadLocalInstanceConfig();
 
     ParseJsonToFlags(mLocalInstanceConfig);
     ParseEnvToFlags();
@@ -628,7 +629,6 @@ void AppConfig::LoadAppConfig(const std::string& ilogtailConfigFile) {
 }
 
 void AppConfig::loadAppConfigLogtailMode(const std::string& ilogtailConfigFile) {
-    mDockerFilePathConfig = GetAgentDockerPathConfig();
 
     Json::Value confJson(Json::objectValue);
     std::string newConfDir;
