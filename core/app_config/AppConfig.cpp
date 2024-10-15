@@ -1717,7 +1717,6 @@ Json::Value AppConfig::mergeAllConfigs() {
 }
 
 void AppConfig::LoadInstanceConfig(const std::map<std::string, std::shared_ptr<InstanceConfig>>& instanceConfig) {
-    LOG_INFO(sLogger, ("LoadInstanceConfig", instanceConfig.size()));
     mRemoteConfig.clear();
     mLocalInstanceConfig.clear();
     for (const auto& config : instanceConfig) {
@@ -1727,11 +1726,11 @@ void AppConfig::LoadInstanceConfig(const std::map<std::string, std::shared_ptr<I
             MergeJson(mRemoteConfig, config.second->GetConfig());
         }
     }
-    LOG_INFO(sLogger,
-             ("Load local instanceConfig", mLocalInstanceConfig.toStyledString())("Load remote instanceConfig",
-                                                                                  mRemoteConfig.toStyledString()));
     auto mergedConfig = mergeAllConfigs();
     if (mMergedConfig != mergedConfig) {
+        LOG_INFO(sLogger,
+                 ("load all local instanceConfig", mLocalInstanceConfig.toStyledString())("load all remote instanceConfig",
+                                                                                    mRemoteConfig.toStyledString()));
         for (const auto& callback : mCallbacks) {
             const std::string& key = callback.first;
             if (!mMergedConfig.isMember(key) && !mergedConfig.isMember(key)) {
@@ -1739,11 +1738,9 @@ void AppConfig::LoadInstanceConfig(const std::map<std::string, std::shared_ptr<I
             }
             if (!mMergedConfig.isMember(key) && mergedConfig.isMember(key)) {
                 callback.second(false);
-            }
-            if (mMergedConfig.isMember(key) && !mergedConfig.isMember(key)) {
+            } else if (mMergedConfig.isMember(key) && !mergedConfig.isMember(key)) {
                 callback.second(false);
-            }
-            if (mMergedConfig[key] != mergedConfig[key]) {
+            } else if (mMergedConfig[key] != mergedConfig[key]) {
                 callback.second(false);
             }
         }
