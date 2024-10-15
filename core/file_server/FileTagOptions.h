@@ -31,13 +31,7 @@ public:
               const PipelineContext& context,
               const std::string& pluginType,
               bool enableContainerDiscovery);
-    StringView GetFileTagKeyName(TagKey key) const {
-        if (mFileTags.find(key) != mFileTags.end()) {
-            // FileTagOption will not be deconstructed or changed before all event be sent
-            return StringView(mFileTags.at(key).c_str(), mFileTags.at(key).size());
-        }
-        return StringView();
-    }
+    StringView GetFileTagKeyName(TagKey key) const;
 
 
 private:

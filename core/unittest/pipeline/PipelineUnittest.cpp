@@ -200,7 +200,9 @@ void PipelineUnittest::OnSuccessfulInit() const {
                 "EnableTimestampNanosecond": false,
                 "UsingOldContentTag": false,
                 "DefaultLogQueueSize" : 5,
-                "DefaultLogGroupQueueSize": 3
+                "DefaultLogGroupQueueSize": 3,
+                "PipelineMetaTagKey": null,
+                "AgentEnvMetaTagKey": null
             },
             "inputs": [
                 {
@@ -227,7 +229,9 @@ void PipelineUnittest::OnSuccessfulInit() const {
                 "EnableTimestampNanosecond": false,
                 "UsingOldContentTag": false,
                 "DefaultLogQueueSize" : 10,
-                "DefaultLogGroupQueueSize": 3
+                "DefaultLogGroupQueueSize": 3,
+                "PipelineMetaTagKey": null,
+                "AgentEnvMetaTagKey": null
             },
             "aggregators": [
                 {
@@ -617,7 +621,9 @@ void PipelineUnittest::OnInitVariousTopology() const {
             "global" : {
                 "EnableTimestampNanosecond": false,
                 "UsingOldContentTag": false,
-                "DefaultLogQueueSize" : 10
+                "DefaultLogQueueSize" : 10,
+                "PipelineMetaTagKey": null,
+                "AgentEnvMetaTagKey": null
             },
             "processors": [
                 {
@@ -684,7 +690,9 @@ void PipelineUnittest::OnInitVariousTopology() const {
         {
             "global": {
                 "EnableTimestampNanosecond": false,
-                "UsingOldContentTag": false
+                "UsingOldContentTag": false,
+                "PipelineMetaTagKey": null,
+                "AgentEnvMetaTagKey": null
             },
             "inputs": [
                 {
@@ -803,7 +811,9 @@ void PipelineUnittest::OnInitVariousTopology() const {
             "global" : {
                 "EnableTimestampNanosecond": false,
                 "UsingOldContentTag": false,
-                "DefaultLogQueueSize" : 10
+                "DefaultLogQueueSize" : 10,
+                "PipelineMetaTagKey": null,
+                "AgentEnvMetaTagKey": null
             },
             "processors": [
                 {
@@ -977,7 +987,9 @@ void PipelineUnittest::OnInitVariousTopology() const {
         {
             "global": {
                 "EnableTimestampNanosecond": false,
-                "UsingOldContentTag": false
+                "UsingOldContentTag": false,
+                "PipelineMetaTagKey": null,
+                "AgentEnvMetaTagKey": null
             },
             "inputs": [
                 {
@@ -1077,7 +1089,9 @@ void PipelineUnittest::OnInitVariousTopology() const {
             "global" : {
                 "EnableTimestampNanosecond": false,
                 "UsingOldContentTag": false,
-                "DefaultLogQueueSize" : 10
+                "DefaultLogQueueSize" : 10,
+                "PipelineMetaTagKey": null,
+                "AgentEnvMetaTagKey": null
             },
             "aggregators": [
                 {
@@ -1197,7 +1211,9 @@ void PipelineUnittest::OnInitVariousTopology() const {
             "global" : {
                 "EnableTimestampNanosecond": false,
                 "UsingOldContentTag": false,
-                "DefaultLogQueueSize" : 10
+                "DefaultLogQueueSize" : 10,
+                "PipelineMetaTagKey": null,
+                "AgentEnvMetaTagKey": null
             },
             "processors": [
                 {
@@ -1257,7 +1273,9 @@ void PipelineUnittest::OnInitVariousTopology() const {
         {
             "global": {
                 "EnableTimestampNanosecond": false,
-                "UsingOldContentTag": false
+                "UsingOldContentTag": false,
+                "PipelineMetaTagKey": null,
+                "AgentEnvMetaTagKey": null
             },
             "inputs": [
                 {
@@ -1364,7 +1382,9 @@ void PipelineUnittest::OnInitVariousTopology() const {
             "global" : {
                 "EnableTimestampNanosecond": false,
                 "UsingOldContentTag": false,
-                "DefaultLogQueueSize" : 10
+                "DefaultLogQueueSize" : 10,
+                "PipelineMetaTagKey": null,
+                "AgentEnvMetaTagKey": null
             },
             "processors": [
                 {
@@ -1491,7 +1511,9 @@ void PipelineUnittest::OnInitVariousTopology() const {
             "global" : {
                 "EnableTimestampNanosecond": false,
                 "UsingOldContentTag": false,
-                "DefaultLogQueueSize" : 10
+                "DefaultLogQueueSize" : 10,
+                "PipelineMetaTagKey": null,
+                "AgentEnvMetaTagKey": null
             },
             "aggregators": [
                 {
@@ -1540,7 +1562,9 @@ void PipelineUnittest::OnInitVariousTopology() const {
         {
             "global": {
                 "EnableTimestampNanosecond": false,
-                "UsingOldContentTag": false
+                "UsingOldContentTag": false,
+                "PipelineMetaTagKey": null,
+                "AgentEnvMetaTagKey": null
             },
             "inputs": [
                 {
@@ -1641,7 +1665,9 @@ void PipelineUnittest::OnInitVariousTopology() const {
             "global" : {
                 "EnableTimestampNanosecond": false,
                 "UsingOldContentTag": false,
-                "DefaultLogQueueSize" : 10
+                "DefaultLogQueueSize" : 10,
+                "PipelineMetaTagKey": null,
+                "AgentEnvMetaTagKey": null
             },
             "aggregators": [
                 {
@@ -1791,7 +1817,9 @@ void PipelineUnittest::OnInitVariousTopology() const {
             "global" : {
                 "EnableTimestampNanosecond": false,
                 "UsingOldContentTag": false,
-                "DefaultLogQueueSize" : 10
+                "DefaultLogQueueSize" : 10,
+                "PipelineMetaTagKey": null,
+                "AgentEnvMetaTagKey": null
             },
             "processors": [
                 {
@@ -1865,7 +1893,9 @@ void PipelineUnittest::OnInitVariousTopology() const {
         {
             "global": {
                 "EnableTimestampNanosecond": false,
-                "UsingOldContentTag": false
+                "UsingOldContentTag": false,
+                "PipelineMetaTagKey": null,
+                "AgentEnvMetaTagKey": null
             },
             "inputs": [
                 {
@@ -1994,7 +2024,9 @@ void PipelineUnittest::OnInitVariousTopology() const {
             "global" : {
                 "EnableTimestampNanosecond": false,
                 "UsingOldContentTag": false,
-                "DefaultLogQueueSize" : 10
+                "DefaultLogQueueSize" : 10,
+                "PipelineMetaTagKey": null,
+                "AgentEnvMetaTagKey": null
             },
             "processors": [
                 {
@@ -2151,7 +2183,9 @@ void PipelineUnittest::OnInitVariousTopology() const {
             "global" : {
                 "EnableTimestampNanosecond": false,
                 "UsingOldContentTag": false,
-                "DefaultLogQueueSize" : 10
+                "DefaultLogQueueSize" : 10,
+                "PipelineMetaTagKey": null,
+                "AgentEnvMetaTagKey": null
             },
             "aggregators": [
                 {
@@ -2214,7 +2248,9 @@ void PipelineUnittest::OnInitVariousTopology() const {
         {
             "global": {
                 "EnableTimestampNanosecond": false,
-                "UsingOldContentTag": false
+                "UsingOldContentTag": false,
+                "PipelineMetaTagKey": null,
+                "AgentEnvMetaTagKey": null
             },
             "inputs": [
                 {
@@ -2567,7 +2603,9 @@ void PipelineUnittest::OnInputFileWithContainerDiscovery() const {
                 "AlwaysOnline": true,
                 "EnableTimestampNanosecond": false,
                 "UsingOldContentTag": false,
-                "DefaultLogQueueSize" : 10
+                "DefaultLogQueueSize" : 10,
+                "PipelineMetaTagKey": null,
+                "AgentEnvMetaTagKey": null
             },
             "inputs": [
                 {
@@ -2629,7 +2667,9 @@ void PipelineUnittest::OnInputFileWithContainerDiscovery() const {
                 "AlwaysOnline": true,
                 "EnableTimestampNanosecond": false,
                 "UsingOldContentTag": false,
-                "DefaultLogQueueSize" : 10
+                "DefaultLogQueueSize" : 10,
+                "PipelineMetaTagKey": null,
+                "AgentEnvMetaTagKey": null
             },
             "inputs": [
                 {
@@ -2649,7 +2689,9 @@ void PipelineUnittest::OnInputFileWithContainerDiscovery() const {
             "global" : {
                 "EnableTimestampNanosecond": false,
                 "UsingOldContentTag": false,
-                "DefaultLogQueueSize" : 10
+                "DefaultLogQueueSize" : 10,
+                "PipelineMetaTagKey": null,
+                "AgentEnvMetaTagKey": null
             },
             "processors": [
                 {
@@ -2894,6 +2936,7 @@ void PipelineUnittest::TestWaitAllItemsInProcessFinished() const {
     APSARA_TEST_NOT_EQUAL(std::future_status::ready, future.wait_for(std::chrono::seconds(0)));
     pipeline->mInProcessCnt.store(0);
     // recover
+    usleep(1000);
     APSARA_TEST_EQUAL(std::future_status::ready, future.wait_for(std::chrono::seconds(0)));
 }
 

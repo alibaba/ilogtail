@@ -20,6 +20,7 @@
 
 #include <cstdint>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 
 namespace logtail {
@@ -38,8 +39,8 @@ struct GlobalConfig {
     uint32_t mProcessPriority = 0;
     bool mEnableTimestampNanosecond = false;
     bool mUsingOldContentTag = false;
-    Json::Value mPipelineMetaTagKey;
-    Json::Value mAgentEnvMetaTagKey;
+    std::unordered_map<std::string, std::string> mPipelineMetaTagKey;
+    std::unordered_map<std::string, std::string> mAgentEnvMetaTagKey;
 };
 
 } // namespace logtail

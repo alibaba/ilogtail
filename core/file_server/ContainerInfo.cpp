@@ -28,6 +28,9 @@ const std::vector<std::string> containerNameTag = {
     "_namespace_",
     "_pod_uid_",
     "_container_ip_",
+    "_k8s_image_name_",
+    "_k8s_container_name_",
+    "_k8s_container_ip_",
 };
 
 const std::vector<TagKey> containerNameTagKey = {
@@ -37,6 +40,9 @@ const std::vector<TagKey> containerNameTagKey = {
     TagKey::K8S_NAMESPACE_TAG_KEY,
     TagKey::K8S_POD_UID_TAG_KEY,
     TagKey::CONTAINER_IP_TAG_KEY,
+    TagKey::K8S_CONTAINER_IMAGE_NAME_TAG_KEY,
+    TagKey::K8S_CONTAINER_NAME_TAG_KEY,
+    TagKey::K8S_CONTAINER_IP_TAG_KEY,
 };
 
 bool ContainerInfo::ParseAllByJSONObj(const Json::Value& paramsAll,
@@ -68,7 +74,6 @@ bool ContainerInfo::ParseAllByJSONObj(const Json::Value& paramsAll,
 }
 
 bool ContainerInfo::ParseByJSONObj(const Json::Value& params, ContainerInfo& containerInfo, std::string& errorMsg) {
-    bool isOldCheckpoint = !params.isMember("MetaDatas");
     containerInfo.mJson = params;
     if (params.isMember("ID") && params["ID"].isString()) {
         if (params["ID"].empty()) {

@@ -32,8 +32,9 @@ protected:
                                        hostLogPathFile,
                                        DevInode(),
                                        make_pair(&readerOpts, &ctx),
-                                       make_pair(&multilineOpts, &ctx)));
-        }
+                                       make_pair(&multilineOpts, &ctx),
+                                       make_pair(&tagOpts, &ctx)));
+    }
 
     void TearDown() override { INT32_FLAG(force_release_deleted_file_fd_timeout) = -1; }
 
@@ -41,6 +42,7 @@ private:
     LogFileReaderPtr reader;
     FileReaderOptions readerOpts;
     MultilineOptions multilineOpts;
+    FileTagOptions tagOpts;
     PipelineContext ctx;
     string hostLogPathDir = ".";
     string hostLogPathFile = "DeletedFileUnittest.txt";

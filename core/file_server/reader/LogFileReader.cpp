@@ -2446,9 +2446,11 @@ void LogFileReader::SetEventGroupMetaAndTag(PipelineEventGroup& group) {
         group.SetMetadata(EventGroupMetaKey::LOG_FILE_INODE, ToString(GetDevInode().inode));
     }
     group.SetMetadata(EventGroupMetaKey::SOURCE_ID, GetSourceId());
-    auto offsetKey = mTagConfig.first->GetFileTagKeyName(TagKey::FILE_OFFSET_KEY);
-    if (!offsetKey.empty()) {
-        group.SetMetadata(EventGroupMetaKey::LOG_FILE_OFFSET_KEY, offsetKey);
+    if (mTagConfig.first != nullptr) {
+        auto offsetKey = mTagConfig.first->GetFileTagKeyName(TagKey::FILE_OFFSET_KEY);
+        if (!offsetKey.empty()) {
+            group.SetMetadata(EventGroupMetaKey::LOG_FILE_OFFSET_KEY, offsetKey);
+        }
     }
 
     // we store info which users can see in tags
@@ -2463,16 +2465,22 @@ void LogFileReader::SetEventGroupMetaAndTag(PipelineEventGroup& group) {
     }
     // 3. container name tag, external k8s env/label tag
     auto containerExtraTags = GetContainerExtraTags();
-    for (size_t i = 0; i < containerExtraTags->size(); ++i) {
-        auto key = ContainerInfo::GetFileTagKey((*containerExtraTags)[i].key());
-        if (key != TagKey::UNKOWN) { // container name tag
-            auto keyName = mTagConfig.first->GetFileTagKeyName(key);
-            if (!keyName.empty()) {
+    if (containerExtraTags) {
+        for (size_t i = 0; i < containerExtraTags->size(); ++i) {
+            auto key = ContainerInfo::GetFileTagKey((*containerExtraTags)[i].key());
+            if (key != TagKey::UNKOWN) { // container name tag
                 StringBuffer b = group.GetSourceBuffer()->CopyString((*containerExtraTags)[i].value());
-                group.SetTagNoCopy(keyName, StringView(b.data, b.size));
+                if (mTagConfig.first == nullptr) { // no tag config
+                    group.SetTagNoCopy(TagDefaultKey[key], StringView(b.data, b.size));
+                } else {
+                    auto keyName = mTagConfig.first->GetFileTagKeyName(key);
+                    if (!keyName.empty()) {
+                        group.SetTagNoCopy(keyName, StringView(b.data, b.size));
+                    }
+                }
+            } else { // external k8s env/label tag
+                group.SetTag((*containerExtraTags)[i].key(), (*containerExtraTags)[i].value());
             }
-        } else { // external k8s env/label tag
-            group.SetTag((*containerExtraTags)[i].key(), (*containerExtraTags)[i].value());
         }
     }
     // 4. inode

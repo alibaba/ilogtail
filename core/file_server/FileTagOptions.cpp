@@ -58,10 +58,10 @@ bool FileTagOptions::Init(const Json::Value& config,
         }
     }
 
-    // the priority of FileOffsetKey and FileOffsetTagKey is higher than appendingLogPositionMeta
+    // the priority of FileOffsetKey and FileInodeTagKey is higher than appendingLogPositionMeta
     if (config.isMember("FileOffsetKey") || tagConfig->isMember("FileOffsetTagKey")) {
         parseDefaultNotAddTag(config, "FileOffsetKey", TagKey::FILE_OFFSET_KEY, context, pluginType);
-        parseDefaultNotAddTag(config, "FileOffsetTagKey", TagKey::FILE_OFFSET_KEY, context, pluginType);
+        parseDefaultNotAddTag(config, "FileInodeTagKey", TagKey::FILE_INODE_TAG_KEY, context, pluginType);
     } else if (appendingLogPositionMeta) {
         mFileTags[TagKey::FILE_OFFSET_KEY] = TagDefaultKey[TagKey::FILE_OFFSET_KEY];
         mFileTags[TagKey::FILE_INODE_TAG_KEY] = TagDefaultKey[TagKey::FILE_INODE_TAG_KEY];
@@ -80,6 +80,15 @@ bool FileTagOptions::Init(const Json::Value& config,
     }
 
     return true;
+}
+
+StringView FileTagOptions::GetFileTagKeyName(TagKey key) const {
+    auto it = mFileTags.find(key);
+    if (it != mFileTags.end()) {
+        // FileTagOption will not be deconstructed or changed before all event be sent
+        return StringView(it->second.c_str(), it->second.size());
+    }
+    return StringView();
 }
 
 void FileTagOptions::parseDefaultAddTag(const Json::Value& config,

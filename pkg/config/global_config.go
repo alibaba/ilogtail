@@ -48,9 +48,8 @@ type GlobalConfig struct {
 	EnableContainerdUpperDirDetect bool
 	EnableSlsMetricsFormat         bool
 
-	PipelineMetaTagKey             map[string]string
-	PipelineMetaTagKeyDefaultValue map[string]string
-	AgentEnvMetaTagKey             map[string]string
+	PipelineMetaTagKey map[string]string
+	AgentEnvMetaTagKey map[string]string
 }
 
 // LoongcollectorGlobalConfig is the singleton instance of GlobalConfig.

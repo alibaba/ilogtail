@@ -14,7 +14,6 @@
 
 #include "pipeline/serializer/SLSSerializer.h"
 
-#include "application/Application.h"
 #include "common/Flags.h"
 #include "common/TimeUtil.h"
 #include "common/compression/CompressType.h"
