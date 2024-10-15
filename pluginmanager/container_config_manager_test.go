@@ -155,7 +155,12 @@ func loadMockConfig() error {
 			"type": "dockerStdout"
 		}
 	}`
-	return LoadLogstoreConfig(project, logstore, configName, 666, configStr)
+	err := LoadLogstoreConfig(project, logstore, configName, 666, configStr)
+	if err != nil {
+		return err
+	}
+	LogtailConfig[configName] = ToStartPipelineConfigWithInput
+	return nil
 }
 
 func (s *containerConfigTestSuite) TestLargeCountLog() {
@@ -169,7 +174,7 @@ func (s *containerConfigTestSuite) TestLargeCountLog() {
 			"DefaultLogGroupQueueSize": 4,
 			"Tags" : {
 				"base_version" : "0.1.0",
-				"logtail_version" : "0.16.19"
+				"loongcollector_version" : "0.16.19"
 			}
 		},
 		"inputs" : [

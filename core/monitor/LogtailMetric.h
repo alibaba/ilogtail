@@ -58,6 +58,8 @@ public:
 
 class MetricsRecordRef {
     friend class WriteMetrics;
+    friend bool operator==(const MetricsRecordRef& lhs, std::nullptr_t rhs);
+    friend bool operator==(std::nullptr_t rhs, const MetricsRecordRef& lhs);
 
 private:
     MetricsRecord* mMetrics = nullptr;
@@ -82,6 +84,22 @@ public:
     bool HasLabel(const std::string& key, const std::string& value) const;
 #endif
 };
+
+inline bool operator==(const MetricsRecordRef& lhs, std::nullptr_t rhs) {
+    return lhs.mMetrics == rhs;
+}
+
+inline bool operator==(std::nullptr_t lhs, const MetricsRecordRef& rhs) {
+    return lhs == rhs.mMetrics;
+}
+
+inline bool operator!=(const MetricsRecordRef& lhs, std::nullptr_t rhs) {
+    return !(lhs == rhs);
+}
+
+inline bool operator!=(std::nullptr_t lhs, const MetricsRecordRef& rhs) {
+    return !(lhs == rhs);
+}
 
 class ReentrantMetricsRecord {
 private:
@@ -115,15 +133,7 @@ public:
         static WriteMetrics* ptr = new WriteMetrics();
         return ptr;
     }
-    void PreparePluginCommonLabels(const std::string& projectName,
-                                   const std::string& logstoreName,
-                                   const std::string& region,
-                                   const std::string& configName,
-                                   const std::string& pluginType,
-                                   const std::string& pluginID,
-                                   const std::string& nodeID,
-                                   const std::string& childNodeID,
-                                   MetricLabels& labels);
+
     void
     PrepareMetricsRecordRef(MetricsRecordRef& ref, MetricLabels&& labels, DynamicMetricLabels&& dynamicLabels = {});
     void CreateMetricsRecordRef(MetricsRecordRef& ref, MetricLabels&& labels, DynamicMetricLabels&& dynamicLabels = {});
@@ -150,7 +160,9 @@ public:
         static ReadMetrics* ptr = new ReadMetrics();
         return ptr;
     }
-    void ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup*>& logGroupMap) const;
+    void ReadAsLogGroup(const std::string& regionFieldName,
+                        const std::string& defaultRegion,
+                        std::map<std::string, sls_logs::LogGroup*>& logGroupMap) const;
     void ReadAsFileBuffer(std::string& metricsContent) const;
     void UpdateMetrics();
 

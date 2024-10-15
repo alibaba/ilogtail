@@ -48,7 +48,9 @@ type logstoreConfigTestSuite struct {
 
 func (s *logstoreConfigTestSuite) BeforeTest(suiteName, testName string) {
 	logger.Infof(context.Background(), "========== %s %s test start ========================", suiteName, testName)
+	LogtailConfigLock.Lock()
 	LogtailConfig = make(map[string]*LogstoreConfig)
+	LogtailConfigLock.Unlock()
 }
 
 func (s *logstoreConfigTestSuite) AfterTest(suiteName, testName string) {
@@ -97,7 +99,7 @@ func (s *logstoreConfigTestSuite) TestPluginGlobalConfig() {
 			}
 		]
 	}`
-	s.NoError(LoadMockConfig("project", "logstore", "1", str), "load config fail")
+	s.NoError(LoadAndStartMockConfig("project", "logstore", "1", str), "load config fail")
 	s.Equal(len(LogtailConfig), 1)
 	s.Equal(LogtailConfig["1"].ConfigName, "1")
 	config := LogtailConfig["1"]
@@ -120,9 +122,9 @@ func (s *logstoreConfigTestSuite) TestPluginGlobalConfig() {
 }
 
 func (s *logstoreConfigTestSuite) TestLoadConfig() {
-	s.NoError(LoadMockConfig("project", "logstore", "1"))
-	s.NoError(LoadMockConfig("project", "logstore", "3"))
-	s.NoError(LoadMockConfig("project", "logstore", "2"))
+	s.NoError(LoadAndStartMockConfig("project", "logstore", "1"))
+	s.NoError(LoadAndStartMockConfig("project", "logstore", "3"))
+	s.NoError(LoadAndStartMockConfig("project", "logstore", "2"))
 	s.Equal(len(LogtailConfig), 3)
 	s.Equal(LogtailConfig["1"].ConfigName, "1")
 	s.Equal(LogtailConfig["2"].ConfigName, "2")
@@ -138,7 +140,7 @@ func (s *logstoreConfigTestSuite) TestLoadConfig() {
 		s.Equal(len(config.PluginRunner.(*pluginv1Runner).AggregatorPlugins), 1)
 		s.Equal(len(config.PluginRunner.(*pluginv1Runner).FlusherPlugins), 2)
 		// global config
-		s.Equal(config.GlobalConfig, &global_config.LogtailGlobalConfig)
+		s.Equal(config.GlobalConfig, &global_config.LoongcollectorGlobalConfig)
 
 		// check plugin inner info
 		reg, ok := config.PluginRunner.(*pluginv1Runner).ProcessorPlugins[0].Processor.(*regex.ProcessorRegex)
@@ -240,7 +242,7 @@ func (s *logstoreConfigTestSuite) TestLoadConfigWithExtension() {
 	}
 `
 
-	s.NoError(LoadMockConfig("project", "logstore", "test", jsonStr))
+	s.NoError(LoadAndStartMockConfig("project", "logstore", "test", jsonStr))
 	s.Equal(len(LogtailConfig), 1)
 	config := LogtailConfig["test"]
 	s.Equal(config.ProjectName, "project")
@@ -254,7 +256,7 @@ func (s *logstoreConfigTestSuite) TestLoadConfigWithExtension() {
 	s.Equal(len(config.PluginRunner.(*pluginv1Runner).FlusherPlugins), 2)
 	s.Equal(len(config.PluginRunner.(*pluginv1Runner).ExtensionPlugins), 1)
 	// global config
-	s.Equal(config.GlobalConfig, &global_config.LogtailGlobalConfig)
+	s.Equal(config.GlobalConfig, &global_config.LoongcollectorGlobalConfig)
 
 	// check plugin inner info
 	_, ok := config.PluginRunner.(*pluginv1Runner).ProcessorPlugins[0].Processor.(*regex.ProcessorRegex)
@@ -327,7 +329,7 @@ func (s *logstoreConfigTestSuite) TestGetExtension() {
 	}
 `
 
-	s.NoError(LoadMockConfig("project", "logstore", "test", jsonStr))
+	s.NoError(LoadAndStartMockConfig("project", "logstore", "test", jsonStr))
 	s.Equal(len(LogtailConfig), 1)
 	config := LogtailConfig["test"]
 	s.Equal(config.ProjectName, "project")
@@ -341,7 +343,7 @@ func (s *logstoreConfigTestSuite) TestGetExtension() {
 	s.Equal(len(config.PluginRunner.(*pluginv1Runner).FlusherPlugins), 2)
 	s.Equal(len(config.PluginRunner.(*pluginv1Runner).ExtensionPlugins), 1)
 	// global config
-	s.Equal(config.GlobalConfig, &global_config.LogtailGlobalConfig)
+	s.Equal(config.GlobalConfig, &global_config.LoongcollectorGlobalConfig)
 
 	// check plugin inner info
 	_, ok := config.PluginRunner.(*pluginv1Runner).ProcessorPlugins[0].Processor.(*regex.ProcessorRegex)
@@ -440,7 +442,7 @@ func TestLogstoreConfig_ProcessRawLogV2(t *testing.T) {
 	l.PluginRunner = &pluginv1Runner{
 		LogsChan: make(chan *pipeline.LogWithContext, 10),
 	}
-	l.GlobalConfig = &config.LogtailGlobalConfig
+	l.GlobalConfig = &config.LoongcollectorGlobalConfig
 	l.GlobalConfig.UsingOldContentTag = true
 	{
 		assert.Equal(t, 0, l.ProcessRawLogV2(rawLogs, "", topic, tags))
@@ -527,51 +529,45 @@ func TestLogstoreConfig_ProcessRawLogV2(t *testing.T) {
 func Test_genPluginMeta(t *testing.T) {
 	l := new(LogstoreConfig)
 	{
-		result := l.genPluginMeta("testPlugin", false, false)
+		result := l.genPluginMeta("testPlugin")
 		assert.Equal(t, "testPlugin", result.PluginType)
 		assert.Regexp(t, `testPlugin/\d+`, result.PluginTypeWithID)
 		assert.Regexp(t, `\d+`, result.PluginID)
-		assert.Equal(t, "", result.NodeID)
-		assert.Equal(t, "", result.ChildNodeID)
 	}
 	{
-		result := l.genPluginMeta("testPlugin", true, false)
+		result := l.genPluginMeta("testPlugin")
 		assert.Equal(t, "testPlugin", result.PluginType)
 		assert.Regexp(t, `testPlugin/\d+`, result.PluginTypeWithID)
 		assert.Regexp(t, `\d+`, result.PluginID)
-		assert.Regexp(t, `\d+`, result.NodeID)
-		assert.Regexp(t, `\d+`, result.ChildNodeID)
 	}
 	{
-		result := l.genPluginMeta("testPlugin", true, true)
+		result := l.genPluginMeta("testPlugin")
 		assert.Equal(t, "testPlugin", result.PluginType)
 		assert.Regexp(t, `testPlugin/\d+`, result.PluginTypeWithID)
 		assert.Regexp(t, `\d+`, result.PluginID)
-		assert.Regexp(t, `\d+`, result.NodeID)
-		assert.Regexp(t, `-1`, result.ChildNodeID)
 	}
 	{
-		result := l.genPluginMeta("testPlugin/customID", false, false)
+		result := l.genPluginMeta("testPlugin/customID")
 		assert.Equal(t, "testPlugin", result.PluginType)
 		assert.Equal(t, "testPlugin/customID", result.PluginTypeWithID)
 		assert.Equal(t, "customID", result.PluginID)
-		assert.Equal(t, "", result.NodeID)
-		assert.Equal(t, "", result.ChildNodeID)
 	}
 	{
-		result := l.genPluginMeta("testPlugin/customID", true, false)
+		result := l.genPluginMeta("testPlugin/customID")
 		assert.Equal(t, "testPlugin", result.PluginType)
 		assert.Equal(t, "testPlugin/customID", result.PluginTypeWithID)
 		assert.Equal(t, "customID", result.PluginID)
-		assert.Regexp(t, `\d+`, result.NodeID)
-		assert.Regexp(t, `\d+`, result.ChildNodeID)
 	}
 	{
-		result := l.genPluginMeta("testPlugin/customID", true, true)
+		result := l.genPluginMeta("testPlugin/customID")
 		assert.Equal(t, "testPlugin", result.PluginType)
 		assert.Equal(t, "testPlugin/customID", result.PluginTypeWithID)
 		assert.Equal(t, "customID", result.PluginID)
-		assert.Regexp(t, `\d+`, result.NodeID)
-		assert.Regexp(t, `-1`, result.ChildNodeID)
+	}
+	{
+		result := l.genPluginMeta("testPlugin/customID/123")
+		assert.Equal(t, "testPlugin", result.PluginType)
+		assert.Equal(t, "testPlugin/customID", result.PluginTypeWithID)
+		assert.Equal(t, "customID", result.PluginID)
 	}
 }

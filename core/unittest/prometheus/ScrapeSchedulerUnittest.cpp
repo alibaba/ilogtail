@@ -31,14 +31,6 @@ using namespace std;
 
 namespace logtail {
 
-class MockTimer : public Timer {
-public:
-    void Init() {}
-    void PushEvent(std::unique_ptr<TimerEvent>&& e) { mQueue.push_back(std::move(e)); }
-    void Stop() {}
-    std::vector<std::unique_ptr<TimerEvent>> mQueue;
-};
-
 class ScrapeSchedulerUnittest : public testing::Test {
 public:
     void TestInitscrapeScheduler();
@@ -47,6 +39,7 @@ public:
     void TestReceiveMessage();
 
     void TestScheduler();
+    void TestQueueIsFull();
 
 protected:
     void SetUp() override {
@@ -56,7 +49,7 @@ protected:
         mScrapeConfig->mScrapeIntervalSeconds = 10;
         mScrapeConfig->mScrapeTimeoutSeconds = 10;
         mScrapeConfig->mMetricsPath = "/metrics";
-        mScrapeConfig->mAuthHeaders = {{"Authorization", "Bearer xxxxx"}};
+        mScrapeConfig->mRequestHeaders = {{"Authorization", "Bearer xxxxx"}};
 
         mHttpResponse.mBody
             = "# HELP go_gc_duration_seconds A summary of the pause duration of garbage collection cycles.\n"
@@ -91,16 +84,18 @@ private:
 
 void ScrapeSchedulerUnittest::TestInitscrapeScheduler() {
     Labels labels;
-    labels.Push({prometheus::ADDRESS_LABEL_NAME, "localhost:8080"});
+    labels.Set(prometheus::ADDRESS_LABEL_NAME, "localhost:8080");
     ScrapeScheduler event(mScrapeConfig, "localhost", 8080, labels, 0, 0);
     APSARA_TEST_EQUAL(event.GetId(), "test_jobhttp://localhost:8080/metrics" + ToString(labels.Hash()));
 }
 
 void ScrapeSchedulerUnittest::TestProcess() {
     Labels labels;
-    labels.Push({prometheus::ADDRESS_LABEL_NAME, "localhost:8080"});
-    labels.Push({prometheus::ADDRESS_LABEL_NAME, "localhost:8080"});
+    labels.Set(prometheus::ADDRESS_LABEL_NAME, "localhost:8080");
+    labels.Set(prometheus::ADDRESS_LABEL_NAME, "localhost:8080");
     ScrapeScheduler event(mScrapeConfig, "localhost", 8080, labels, 0, 0);
+    auto defaultLabels = MetricLabels();
+    event.InitSelfMonitor(defaultLabels);
     APSARA_TEST_EQUAL(event.GetId(), "test_jobhttp://localhost:8080/metrics" + ToString(labels.Hash()));
     // if status code is not 200, no data will be processed
     // but will continue running, sending self-monitoring metrics
@@ -117,8 +112,8 @@ void ScrapeSchedulerUnittest::TestProcess() {
 
 void ScrapeSchedulerUnittest::TestSplitByLines() {
     Labels labels;
-    labels.Push({prometheus::ADDRESS_LABEL_NAME, "localhost:8080"});
-    labels.Push({prometheus::ADDRESS_LABEL_NAME, "localhost:8080"});
+    labels.Set(prometheus::ADDRESS_LABEL_NAME, "localhost:8080");
+    labels.Set(prometheus::ADDRESS_LABEL_NAME, "localhost:8080");
     ScrapeScheduler event(mScrapeConfig, "localhost", 8080, labels, 0, 0);
     APSARA_TEST_EQUAL(event.GetId(), "test_jobhttp://localhost:8080/metrics" + ToString(labels.Hash()));
     auto res = event.BuildPipelineEventGroup(mHttpResponse.mBody);
@@ -149,8 +144,8 @@ void ScrapeSchedulerUnittest::TestSplitByLines() {
 
 void ScrapeSchedulerUnittest::TestReceiveMessage() {
     Labels labels;
-    labels.Push({prometheus::ADDRESS_LABEL_NAME, "localhost:8080"});
-    labels.Push({prometheus::ADDRESS_LABEL_NAME, "localhost:8080"});
+    labels.Set(prometheus::ADDRESS_LABEL_NAME, "localhost:8080");
+    labels.Set(prometheus::ADDRESS_LABEL_NAME, "localhost:8080");
     auto event = make_shared<ScrapeScheduler>(mScrapeConfig, "localhost", 8080, labels, 0, 0);
 
 
@@ -164,9 +159,9 @@ void ScrapeSchedulerUnittest::TestReceiveMessage() {
 
 void ScrapeSchedulerUnittest::TestScheduler() {
     Labels labels;
-    labels.Push({prometheus::ADDRESS_LABEL_NAME, "localhost:8080"});
+    labels.Set(prometheus::ADDRESS_LABEL_NAME, "localhost:8080");
     ScrapeScheduler event(mScrapeConfig, "localhost", 8080, labels, 0, 0);
-    auto timer = make_shared<MockTimer>();
+    auto timer = make_shared<Timer>();
     event.SetTimer(timer);
     event.ScheduleNext();
 
@@ -178,9 +173,36 @@ void ScrapeSchedulerUnittest::TestScheduler() {
     APSARA_TEST_TRUE(event.mFuture->mState == PromFutureState::Done);
 }
 
+void ScrapeSchedulerUnittest::TestQueueIsFull() {
+    Labels labels;
+    labels.Set(prometheus::ADDRESS_LABEL_NAME, "localhost:8080");
+    ScrapeScheduler event(mScrapeConfig, "localhost", 8080, labels, 0, 0);
+    auto defaultLabels = MetricLabels();
+    event.InitSelfMonitor(defaultLabels);
+    auto timer = make_shared<Timer>();
+    event.SetTimer(timer);
+    auto now = std::chrono::steady_clock::now();
+    event.SetFirstExecTime(now);
+    event.ScheduleNext();
+
+    APSARA_TEST_TRUE(timer->mQueue.size() == 1);
+
+    const auto& e = timer->mQueue.top();
+    APSARA_TEST_EQUAL(now, e->GetExecTime());
+    APSARA_TEST_FALSE(e->IsValid());
+    timer->mQueue.pop();
+    // queue is full, so it should schedule next after 1 second
+    APSARA_TEST_EQUAL(1UL, timer->mQueue.size());
+    const auto& next = timer->mQueue.top();
+    APSARA_TEST_EQUAL(now + std::chrono::seconds(1), next->GetExecTime());
+}
+
 UNIT_TEST_CASE(ScrapeSchedulerUnittest, TestInitscrapeScheduler)
 UNIT_TEST_CASE(ScrapeSchedulerUnittest, TestProcess)
 UNIT_TEST_CASE(ScrapeSchedulerUnittest, TestSplitByLines)
+UNIT_TEST_CASE(ScrapeSchedulerUnittest, TestScheduler)
+UNIT_TEST_CASE(ScrapeSchedulerUnittest, TestQueueIsFull)
+
 
 } // namespace logtail
 

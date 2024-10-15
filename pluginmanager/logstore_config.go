@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"sync"
 	"sync/atomic"
 
 	"github.com/alibaba/ilogtail/pkg/config"
@@ -31,7 +30,6 @@ import (
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-	"github.com/alibaba/ilogtail/pkg/util"
 	"github.com/alibaba/ilogtail/plugins/input"
 )
 
@@ -93,7 +91,7 @@ type LogstoreConfig struct {
 	ConfigName           string
 	ConfigNameWithSuffix string
 	LogstoreKey          int64
-	FlushOutFlag         bool
+	FlushOutFlag         atomic.Bool
 	// Each LogstoreConfig can have its independent GlobalConfig if the "global" field
 	//   is offered in configuration, see build-in StatisticsConfig and AlarmConfig.
 	GlobalConfig *config.GlobalConfig
@@ -103,26 +101,17 @@ type LogstoreConfig struct {
 	Statistics   LogstoreStatistics
 	PluginRunner PluginRunner
 	// private fields
-	alreadyStarted   bool // if this flag is true, do not start it when config Resume
 	configDetailHash string
-	// processShutdown  chan struct{}
-	// flushShutdown    chan struct{}
-	pauseChan  chan struct{}
-	resumeChan chan struct{}
-	// processWaitSema  sync.WaitGroup
-	// flushWaitSema    sync.WaitGroup
-	pauseOrResumeWg sync.WaitGroup
 
 	K8sLabelSet              map[string]struct{}
 	ContainerLabelSet        map[string]struct{}
 	EnvSet                   map[string]struct{}
 	CollectingContainersMeta bool
 	pluginID                 int32
-	nodeID                   int32
 }
 
 func (p *LogstoreStatistics) Init(context pipeline.Context) {
-	labels := pipeline.GetCommonLabels(context, &pipeline.PluginMeta{})
+	labels := helper.GetCommonLabels(context, &pipeline.PluginMeta{})
 	metricsRecord := context.RegisterLogstoreConfigMetricRecord(labels)
 	p.CollecLatencytMetric = helper.NewLatencyMetricAndRegister(metricsRecord, "collect_latency")
 	p.RawLogMetric = helper.NewCounterMetricAndRegister(metricsRecord, "raw_log")
@@ -142,11 +131,8 @@ func (p *LogstoreStatistics) Init(context pipeline.Context) {
 //  4. Start inputs (including metrics and services), just like aggregator, each input
 //     has its own goroutine.
 func (lc *LogstoreConfig) Start() {
-	lc.FlushOutFlag = false
+	lc.FlushOutFlag.Store(false)
 	logger.Info(lc.Context.GetRuntimeContext(), "config start", "begin")
-
-	lc.pauseChan = make(chan struct{}, 1)
-	lc.resumeChan = make(chan struct{}, 1)
 
 	lc.PluginRunner.Run()
 
@@ -154,46 +140,23 @@ func (lc *LogstoreConfig) Start() {
 }
 
 // Stop stops plugin instances and corresponding goroutines of config.
-// @exitFlag passed from Logtail, indicates that if Logtail will quit after this.
+// @removedFlag passed from C++, indicates that if config will be removed after this.
 // Procedures:
 // 1. SetUrgent to all flushers to indicate them current state.
 // 2. Stop all input plugins, stop generating logs.
 // 3. Stop processor goroutine, pass all existing logs to aggregator.
 // 4. Stop all aggregator plugins, make all logs to LogGroups.
 // 5. Set stopping flag, stop flusher goroutine.
-// 6. If Logtail is exiting and there are remaining data, try to flush once.
+// 6. If config will be removed and there are remaining data, try to flush once.
 // 7. Stop flusher plugins.
-func (lc *LogstoreConfig) Stop(exitFlag bool) error {
-	logger.Info(lc.Context.GetRuntimeContext(), "config stop", "begin", "exit", exitFlag)
-	if err := lc.PluginRunner.Stop(exitFlag); err != nil {
+func (lc *LogstoreConfig) Stop(removedFlag bool) error {
+	logger.Info(lc.Context.GetRuntimeContext(), "config stop", "begin", "removing", removedFlag)
+	if err := lc.PluginRunner.Stop(removedFlag); err != nil {
 		return err
 	}
 	logger.Info(lc.Context.GetRuntimeContext(), "Plugin Runner stop", "done")
-	close(lc.pauseChan)
-	close(lc.resumeChan)
 	logger.Info(lc.Context.GetRuntimeContext(), "config stop", "success")
 	return nil
-}
-
-func (lc *LogstoreConfig) pause() {
-	lc.pauseOrResumeWg.Add(1)
-	lc.pauseChan <- struct{}{}
-	lc.pauseOrResumeWg.Wait()
-}
-
-func (lc *LogstoreConfig) waitForResume() {
-	lc.pauseOrResumeWg.Done()
-	select {
-	case <-lc.resumeChan:
-		lc.pauseOrResumeWg.Done()
-	case <-GetFlushCancelToken(lc.PluginRunner):
-	}
-}
-
-func (lc *LogstoreConfig) resume() {
-	lc.pauseOrResumeWg.Add(1)
-	lc.resumeChan <- struct{}{}
-	lc.pauseOrResumeWg.Wait()
 }
 
 const (
@@ -205,14 +168,6 @@ var (
 	tagDelimiter = []byte("^^^")
 	tagSeparator = []byte("~=~")
 )
-
-func (lc *LogstoreConfig) ProcessRawLog(rawLog []byte, packID string, topic string) int {
-	log := &protocol.Log{}
-	log.Contents = append(log.Contents, &protocol.Log_Content{Key: rawStringKey, Value: string(rawLog)})
-	logger.Debug(context.Background(), "Process raw log ", packID, topic, len(rawLog))
-	lc.PluginRunner.ReceiveRawLog(&pipeline.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic}})
-	return 0
-}
 
 // extractTags extracts tags from rawTags and append them into log.
 // Rule: k1~=~v1^^^k2~=~v2
@@ -372,8 +327,6 @@ func hasDockerStdoutInput(plugins map[string]interface{}) bool {
 	return false
 }
 
-var enableAlwaysOnlineForStdout = true
-
 func createLogstoreConfig(project string, logstore string, configName string, logstoreKey int64, jsonStr string) (*LogstoreConfig, error) {
 	var err error
 	contextImp := &ContextImp{}
@@ -389,21 +342,6 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 	}
 	contextImp.logstoreC = logstoreC
 
-	// Check if the config has been disabled (keep disabled if config detail is unchanged).
-	DisabledLogtailConfigLock.Lock()
-	if disabledConfig, hasDisabled := DisabledLogtailConfig[configName]; hasDisabled {
-		if disabledConfig.configDetailHash == logstoreC.configDetailHash {
-			DisabledLogtailConfigLock.Unlock()
-			return nil, fmt.Errorf("failed to create config because timeout "+
-				"stop has happened on it: %v", configName)
-		}
-		delete(DisabledLogtailConfig, configName)
-		DisabledLogtailConfigLock.Unlock()
-		logger.Info(contextImp.GetRuntimeContext(), "retry timeout config because config detail has changed")
-	} else {
-		DisabledLogtailConfigLock.Unlock()
-	}
-
 	var plugins = make(map[string]interface{})
 	if err = json.Unmarshal([]byte(jsonStr), &plugins); err != nil {
 		return nil, err
@@ -414,26 +352,6 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 		return nil, err
 	}
 
-	// check AlwaysOnlineManager
-	if oldConfig, ok := GetAlwaysOnlineManager().GetCachedConfig(configName); ok {
-		logger.Info(contextImp.GetRuntimeContext(), "find alwaysOnline config", oldConfig.ConfigName, "config compare", oldConfig.configDetailHash == logstoreC.configDetailHash,
-			"new config hash", logstoreC.configDetailHash, "old config hash", oldConfig.configDetailHash)
-		if oldConfig.configDetailHash == logstoreC.configDetailHash {
-			logstoreC = oldConfig
-			logstoreC.alreadyStarted = true
-			logger.Info(contextImp.GetRuntimeContext(), "config is same after reload, use it again", GetFlushStoreLen(logstoreC.PluginRunner))
-			return logstoreC, nil
-		}
-		oldConfig.resume()
-		_ = oldConfig.Stop(false)
-		logstoreC.PluginRunner.Merge(oldConfig.PluginRunner)
-		logger.Info(contextImp.GetRuntimeContext(), "config is changed after reload", "stop and create a new one")
-	} else if lastConfig, hasLastConfig := LastLogtailConfig[configName]; hasLastConfig {
-		// Move unsent LogGroups from last config to new config.
-		logstoreC.PluginRunner.Merge(lastConfig.PluginRunner)
-	}
-
-	enableAlwaysOnline := enableAlwaysOnlineForStdout && hasDockerStdoutInput(plugins)
 	logstoreC.ContainerLabelSet = make(map[string]struct{})
 	logstoreC.EnvSet = make(map[string]struct{})
 	logstoreC.K8sLabelSet = make(map[string]struct{})
@@ -506,11 +424,11 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 		}
 	}
 
-	logstoreC.GlobalConfig = &config.LogtailGlobalConfig
+	logstoreC.GlobalConfig = &config.LoongcollectorGlobalConfig
 	// If plugins config has "global" field, then override the logstoreC.GlobalConfig
-	if pluginConfigInterface, flag := plugins["global"]; flag || enableAlwaysOnline {
+	if pluginConfigInterface, flag := plugins["global"]; flag {
 		pluginConfig := &config.GlobalConfig{}
-		*pluginConfig = config.LogtailGlobalConfig
+		*pluginConfig = config.LoongcollectorGlobalConfig
 		if flag {
 			configJSONStr, err := json.Marshal(pluginConfigInterface) //nolint:govet
 			if err != nil {
@@ -520,9 +438,6 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 			if err != nil {
 				return nil, err
 			}
-		}
-		if enableAlwaysOnline {
-			pluginConfig.AlwaysOnline = true
 		}
 		logstoreC.GlobalConfig = pluginConfig
 		logger.Debug(contextImp.GetRuntimeContext(), "load plugin config", *logstoreC.GlobalConfig)
@@ -562,7 +477,7 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 				}
 				pluginType := getPluginType(pluginTypeWithIDStr)
 				logger.Debug(contextImp.GetRuntimeContext(), "add extension", pluginType)
-				err = loadExtension(logstoreC.genPluginMeta(pluginTypeWithIDStr, false, false), logstoreC, extension["detail"])
+				err = loadExtension(logstoreC.genPluginMeta(pluginTypeWithIDStr), logstoreC, extension["detail"])
 				if err != nil {
 					return nil, err
 				}
@@ -584,10 +499,10 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 							if _, isMetricInput := pipeline.MetricInputs[pluginType]; isMetricInput {
 								// Load MetricInput plugin defined in pipeline.MetricInputs
 								// pipeline.MetricInputs will be renamed in a future version
-								err = loadMetric(logstoreC.genPluginMeta(pluginTypeWithIDStr, true, false), logstoreC, input["detail"])
+								err = loadMetric(logstoreC.genPluginMeta(pluginTypeWithIDStr), logstoreC, input["detail"])
 							} else if _, isServiceInput := pipeline.ServiceInputs[pluginType]; isServiceInput {
 								// Load ServiceInput plugin defined in pipeline.ServiceInputs
-								err = loadService(logstoreC.genPluginMeta(pluginTypeWithIDStr, true, false), logstoreC, input["detail"])
+								err = loadService(logstoreC.genPluginMeta(pluginTypeWithIDStr), logstoreC, input["detail"])
 							}
 							if err != nil {
 								return nil, err
@@ -614,7 +529,7 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 						if pluginTypeWithIDStr, ok := pluginTypeWithID.(string); ok {
 							pluginType := getPluginType(pluginTypeWithIDStr)
 							logger.Debug(contextImp.GetRuntimeContext(), "add processor", pluginType)
-							err = loadProcessor(logstoreC.genPluginMeta(pluginTypeWithIDStr, true, false), i, logstoreC, processor["detail"])
+							err = loadProcessor(logstoreC.genPluginMeta(pluginTypeWithIDStr), i, logstoreC, processor["detail"])
 							if err != nil {
 								return nil, err
 							}
@@ -641,7 +556,7 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 						if pluginTypeWithIDStr, ok := pluginTypeWithID.(string); ok {
 							pluginType := getPluginType(pluginTypeWithIDStr)
 							logger.Debug(contextImp.GetRuntimeContext(), "add aggregator", pluginType)
-							err = loadAggregator(logstoreC.genPluginMeta(pluginTypeWithIDStr, true, false), logstoreC, aggregator["detail"])
+							err = loadAggregator(logstoreC.genPluginMeta(pluginTypeWithIDStr), logstoreC, aggregator["detail"])
 							if err != nil {
 								return nil, err
 							}
@@ -664,19 +579,14 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 	if flushersFound {
 		flushers, ok := pluginConfig.([]interface{})
 		if ok {
-			flushersLen := len(flushers)
-			for num, flusherInterface := range flushers {
+			for _, flusherInterface := range flushers {
 				flusher, ok := flusherInterface.(map[string]interface{})
 				if ok {
 					if pluginTypeWithID, ok := flusher["type"]; ok {
 						if pluginTypeWithIDStr, ok := pluginTypeWithID.(string); ok {
 							pluginType := getPluginType(pluginTypeWithIDStr)
 							logger.Debug(contextImp.GetRuntimeContext(), "add flusher", pluginType)
-							lastOne := false
-							if num == flushersLen-1 {
-								lastOne = true
-							}
-							err = loadFlusher(logstoreC.genPluginMeta(pluginTypeWithIDStr, true, lastOne), logstoreC, flusher["detail"])
+							err = loadFlusher(logstoreC.genPluginMeta(pluginTypeWithIDStr), logstoreC, flusher["detail"])
 							if err != nil {
 								return nil, err
 							}
@@ -730,7 +640,9 @@ func initPluginRunner(lc *LogstoreConfig) (PluginRunner, error) {
 func LoadLogstoreConfig(project string, logstore string, configName string, logstoreKey int64, jsonStr string) error {
 	if len(jsonStr) == 0 {
 		logger.Info(context.Background(), "delete config", configName, "logstore", logstore)
+		LogtailConfigLock.Lock()
 		delete(LogtailConfig, configName)
+		LogtailConfigLock.Unlock()
 		return nil
 	}
 	logger.Info(context.Background(), "load config", configName, "logstore", logstore)
@@ -738,8 +650,26 @@ func LoadLogstoreConfig(project string, logstore string, configName string, logs
 	if err != nil {
 		return err
 	}
-	LogtailConfig[configName] = logstoreC
+	if logstoreC.PluginRunner.IsWithInputPlugin() {
+		ToStartPipelineConfigWithInput = logstoreC
+	} else {
+		ToStartPipelineConfigWithoutInput = logstoreC
+	}
 	return nil
+}
+
+func UnloadPartiallyLoadedConfig(configName string) error {
+	logger.Info(context.Background(), "unload config", configName)
+	if ToStartPipelineConfigWithInput.ConfigNameWithSuffix == configName {
+		ToStartPipelineConfigWithInput = nil
+		return nil
+	}
+	if ToStartPipelineConfigWithoutInput.ConfigNameWithSuffix == configName {
+		ToStartPipelineConfigWithoutInput = nil
+		return nil
+	}
+	logger.Error(context.Background(), "unload config", "config not found", configName)
+	return fmt.Errorf("config not found")
 }
 
 func loadBuiltinConfig(name string, project string, logstore string,
@@ -861,42 +791,30 @@ func getPluginType(pluginTypeWithID string) string {
 	return pluginTypeWithID
 }
 
-func (lc *LogstoreConfig) genPluginMeta(pluginTypeWithID string, genNodeID bool, lastOne bool) *pipeline.PluginMeta {
-	nodeID := ""
-	childNodeID := ""
+func (lc *LogstoreConfig) genPluginMeta(pluginTypeWithID string) *pipeline.PluginMeta {
 	if isPluginTypeWithID(pluginTypeWithID) {
 		pluginTypeWithID := pluginTypeWithID
 		if idx := strings.IndexByte(pluginTypeWithID, '#'); idx != -1 {
 			pluginTypeWithID = pluginTypeWithID[:idx]
 		}
 		if ids := strings.IndexByte(pluginTypeWithID, '/'); ids != -1 {
-			if genNodeID {
-				nodeID, childNodeID = lc.genNodeID(lastOne)
-			}
 			if pluginID, err := strconv.ParseInt(pluginTypeWithID[ids+1:], 10, 32); err == nil {
 				atomic.StoreInt32(&lc.pluginID, int32(pluginID))
 			}
 			return &pipeline.PluginMeta{
-				PluginTypeWithID: pluginTypeWithID,
-				PluginType:       pluginTypeWithID[:ids],
-				PluginID:         pluginTypeWithID[ids+1:],
-				NodeID:           nodeID,
-				ChildNodeID:      childNodeID,
+				PluginTypeWithID: getPluginTypeWithID(pluginTypeWithID),
+				PluginType:       getPluginType(pluginTypeWithID),
+				PluginID:         getPluginID(pluginTypeWithID),
 			}
 		}
 	}
 	pluginType := pluginTypeWithID
 	pluginID := lc.genPluginID()
-	if genNodeID {
-		nodeID, childNodeID = lc.genNodeID(lastOne)
-	}
 	pluginTypeWithID = fmt.Sprintf("%s/%s", pluginType, pluginID)
 	return &pipeline.PluginMeta{
-		PluginTypeWithID: pluginTypeWithID,
-		PluginType:       pluginType,
-		PluginID:         pluginID,
-		NodeID:           nodeID,
-		ChildNodeID:      childNodeID,
+		PluginTypeWithID: getPluginTypeWithID(pluginTypeWithID),
+		PluginType:       getPluginType(pluginTypeWithID),
+		PluginID:         getPluginID(pluginTypeWithID),
 	}
 }
 
@@ -905,6 +823,29 @@ func isPluginTypeWithID(pluginTypeWithID string) bool {
 		return true
 	}
 	return false
+}
+
+func getPluginID(pluginTypeWithID string) string {
+	slashCount := strings.Count(pluginTypeWithID, "/")
+	switch slashCount {
+	case 0:
+		return ""
+	case 1:
+		if idx := strings.IndexByte(pluginTypeWithID, '/'); idx != -1 {
+			return pluginTypeWithID[idx+1:]
+		}
+	default:
+		if firstIdx := strings.IndexByte(pluginTypeWithID, '/'); firstIdx != -1 {
+			if lastIdx := strings.LastIndexByte(pluginTypeWithID, '/'); lastIdx != -1 {
+				return pluginTypeWithID[firstIdx+1 : lastIdx]
+			}
+		}
+	}
+	return ""
+}
+
+func getPluginTypeWithID(pluginTypeWithID string) string {
+	return fmt.Sprintf("%s/%s", getPluginType(pluginTypeWithID), getPluginID(pluginTypeWithID))
 }
 
 func GetPluginPriority(pluginTypeWithID string) int {
@@ -922,15 +863,8 @@ func (lc *LogstoreConfig) genPluginID() string {
 	return fmt.Sprintf("%v", atomic.AddInt32(&lc.pluginID, 1))
 }
 
-func (lc *LogstoreConfig) genNodeID(lastOne bool) (string, string) {
-	id := atomic.AddInt32(&lc.nodeID, 1)
-	if lastOne {
-		return fmt.Sprintf("%v", id), fmt.Sprintf("%v", -1)
-	}
-	return fmt.Sprintf("%v", id), fmt.Sprintf("%v", id+1)
-}
-
 func init() {
+	LogtailConfigLock.Lock()
 	LogtailConfig = make(map[string]*LogstoreConfig)
-	_ = util.InitFromEnvBool("ALIYUN_LOGTAIL_ENABLE_ALWAYS_ONLINE_FOR_STDOUT", &enableAlwaysOnlineForStdout, true)
+	LogtailConfigLock.Unlock()
 }

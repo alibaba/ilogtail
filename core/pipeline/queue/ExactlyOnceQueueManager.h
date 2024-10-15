@@ -59,14 +59,15 @@ public:
     // 0: success, 1: queue is full, 2: queue not found
     int PushProcessQueue(QueueKey key, std::unique_ptr<ProcessQueueItem>&& item);
     bool IsAllProcessQueueEmpty() const;
-    void InvalidatePopProcessQueue(const std::string& configName);
-    void ValidatePopProcessQueue(const std::string& configName);
+    void DisablePopProcessQueue(const std::string& configName, bool isPipelineRemoving);
+    void EnablePopProcessQueue(const std::string& configName);
 
     // 0: success, 1: queue is full, 2: queue not found
     int PushSenderQueue(QueueKey key, std::unique_ptr<SenderQueueItem>&& item);
-    void GetAllAvailableSenderQueueItems(std::vector<SenderQueueItem*>& item, bool withLimits = true);
+    void GetAvailableSenderQueueItems(std::vector<SenderQueueItem*>& item, int32_t itemsCntLimit);
     bool RemoveSenderQueueItem(QueueKey key, SenderQueueItem* item);
     bool IsAllSenderQueueEmpty() const;
+    void SetPipelineForSenderItems(QueueKey key, const std::shared_ptr<Pipeline>& p);
 
     void ClearTimeoutQueues();
 

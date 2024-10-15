@@ -77,7 +77,7 @@ func (p *pluginv2Runner) Init(inputQueueSize int, flushQueueSize int) error {
 
 func (p *pluginv2Runner) AddDefaultAggregatorIfEmpty() error {
 	if len(p.AggregatorPlugins) == 0 {
-		pluginMeta := p.LogstoreConfig.genPluginMeta("aggregator_default", true, false)
+		pluginMeta := p.LogstoreConfig.genPluginMeta("aggregator_default")
 		logger.Debug(p.LogstoreConfig.Context.GetRuntimeContext(), "add default aggregator")
 		if err := loadAggregator(pluginMeta, p.LogstoreConfig, nil); err != nil {
 			return err
@@ -142,6 +142,10 @@ func (p *pluginv2Runner) RunPlugins(category pluginCategory, control *pipeline.A
 	}
 }
 
+func (p *pluginv2Runner) IsWithInputPlugin() bool {
+	return len(p.MetricPlugins) > 0 || len(p.ServicePlugins) > 0
+}
+
 func (p *pluginv2Runner) addMetricInput(pluginMeta *pipeline.PluginMeta, input pipeline.MetricInputV2, inputInterval int) error {
 	var wrapper MetricWrapperV2
 	wrapper.Config = p.LogstoreConfig
@@ -153,7 +157,7 @@ func (p *pluginv2Runner) addMetricInput(pluginMeta *pipeline.PluginMeta, input p
 	p.MetricPlugins = append(p.MetricPlugins, &wrapper)
 	p.TimerRunner = append(p.TimerRunner, &timerRunner{
 		state:         input,
-		interval:      wrapper.Interval * time.Millisecond,
+		interval:      wrapper.Interval,
 		context:       p.LogstoreConfig.Context,
 		latencyMetric: p.LogstoreConfig.Statistics.CollecLatencytMetric,
 	})
@@ -189,7 +193,7 @@ func (p *pluginv2Runner) addAggregator(pluginMeta *pipeline.PluginMeta, aggregat
 	p.AggregatorPlugins = append(p.AggregatorPlugins, &wrapper)
 	p.TimerRunner = append(p.TimerRunner, &timerRunner{
 		state:         aggregator,
-		interval:      time.Millisecond * wrapper.Interval,
+		interval:      wrapper.Interval,
 		context:       p.LogstoreConfig.Context,
 		latencyMetric: p.LogstoreConfig.Statistics.CollecLatencytMetric,
 	})
@@ -228,7 +232,7 @@ func (p *pluginv2Runner) runInput() {
 
 func (p *pluginv2Runner) runMetricInput(control *pipeline.AsyncControl) {
 	for _, t := range p.TimerRunner {
-		if plugin, ok := t.state.(*MetricWrapperV2); ok {
+		if plugin, ok := t.state.(pipeline.MetricInputV2); ok {
 			metric := plugin
 			timer := t
 			control.Run(func(cc *pipeline.AsyncControl) {
@@ -236,6 +240,8 @@ func (p *pluginv2Runner) runMetricInput(control *pipeline.AsyncControl) {
 					return metric.Read(p.InputPipeContext)
 				}, cc)
 			})
+		} else {
+			logger.Error(p.LogstoreConfig.Context.GetRuntimeContext(), "METRIC_INPUT_V2_START_FAILURE", "type assertion", "failure")
 		}
 	}
 }
@@ -322,19 +328,10 @@ func (p *pluginv2Runner) runFlusherInternal(cc *pipeline.AsyncControl) {
 			if len(pipeChan) == 0 {
 				return
 			}
-		case <-p.LogstoreConfig.pauseChan:
-			p.LogstoreConfig.waitForResume()
 
 		case event := <-pipeChan:
 			if event == nil {
 				continue
-			}
-
-			// Check pause status if config is still alive, if paused, wait for resume.
-			select {
-			case <-p.LogstoreConfig.pauseChan:
-				p.LogstoreConfig.waitForResume()
-			default:
 			}
 
 			dataSize := len(pipeChan) + 1
@@ -380,7 +377,7 @@ func (p *pluginv2Runner) runFlusherInternal(cc *pipeline.AsyncControl) {
 					}
 					break
 				}
-				if !p.LogstoreConfig.FlushOutFlag {
+				if !p.LogstoreConfig.FlushOutFlag.Load() {
 					time.Sleep(time.Duration(10) * time.Millisecond)
 					continue
 				}
@@ -410,7 +407,7 @@ func (p *pluginv2Runner) Stop(exit bool) error {
 	p.AggregateControl.WaitCancel()
 	logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "aggregator plugins stop", "done")
 
-	p.LogstoreConfig.FlushOutFlag = true
+	p.LogstoreConfig.FlushOutFlag.Store(true)
 	p.FlushControl.WaitCancel()
 
 	if exit && p.FlushOutStore.Len() > 0 {

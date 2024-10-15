@@ -22,10 +22,10 @@
 #include "common/Thread.h"
 #include "common/TimeUtil.h"
 #include "common/version.h"
-#include "protobuf/sls/sls_logs.pb.h"
-#include "profile_sender/ProfileSender.h"
 #include "pipeline/queue/QueueKeyManager.h"
 #include "pipeline/queue/SenderQueueManager.h"
+#include "protobuf/sls/sls_logs.pb.h"
+#include "provider/Provider.h"
 
 DEFINE_FLAG_INT32(logtail_alarm_interval, "the interval of two same type alarm message", 30);
 DEFINE_FLAG_INT32(logtail_low_level_alarm_speed, "the speed(count/second) which logtail's low level alarm allow", 100);
@@ -103,6 +103,9 @@ LogtailAlarm::LogtailAlarm() {
     mMessageType[OBSERVER_RUNTIME_ALARM] = "OBSERVER_RUNTIME_ALARM";
     mMessageType[OBSERVER_STOP_ALARM] = "OBSERVER_STOP_ALARM";
     mMessageType[INVALID_CONTAINER_PATH_ALARM] = "INVALID_CONTAINER_PATH_ALARM";
+    mMessageType[COMPRESS_FAIL_ALARM] = "COMPRESS_FAIL_ALARM";
+    mMessageType[SERIALIZE_FAIL_ALARM] = "SERIALIZE_FAIL_ALARM";
+    mMessageType[RELABEL_METRIC_FAIL_ALARM] = "RELABEL_METRIC_FAIL_ALARM";
 }
 
 void LogtailAlarm::Init() {
@@ -195,7 +198,7 @@ void LogtailAlarm::SendAllRegionAlarm() {
             // check sender queue status, if invalid jump this region
 
             QueueKey alarmPrjLogstoreKey = QueueKeyManager::GetInstance()->GetKey(
-                "-flusher_sls-" + ProfileSender::GetInstance()->GetProfileProjectName(region) + "#logtail_alarm");
+                "-flusher_sls-" + GetProfileSender()->GetProfileProjectName(region) + "#logtail_alarm");
             if (!SenderQueueManager::GetInstance()->IsValidToPush(alarmPrjLogstoreKey)) {
                 // jump this region
                 ++sendRegionIndex;
@@ -264,7 +267,7 @@ void LogtailAlarm::SendAllRegionAlarm() {
             continue;
         }
         // this is an anonymous send and non lock send
-        ProfileSender::GetInstance()->SendToProfileProject(region, logGroup);
+        GetProfileSender()->SendToProfileProject(region, logGroup);
     } while (true);
 }
 
@@ -298,7 +301,7 @@ void LogtailAlarm::SendAlarm(const LogtailAlarmType alarmType,
     }
 
     // ignore alarm for profile data
-    if (ProfileSender::GetInstance()->IsProfileData(region, projectName, category)) {
+    if (GetProfileSender()->IsProfileData(region, projectName, category)) {
         return;
     }
     // LOG_DEBUG(sLogger, ("Add Alarm", region)("projectName", projectName)("alarm index",

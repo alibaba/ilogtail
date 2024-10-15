@@ -24,14 +24,16 @@
 #include <optional>
 #include <vector>
 
+#include "common/Flags.h"
+#include "common/ParamExtractor.h"
+#include "models/PipelineEventGroup.h"
+#include "monitor/LogtailMetric.h"
+#include "monitor/metric_constants/MetricConstants.h"
+#include "pipeline/PipelineContext.h"
 #include "pipeline/batch/BatchItem.h"
 #include "pipeline/batch/BatchStatus.h"
 #include "pipeline/batch/FlushStrategy.h"
 #include "pipeline/batch/TimeoutFlushManager.h"
-#include "common/Flags.h"
-#include "common/ParamExtractor.h"
-#include "models/PipelineEventGroup.h"
-#include "pipeline/PipelineContext.h"
 
 namespace logtail {
 
@@ -97,6 +99,26 @@ public:
 
         mFlusher = flusher;
 
+        std::vector<std::pair<std::string, std::string>> labels{
+            {METRIC_LABEL_KEY_PROJECT, ctx.GetProjectName()},
+            {METRIC_LABEL_KEY_PIPELINE_NAME, ctx.GetConfigName()},
+            {METRIC_LABEL_KEY_COMPONENT_NAME, METRIC_LABEL_VALUE_COMPONENT_NAME_BATCHER},
+            {METRIC_LABEL_KEY_FLUSHER_PLUGIN_ID, flusher->GetPluginID()}};
+        if (enableGroupBatch) {
+            labels.emplace_back("enable_group_batch", "true");
+        } else {
+            labels.emplace_back("enable_group_batch", "false");
+        }
+        WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, std::move(labels));
+        mInEventsTotal = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_IN_EVENTS_TOTAL);
+        mInGroupDataSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_IN_SIZE_BYTES);
+        mOutEventsTotal = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_OUT_EVENTS_TOTAL);
+        mTotalDelayMs = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_TOTAL_DELAY_MS);
+        mEventBatchItemsTotal = mMetricsRecordRef.CreateIntGauge(METRIC_COMPONENT_BATCHER_EVENT_BATCHES_TOTAL);
+        mBufferedGroupsTotal = mMetricsRecordRef.CreateIntGauge(METRIC_COMPONENT_BATCHER_BUFFERED_GROUPS_TOTAL);
+        mBufferedEventsTotal = mMetricsRecordRef.CreateIntGauge(METRIC_COMPONENT_BATCHER_BUFFERED_EVENTS_TOTAL);
+        mBufferedDataSizeByte = mMetricsRecordRef.CreateIntGauge(METRIC_COMPONENT_BATCHER_BUFFERED_SIZE_BYTES);
+
         return true;
     }
 
@@ -105,15 +127,20 @@ public:
         std::lock_guard<std::mutex> lock(mMux);
         size_t key = g.GetTagsHash();
         EventBatchItem<T>& item = mEventQueueMap[key];
+        mInEventsTotal->Add(g.GetEvents().size());
+        mInGroupDataSizeBytes->Add(g.DataSize());
+        mEventBatchItemsTotal->Set(mEventQueueMap.size());
 
         size_t eventsSize = g.GetEvents().size();
         for (size_t i = 0; i < eventsSize; ++i) {
             PipelineEventPtr& e = g.MutableEvents()[i];
             if (!item.IsEmpty() && mEventFlushStrategy.NeedFlushByTime(item.GetStatus(), e)) {
                 if (!mGroupQueue) {
+                    UpdateMetricsOnFlushingEventQueue(item);
                     item.Flush(res);
                 } else {
                     if (!mGroupQueue->IsEmpty() && mGroupFlushStrategy->NeedFlushByTime(mGroupQueue->GetStatus())) {
+                        UpdateMetricsOnFlushingGroupQueue();
                         mGroupQueue->Flush(res);
                     }
                     if (mGroupQueue->IsEmpty()) {
@@ -125,6 +152,7 @@ public:
                     }
                     item.Flush(mGroupQueue.value());
                     if (mGroupFlushStrategy->NeedFlushBySize(mGroupQueue->GetStatus())) {
+                        UpdateMetricsOnFlushingGroupQueue();
                         mGroupQueue->Flush(res);
                     }
                 }
@@ -136,12 +164,17 @@ public:
                            g.GetMetadata(EventGroupMetaKey::SOURCE_ID));
                 TimeoutFlushManager::GetInstance()->UpdateRecord(
                     mFlusher->GetContext().GetConfigName(), 0, key, mEventFlushStrategy.GetTimeoutSecs(), mFlusher);
+                mBufferedGroupsTotal->Add(1);
+                mBufferedDataSizeByte->Add(item.DataSize());
             } else if (i == 0) {
                 item.AddSourceBuffer(g.GetSourceBuffer());
             }
+            mBufferedEventsTotal->Add(1);
+            mBufferedDataSizeByte->Add(e->DataSize());
             item.Add(std::move(e));
             if (mEventFlushStrategy.NeedFlushBySize(item.GetStatus())
                 || mEventFlushStrategy.NeedFlushByCnt(item.GetStatus())) {
+                UpdateMetricsOnFlushingEventQueue(item);
                 item.Flush(res);
             }
         }
@@ -155,6 +188,7 @@ public:
             if (!mGroupQueue) {
                 return;
             }
+            UpdateMetricsOnFlushingGroupQueue();
             return mGroupQueue->Flush(res);
         }
 
@@ -164,12 +198,15 @@ public:
         }
 
         if (!mGroupQueue) {
+            UpdateMetricsOnFlushingEventQueue(iter->second);
             iter->second.Flush(res);
             mEventQueueMap.erase(iter);
+            mEventBatchItemsTotal->Set(mEventQueueMap.size());
             return;
         }
 
         if (!mGroupQueue->IsEmpty() && mGroupFlushStrategy->NeedFlushByTime(mGroupQueue->GetStatus())) {
+            UpdateMetricsOnFlushingGroupQueue();
             mGroupQueue->Flush(res);
         }
         if (mGroupQueue->IsEmpty()) {
@@ -178,7 +215,9 @@ public:
         }
         iter->second.Flush(mGroupQueue.value());
         mEventQueueMap.erase(iter);
+        mEventBatchItemsTotal->Set(mEventQueueMap.size());
         if (mGroupFlushStrategy->NeedFlushBySize(mGroupQueue->GetStatus())) {
+            UpdateMetricsOnFlushingGroupQueue();
             mGroupQueue->Flush(res);
         }
     }
@@ -187,20 +226,25 @@ public:
         std::lock_guard<std::mutex> lock(mMux);
         for (auto& item : mEventQueueMap) {
             if (!mGroupQueue) {
+                UpdateMetricsOnFlushingEventQueue(item.second);
                 item.second.Flush(res);
             } else {
                 if (!mGroupQueue->IsEmpty() && mGroupFlushStrategy->NeedFlushByTime(mGroupQueue->GetStatus())) {
+                    UpdateMetricsOnFlushingGroupQueue();
                     mGroupQueue->Flush(res);
                 }
                 item.second.Flush(mGroupQueue.value());
                 if (mGroupFlushStrategy->NeedFlushBySize(mGroupQueue->GetStatus())) {
+                    UpdateMetricsOnFlushingGroupQueue();
                     mGroupQueue->Flush(res);
                 }
             }
         }
         if (mGroupQueue) {
+            UpdateMetricsOnFlushingGroupQueue();
             mGroupQueue->Flush(res);
         }
+        mEventBatchItemsTotal->Set(0);
         mEventQueueMap.clear();
     }
 
@@ -210,6 +254,32 @@ public:
 #endif
 
 private:
+    void UpdateMetricsOnFlushingEventQueue(const EventBatchItem<T>& item) {
+        mOutEventsTotal->Add(item.EventSize());
+        mTotalDelayMs->Add(
+            item.EventSize()
+                * std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now())
+                      .time_since_epoch()
+                      .count()
+            - item.TotalEnqueTimeMs());
+        mBufferedGroupsTotal->Sub(1);
+        mBufferedEventsTotal->Sub(item.EventSize());
+        mBufferedDataSizeByte->Sub(item.DataSize());
+    }
+
+    void UpdateMetricsOnFlushingGroupQueue() {
+        mOutEventsTotal->Add(mGroupQueue->EventSize());
+        mTotalDelayMs->Add(
+            mGroupQueue->EventSize()
+                * std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now())
+                      .time_since_epoch()
+                      .count()
+            - mGroupQueue->TotalEnqueTimeMs());
+        mBufferedGroupsTotal->Sub(mGroupQueue->GroupSize());
+        mBufferedEventsTotal->Sub(mGroupQueue->EventSize());
+        mBufferedDataSizeByte->Sub(mGroupQueue->DataSize());
+    }
+
     std::mutex mMux;
     std::map<size_t, EventBatchItem<T>> mEventQueueMap;
     EventFlushStrategy<T> mEventFlushStrategy;
@@ -218,6 +288,16 @@ private:
     std::optional<GroupFlushStrategy> mGroupFlushStrategy;
 
     Flusher* mFlusher = nullptr;
+
+    mutable MetricsRecordRef mMetricsRecordRef;
+    CounterPtr mInEventsTotal;
+    CounterPtr mInGroupDataSizeBytes;
+    CounterPtr mOutEventsTotal;
+    CounterPtr mTotalDelayMs;
+    IntGaugePtr mEventBatchItemsTotal;
+    IntGaugePtr mBufferedGroupsTotal;
+    IntGaugePtr mBufferedEventsTotal;
+    IntGaugePtr mBufferedDataSizeByte;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class BatcherUnittest;

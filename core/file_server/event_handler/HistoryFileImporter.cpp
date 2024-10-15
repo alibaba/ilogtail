@@ -20,10 +20,10 @@
 #include "common/Thread.h"
 #include "common/TimeUtil.h"
 #include "file_server/ConfigManager.h"
-#include "logger/Logger.h"
-#include "runner/LogProcess.h"
-#include "pipeline/queue/ProcessQueueManager.h"
 #include "file_server/reader/LogFileReader.h"
+#include "logger/Logger.h"
+#include "pipeline/queue/ProcessQueueManager.h"
+#include "runner/ProcessorRunner.h"
 
 namespace logtail {
 
@@ -51,7 +51,7 @@ void HistoryFileImporter::Run() {
 }
 
 void HistoryFileImporter::LoadCheckPoint() {
-    std::string historyDataPath = GetProcessExecutionDir() + "history_file_checkpoint";
+    std::string historyDataPath = GetAgentDataDir() + "history_file_checkpoint";
     FILE* readPtr = fopen(historyDataPath.c_str(), "r");
     if (readPtr != NULL) {
         fclose(readPtr);
@@ -59,7 +59,7 @@ void HistoryFileImporter::LoadCheckPoint() {
 }
 
 void HistoryFileImporter::ProcessEvent(const HistoryFileEvent& event, const std::vector<std::string>& fileNames) {
-    static LogProcess* logProcess = LogProcess::GetInstance();
+    static ProcessorRunner* logProcess = ProcessorRunner::GetInstance();
 
     LOG_INFO(sLogger, ("begin load history files, count", fileNames.size())("file list", ToString(fileNames)));
     for (size_t i = 0; i < fileNames.size(); ++i) {
@@ -116,7 +116,7 @@ void HistoryFileImporter::ProcessEvent(const HistoryFileEvent& event, const std:
 
                 // TODO: currently only 1 input is allowed, so we assume 0 here. It should be the actual input seq after
                 // refactorization.
-                logProcess->PushBuffer(readerSharePtr->GetQueueKey(), 0, std::move(group), 100000000);
+                logProcess->PushQueue(readerSharePtr->GetQueueKey(), 0, std::move(group), 100000000);
             } else {
                 // when ReadLog return false, retry once
                 if (doneFlag) {

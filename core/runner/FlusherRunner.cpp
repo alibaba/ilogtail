@@ -41,6 +41,16 @@ namespace logtail {
 
 bool FlusherRunner::Init() {
     srand(time(nullptr));
+    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef,
+                                                         {{METRIC_LABEL_KEY_RUNNER_NAME, METRIC_LABEL_VALUE_RUNNER_NAME_FLUSHER}});
+    mInItemsTotal = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_ITEMS_TOTAL);
+    mInItemDataSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_SIZE_BYTES);
+    mOutItemsTotal = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_OUT_ITEMS_TOTAL);
+    mTotalDelayMs = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_TOTAL_DELAY_MS);
+    mLastRunTime = mMetricsRecordRef.CreateIntGauge(METRIC_RUNNER_LAST_RUN_TIME);
+    mInItemRawDataSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_FLUSHER_IN_SIZE_BYTES);
+    mWaitingItemsTotal = mMetricsRecordRef.CreateIntGauge(METRIC_RUNNER_FLUSHER_WAITING_ITEMS_TOTAL);
+
     mThreadRes = async(launch::async, &FlusherRunner::Run, this);
     mLastCheckSendClientTime = time(nullptr);
     return true;
@@ -99,12 +109,21 @@ void FlusherRunner::Run() {
     LOG_INFO(sLogger, ("flusher runner", "started"));
     while (true) {
         auto curTime = chrono::system_clock::now();
+        mLastRunTime->Set(chrono::duration_cast<chrono::seconds>(curTime.time_since_epoch()).count());
 
         vector<SenderQueueItem*> items;
-        SenderQueueManager::GetInstance()->GetAllAvailableItems(items, !Application::GetInstance()->IsExiting());
+        int32_t limit = Application::GetInstance()->IsExiting() ? -1 : AppConfig::GetInstance()->GetSendRequestConcurrency();
+        SenderQueueManager::GetInstance()->GetAvailableItems(items,  limit);
         if (items.empty()) {
             SenderQueueManager::GetInstance()->Wait(1000);
         } else {
+            for (auto itr = items.begin(); itr != items.end(); ++itr) {
+                mInItemDataSizeBytes->Add((*itr)->mData.size());
+                mInItemRawDataSizeBytes->Add((*itr)->mRawSize);
+            }
+            mInItemsTotal->Add(items.size());
+            mWaitingItemsTotal->Add(items.size());
+
             // smoothing send tps, walk around webserver load burst
             uint32_t bufferPackageCount = items.size();
             if (!Application::GetInstance()->IsExiting() && AppConfig::GetInstance()->IsSendRandomSleep()) {
@@ -132,6 +151,10 @@ void FlusherRunner::Run() {
             }
 
             Dispatch(*itr);
+            mWaitingItemsTotal->Sub(1);
+            mOutItemsTotal->Add(1);
+            mTotalDelayMs->Add(
+                chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - curTime).count());
         }
 
         // TODO: move the following logic to scheduler
