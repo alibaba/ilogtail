@@ -456,7 +456,7 @@ void CommonConfigProviderUnittest::TestGetConfigUpdateAndConfigWatcher() {
         InstanceConfigManager::GetInstance()->UpdateInstanceConfigs(instanceConfigDiff);
         APSARA_TEST_TRUE(!instanceConfigDiff.IsEmpty());
         APSARA_TEST_EQUAL(1U, instanceConfigDiff.mAdded.size());
-        APSARA_TEST_EQUAL(instanceConfigDiff.mAdded[0].mName, "instanceconfig1");
+        APSARA_TEST_EQUAL(instanceConfigDiff.mAdded[0].mConfigName, "instanceconfig1");
         APSARA_TEST_EQUAL(InstanceConfigManager::GetInstance()->GetAllConfigNames().size(), 2);
         APSARA_TEST_EQUAL(InstanceConfigManager::GetInstance()->GetAllConfigNames()[0], "instanceconfig1");
         // 再次处理 instanceconfig
