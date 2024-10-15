@@ -134,9 +134,6 @@ execute_process(COMMAND ${protobuf_BIN} --proto_path=${PROTO_FILE_PATH} --cpp_ou
 set(PROTO_FILE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/protobuf/models")
 set(PROTO_FILES ${PROTO_FILE_PATH}/log_event.proto ${PROTO_FILE_PATH}/metric_event.proto ${PROTO_FILE_PATH}/span_event.proto ${PROTO_FILE_PATH}/pipeline_event_group.proto)
 execute_process(COMMAND ${protobuf_BIN} --proto_path=${PROTO_FILE_PATH} --cpp_out=${PROTO_FILE_PATH} ${PROTO_FILES})
-set(PROTO_FILE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/protobuf/models")
-set(PROTO_FILES ${PROTO_FILE_PATH}/log_event.proto ${PROTO_FILE_PATH}/metric_event.proto ${PROTO_FILE_PATH}/span_event.proto ${PROTO_FILE_PATH}/pipeline_event_group.proto)
-execute_process(COMMAND ${protobuf_BIN} --proto_path=${PROTO_FILE_PATH} --cpp_out=${PROTO_FILE_PATH} ${PROTO_FILES})
 
 # re2
 macro(link_re2 target_name)
