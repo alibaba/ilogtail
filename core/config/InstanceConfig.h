@@ -36,7 +36,7 @@ struct InstanceConfig {
 
     InstanceConfig(const std::string& name, std::unique_ptr<Json::Value>&& detail, const std::string& dirName)
         : mName(name), mDirName(dirName), mDetail(std::move(detail)) {}
-    InstanceConfig(const logtail::InstanceConfig& config) : mName(config.mName) {
+    InstanceConfig(const logtail::InstanceConfig& config) : mName(config.mName), mDirName(config.mDirName) {
         mDetail = std::make_unique<Json::Value>(*config.mDetail);
     }
 
@@ -44,6 +44,7 @@ struct InstanceConfig {
         if (this != &other) {
             mName = std::move(other.mName);
             mDetail = std::move(other.mDetail);
+            mDirName = std::move(other.mDirName);
         }
         return *this;
     }
@@ -52,6 +53,7 @@ struct InstanceConfig {
         if (this != &other) {
             mName = other.mName;
             mDetail = std::make_unique<Json::Value>(*other.mDetail);
+            mDirName = other.mDirName;
         }
         return *this;
     }
@@ -60,7 +62,7 @@ struct InstanceConfig {
 };
 
 inline bool operator==(const InstanceConfig& lhs, const InstanceConfig& rhs) {
-    return (lhs.mName == rhs.mName) && (*lhs.mDetail == *rhs.mDetail);
+    return (lhs.mName == rhs.mName) && (*lhs.mDetail == *rhs.mDetail) && (lhs.mDirName == rhs.mDirName);
 }
 
 inline bool operator!=(const InstanceConfig& lhs, const InstanceConfig& rhs) {

@@ -308,26 +308,26 @@ public:
     const Json::Value& GetEnvConfig() { return mEnvConfig; };
     const Json::Value& GetRemoteConfig() { return mRemoteConfig; };
 
-    static int32_t MergeInt32(int32_t defaultValue,
-                              const std::string name,
-                              const std::function<bool(const std::string key, const int32_t value)>& validateFn);
+    template <typename T>
+    T MergeConfig(T defaultValue,
+                  const std::string& name,
+                  const std::function<bool(const std::string&, const T&)>& validateFn);
+    int32_t MergeInt32(int32_t defaultValue,
+                       const std::string& name,
+                       const std::function<bool(const std::string&, const int32_t)>& validateFn);
 
-    static int64_t MergeInt64(int64_t defaultValue,
-                              const std::string name,
-                              const std::function<bool(const std::string key, const int64_t value)>& validateFn);
-
-    static bool MergeBool(bool defaultValue,
-                          const std::string name,
-                          const std::function<bool(const std::string key, const bool value)>& validateFn);
-
-    static std::string
-    MergeString(const std::string& defaultValue,
-                const std::string name,
-                const std::function<bool(const std::string key, const std::string value)>& validateFn);
-
-    static double MergeDouble(double defaultValue,
-                              const std::string name,
-                              const std::function<bool(const std::string key, const double value)>& validateFn);
+    int64_t MergeInt64(int64_t defaultValue,
+                       const std::string& name,
+                       const std::function<bool(const std::string&, const int64_t)>& validateFn);
+    bool MergeBool(bool defaultValue,
+                   const std::string& name,
+                   const std::function<bool(const std::string&, const bool)>& validateFn);
+    std::string MergeString(const std::string& defaultValue,
+                            const std::string& name,
+                            const std::function<bool(const std::string&, const std::string&)>& validateFn);
+    double MergeDouble(double defaultValue,
+                       const std::string& name,
+                       const std::function<bool(const std::string&, const double)>& validateFn);
 
 
     // 注册回调

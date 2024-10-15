@@ -72,16 +72,14 @@ bool FlusherRunner::LoadModuleConfig(bool isInit) {
         return true;
     };
     if (isInit) {
-        auto maxBytePerSec = AppConfig::MergeInt32(AppConfig::GetInstance()->GetMaxBytePerSec(),
-                                                   "max_bytes_per_sec",
-                                                   ValidateFn);
+        auto maxBytePerSec = AppConfig::GetInstance()->MergeInt32(
+            AppConfig::GetInstance()->GetMaxBytePerSec(), "max_bytes_per_sec", ValidateFn);
         AppConfig::GetInstance()->SetMaxBytePerSec(maxBytePerSec);
         UpdateSendFlowControl();
         return true;
     }
-    auto maxBytePerSec = AppConfig::MergeInt32(AppConfig::GetInstance()->GetMaxBytePerSec(),
-                                               "max_bytes_per_sec",
-                                               ValidateFn);
+    auto maxBytePerSec = AppConfig::GetInstance()->MergeInt32(
+        AppConfig::GetInstance()->GetMaxBytePerSec(), "max_bytes_per_sec", ValidateFn);
     AppConfig::GetInstance()->SetMaxBytePerSec(maxBytePerSec);
     UpdateSendFlowControl();
 

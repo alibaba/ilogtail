@@ -190,6 +190,17 @@ void CreateAgentDir() {
     if (BOOL_FLAG(logtail_mode)) {
         return;
     }
+    try {
+        const char* value = getenv("logtail_mode");
+        if (value != NULL) {
+            STRING_FLAG(logtail_mode) = StringTo<bool>(value);
+        }
+    } catch (const exception& e) {
+        std::cout << "load config from env error, env_name:logtail_mode, error:" << e.what() << std::endl;
+    }
+    if (BOOL_FLAG(logtail_mode)) {
+        return;
+    }
     std::string processExecutionDir = GetProcessExecutionDir();
     Json::Value emptyJson;
 #define PROCESSDIRFLAG(flag_name) \
@@ -1790,141 +1801,115 @@ Json::Value AppConfig::mergeAllConfigs() {
 }
 
 void AppConfig::LoadInstanceConfig(std::map<std::string, Json::Value>& instanceConfig) {
+    LOG_INFO(sLogger, ("LoadInstanceConfig", instanceConfig.size()));
     mRemoteConfig.clear();
     mLocalInstanceConfig.clear();
     for (auto& config : instanceConfig) {
-        if (config.first == AppConfig::sLocalConfigDir) {
+        if (EndWith(config.first, AppConfig::sLocalConfigDir)) {
             MergeJson(mLocalInstanceConfig, config.second);
         } else {
             MergeJson(mRemoteConfig, config.second);
         }
     }
+    LOG_INFO(sLogger,
+             ("Load local instanceConfig", mLocalInstanceConfig.toStyledString())("Load remote instanceConfig",
+                                                                                  mRemoteConfig.toStyledString()));
     auto mergedConfig = mergeAllConfigs();
-    for (const auto& callback : mCallbacks) {
-        const std::string& key = callback.first;
-        if (!mMergedConfig.isMember(key) && !mergedConfig.isMember(key)) {
-            continue;
+    if (mMergedConfig != mergedConfig) {
+        for (const auto& callback : mCallbacks) {
+            const std::string& key = callback.first;
+            if (!mMergedConfig.isMember(key) && !mergedConfig.isMember(key)) {
+                continue;
+            }
+            if (!mMergedConfig.isMember(key) && mergedConfig.isMember(key)) {
+                callback.second(false);
+            }
+            if (mMergedConfig.isMember(key) && !mergedConfig.isMember(key)) {
+                callback.second(false);
+            }
+            if (mMergedConfig[key] != mergedConfig[key]) {
+                callback.second(false);
+            }
         }
-        if (!mMergedConfig.isMember(key) && mergedConfig.isMember(key)) {
-            callback.second(false);
-        }
-        if (mMergedConfig.isMember(key) && !mergedConfig.isMember(key)) {
-            callback.second(false);
-        }
-        if (mMergedConfig[key] != mergedConfig[key]) {
-            callback.second(false);
-        }
+        mMergedConfig = std::move(mergedConfig);
     }
-    mMergedConfig = std::move(mergedConfig);
 }
 
 void AppConfig::RegisterCallback(const std::string& key, std::function<bool(bool)> callback) {
     mCallbacks[key] = std::move(callback);
 }
 
-int32_t AppConfig::MergeInt32(int32_t defaultValue,
-                              const std::string name,
-                              const std::function<bool(const std::string key, const int32_t value)>& validateFn) {
+template<typename T>
+T AppConfig::MergeConfig(T defaultValue,
+                         const std::string& name,
+                         const std::function<bool(const std::string&, const T&)>& validateFn) {
     const auto& localInstanceConfig = AppConfig::GetInstance()->GetLocalInstanceConfig();
     const auto& envConfig = AppConfig::GetInstance()->GetEnvConfig();
     const auto& remoteConfig = AppConfig::GetInstance()->GetRemoteConfig();
 
-    int32_t res = defaultValue;
-    if (localInstanceConfig.isMember(name) && localInstanceConfig[name].isInt()
-        && validateFn(name, localInstanceConfig[name].asInt())) {
-        res = localInstanceConfig[name].asInt();
-    }
-    if (envConfig.isMember(name) && envConfig[name].isInt() && validateFn(name, envConfig[name].asInt())) {
-        res = envConfig[name].asInt();
-    }
-    if (remoteConfig.isMember(name) && remoteConfig[name].isInt() && validateFn(name, remoteConfig[name].asInt())) {
-        res = remoteConfig[name].asInt();
-    }
+    T res = defaultValue;
+
+    auto tryMerge = [&](const Json::Value& config) {
+        if (config.isMember(name)) {
+            if constexpr (std::is_same_v<T, int32_t>) {
+                if (config[name].isInt() && validateFn(name, config[name].asInt())) {
+                    res = config[name].asInt();
+                }
+            } else if constexpr (std::is_same_v<T, int64_t>) {
+                if (config[name].isInt64() && validateFn(name, config[name].asInt64())) {
+                    res = config[name].asInt64();
+                }
+            } else if constexpr (std::is_same_v<T, bool>) {
+                if (config[name].isBool() && validateFn(name, config[name].asBool())) {
+                    res = config[name].asBool();
+                }
+            } else if constexpr (std::is_same_v<T, std::string>) {
+                if (config[name].isString() && validateFn(name, config[name].asString())) {
+                    res = config[name].asString();
+                }
+            } else if constexpr (std::is_same_v<T, double>) {
+                if (config[name].isDouble() && validateFn(name, config[name].asDouble())) {
+                    res = config[name].asDouble();
+                }
+            }
+        }
+    };
+
+    tryMerge(localInstanceConfig);
+    tryMerge(envConfig);
+    tryMerge(remoteConfig);
+
     return res;
+}
+
+int32_t AppConfig::MergeInt32(int32_t defaultValue,
+                              const std::string& name,
+                              const std::function<bool(const std::string&, const int32_t)>& validateFn) {
+    return MergeConfig<int32_t>(defaultValue, name, validateFn);
 }
 
 int64_t AppConfig::MergeInt64(int64_t defaultValue,
-                              const std::string name,
-                              const std::function<bool(const std::string key, const int64_t value)>& validateFn) {
-    const auto& localInstanceConfig = AppConfig::GetInstance()->GetLocalInstanceConfig();
-    const auto& envConfig = AppConfig::GetInstance()->GetEnvConfig();
-    const auto& remoteConfig = AppConfig::GetInstance()->GetRemoteConfig();
-
-    int64_t res = defaultValue;
-    if (localInstanceConfig.isMember(name) && localInstanceConfig[name].isInt64()
-        && validateFn(name, localInstanceConfig[name].asInt64())) {
-        res = localInstanceConfig[name].asInt64();
-    }
-    if (envConfig.isMember(name) && envConfig[name].isInt64() && validateFn(name, envConfig[name].asInt64())) {
-        res = envConfig[name].asInt64();
-    }
-    if (remoteConfig.isMember(name) && remoteConfig[name].isInt64() && validateFn(name, remoteConfig[name].asInt64())) {
-        res = remoteConfig[name].asInt64();
-    }
-    return res;
+                              const std::string& name,
+                              const std::function<bool(const std::string&, const int64_t)>& validateFn) {
+    return MergeConfig<int64_t>(defaultValue, name, validateFn);
 }
 
 bool AppConfig::MergeBool(bool defaultValue,
-                          const std::string name,
-                          const std::function<bool(const std::string key, const bool value)>& validateFn) {
-    const auto& localInstanceConfig = AppConfig::GetInstance()->GetLocalInstanceConfig();
-    const auto& envConfig = AppConfig::GetInstance()->GetEnvConfig();
-    const auto& remoteConfig = AppConfig::GetInstance()->GetRemoteConfig();
-    bool res = defaultValue;
-    if (localInstanceConfig.isMember(name) && localInstanceConfig[name].isBool()
-        && validateFn(name, localInstanceConfig[name].asBool())) {
-        res = localInstanceConfig[name].asBool();
-    }
-    if (envConfig.isMember(name) && envConfig[name].isBool() && validateFn(name, envConfig[name].asBool())) {
-        res = envConfig[name].asBool();
-    }
-    if (remoteConfig.isMember(name) && remoteConfig[name].isBool() && validateFn(name, remoteConfig[name].asBool())) {
-        res = remoteConfig[name].asBool();
-    }
-    return res;
+                          const std::string& name,
+                          const std::function<bool(const std::string&, const bool)>& validateFn) {
+    return MergeConfig<bool>(defaultValue, name, validateFn);
 }
 
-std::string
-AppConfig::MergeString(const std::string& defaultValue,
-                       const std::string name,
-                       const std::function<bool(const std::string key, const std::string value)>& validateFn) {
-    const auto& localInstanceConfig = AppConfig::GetInstance()->GetLocalInstanceConfig();
-    const auto& envConfig = AppConfig::GetInstance()->GetEnvConfig();
-    const auto& remoteConfig = AppConfig::GetInstance()->GetRemoteConfig();
-    std::string res = defaultValue;
-    if (localInstanceConfig.isMember(name) && localInstanceConfig[name].isString()
-        && validateFn(name, localInstanceConfig[name].asString())) {
-        res = localInstanceConfig[name].asString();
-    }
-    if (envConfig.isMember(name) && envConfig[name].isString() && validateFn(name, envConfig[name].asString())) {
-        res = envConfig[name].asString();
-    }
-    if (remoteConfig.isMember(name) && remoteConfig[name].isString()
-        && validateFn(name, remoteConfig[name].asString())) {
-        res = remoteConfig[name].asString();
-    }
-    return res;
+std::string AppConfig::MergeString(const std::string& defaultValue,
+                                   const std::string& name,
+                                   const std::function<bool(const std::string&, const std::string&)>& validateFn) {
+    return MergeConfig<std::string>(defaultValue, name, validateFn);
 }
 
 double AppConfig::MergeDouble(double defaultValue,
-                              const std::string name,
-                              const std::function<bool(const std::string key, const double value)>& validateFn) {
-    const auto& localInstanceConfig = AppConfig::GetInstance()->GetLocalInstanceConfig();
-    const auto& envConfig = AppConfig::GetInstance()->GetEnvConfig();
-    const auto& remoteConfig = AppConfig::GetInstance()->GetRemoteConfig();
-    double res = defaultValue;
-    if (localInstanceConfig.isMember(name) && localInstanceConfig[name].isDouble()
-        && validateFn(name, localInstanceConfig[name].asDouble())) {
-        res = localInstanceConfig[name].asDouble();
-    }
-    if (envConfig.isMember(name) && envConfig[name].isDouble() && validateFn(name, envConfig[name].asDouble())) {
-        res = envConfig[name].asDouble();
-    }
-    if (remoteConfig.isMember(name) && remoteConfig[name].isDouble()
-        && validateFn(name, remoteConfig[name].asDouble())) {
-        res = remoteConfig[name].asDouble();
-    }
-    return res;
+                              const std::string& name,
+                              const std::function<bool(const std::string&, const double)>& validateFn) {
+    return MergeConfig<double>(defaultValue, name, validateFn);
 }
 
 } // namespace logtail
