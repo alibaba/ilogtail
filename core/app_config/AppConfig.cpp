@@ -590,7 +590,6 @@ void AppConfig::LoadIncludeConfig(Json::Value& confJson) {
 }
 
 void AppConfig::LoadLocalInstanceConfig() {
-    // add local config dir
     filesystem::path localConfigPath
         = filesystem::path(AppConfig::GetInstance()->GetLoongcollectorConfDir()) / "instance_config" / "local";
     error_code ec;
@@ -1156,21 +1155,6 @@ void AppConfig::LoadResourceConf(const Json::Value& confJson) {
     }
 }
 
-/**
- * @brief 检查并重置代理环境变量
- *
- * @return bool 如果所有代理设置都有效则返回true，否则返回false
- *
- * 该函数执行以下操作：
- * 1. 检查并设置HTTP代理
- * 2. 检查并设置HTTPS代理
- * 3. 检查并设置ALL代理
- * 4. 处理NO_PROXY设置
- * 5. 如果设置了任何代理，禁用主机IP替换
- *
- * 函数会优先考虑大写的环境变量名，如果不存在则使用小写的。
- * 对于每种代理类型，如果设置无效，函数会清除相关的环境变量并返回false。
- */
 bool AppConfig::CheckAndResetProxyEnv() {
     // envs capitalized prioritize those in lower case
     string httpProxy = ToString(getenv("HTTP_PROXY"));
@@ -1241,17 +1225,8 @@ bool AppConfig::CheckAndResetProxyEnv() {
     return true;
 }
 
-/**
- * @brief 检查并重置代理地址
- *
- * @param envKey 环境变量键名
- * @param address 代理地址
- * @return bool 如果地址有效则返回true，否则返回false
- *
- * 该函数验证代理地址的格式是否正确，格式为：[scheme://[user:pwd\@]]address[:port]
- * 如果没有提供scheme或port，则假定为'http'和'80'
- * 如果地址有效但缺少port，函数会添加默认port并更新环境变量
- */
+// valid proxy address format: [scheme://[user:pwd\@]]address[:port], 'http' and '80' assumed if no scheme or port
+// provided
 bool AppConfig::CheckAndResetProxyAddress(const char* envKey, string& address) {
     if (address.empty()) {
         return true;
@@ -1275,25 +1250,6 @@ bool AppConfig::CheckAndResetProxyAddress(const char* envKey, string& address) {
     return true;
 }
 
-/**
- * @brief 加载其他配置项
- *
- * @param confJson JSON格式的配置对象
- *
- * 该函数从给定的JSON配置对象中加载各种配置项，包括但不限于：
- * - 流日志开关
- * - OAS连接和请求超时时间
- * - 强制退出读取超时时间
- * - 动态插件列表
- * - 检查点同步写入开关
- * - 日志时间自动调整开关
- * - 检查点搜索相关参数
- * - 轮询发现相关参数
- * - 多配置接受标志和最大数量
- * - 日志解析错误报警标志
- *
- * 函数会根据配置项的存在与否来决定是否更新相应的成员变量或全局标志。
- */
 void AppConfig::LoadOtherConf(const Json::Value& confJson) {
     {
         int32_t oasConnectTimeout = 0;
@@ -1389,15 +1345,6 @@ void AppConfig::LoadOtherConf(const Json::Value& confJson) {
     }
 }
 
-/**
- * @brief 初始化环境变量映射
- *
- * @param envStr 环境变量字符串，格式为"KEY=VALUE"
- * @param envMapping 用于存储解析后的环境变量的映射
- *
- * 该函数解析给定的环境变量字符串，并将其添加到环境变量映射中。
- * 如果解析失败，会记录警告日志。
- */
 void AppConfig::InitEnvMapping(const std::string& envStr, std::map<std::string, std::string>& envMapping) {
     int pos = envStr.find('=');
     if (pos > 0 && size_t(pos) < envStr.size()) {
@@ -1408,16 +1355,6 @@ void AppConfig::InitEnvMapping(const std::string& envStr, std::map<std::string, 
         APSARA_LOG_WARNING(sLogger, ("error to find ", "")("pos", pos)("env string", envStr));
     }
 }
-
-/**
- * @brief 设置配置标志
- *
- * @param flagName 标志名称
- * @param value 要设置的值
- *
- * 该函数尝试设置指定名称的配置标志为给定的值。
- * 如果设置成功，会记录信息日志；如果标志未定义，会记录调试日志。
- */
 void AppConfig::SetConfigFlag(const std::string& flagName, const std::string& value) {
     static set<string> sIgnoreFlagSet
         = {"loongcollector_conf_dir", "loongcollector_log_dir", "loongcollector_data_dir", "loongcollector_run_dir", "logtail_mode"};
@@ -1673,17 +1610,6 @@ bool AppConfig::IsInInotifyBlackList(const std::string& path) const {
 // TODO: Use Boost instead.
 // boost::filesystem::directory_iterator end;
 // try { boost::filesystem::directory_iterator(path); } catch (...) { // failed } // OK
-/**
- * @brief 设置Logtail系统配置目录
- *
- * 该函数用于设置Logtail系统配置目录的路径。它执行以下操作：
- * 1. 设置配置目录路径，确保路径以分隔符结尾
- * 2. 如果目录不存在，尝试创建
- * 3. 验证目录的可访问性，如果不可访问则使用进程执行目录作为备选
- * 4. 记录最终设置的配置目录路径
- *
- * @param dirPath 要设置的配置目录路径
- */
 void AppConfig::SetLoongcollectorConfDir(const std::string& dirPath) {
     mLoongcollectorConfDir = dirPath;
     if (dirPath.back() != '/' || dirPath.back() != '\\') {
@@ -1743,13 +1669,6 @@ bool AppConfig::IsHostPathMatchBlacklist(const string& dirPath) const {
     return false;
 }
 
-/**
- * @brief 更新文件标签
- *
- * 该函数从指定的配置文件中读取文件标签信息，并更新内部的文件标签存储。
- * 如果配置文件不存在或格式无效，将记录错误日志。
- * 只有当新的标签配置与当前存储的配置不同时，才会进行更新。
- */
 void AppConfig::UpdateFileTags() {
     if (STRING_FLAG(ALIYUN_LOG_FILE_TAGS).empty()) {
         return;
