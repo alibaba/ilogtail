@@ -252,7 +252,7 @@ extern const std::string METRIC_RUNNER_JOB_NUM;
 /**********************************************************
  *   flusher runner
  **********************************************************/
-extern const std::string METRIC_RUNNER_FLUSHER_IN_SIZE_BYTES;
+extern const std::string METRIC_RUNNER_FLUSHER_IN_RAW_SIZE_BYTES;
 extern const std::string METRIC_RUNNER_FLUSHER_WAITING_ITEMS_TOTAL;
 
 /**********************************************************

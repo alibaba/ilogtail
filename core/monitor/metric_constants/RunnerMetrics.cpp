@@ -48,7 +48,7 @@ const string METRIC_RUNNER_JOB_NUM = "runner_job_num";
 /**********************************************************
  *   flusher runner
  **********************************************************/
-const string METRIC_RUNNER_FLUSHER_IN_SIZE_BYTES = "runner_in_size_bytes";
+const string METRIC_RUNNER_FLUSHER_IN_RAW_SIZE_BYTES = "runner_in_raw_size_bytes";
 const string METRIC_RUNNER_FLUSHER_WAITING_ITEMS_TOTAL = "runner_waiting_items_total";
 
 /**********************************************************
