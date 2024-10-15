@@ -40,7 +40,8 @@ cp LICENSE README.md "${ROOTDIR}/${DIST_DIR}/${PACKAGE_DIR}"
 cp "${ROOTDIR}/${OUT_DIR}/loongcollector" "${ROOTDIR}/${DIST_DIR}/${PACKAGE_DIR}"
 cp "${ROOTDIR}/${OUT_DIR}/libGoPluginAdapter.so" "${ROOTDIR}/${DIST_DIR}/${PACKAGE_DIR}"
 cp "${ROOTDIR}/${OUT_DIR}/libGoPluginBase.so" "${ROOTDIR}/${DIST_DIR}/${PACKAGE_DIR}"
-cp "${ROOTDIR}/${OUT_DIR}/loongcollector_config.json" "${ROOTDIR}/${DIST_DIR}/${PACKAGE_DIR}"
+mkdir -p "${ROOTDIR}/${DIST_DIR}/${PACKAGE_DIR}/conf/instance_config/local/"
+cp "${ROOTDIR}/${OUT_DIR}/loongcollector_config.json" "${ROOTDIR}/${DIST_DIR}/${PACKAGE_DIR}/conf/instance_config/local/"
 cp -a "${ROOTDIR}/${OUT_DIR}/config/local" "${ROOTDIR}/${DIST_DIR}/${PACKAGE_DIR}/conf"
 if file "${ROOTDIR}/${DIST_DIR}/${PACKAGE_DIR}/loongcollector" | grep x86-64; then ./scripts/download_ebpflib.sh "${ROOTDIR}/${DIST_DIR}/${PACKAGE_DIR}"; fi
 
