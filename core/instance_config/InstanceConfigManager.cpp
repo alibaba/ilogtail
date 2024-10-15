@@ -27,28 +27,20 @@ InstanceConfigManager::InstanceConfigManager() = default;
 
 void InstanceConfigManager::UpdateInstanceConfigs(InstanceConfigDiff& diff) {
     for (auto& config : diff.mAdded) {
-        std::shared_ptr<InstanceConfig> configTmp(
-            new InstanceConfig(config.mName, std::move(config.mDetail), config.mDirName));
-        mInstanceConfigMap[config.mName] = configTmp;
-        ConfigFeedbackReceiver::GetInstance().FeedbackInstanceConfigStatus(config.mName, ConfigFeedbackStatus::APPLIED);
+        mInstanceConfigMap[config.mConfigName] = 
+            std::make_shared<InstanceConfig>(config.mConfigName, std::move(config.mDetail), config.mDirName);
+        ConfigFeedbackReceiver::GetInstance().FeedbackInstanceConfigStatus(config.mConfigName, ConfigFeedbackStatus::APPLIED);
     }
     for (auto& config : diff.mModified) {
-        std::shared_ptr<InstanceConfig> configTmp(
-            new InstanceConfig(config.mName, std::move(config.mDetail), config.mDirName));
-        mInstanceConfigMap[config.mName] = configTmp;
-        ConfigFeedbackReceiver::GetInstance().FeedbackInstanceConfigStatus(config.mName, ConfigFeedbackStatus::APPLIED);
+        mInstanceConfigMap[config.mConfigName] = 
+            std::make_shared<InstanceConfig>(config.mConfigName, std::move(config.mDetail), config.mDirName);
+        ConfigFeedbackReceiver::GetInstance().FeedbackInstanceConfigStatus(config.mConfigName, ConfigFeedbackStatus::APPLIED);
     }
-    for (auto& configName : diff.mRemoved) {
+    for (const auto& configName : diff.mRemoved) {
         mInstanceConfigMap.erase(configName);
         ConfigFeedbackReceiver::GetInstance().FeedbackInstanceConfigStatus(configName, ConfigFeedbackStatus::DELETED);
     }
-    std::map<std::string, Json::Value> allConfigs;
-    for (auto& config : mInstanceConfigMap) {
-        for (const auto& key : config.second->mDetail->getMemberNames()) {
-            allConfigs[config.second->mDirName][key] = Json::Value((*config.second->mDetail)[key]);
-        }
-    }
-    AppConfig::GetInstance()->LoadInstanceConfig(allConfigs);
+    AppConfig::GetInstance()->LoadInstanceConfig(mInstanceConfigMap);
 }
 
 std::shared_ptr<InstanceConfig> InstanceConfigManager::FindConfigByName(const string& configName) const {

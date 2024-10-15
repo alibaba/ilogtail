@@ -23,6 +23,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "InstanceConfig.h"
 #include "common/Lock.h"
 #include "protobuf/sls/sls_logs.pb.h"
 
@@ -292,7 +293,7 @@ public:
     AppConfig();
     ~AppConfig(){};
 
-    void LoadInstanceConfig(std::map<std::string, Json::Value>&);
+    void LoadInstanceConfig(const std::map<std::string, std::shared_ptr<InstanceConfig>>&);
 
     static AppConfig* GetInstance() {
         static AppConfig singleton;

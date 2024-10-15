@@ -1719,15 +1719,15 @@ Json::Value AppConfig::mergeAllConfigs() {
     return mergedConfig;
 }
 
-void AppConfig::LoadInstanceConfig(std::map<std::string, Json::Value>& instanceConfig) {
+void AppConfig::LoadInstanceConfig(const std::map<std::string, std::shared_ptr<InstanceConfig>>& instanceConfig) {
     LOG_INFO(sLogger, ("LoadInstanceConfig", instanceConfig.size()));
     mRemoteConfig.clear();
     mLocalInstanceConfig.clear();
-    for (auto& config : instanceConfig) {
-        if (EndWith(config.first, AppConfig::sLocalConfigDir)) {
-            MergeJson(mLocalInstanceConfig, config.second);
+    for (const auto& config : instanceConfig) {
+        if (EndWith(config.second->mDirName, AppConfig::sLocalConfigDir)) {
+            MergeJson(mLocalInstanceConfig, config.second->GetConfig());
         } else {
-            MergeJson(mRemoteConfig, config.second);
+            MergeJson(mRemoteConfig, config.second->GetConfig());
         }
     }
     LOG_INFO(sLogger,
