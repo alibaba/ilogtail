@@ -106,6 +106,7 @@ func NewDockerComposeEnv() *DockerComposeEnv {
 	reportDir := root + "/report/"
 	_ = os.Mkdir(reportDir, 0750)
 	config.ConfigDir = reportDir + "config"
+	env.BootType = dockercompose.DockerComposeBootTypeE2E
 	return env
 }
 
