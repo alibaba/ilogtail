@@ -28,6 +28,7 @@
 #include "config/watcher/InstanceConfigWatcher.h"
 #include "file_server/ConfigManager.h"
 #include "file_server/reader/LogFileReader.h"
+#include "json/value.h"
 #include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/LogtailAlarm.h"
@@ -1702,54 +1703,50 @@ void AppConfig::UpdateFileTags() {
     return;
 }
 
-Json::Value AppConfig::mergeAllConfigs() {
-    Json::Value mergedConfig;
-    for (const auto& key : mLocalInstanceConfig.getMemberNames()) {
-        mergedConfig[key] = Json::Value(mLocalInstanceConfig[key]);
-    }
-    for (const auto& key : mEnvConfig.getMemberNames()) {
-        mergedConfig[key] = Json::Value(mEnvConfig[key]);
-    }
-    for (const auto& key : mRemoteConfig.getMemberNames()) {
-        mergedConfig[key] = Json::Value(mRemoteConfig[key]);
-    }
-    return mergedConfig;
-}
-
 void AppConfig::LoadInstanceConfig(const std::map<std::string, std::shared_ptr<InstanceConfig>>& instanceConfig) {
-    mRemoteConfig.clear();
-    mLocalInstanceConfig.clear();
+    Json::Value remoteInstanceConfig;
+    Json::Value localInstanceConfig;
     for (const auto& config : instanceConfig) {
         if (EndWith(config.second->mDirName, AppConfig::sLocalConfigDir)) {
-            MergeJson(mLocalInstanceConfig, config.second->GetConfig());
+            MergeJson(localInstanceConfig, config.second->GetConfig());
         } else {
-            MergeJson(mRemoteConfig, config.second->GetConfig());
+            MergeJson(remoteInstanceConfig, config.second->GetConfig());
         }
     }
-    auto mergedConfig = mergeAllConfigs();
-    if (mMergedConfig != mergedConfig) {
+    if (localInstanceConfig != mLocalInstanceConfig || mRemoteInstanceConfig != remoteInstanceConfig) {
         LOG_INFO(sLogger,
-                 ("load all local instanceConfig", mLocalInstanceConfig.toStyledString())("load all remote instanceConfig",
-                                                                                    mRemoteConfig.toStyledString()));
+                 ("load all local instanceConfig", localInstanceConfig.toStyledString())(
+                     "load all remote instanceConfig", remoteInstanceConfig.toStyledString()));
+        std::set<std::function<bool()>> callbackCall;
         for (const auto& callback : mCallbacks) {
             const std::string& key = callback.first;
-            if (!mMergedConfig.isMember(key) && !mergedConfig.isMember(key)) {
-                continue;
+            bool configChanged = false;
+            // 检查本地配置是否发生变化
+            if (localInstanceConfig.isMember(key) != mLocalInstanceConfig.isMember(key)
+                || (localInstanceConfig.isMember(key) && localInstanceConfig[key] != mLocalInstanceConfig[key])) {
+                configChanged = true;
             }
-            if (!mMergedConfig.isMember(key) && mergedConfig.isMember(key)) {
-                callback.second(false);
-            } else if (mMergedConfig.isMember(key) && !mergedConfig.isMember(key)) {
-                callback.second(false);
-            } else if (mMergedConfig[key] != mergedConfig[key]) {
-                callback.second(false);
+            // 检查远程配置是否发生变化
+            if (!configChanged
+                && (remoteInstanceConfig.isMember(key) != mRemoteInstanceConfig.isMember(key)
+                    || (remoteInstanceConfig.isMember(key)
+                        && remoteInstanceConfig[key] != mRemoteInstanceConfig[key]))) {
+                configChanged = true;
+            }
+            if (configChanged) {
+                callbackCall.insert(callback.second);
             }
         }
-        mMergedConfig = std::move(mergedConfig);
+        for (const auto& callback : callbackCall) {
+            callback();
+        }
+        mLocalInstanceConfig = std::move(localInstanceConfig);
+        mRemoteInstanceConfig = std::move(remoteInstanceConfig);
     }
 }
 
-void AppConfig::RegisterCallback(const std::string& key, std::function<bool(bool)> callback) {
-    mCallbacks[key] = std::move(callback);
+void AppConfig::RegisterCallback(const std::string& key, std::function<bool()> callback) {
+    mCallbacks[key] = callback;
 }
 
 template<typename T>
@@ -1758,7 +1755,7 @@ T AppConfig::MergeConfig(T defaultValue,
                          const std::function<bool(const std::string&, const T&)>& validateFn) {
     const auto& localInstanceConfig = AppConfig::GetInstance()->GetLocalInstanceConfig();
     const auto& envConfig = AppConfig::GetInstance()->GetEnvConfig();
-    const auto& remoteConfig = AppConfig::GetInstance()->GetRemoteConfig();
+    const auto& remoteInstanceConfig = AppConfig::GetInstance()->GetRemoteInstanceConfig();
 
     T res = defaultValue;
 
@@ -1790,7 +1787,7 @@ T AppConfig::MergeConfig(T defaultValue,
 
     tryMerge(localInstanceConfig);
     tryMerge(envConfig);
-    tryMerge(remoteConfig);
+    tryMerge(remoteInstanceConfig);
 
     return res;
 }

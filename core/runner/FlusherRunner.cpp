@@ -57,7 +57,7 @@ bool FlusherRunner::Init() {
     mLastCheckSendClientTime = time(nullptr);
     LoadModuleConfig(true);
     AppConfig::GetInstance()->RegisterCallback(
-        "max_bytes_per_sec", [this](auto && PH1) { return LoadModuleConfig(std::forward<decltype(PH1)>(PH1)); });
+        "max_bytes_per_sec", [this]() { return LoadModuleConfig(false); });
     return true;
 }
 

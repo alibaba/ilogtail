@@ -87,26 +87,26 @@ void InstanceConfigManagerUnittest::TestUpdateInstanceConfigs() {
     {
         AppConfig::GetInstance()->GetInstance()->LoadAppConfig(STRING_FLAG(ilogtail_config));
         AppConfig::GetInstance()->GetInstance()->RegisterCallback(
-            "bool_true", [this](auto && PH1) { return LoadModuleConfig(std::forward<decltype(PH1)>(PH1)); });
+            "bool_true", [this]() { return LoadModuleConfig(false); });
         AppConfig::GetInstance()->GetInstance()->RegisterCallback(
-            "int32_true", [this](auto && PH1) { return LoadModuleConfig(std::forward<decltype(PH1)>(PH1)); });
+            "int32_true", [this]() { return LoadModuleConfig(false); });
         AppConfig::GetInstance()->GetInstance()->RegisterCallback(
-            "int64_true", [this](auto && PH1) { return LoadModuleConfig(std::forward<decltype(PH1)>(PH1)); });
+            "int64_true", [this]() { return LoadModuleConfig(false); });
         AppConfig::GetInstance()->GetInstance()->RegisterCallback(
-            "double_true", [this](auto && PH1) { return LoadModuleConfig(std::forward<decltype(PH1)>(PH1)); });
+            "double_true", [this]() { return LoadModuleConfig(false); });
         AppConfig::GetInstance()->GetInstance()->RegisterCallback(
-            "string_true", [this](auto && PH1) { return LoadModuleConfig(std::forward<decltype(PH1)>(PH1)); });
+            "string_true", [this]() { return LoadModuleConfig(false); });
 
         AppConfig::GetInstance()->GetInstance()->RegisterCallback(
-            "bool_false", [this](auto && PH1) { return LoadModuleConfig(std::forward<decltype(PH1)>(PH1)); });
+            "bool_false", [this]() { return LoadModuleConfig(false); });
         AppConfig::GetInstance()->GetInstance()->RegisterCallback(
-            "int32_false", [this](auto && PH1) { return LoadModuleConfig(std::forward<decltype(PH1)>(PH1)); });
+            "int32_false", [this]() { return LoadModuleConfig(false); });
         AppConfig::GetInstance()->GetInstance()->RegisterCallback(
-            "int64_false", [this](auto && PH1) { return LoadModuleConfig(std::forward<decltype(PH1)>(PH1)); });
+            "int64_false", [this]() { return LoadModuleConfig(false); });
         AppConfig::GetInstance()->GetInstance()->RegisterCallback(
-            "double_false", [this](auto && PH1) { return LoadModuleConfig(std::forward<decltype(PH1)>(PH1)); });
+            "double_false", [this]() { return LoadModuleConfig(false); });
         AppConfig::GetInstance()->GetInstance()->RegisterCallback(
-            "string_false", [this](auto && PH1) { return LoadModuleConfig(std::forward<decltype(PH1)>(PH1)); });
+            "string_false", [this]() { return LoadModuleConfig(false); });
     }
     FlusherRunner::GetInstance()->Init();
     // Added

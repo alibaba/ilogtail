@@ -78,10 +78,10 @@ private:
 
     Json::Value mLocalInstanceConfig;
     Json::Value mEnvConfig;
-    Json::Value mRemoteConfig;
+    Json::Value mRemoteInstanceConfig;
     Json::Value mMergedConfig;
 
-    std::map<std::string, std::function<bool(bool)>> mCallbacks;
+    std::map<std::string, std::function<bool()>> mCallbacks;
 
     DoubleBuffer<std::vector<sls_logs::LogTag>> mFileTags;
     DoubleBuffer<std::map<std::string, std::string>> mAgentAttrs;
@@ -307,7 +307,7 @@ public:
     // 获取全局参数方法
     const Json::Value& GetLocalInstanceConfig() { return mLocalInstanceConfig; };
     const Json::Value& GetEnvConfig() { return mEnvConfig; };
-    const Json::Value& GetRemoteConfig() { return mRemoteConfig; };
+    const Json::Value& GetRemoteInstanceConfig() { return mRemoteInstanceConfig; };
 
     template <typename T>
     T MergeConfig(T defaultValue,
@@ -332,7 +332,7 @@ public:
 
 
     // 注册回调
-    void RegisterCallback(const std::string& key, std::function<bool(bool)> callback);
+    void RegisterCallback(const std::string& key, std::function<bool()> callback);
 
     // 合并配置
     std::string Merge(Json::Value& localConf,
