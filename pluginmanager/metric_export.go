@@ -17,6 +17,9 @@ import (
 	goruntimemetrics "runtime/metrics"
 	"strconv"
 	"strings"
+
+	"github.com/alibaba/ilogtail/pkg/helper"
+	"github.com/alibaba/ilogtail/pkg/helper/k8smeta"
 )
 
 const (
@@ -50,6 +53,8 @@ func GetGoDirectMetrics() []map[string]string {
 	metrics := make([]map[string]string, 0)
 	// go plugin metrics
 	metrics = append(metrics, GetGoPluginMetrics()...)
+	// k8s meta metrics
+	metrics = append(metrics, k8smeta.GetMetaManagerMetrics()...)
 	return metrics
 }
 
@@ -71,9 +76,11 @@ func GetGoCppProvidedMetrics() []map[string]string {
 // go 插件指标，直接输出
 func GetGoPluginMetrics() []map[string]string {
 	metrics := make([]map[string]string, 0)
+	LogtailConfigLock.RLock()
 	for _, config := range LogtailConfig {
 		metrics = append(metrics, config.Context.ExportMetricRecords()...)
 	}
+	LogtailConfigLock.RUnlock()
 	return metrics
 }
 
@@ -83,12 +90,10 @@ func GetAgentStat() []map[string]string {
 	metric := map[string]string{}
 	// key is the metric key in runtime/metrics, value is agent's metric key
 	metricNames := map[string]string{
-		// cpu
-		// "": "agent_go_cpu_percent",
 		// mem. All memory mapped by the Go runtime into the current process as read-write. Note that this does not include memory mapped by code called via cgo or via the syscall package. Sum of all metrics in /memory/classes.
-		"/memory/classes/total:bytes": "agent_go_memory_used_mb",
+		"/memory/classes/total:bytes": helper.MetricAgentMemoryGo,
 		// go routines cnt. Count of live goroutines.
-		"/sched/goroutines:goroutines": "agent_go_routines_total",
+		"/sched/goroutines:goroutines": helper.MetricAgentGoRoutinesTotal,
 	}
 
 	// metrics to read from runtime/metrics

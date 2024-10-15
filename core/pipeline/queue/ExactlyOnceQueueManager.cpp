@@ -16,11 +16,11 @@
 
 #include "common/Flags.h"
 #include "common/TimeUtil.h"
-#include "plugin/input/InputFeedbackInterfaceRegistry.h"
-#include "plugin/input/InputFile.h"
 #include "logger/Logger.h"
 #include "pipeline/queue/ProcessQueueManager.h"
 #include "pipeline/queue/QueueKeyManager.h"
+#include "plugin/input/InputFeedbackInterfaceRegistry.h"
+#include "plugin/input/InputFile.h"
 
 DEFINE_FLAG_INT32(logtail_queue_gc_threshold_sec, "2min", 2 * 60);
 DEFINE_FLAG_INT64(logtail_queue_max_used_time_per_round_in_msec, "500ms", 500);
@@ -148,20 +148,26 @@ bool ExactlyOnceQueueManager::IsAllProcessQueueEmpty() const {
     return true;
 }
 
-void ExactlyOnceQueueManager::InvalidatePopProcessQueue(const string& configName) {
+void ExactlyOnceQueueManager::DisablePopProcessQueue(const string& configName, bool isPipelineRemoving) {
     lock_guard<mutex> lock(mProcessQueueMux);
     for (auto& iter : mProcessQueues) {
         if (iter.second->GetConfigName() == configName) {
-            iter.second->InvalidatePop();
+            iter.second->DisablePop();
+            if (!isPipelineRemoving) {
+                const auto& p = PipelineManager::GetInstance()->FindConfigByName(configName);
+                if (p) {
+                    iter.second->SetPipelineForItems(p);
+                }
+            }
         }
     }
 }
 
-void ExactlyOnceQueueManager::ValidatePopProcessQueue(const string& configName) {
+void ExactlyOnceQueueManager::EnablePopProcessQueue(const string& configName) {
     lock_guard<mutex> lock(mProcessQueueMux);
     for (auto& iter : mProcessQueues) {
         if (iter.second->GetConfigName() == configName) {
-            iter.second->ValidatePop();
+            iter.second->EnablePop();
         }
     }
 }
@@ -178,10 +184,10 @@ int ExactlyOnceQueueManager::PushSenderQueue(QueueKey key, unique_ptr<SenderQueu
     return 0;
 }
 
-void ExactlyOnceQueueManager::GetAllAvailableSenderQueueItems(std::vector<SenderQueueItem*>& item, bool withLimits) {
+void ExactlyOnceQueueManager::GetAvailableSenderQueueItems(std::vector<SenderQueueItem*>& item, int32_t itemsCntLimit) {
     lock_guard<mutex> lock(mSenderQueueMux);
     for (auto iter = mSenderQueues.begin(); iter != mSenderQueues.end(); ++iter) {
-        iter->second.GetAllAvailableItems(item, withLimits);
+        iter->second.GetAvailableItems(item, itemsCntLimit);
     }
 }
 
@@ -271,6 +277,14 @@ uint32_t ExactlyOnceQueueManager::GetInvalidProcessQueueCnt() const {
 uint32_t ExactlyOnceQueueManager::GetProcessQueueCnt() const {
     lock_guard<mutex> lock(mProcessQueueMux);
     return mProcessQueues.size();
+}
+
+void ExactlyOnceQueueManager::SetPipelineForSenderItems(QueueKey key, const std::shared_ptr<Pipeline>& p) {
+    lock_guard<mutex> lock(mSenderQueueMux);
+    auto iter = mSenderQueues.find(key);
+    if (iter != mSenderQueues.end()) {
+        iter->second.SetPipelineForItems(p);
+    }
 }
 
 #ifdef APSARA_UNIT_TEST_MAIN

@@ -35,7 +35,8 @@ public:
 
     bool Push(std::unique_ptr<SenderQueueItem>&& item) override;
     bool Remove(SenderQueueItem* item) override;
-    void GetAllAvailableItems(std::vector<SenderQueueItem*>& items, bool withLimits = true) override;
+    void GetAvailableItems(std::vector<SenderQueueItem*>& items, int32_t limit) override;
+    void SetPipelineForItems(const std::shared_ptr<Pipeline>& p) const override;
 
 private:
     size_t Size() const override { return mSize; }
@@ -45,9 +46,14 @@ private:
     size_t mRead = 0;
     size_t mSize = 0;
 
+    CounterPtr mFetchedTimesCnt;
+    CounterPtr mFetchedItemsCnt;
+    
+
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class SenderQueueUnittest;
     friend class SenderQueueManagerUnittest;
+    friend class FlusherUnittest;
 #endif
 };
 

@@ -24,20 +24,21 @@
 #include <unordered_set>
 #include <vector>
 
+#include "common/compression/Compressor.h"
+#include "models/PipelineEventGroup.h"
 #include "pipeline/batch/BatchStatus.h"
 #include "pipeline/batch/Batcher.h"
-#include "pipeline/compression/Compressor.h"
-#include "models/PipelineEventGroup.h"
-#include "pipeline/plugin/interface/HttpFlusher.h"
 #include "pipeline/limiter/ConcurrencyLimiter.h"
+#include "pipeline/plugin/interface/HttpFlusher.h"
 #include "pipeline/serializer/SLSSerializer.h"
+#include "protobuf/sls/sls_logs.pb.h"
 
 namespace logtail {
 
 class FlusherSLS : public HttpFlusher {
 public:
-    enum class TelemetryType { LOG, METRIC };
 
+    static std::shared_ptr<ConcurrencyLimiter> GetLogstoreConcurrencyLimiter(const std::string& project, const std::string& logstore);
     static std::shared_ptr<ConcurrencyLimiter> GetProjectConcurrencyLimiter(const std::string& project);
     static std::shared_ptr<ConcurrencyLimiter> GetRegionConcurrencyLimiter(const std::string& region);
     static void ClearInvalidConcurrencyLimiters();
@@ -77,7 +78,7 @@ public:
     std::string mRegion;
     std::string mEndpoint;
     std::string mAliuid;
-    TelemetryType mTelemetryType = TelemetryType::LOG;
+    sls_logs::SlsTelemetryType mTelemetryType = sls_logs::SlsTelemetryType::SLS_TELEMETRY_TYPE_LOGS;
     std::vector<std::string> mShardHashKeys;
     uint32_t mMaxSendRate = 0; // preserved only for exactly once
     uint32_t mFlowControlExpireTime = 0;
@@ -98,6 +99,7 @@ private:
     static std::mutex sMux;
     static std::unordered_map<std::string, std::weak_ptr<ConcurrencyLimiter>> sProjectConcurrencyLimiterMap;
     static std::unordered_map<std::string, std::weak_ptr<ConcurrencyLimiter>> sRegionConcurrencyLimiterMap;
+    static std::unordered_map<std::string, std::weak_ptr<ConcurrencyLimiter>> sLogstoreConcurrencyLimiterMap;
 
     static std::mutex sDefaultRegionLock;
     static std::string sDefaultRegion;
@@ -124,6 +126,19 @@ private:
     Batcher<SLSEventBatchStatus> mBatcher;
     std::unique_ptr<EventGroupSerializer> mGroupSerializer;
     std::unique_ptr<Serializer<std::vector<CompressedLogGroup>>> mGroupListSerializer;
+
+    CounterPtr mSendCnt;
+    CounterPtr mSendDoneCnt;
+    CounterPtr mSuccessCnt;
+    CounterPtr mNetworkErrorCnt;
+    CounterPtr mServerErrorCnt;
+    CounterPtr mShardWriteQuotaErrorCnt;
+    CounterPtr mProjectQuotaErrorCnt;
+    CounterPtr mUnauthErrorCnt;
+    CounterPtr mParamsErrorCnt;
+    CounterPtr mSequenceIDErrorCnt;
+    CounterPtr mRequestExpiredErrorCnt;
+    CounterPtr mOtherErrorCnt;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class FlusherSLSUnittest;

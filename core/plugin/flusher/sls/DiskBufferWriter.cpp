@@ -27,7 +27,7 @@
 #include "protobuf/sls/sls_logs.pb.h"
 #include "logger/Logger.h"
 #include "monitor/LogtailAlarm.h"
-#include "profile_sender/ProfileSender.h"
+#include "provider/Provider.h"
 #include "pipeline/queue/QueueKeyManager.h"
 #include "pipeline/queue/SLSSenderQueueItem.h"
 #include "sdk/Exception.h"
@@ -46,7 +46,6 @@ using namespace std;
 
 namespace logtail {
 
-const string DiskBufferWriter::BUFFER_FILE_NAME_PREFIX = "logtail_buffer_file_";
 const int32_t DiskBufferWriter::BUFFER_META_BASE_SIZE = 65536;
 
 void DiskBufferWriter::Init() {
@@ -207,7 +206,7 @@ void DiskBufferWriter::BufferSenderThread() {
 void DiskBufferWriter::SetBufferFilePath(const std::string& bufferfilepath) {
     lock_guard<mutex> lock(mBufferFileLock);
     if (bufferfilepath == "") {
-        mBufferFilePath = GetProcessExecutionDir();
+        mBufferFilePath = GetAgentDataDir();
     } else
         mBufferFilePath = bufferfilepath;
 
@@ -234,7 +233,7 @@ std::string DiskBufferWriter::GetBufferFileName() {
 bool DiskBufferWriter::LoadFileToSend(time_t timeLine, std::vector<std::string>& filesToSend) {
     string bufferFilePath = GetBufferFilePath();
     if (!CheckExistance(bufferFilePath)) {
-        if (GetProcessExecutionDir().find(bufferFilePath) != 0) {
+        if (GetAgentDataDir().find(bufferFilePath) != 0) {
             LOG_WARNING(sLogger,
                         ("buffer file path not exist", bufferFilePath)("logtail will not recreate external path",
                                                                        "local secondary does not work"));
@@ -262,9 +261,9 @@ bool DiskBufferWriter::LoadFileToSend(time_t timeLine, std::vector<std::string>&
     fsutil::Entry ent;
     while ((ent = dir.ReadNext())) {
         string filename = ent.Name();
-        if (filename.find(BUFFER_FILE_NAME_PREFIX) == 0) {
+        if (filename.find(GetSendBufferFileNamePrefix()) == 0) {
             try {
-                int32_t filetime = StringTo<int32_t>(filename.substr(BUFFER_FILE_NAME_PREFIX.size()));
+                int32_t filetime = StringTo<int32_t>(filename.substr(GetSendBufferFileNamePrefix().size()));
                 if (filetime < timeLine)
                     filesToSend.push_back(filename);
             } catch (...) {
@@ -388,6 +387,9 @@ bool DiskBufferWriter::ReadNextEncryption(int32_t& pos,
     if (!bufferMeta.has_compresstype()) {
         bufferMeta.set_compresstype(sls_logs::SlsCompressType::SLS_CMP_LZ4);
     }
+    if (!bufferMeta.has_telemetrytype()) {
+        bufferMeta.set_telemetrytype(sls_logs::SLS_TELEMETRY_TYPE_LOGS);
+    }
 
     buffer = new char[meta.mEncryptionSize + 1];
     nbytes = fread(buffer, sizeof(char), meta.mEncryptionSize, fin);
@@ -469,6 +471,7 @@ void DiskBufferWriter::SendEncryptionBuffer(const std::string& filename, int32_t
                         bufferMeta.set_datatype(int(RawDataType::EVENT_GROUP));
                         bufferMeta.set_rawsize(meta.mLogDataSize);
                         bufferMeta.set_compresstype(sls_logs::SLS_CMP_LZ4);
+                        bufferMeta.set_telemetrytype(sls_logs::SLS_TELEMETRY_TYPE_LOGS);
                     }
                 }
                 if (!sendResult) {
@@ -539,7 +542,7 @@ bool DiskBufferWriter::CreateNewFile() {
         }
     }
     mBufferDivideTime = currentTime;
-    SetBufferFileName(GetBufferFilePath() + BUFFER_FILE_NAME_PREFIX + ToString(currentTime));
+    SetBufferFileName(GetBufferFilePath() + GetSendBufferFileNamePrefix() + ToString(currentTime));
     return true;
 }
 
@@ -650,6 +653,7 @@ bool DiskBufferWriter::SendToBufferFile(SenderQueueItem* dataPtr) {
     bufferMeta.set_rawsize(data->mRawSize);
     bufferMeta.set_shardhashkey(data->mShardHashKey);
     bufferMeta.set_compresstype(ConvertCompressType(flusher->GetCompressType()));
+    bufferMeta.set_telemetrytype(flusher->mTelemetryType);
     string encodedInfo;
     bufferMeta.SerializeToString(&encodedInfo);
 
@@ -727,7 +731,14 @@ SendResult DiskBufferWriter::SendToNetSync(sdk::Client* sendClient,
         ++retryTimes;
         try {
             if (bufferMeta.datatype() == int(RawDataType::EVENT_GROUP)) {
-                if (bufferMeta.has_shardhashkey() && !bufferMeta.shardhashkey().empty())
+                if (bufferMeta.has_telemetrytype()
+                    && bufferMeta.telemetrytype() == sls_logs::SLS_TELEMETRY_TYPE_METRICS) {
+                    sendClient->PostMetricStoreLogs(bufferMeta.project(),
+                                                    bufferMeta.logstore(),
+                                                    bufferMeta.compresstype(),
+                                                    logData,
+                                                    bufferMeta.rawsize());
+                } else if (bufferMeta.has_shardhashkey() && !bufferMeta.shardhashkey().empty())
                     sendClient->PostLogStoreLogs(bufferMeta.project(),
                                                  bufferMeta.logstore(),
                                                  bufferMeta.compresstype(),
@@ -765,7 +776,7 @@ SendResult DiskBufferWriter::SendToNetSync(sdk::Client* sendClient,
                                                            bufferMeta.logstore(),
                                                            "");
                 // no region
-                if (!ProfileSender::GetInstance()->IsProfileData("", bufferMeta.project(), bufferMeta.logstore()))
+                if (!GetProfileSender()->IsProfileData("", bufferMeta.project(), bufferMeta.logstore()))
                     LOG_ERROR(sLogger,
                               ("send data to SLS fail, error_code", errorCode)("error_message", ex.GetMessage())(
                                   "endpoint", sendClient->GetRawSlsHost())("projectName", bufferMeta.project())(

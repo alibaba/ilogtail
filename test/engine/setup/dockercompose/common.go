@@ -20,9 +20,11 @@ import (
 	"sync"
 )
 
+type DockerComposeBootType = string
+
 const (
-	dockerComposeTypeE2E       = "e2e"
-	dockerComposeTypeBenchmark = "benchmark"
+	DockerComposeBootTypeE2E       DockerComposeBootType = "e2e"
+	DockerComposeBootTypeBenchmark DockerComposeBootType = "benchmark"
 )
 
 var networkMapping = make(map[string]string)
@@ -38,13 +40,13 @@ type Booter interface {
 }
 
 // Load configuration to the Booter.
-func Load(loadType string) error {
+func Load(bootType DockerComposeBootType) error {
 	mu.Lock()
 	defer mu.Unlock()
-	switch loadType {
-	case dockerComposeTypeE2E:
+	switch bootType {
+	case DockerComposeBootTypeE2E:
 		instance = NewComposeBooter()
-	case dockerComposeTypeBenchmark:
+	case DockerComposeBootTypeBenchmark:
 		instance = NewComposeBenchmarkBooter()
 	default:
 		return errors.New("invalid load type")

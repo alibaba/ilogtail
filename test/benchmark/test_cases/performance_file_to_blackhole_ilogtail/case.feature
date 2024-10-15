@@ -5,7 +5,7 @@ Feature: performance file to blackhole iLogtail
   @e2e-performance @docker-compose
   Scenario: PerformanceFileToBlackholeiLogtail
     Given {docker-compose} environment
-    Given docker-compose type {e2e}
+    Given docker-compose boot type {e2e}
     Given {performance-file-to-blackhole-ilogtail-case} local config as below
     """
     enable: true

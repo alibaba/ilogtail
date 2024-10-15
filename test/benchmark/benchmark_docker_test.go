@@ -17,12 +17,14 @@ import (
 	"testing"
 
 	"github.com/cucumber/godog"
+
+	"github.com/alibaba/ilogtail/test/engine"
 )
 
 func TestE2EOnDockerComposePerformance(t *testing.T) {
 	suite := godog.TestSuite{
 		Name:                "E2EOnDockerCompose",
-		ScenarioInitializer: scenarioInitializer,
+		ScenarioInitializer: engine.ScenarioInitializer,
 		Options: &godog.Options{
 			Format:   "pretty",
 			Paths:    []string{"test_cases"},

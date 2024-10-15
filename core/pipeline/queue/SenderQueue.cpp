@@ -24,18 +24,20 @@ SenderQueue::SenderQueue(
     size_t cap, size_t low, size_t high, QueueKey key, const string& flusherId, const PipelineContext& ctx)
     : QueueInterface(key, cap, ctx), BoundedSenderQueueInterface(cap, low, high, key, flusherId, ctx) {
     mQueue.resize(cap);
-    WriteMetrics::GetInstance()->CommitMetricsRecordRef(mMetricsRecordRef);
+    mFetchedTimesCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_FETCH_TIMES_TOTAL);
+    mFetchedItemsCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_FETCHED_ITEMS_TOTAL);    
+    WriteMetrics::GetInstance()->CommitMetricsRecordRef(mMetricsRecordRef);    
 }
 
 bool SenderQueue::Push(unique_ptr<SenderQueueItem>&& item) {
     item->mEnqueTime = chrono::system_clock::now();
     auto size = item->mData.size();
 
-    mInItemsCnt->Add(1);
+    mInItemsTotal->Add(1);
     mInItemDataSizeBytes->Add(size);
 
     if (Full()) {
-        mExtraBuffer.push(std::move(item));
+        mExtraBuffer.push_back(std::move(item));
 
         mExtraBufferSize->Set(mExtraBuffer.size());
         mExtraBufferDataSizeBytes->Add(size);
@@ -55,7 +57,7 @@ bool SenderQueue::Push(unique_ptr<SenderQueueItem>&& item) {
     ++mSize;
     ChangeStateIfNeededAfterPush();
 
-    mQueueSize->Set(Size());
+    mQueueSizeTotal->Set(Size());
     mQueueDataSizeByte->Add(size);
     mValidToPushFlag->Set(IsValidToPush());
     return true;
@@ -65,6 +67,7 @@ bool SenderQueue::Remove(SenderQueueItem* item) {
     if (item == nullptr) {
         return false;
     }
+    
     size_t size = 0;
     chrono::system_clock::time_point enQueuTime;
     auto index = mRead;
@@ -84,14 +87,14 @@ bool SenderQueue::Remove(SenderQueueItem* item) {
     }
     --mSize;
 
-    mOutItemsCnt->Add(1);
+    mOutItemsTotal->Add(1);
     mTotalDelayMs->Add(chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - enQueuTime).count());
     mQueueDataSizeByte->Sub(size);
 
     if (!mExtraBuffer.empty()) {
         auto newSize = mExtraBuffer.front()->mData.size();
         Push(std::move(mExtraBuffer.front()));
-        mExtraBuffer.pop();
+        mExtraBuffer.pop_front();
 
         mExtraBufferSize->Set(mExtraBuffer.size());
         mExtraBufferDataSizeBytes->Sub(newSize);
@@ -101,43 +104,82 @@ bool SenderQueue::Remove(SenderQueueItem* item) {
         GiveFeedback();
     }
 
-    mQueueSize->Set(Size());
+    mQueueSizeTotal->Set(Size());
     mValidToPushFlag->Set(IsValidToPush());
     return true;
 }
 
-void SenderQueue::GetAllAvailableItems(vector<SenderQueueItem*>& items, bool withLimits) {
+
+void SenderQueue::GetAvailableItems(vector<SenderQueueItem*>& items, int32_t limit) {
+    mFetchedTimesCnt->Add(1);
     if (Empty()) {
         return;
     }
+    if (limit < 0) {
+        for (auto index = mRead; index < mWrite; ++index) {
+            SenderQueueItem* item = mQueue[index % mCapacity].get();
+            if (item == nullptr) {
+                continue;
+            }
+            if (item->mStatus.Get() == SendingStatus::IDLE) {
+                item->mStatus.Set(SendingStatus::SENDING);
+                items.emplace_back(item);
+            }
+        }
+        return;
+    } 
+
     for (auto index = mRead; index < mWrite; ++index) {
         SenderQueueItem* item = mQueue[index % mCapacity].get();
         if (item == nullptr) {
             continue;
         }
-        if (withLimits) {
-            if (mRateLimiter && !mRateLimiter->IsValidToPop()) {
+        if (limit == 0) {
+            return;
+        }
+        if (mRateLimiter && !mRateLimiter->IsValidToPop()) {
+            mRejectedByRateLimiterCnt->Add(1);
+            return;
+        }
+        for (auto& limiter : mConcurrencyLimiters) {
+            if (!limiter.first->IsValidToPop()) {
+                limiter.second->Add(1);
                 return;
             }
+        }
+        if (item->mStatus.Get() == SendingStatus::IDLE) {
+            mFetchedItemsCnt->Add(1);
+            --limit;
+            item->mStatus.Set(SendingStatus::SENDING);
+            items.emplace_back(item);
             for (auto& limiter : mConcurrencyLimiters) {
-                if (!limiter->IsValidToPop()) {
-                    return;
+                if (limiter.first != nullptr) {
+                    limiter.first->PostPop();
                 }
+            }
+            if (mRateLimiter) {
+                mRateLimiter->PostPop(item->mRawSize);
             }
         }
-        if (item->mStatus == SendingStatus::IDLE) {
-            item->mStatus = SendingStatus::SENDING;
-            items.emplace_back(item);
-            if (withLimits) {
-                for (auto& limiter : mConcurrencyLimiters) {
-                    if (limiter != nullptr) {
-                        limiter->PostPop();
-                    }
-                }
-                if (mRateLimiter) {
-                    mRateLimiter->PostPop(item->mRawSize);
-                }
-            }
+    }
+}
+
+void SenderQueue::SetPipelineForItems(const std::shared_ptr<Pipeline>& p) const {
+    if (Empty()) {
+        return;
+    }
+    for (auto index = mRead; index < mWrite; ++index) {
+        auto realIndex = index % mCapacity;
+        if (!mQueue[realIndex]) {
+            continue;
+        }
+        if (!mQueue[realIndex]->mPipeline) {
+            mQueue[realIndex]->mPipeline = p;
+        }
+    }
+    for (auto& item : mExtraBuffer) {
+        if (!item->mPipeline) {
+            item->mPipeline = p;
         }
     }
 }

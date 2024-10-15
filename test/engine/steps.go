@@ -10,6 +10,7 @@ import (
 	"github.com/alibaba/ilogtail/test/engine/cleanup"
 	"github.com/alibaba/ilogtail/test/engine/control"
 	"github.com/alibaba/ilogtail/test/engine/setup"
+	"github.com/alibaba/ilogtail/test/engine/setup/monitor"
 	"github.com/alibaba/ilogtail/test/engine/setup/subscriber"
 	"github.com/alibaba/ilogtail/test/engine/trigger"
 	"github.com/alibaba/ilogtail/test/engine/verify"
@@ -26,11 +27,13 @@ func ScenarioInitializer(ctx *godog.ScenarioContext) {
 	ctx.Given(`^remove http config \{(.*)\}`, control.RemoveHTTPConfig)
 	ctx.Given(`^subcribe data from \{(\S+)\} with config`, subscriber.InitSubscriber)
 	ctx.Given(`^mkdir \{(.*)\}`, setup.Mkdir)
+	ctx.Given(`^docker-compose boot type \{(\S+)\}$`, setup.SetDockerComposeBootType)
 
 	// When
 	ctx.When(`^generate \{(\d+)\} regex logs to file \{(.*)\}, with interval \{(\d+)\}ms$`, trigger.RegexSingle)
 	ctx.When(`^generate \{(\d+)\} regex gbk logs to file \{(.*)\}, with interval \{(\d+)\}ms$`, trigger.RegexSingleGBK)
 	ctx.When(`^generate \{(\d+)\} http logs, with interval \{(\d+)\}ms, url: \{(.*)\}, method: \{(.*)\}, body:`, trigger.HTTP)
+	ctx.When(`^generate logs to file, speed \{(\d+)\}MB/s, total \{(\d+)\}min, to file \{(.*)\}, template`, trigger.GenerateLogToFile)
 	ctx.When(`^add k8s label \{(.*)\}`, control.AddLabel)
 	ctx.When(`^remove k8s label \{(.*)\}`, control.RemoveLabel)
 	ctx.When(`^start docker-compose \{(\S+)\}`, setup.StartDockerComposeEnv)
@@ -40,6 +43,7 @@ func ScenarioInitializer(ctx *godog.ScenarioContext) {
 	ctx.When(`^query through \{(.*)\}`, control.SetQuery)
 	ctx.When(`^begin trigger`, trigger.BeginTrigger)
 	ctx.When(`^execute \{(\d+)\} commands to generate file security events on files \{(.*)\}$`, trigger.TrigerFileSecurityEvents)
+	ctx.When(`^start monitor \{(\S+)\}`, monitor.StartMonitor)
 
 	// Then
 	ctx.Then(`^there is \{(\d+)\} logs$`, verify.LogCount)

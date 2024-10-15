@@ -15,6 +15,7 @@
 #include <memory>
 
 #include "models/PipelineEventGroup.h"
+#include "pipeline/PipelineManager.h"
 #include "pipeline/queue/ExactlyOnceQueueManager.h"
 #include "pipeline/queue/QueueKeyManager.h"
 #include "pipeline/queue/SLSSenderQueueItem.h"
@@ -35,7 +36,7 @@ public:
     void TestPushProcessQueue();
     void TestIsAllProcessQueueEmpty();
     void TestPushSenderQueue();
-    void TestGetAllAvailableSenderQueueItems();
+    void TestGetAvailableSenderQueueItems();
     void TestRemoveSenderItem();
     void TestIsAllSenderQueueEmpty();
     void OnPipelineUpdate();
@@ -201,7 +202,7 @@ void ExactlyOnceQueueManagerUnittest::TestPushSenderQueue() {
     APSARA_TEST_EQUAL(2, sManager->PushSenderQueue(1, GenerateSenderItem()));
 }
 
-void ExactlyOnceQueueManagerUnittest::TestGetAllAvailableSenderQueueItems() {
+void ExactlyOnceQueueManagerUnittest::TestGetAvailableSenderQueueItems() {
     vector<RangeCheckpointPtr> checkpoints1;
     for (size_t i = 0; i < 2; ++i) {
         auto cpt = make_shared<RangeCheckpoint>();
@@ -231,20 +232,21 @@ void ExactlyOnceQueueManagerUnittest::TestGetAllAvailableSenderQueueItems() {
     {
         // no limits
         vector<SenderQueueItem*> items;
-        sManager->GetAllAvailableSenderQueueItems(items, false);
+        sManager->GetAvailableSenderQueueItems(items, -1);
         APSARA_TEST_EQUAL(4U, items.size());
         for (auto& item : items) {
-            item->mStatus = SendingStatus::IDLE;
+            item->mStatus.Set(SendingStatus::IDLE);
         }
     }
     auto& regionConcurrencyLimiter = sManager->mSenderQueues.at(0).mConcurrencyLimiters[0];
     {
         // with limits, limited by concurrency limiter
-        regionConcurrencyLimiter->SetLimit(3);
+        regionConcurrencyLimiter.first->SetCurrentLimit(3);
+        regionConcurrencyLimiter.first->SetInSendingCount(0);
         vector<SenderQueueItem*> items;
-        sManager->GetAllAvailableSenderQueueItems(items);
+        sManager->GetAvailableSenderQueueItems(items, 80);
         APSARA_TEST_EQUAL(3U, items.size());
-        APSARA_TEST_EQUAL(0, regionConcurrencyLimiter->GetLimit());
+        APSARA_TEST_EQUAL(3, regionConcurrencyLimiter.first->GetInSendingCount());
     }
 }
 
@@ -278,16 +280,66 @@ void ExactlyOnceQueueManagerUnittest::TestIsAllSenderQueueEmpty() {
 void ExactlyOnceQueueManagerUnittest::OnPipelineUpdate() {
     PipelineContext ctx;
     ctx.SetConfigName("test_config");
-    sManager->CreateOrUpdateQueue(0, 0, ctx, sCheckpoints);
     sManager->CreateOrUpdateQueue(1, 0, ctx, sCheckpoints);
+    sManager->CreateOrUpdateQueue(2, 0, ctx, sCheckpoints);
 
-    sManager->InvalidatePopProcessQueue("test_config");
-    APSARA_TEST_FALSE(sManager->mProcessQueues[0]->mValidToPop);
+    auto pipeline1 = make_shared<Pipeline>();
+    PipelineManager::GetInstance()->mPipelineNameEntityMap["test_config"] = pipeline1;
+
+    auto item1 = GenerateProcessItem();
+    auto p1 = item1.get();
+    sManager->PushProcessQueue(1, std::move(item1));
+
+    auto item2 = GenerateProcessItem();
+    auto p2 = item2.get();
+    sManager->PushProcessQueue(2, std::move(item2));
+
+    sManager->DisablePopProcessQueue("test_config", false);
+    APSARA_TEST_FALSE(ExactlyOnceQueueManager::GetInstance()->mProcessQueues[1]->mValidToPop);
+    APSARA_TEST_FALSE(ExactlyOnceQueueManager::GetInstance()->mProcessQueues[2]->mValidToPop);
+    APSARA_TEST_EQUAL(pipeline1, p1->mPipeline);
+    APSARA_TEST_EQUAL(pipeline1, p2->mPipeline);
+
+    auto item3 = GenerateProcessItem();
+    auto p3 = item3.get();
+    sManager->PushProcessQueue(1, std::move(item3));
+
+    auto item4 = GenerateProcessItem();
+    auto p4 = item4.get();
+    sManager->PushProcessQueue(2, std::move(item4));
+
+    auto pipeline2 = make_shared<Pipeline>();
+    PipelineManager::GetInstance()->mPipelineNameEntityMap["test_config"] = pipeline2;
+
+    sManager->DisablePopProcessQueue("test_config", false);
     APSARA_TEST_FALSE(sManager->mProcessQueues[1]->mValidToPop);
+    APSARA_TEST_FALSE(sManager->mProcessQueues[2]->mValidToPop);
+    APSARA_TEST_EQUAL(pipeline1, p1->mPipeline);
+    APSARA_TEST_EQUAL(pipeline1, p2->mPipeline);
+    APSARA_TEST_EQUAL(pipeline2, p3->mPipeline);
+    APSARA_TEST_EQUAL(pipeline2, p4->mPipeline);
 
-    sManager->ValidatePopProcessQueue("test_config");
-    APSARA_TEST_TRUE(sManager->mProcessQueues[0]->mValidToPop);
+    auto item5 = GenerateProcessItem();
+    auto p5 = item5.get();
+    sManager->PushProcessQueue(1, std::move(item5));
+
+    auto item6 = GenerateProcessItem();
+    auto p6 = item6.get();
+    sManager->PushProcessQueue(2, std::move(item6));
+
+    sManager->DisablePopProcessQueue("test_config", true);
+    APSARA_TEST_FALSE(sManager->mProcessQueues[1]->mValidToPop);
+    APSARA_TEST_FALSE(sManager->mProcessQueues[2]->mValidToPop);
+    APSARA_TEST_EQUAL(pipeline1, p1->mPipeline);
+    APSARA_TEST_EQUAL(pipeline1, p2->mPipeline);
+    APSARA_TEST_EQUAL(pipeline2, p3->mPipeline);
+    APSARA_TEST_EQUAL(pipeline2, p4->mPipeline);
+    APSARA_TEST_EQUAL(nullptr, p5->mPipeline);
+    APSARA_TEST_EQUAL(nullptr, p6->mPipeline);
+
+    sManager->EnablePopProcessQueue("test_config");
     APSARA_TEST_TRUE(sManager->mProcessQueues[1]->mValidToPop);
+    APSARA_TEST_TRUE(sManager->mProcessQueues[2]->mValidToPop);
 }
 
 unique_ptr<ProcessQueueItem> ExactlyOnceQueueManagerUnittest::GenerateProcessItem() {
@@ -306,7 +358,7 @@ UNIT_TEST_CASE(ExactlyOnceQueueManagerUnittest, TestDeleteQueue)
 UNIT_TEST_CASE(ExactlyOnceQueueManagerUnittest, TestPushProcessQueue)
 UNIT_TEST_CASE(ExactlyOnceQueueManagerUnittest, TestIsAllProcessQueueEmpty)
 UNIT_TEST_CASE(ExactlyOnceQueueManagerUnittest, TestPushSenderQueue)
-UNIT_TEST_CASE(ExactlyOnceQueueManagerUnittest, TestGetAllAvailableSenderQueueItems)
+UNIT_TEST_CASE(ExactlyOnceQueueManagerUnittest, TestGetAvailableSenderQueueItems)
 UNIT_TEST_CASE(ExactlyOnceQueueManagerUnittest, TestRemoveSenderItem)
 UNIT_TEST_CASE(ExactlyOnceQueueManagerUnittest, TestIsAllSenderQueueEmpty)
 UNIT_TEST_CASE(ExactlyOnceQueueManagerUnittest, OnPipelineUpdate)

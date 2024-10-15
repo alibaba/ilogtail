@@ -16,6 +16,7 @@
 
 #include <filesystem>
 
+#include "app_config/AppConfig.h"
 #include "LogFileProfiler.h"
 #include "LogtailMetric.h"
 #include "MetricConstants.h"
@@ -24,8 +25,8 @@
 #include "common/RuntimeUtil.h"
 #include "common/TimeUtil.h"
 #include "go_pipeline/LogtailPlugin.h"
-#include "protobuf/sls/sls_logs.pb.h"
 #include "pipeline/PipelineManager.h"
+#include "protobuf/sls/sls_logs.pb.h"
 
 using namespace sls_logs;
 using namespace std;
@@ -34,13 +35,17 @@ DECLARE_FLAG_STRING(metrics_report_method);
 
 namespace logtail {
 
+const string METRIC_REGION_FIELD_NAME = "region";
+const string METRIC_REGION_DEFAULT = "default";
+const string METRIC_SLS_LOGSTORE_NAME = "shennong_log_profile";
+const string METRIC_TOPIC_TYPE = "loong_collector_metric";
+
 const std::string METRIC_EXPORT_TYPE_GO = "direct";
 const std::string METRIC_EXPORT_TYPE_CPP = "cpp_provided";
 
 MetricExportor::MetricExportor() : mSendInterval(60), mLastSendTime(time(NULL) - (rand() % (mSendInterval / 10)) * 10) {
-    // mAgentCpuGo = LoongCollectorMonitor::GetInstance()->GetDoubleGauge(METRIC_AGENT_CPU_GO);
     mAgentMemGo = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_AGENT_MEMORY_GO);
-    mAgentGoRoutines = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_AGENT_GO_ROUTINES_TOTAL); 
+    mAgentGoRoutines = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_AGENT_GO_ROUTINES_TOTAL);
 }
 
 void MetricExportor::PushMetrics(bool forceSend) {
@@ -63,7 +68,7 @@ void MetricExportor::PushCppMetrics() {
 
     if ("sls" == STRING_FLAG(metrics_report_method)) {
         std::map<std::string, sls_logs::LogGroup*> logGroupMap;
-        ReadMetrics::GetInstance()->ReadAsLogGroup(logGroupMap);
+        ReadMetrics::GetInstance()->ReadAsLogGroup(METRIC_REGION_FIELD_NAME, METRIC_REGION_DEFAULT, logGroupMap);
         SendToSLS(logGroupMap);
     } else if ("file" == STRING_FLAG(metrics_report_method)) {
         std::string metricsContent;
@@ -90,10 +95,9 @@ void MetricExportor::SendToSLS(std::map<std::string, sls_logs::LogGroup*>& logGr
         logGroup->set_source(LogFileProfiler::mIpAddr);
         logGroup->set_topic(METRIC_TOPIC_TYPE);
         if (METRIC_REGION_DEFAULT == iter->first) {
-            ProfileSender::GetInstance()->SendToProfileProject(ProfileSender::GetInstance()->GetDefaultProfileRegion(),
-                                                               *logGroup);
+            GetProfileSender()->SendToProfileProject(GetProfileSender()->GetDefaultProfileRegion(), *logGroup);
         } else {
-            ProfileSender::GetInstance()->SendToProfileProject(iter->first, *logGroup);
+            GetProfileSender()->SendToProfileProject(iter->first, *logGroup);
         }
         delete logGroup;
     }
@@ -105,7 +109,7 @@ void MetricExportor::SendToLocalFile(std::string& metricsContent, const std::str
 
     if (!metricsContent.empty()) {
         // 创建输出目录（如果不存在）
-        std::string outputDirectory = GetProcessExecutionDir() + "/" + metricsDirName;
+        std::string outputDirectory = GetAgentLogDir() + metricsDirName;
         Mkdirs(outputDirectory);
 
         std::vector<std::filesystem::path> metricFiles;
@@ -173,9 +177,6 @@ void MetricExportor::PushGoCppProvidedMetrics(std::vector<std::map<std::string, 
 
     for (auto metrics : metricsList) {
         for (auto metric : metrics) {
-            // if (metric.first == METRIC_AGENT_CPU_GO) {
-            //     mAgentCpuGo->Set(std::stod(metric.second));
-            // }
             if (metric.first == METRIC_AGENT_MEMORY_GO) {
                 mAgentMemGo->Set(std::stoi(metric.second));
             }

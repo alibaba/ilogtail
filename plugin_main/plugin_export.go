@@ -94,7 +94,6 @@ import "C" //nolint:typecheck
 
 var initOnce sync.Once
 var loadOnce sync.Once
-var started bool
 
 //export InitPluginBase
 func InitPluginBase() int {
@@ -111,33 +110,30 @@ func LoadGlobalConfig(jsonStr string) int {
 	// Only the first call will return non-zero.
 	retcode := 0
 	loadOnce.Do(func() {
-		logger.Info(context.Background(), "load global config", jsonStr)
 		if len(jsonStr) >= 2 { // For invalid JSON, use default value and return 0
-			if err := json.Unmarshal([]byte(jsonStr), &config.LogtailGlobalConfig); err != nil {
-				logger.Error(context.Background(), "LOAD_PLUGIN_ALARM", "load global config error", err)
+			if err := json.Unmarshal([]byte(jsonStr), &config.LoongcollectorGlobalConfig); err != nil {
+				fmt.Println("load global config error", "GlobalConfig", jsonStr, "err", err)
 				retcode = 1
 			}
-			config.UserAgent = fmt.Sprintf("ilogtail/%v (%v) ip/%v", config.BaseVersion, runtime.GOOS, config.LogtailGlobalConfig.HostIP)
+			logger.InitLogger()
+			logger.Info(context.Background(), "load global config", jsonStr)
+			config.UserAgent = fmt.Sprintf("ilogtail/%v (%v) ip/%v", config.BaseVersion, runtime.GOOS, config.LoongcollectorGlobalConfig.HostIP)
 		}
 	})
 	if retcode == 0 {
 		// Update when both of them are not empty.
 		logger.Debugf(context.Background(), "host IP: %v, hostname: %v",
-			config.LogtailGlobalConfig.HostIP, config.LogtailGlobalConfig.Hostname)
-		if len(config.LogtailGlobalConfig.Hostname) > 0 && len(config.LogtailGlobalConfig.HostIP) > 0 {
-			util.SetNetworkIdentification(config.LogtailGlobalConfig.HostIP, config.LogtailGlobalConfig.Hostname)
+			config.LoongcollectorGlobalConfig.HostIP, config.LoongcollectorGlobalConfig.Hostname)
+		if len(config.LoongcollectorGlobalConfig.Hostname) > 0 && len(config.LoongcollectorGlobalConfig.HostIP) > 0 {
+			util.SetNetworkIdentification(config.LoongcollectorGlobalConfig.HostIP, config.LoongcollectorGlobalConfig.Hostname)
 		}
 	}
 	return retcode
 }
 
-//export LoadConfig
-func LoadConfig(project string, logstore string, configName string, logstoreKey int64, jsonStr string) int {
+//export LoadPipeline
+func LoadPipeline(project string, logstore string, configName string, logstoreKey int64, jsonStr string) int {
 	logger.Debug(context.Background(), "load config", configName, logstoreKey, "\n"+jsonStr)
-	if started {
-		logger.Error(context.Background(), "CONFIG_LOAD_ALARM", "cannot load config before hold on the running configs")
-		return 1
-	}
 	defer func() {
 		if err := recover(); err != nil {
 			trace := make([]byte, 2048)
@@ -158,81 +154,77 @@ func LoadConfig(project string, logstore string, configName string, logstoreKey 
 	return 0
 }
 
-//export UnloadConfig
-func UnloadConfig(project string, logstore string, configName string) int {
+//export UnloadPipeline
+func UnloadPipeline(configName string) int {
 	logger.Debug(context.Background(), "unload config", configName)
+	err := pluginmanager.UnloadPartiallyLoadedConfig(util.StringDeepCopy(configName))
+	if err != nil {
+		return 1
+	}
 	return 0
-}
-
-//export ProcessRawLog
-func ProcessRawLog(configName string, rawLog []byte, packID string, topic string) int {
-	plugin, flag := pluginmanager.LogtailConfig[configName]
-	if !flag {
-		return -1
-	}
-
-	// rawLog will be copied when it is converted to string, packID and topic
-	// are unused now, so deep copy is unnecessary.
-	return plugin.ProcessRawLog(rawLog, util.StringDeepCopy(packID), topic)
-}
-
-//export ProcessRawLogV2
-func ProcessRawLogV2(configName string, rawLog []byte, packID string, topic string, tags []byte) int {
-	config, exists := pluginmanager.LogtailConfig[configName]
-	if !exists {
-		return -1
-	}
-	return config.ProcessRawLogV2(rawLog, util.StringDeepCopy(packID), util.StringDeepCopy(topic), tags)
 }
 
 //export ProcessLog
 func ProcessLog(configName string, logBytes []byte, packID string, topic string, tags []byte) int {
-	config, exists := pluginmanager.LogtailConfig[configName]
-	if !exists {
-		logger.Debug(context.Background(), "config not found", configName)
+	pluginmanager.LogtailConfigLock.RLock()
+	config, flag := pluginmanager.LogtailConfig[configName]
+	if !flag {
 		return -1
 	}
+	pluginmanager.LogtailConfigLock.RUnlock()
 	return config.ProcessLog(logBytes, util.StringDeepCopy(packID), util.StringDeepCopy(topic), tags)
 }
 
 //export ProcessLogGroup
 func ProcessLogGroup(configName string, logBytes []byte, packID string) int {
-	config, exists := pluginmanager.LogtailConfig[configName]
-	if !exists {
-		logger.Debug(context.Background(), "config not found", configName)
+	pluginmanager.LogtailConfigLock.RLock()
+	config, flag := pluginmanager.LogtailConfig[configName]
+	pluginmanager.LogtailConfigLock.RUnlock()
+	if !flag {
+		logger.Error(context.Background(), "PLUGIN_ALARM", "config not found", configName)
 		return -1
 	}
 	return config.ProcessLogGroup(logBytes, util.StringDeepCopy(packID))
 }
 
-//export HoldOn
-func HoldOn(exitFlag int) {
-	logger.Info(context.Background(), "Hold on", "start", "flag", exitFlag)
-	if started {
-		err := pluginmanager.HoldOn(exitFlag != 0)
-		if err != nil {
-			logger.Error(context.Background(), "PLUGIN_ALARM", "hold on error", err)
-		}
+//export StopAllPipelines
+func StopAllPipelines(withInputFlag int) {
+	logger.Info(context.Background(), "Stop all", "start", "with input", withInputFlag)
+	err := pluginmanager.StopAllPipelines(withInputFlag != 0)
+	if err != nil {
+		logger.Error(context.Background(), "PLUGIN_ALARM", "stop all error", err)
 	}
-	started = false
-	logger.Info(context.Background(), "Hold on", "success")
-	if exitFlag != 0 {
+	logger.Info(context.Background(), "Stop all", "success", "with input", withInputFlag)
+	// Stop with input first, without input last.
+	if withInputFlag == 0 {
 		logger.Info(context.Background(), "logger", "close and recover")
+		logger.Flush()
 		logger.Close()
 	}
 }
 
-//export Resume
-func Resume() {
-	logger.Info(context.Background(), "Resume", "start")
-	if !started {
-		err := pluginmanager.Resume()
-		if err != nil {
-			logger.Error(context.Background(), "PLUGIN_ALARM", "resume error", err)
-		}
+//export Stop
+func Stop(configName string, removedFlag int) {
+	logger.Info(context.Background(), "Stop", "start", "config", configName, "removed", removedFlag)
+	err := pluginmanager.Stop(configName, removedFlag != 0)
+	if err != nil {
+		logger.Error(context.Background(), "PLUGIN_ALARM", "stop error", err)
 	}
-	started = true
-	logger.Info(context.Background(), "Resume", "success")
+}
+
+//export StopBuiltInModules
+func StopBuiltInModules() {
+	pluginmanager.StopBuiltInModulesConfig()
+}
+
+//export Start
+func Start(configName string) {
+	logger.Info(context.Background(), "Start", "start", "config", configName)
+	err := pluginmanager.Start(configName)
+	if err != nil {
+		logger.Error(context.Background(), "PLUGIN_ALARM", "start error", err)
+	}
+	logger.Info(context.Background(), "Start", "success", "config", configName)
 }
 
 //export CtlCmd
@@ -242,7 +234,7 @@ func CtlCmd(configName string, cmdID int, cmdDetail string) {
 
 //export GetContainerMeta
 func GetContainerMeta(containerID string) *C.struct_containerMeta {
-	logger.Init()
+	logger.InitLogger()
 	meta := helper.GetContainerMeta(containerID)
 	if meta == nil {
 		logger.Debug(context.Background(), "get meta", "")
@@ -332,11 +324,10 @@ func initPluginBase(cfgStr string) int {
 	// Only the first call will return non-zero.
 	rst := 0
 	initOnce.Do(func() {
-		logger.Init()
+		LoadGlobalConfig(cfgStr)
 		InitHTTPServer()
 		setGCPercentForSlowStart()
 		logger.Info(context.Background(), "init plugin base, version", config.BaseVersion)
-		LoadGlobalConfig(cfgStr)
 		if *flags.DeployMode == flags.DeploySingleton && *flags.EnableKubernetesMeta {
 			instance := k8smeta.GetMetaManagerInstance()
 			err := instance.Init("")
@@ -351,6 +342,20 @@ func initPluginBase(cfgStr string) int {
 			logger.Error(context.Background(), "PLUGIN_ALARM", "init plugin error", err)
 			rst = 1
 		}
+		if pluginmanager.StatisticsConfig != nil {
+			pluginmanager.StatisticsConfig.Start()
+		}
+		if pluginmanager.AlarmConfig != nil {
+			pluginmanager.AlarmConfig.Start()
+		}
+		if pluginmanager.ContainerConfig != nil {
+			pluginmanager.ContainerConfig.Start()
+		}
+		err := pluginmanager.CheckPointManager.Init()
+		if err != nil {
+			logger.Error(context.Background(), "CHECKPOINT_INIT_ALARM", "init checkpoint manager error", err)
+		}
+		pluginmanager.CheckPointManager.Start()
 	})
 	return rst
 }
