@@ -20,11 +20,11 @@ import (
 	"sync"
 )
 
-type DockerComposeBootType = string
+type BootType = string
 
 const (
-	DockerComposeBootTypeE2E       DockerComposeBootType = "e2e"
-	DockerComposeBootTypeBenchmark DockerComposeBootType = "benchmark"
+	DockerComposeBootTypeE2E       BootType = "e2e"
+	DockerComposeBootTypeBenchmark BootType = "benchmark"
 )
 
 var networkMapping = make(map[string]string)
@@ -40,7 +40,7 @@ type Booter interface {
 }
 
 // Load configuration to the Booter.
-func Load(bootType DockerComposeBootType) error {
+func Load(bootType BootType) error {
 	mu.Lock()
 	defer mu.Unlock()
 	switch bootType {

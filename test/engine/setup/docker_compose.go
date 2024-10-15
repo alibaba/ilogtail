@@ -19,10 +19,10 @@ const dependencyHome = "test_cases"
 
 type DockerComposeEnv struct {
 	BootController *controller.BootController
-	BootType       dockercompose.DockerComposeBootType
+	BootType       dockercompose.BootType
 }
 
-func SetDockerComposeBootType(t dockercompose.DockerComposeBootType) error {
+func SetDockerComposeBootType(t dockercompose.BootType) error {
 	if dockerComposeEnv, ok := Env.(*DockerComposeEnv); ok {
 		if t != dockercompose.DockerComposeBootTypeE2E && t != dockercompose.DockerComposeBootTypeBenchmark {
 			return fmt.Errorf("invalid docker compose boot type, not e2e or benchmark")
