@@ -1747,11 +1747,11 @@ void AppConfig::LoadInstanceConfig(const std::map<std::string, std::shared_ptr<I
                 callbackCall.insert(callback.second);
             }
         }
+        mLocalInstanceConfig = std::move(localInstanceConfig);
+        mRemoteInstanceConfig = std::move(remoteInstanceConfig);
         for (const auto& callback : callbackCall) {
             (*callback)();
         }
-        mLocalInstanceConfig = std::move(localInstanceConfig);
-        mRemoteInstanceConfig = std::move(remoteInstanceConfig);
     }
 }
 
