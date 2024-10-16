@@ -35,20 +35,7 @@ struct InstanceConfig {
     InstanceConfig(const std::string& name, const Json::Value& detail, const std::string& dirName)
         : mConfigName(name), mDirName(dirName), mDetail(detail) {}
 
-    InstanceConfig(const InstanceConfig& config) = default;
-
-    InstanceConfig& operator=(InstanceConfig&& other) = default;
-    InstanceConfig& operator=(const InstanceConfig& other) = default;
-
     const Json::Value& GetConfig() const { return mDetail; }
 };
-
-inline bool operator==(const InstanceConfig& lhs, const InstanceConfig& rhs) {
-    return (lhs.mConfigName == rhs.mConfigName) && (lhs.mDetail == rhs.mDetail) && (lhs.mDirName == rhs.mDirName);
-}
-
-inline bool operator!=(const InstanceConfig& lhs, const InstanceConfig& rhs) {
-    return !(lhs == rhs);
-}
 
 } // namespace logtail
