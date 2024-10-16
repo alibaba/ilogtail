@@ -45,8 +45,7 @@ func initAgentRouter(router *gin.Engine) {
 	{
 		agentRouter.POST("/Heartbeat", handler.HeartBeat)
 		agentRouter.POST("/FetchPipelineConfig", handler.FetchPipelineConfig)
-		//agent有bug暂时不开启此路由
-		//agentRouter.POST("/FetchProcessConfig", handler.FetchProcessConfig)
+		agentRouter.POST("/FetchInstanceConfig", handler.FetchInstanceConfig)
 	}
 	handler.CheckAgentExist()
 	handler.AppliedOrRemoveConfigForAgentGroup()
