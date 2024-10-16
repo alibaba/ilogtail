@@ -181,7 +181,7 @@ e2e-core: clean gocdocker e2edocker
 	./scripts/e2e.sh e2e core
 
 .PHONY: e2e-performance
-e2e-performance: clean docker gocdocker
+e2e-performance: clean e2edocker
 	./scripts/e2e.sh e2e performance
 
 .PHONY: unittest_e2e_engine
