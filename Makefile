@@ -181,7 +181,7 @@ e2e-core: clean gocdocker e2edocker
 	./scripts/e2e.sh e2e core
 
 .PHONY: e2e-performance
-e2e-performance: clean docker gocdocker
+e2e-performance: clean docker
 	./scripts/e2e.sh e2e performance
 
 .PHONY: unittest_e2e_engine
@@ -212,7 +212,7 @@ unittest_pluginmanager: clean import_plugins
 
 # benchmark
 .PHONY: benchmark
-benchmark: clean gocdocker e2edocker
+benchmark: clean e2edocker
 	./scripts/e2e.sh benchmark performance
 	./scripts/benchmark_collect_result.sh
 
