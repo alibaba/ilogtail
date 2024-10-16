@@ -22,6 +22,7 @@ import (
 
 	"github.com/alibaba/ilogtail/test/engine/control"
 	"github.com/alibaba/ilogtail/test/engine/setup"
+	"github.com/alibaba/ilogtail/test/engine/setup/monitor"
 	"github.com/alibaba/ilogtail/test/engine/setup/subscriber"
 )
 
@@ -48,6 +49,8 @@ func All() {
 	_, _ = AllGeneratedLog(ctx)
 	_, _ = GoTestCache(ctx)
 	_, _ = DeleteContainers(ctx)
+	// Stop Monitor
+	_ = monitor.StopMonitor()
 	// FIXME: if this test case has no subscriber and the previous one has subscriber, it will panic
 	if subscriber.TestSubscriber != nil {
 		_ = subscriber.TestSubscriber.Stop()
