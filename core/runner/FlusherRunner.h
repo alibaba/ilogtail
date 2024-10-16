@@ -57,6 +57,8 @@ private:
     void Dispatch(SenderQueueItem* item);
     void UpdateSendFlowControl();
 
+    std::function<bool()> mCallback;
+
     std::future<void> mThreadRes;
     std::atomic_bool mIsFlush = false;
 

@@ -20,6 +20,7 @@
 
 #include <map>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -79,9 +80,11 @@ private:
     Json::Value mLocalInstanceConfig;
     Json::Value mEnvConfig;
     Json::Value mRemoteInstanceConfig;
-    Json::Value mMergedConfig;
+    std::unordered_map<std::string, std::string> mLocalInstanceConfigKeyToConfigName;
+    std::unordered_map<std::string, std::string> mEnvConfigKeyToConfigName;
+    std::unordered_map<std::string, std::string> mRemoteInstanceConfigKeyToConfigName;
 
-    std::map<std::string, std::function<bool()>> mCallbacks;
+    std::map<std::string, std::function<bool()>*> mCallbacks;
 
     DoubleBuffer<std::vector<sls_logs::LogTag>> mFileTags;
     DoubleBuffer<std::map<std::string, std::string>> mAgentAttrs;
@@ -219,6 +222,7 @@ private:
      */
     void CheckAndAdjustParameters();
     void MergeJson(Json::Value& mainConfJson, const Json::Value& subConfJson);
+    void MergeJson(Json::Value& mainConfJson, const Json::Value& subConfJson, std::unordered_map<std::string, std::string>& keyToConfigName, const std::string& configName);
     /**
      * @brief Load *.json from config.d dir
      *
@@ -332,7 +336,7 @@ public:
 
 
     // 注册回调
-    void RegisterCallback(const std::string& key, std::function<bool()> callback);
+    void RegisterCallback(const std::string& key, std::function<bool()>* callback);
 
     // 合并配置
     std::string Merge(Json::Value& localConf,

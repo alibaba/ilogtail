@@ -56,8 +56,8 @@ bool FlusherRunner::Init() {
     mThreadRes = async(launch::async, &FlusherRunner::Run, this);
     mLastCheckSendClientTime = time(nullptr);
     LoadModuleConfig(true);
-    AppConfig::GetInstance()->RegisterCallback(
-        "max_bytes_per_sec", [this]() { return LoadModuleConfig(false); });
+    mCallback = [this]() { return LoadModuleConfig(false); };
+    AppConfig::GetInstance()->RegisterCallback("max_bytes_per_sec", &mCallback);
     return true;
 }
 
@@ -76,14 +76,13 @@ bool FlusherRunner::LoadModuleConfig(bool isInit) {
             AppConfig::GetInstance()->GetMaxBytePerSec(), "max_bytes_per_sec", ValidateFn);
         AppConfig::GetInstance()->SetMaxBytePerSec(maxBytePerSec);
         UpdateSendFlowControl();
-        return true;
     } else {
         auto maxBytePerSec = AppConfig::GetInstance()->MergeInt32(
             AppConfig::GetInstance()->GetMaxBytePerSec(), "max_bytes_per_sec", ValidateFn);
         AppConfig::GetInstance()->SetMaxBytePerSec(maxBytePerSec);
         UpdateSendFlowControl();
-        return true;
     }
+    return true;
 }
 
 void FlusherRunner::UpdateSendFlowControl() {

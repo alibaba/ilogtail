@@ -1409,6 +1409,7 @@ void AppConfig::ParseEnvToFlags() {
         // 尝试解析为 double
         char* end;
         double doubleValue = strtod(value.c_str(), &end);
+        mEnvConfigKeyToConfigName[key] = "env";
         if (*end == '\0') {
             mEnvConfig[key] = doubleValue;
             continue;
@@ -1703,21 +1704,30 @@ void AppConfig::UpdateFileTags() {
     return;
 }
 
+void AppConfig::MergeJson(Json::Value& mainConfJson, const Json::Value& subConfJson, std::unordered_map<std::string, std::string>& keyToConfigName, const std::string& configName) {
+    for (const auto& subkey : subConfJson.getMemberNames()) {
+        mainConfJson[subkey] = subConfJson[subkey];
+        keyToConfigName[subkey] = configName;
+    }
+}
+
 void AppConfig::LoadInstanceConfig(const std::map<std::string, std::shared_ptr<InstanceConfig>>& instanceConfig) {
     Json::Value remoteInstanceConfig;
     Json::Value localInstanceConfig;
+    mLocalInstanceConfigKeyToConfigName.clear();
+    mRemoteInstanceConfigKeyToConfigName.clear();
     for (const auto& config : instanceConfig) {
         if (EndWith(config.second->mDirName, AppConfig::sLocalConfigDir)) {
-            MergeJson(localInstanceConfig, config.second->GetConfig());
+            MergeJson(localInstanceConfig, config.second->GetConfig(), mLocalInstanceConfigKeyToConfigName, config.second->mDirName+"$"+config.second->mConfigName);
         } else {
-            MergeJson(remoteInstanceConfig, config.second->GetConfig());
+            MergeJson(remoteInstanceConfig, config.second->GetConfig(), mRemoteInstanceConfigKeyToConfigName, config.second->mDirName+"$"+config.second->mConfigName);
         }
     }
     if (localInstanceConfig != mLocalInstanceConfig || mRemoteInstanceConfig != remoteInstanceConfig) {
         LOG_INFO(sLogger,
                  ("load all local instanceConfig", localInstanceConfig.toStyledString())(
                      "load all remote instanceConfig", remoteInstanceConfig.toStyledString()));
-        std::set<std::function<bool()>> callbackCall;
+        std::set<std::function<bool()>*> callbackCall;
         for (const auto& callback : mCallbacks) {
             const std::string& key = callback.first;
             bool configChanged = false;
@@ -1738,14 +1748,14 @@ void AppConfig::LoadInstanceConfig(const std::map<std::string, std::shared_ptr<I
             }
         }
         for (const auto& callback : callbackCall) {
-            callback();
+            (*callback)();
         }
         mLocalInstanceConfig = std::move(localInstanceConfig);
         mRemoteInstanceConfig = std::move(remoteInstanceConfig);
     }
 }
 
-void AppConfig::RegisterCallback(const std::string& key, std::function<bool()> callback) {
+void AppConfig::RegisterCallback(const std::string& key, std::function<bool()>* callback) {
     mCallbacks[key] = callback;
 }
 
@@ -1758,37 +1768,45 @@ T AppConfig::MergeConfig(T defaultValue,
     const auto& remoteInstanceConfig = AppConfig::GetInstance()->GetRemoteInstanceConfig();
 
     T res = defaultValue;
+    std::string configName;
 
-    auto tryMerge = [&](const Json::Value& config) {
+    auto tryMerge = [&](const Json::Value& config, std::unordered_map<std::string, std::string>& keyToConfigName) {
         if (config.isMember(name)) {
             if constexpr (std::is_same_v<T, int32_t>) {
                 if (config[name].isInt() && validateFn(name, config[name].asInt())) {
                     res = config[name].asInt();
+                    configName = keyToConfigName[name];
                 }
             } else if constexpr (std::is_same_v<T, int64_t>) {
                 if (config[name].isInt64() && validateFn(name, config[name].asInt64())) {
                     res = config[name].asInt64();
+                    configName = keyToConfigName[name];
                 }
             } else if constexpr (std::is_same_v<T, bool>) {
                 if (config[name].isBool() && validateFn(name, config[name].asBool())) {
                     res = config[name].asBool();
+                    configName = keyToConfigName[name];
                 }
             } else if constexpr (std::is_same_v<T, std::string>) {
                 if (config[name].isString() && validateFn(name, config[name].asString())) {
                     res = config[name].asString();
+                    configName = keyToConfigName[name];
                 }
             } else if constexpr (std::is_same_v<T, double>) {
                 if (config[name].isDouble() && validateFn(name, config[name].asDouble())) {
                     res = config[name].asDouble();
+                    configName = keyToConfigName[name];
                 }
             }
         }
     };
 
-    tryMerge(localInstanceConfig);
-    tryMerge(envConfig);
-    tryMerge(remoteInstanceConfig);
-
+    tryMerge(localInstanceConfig, mLocalInstanceConfigKeyToConfigName);
+    tryMerge(envConfig, mEnvConfigKeyToConfigName);
+    tryMerge(remoteInstanceConfig, mRemoteInstanceConfigKeyToConfigName);
+    LOG_INFO(
+        sLogger,
+        ("merge instance config", name)("key", name)("value", res)("defaultValue", defaultValue)("from", configName));
     return res;
 }
 

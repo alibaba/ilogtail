@@ -84,29 +84,30 @@ bool InstanceConfigManagerUnittest::LoadModuleConfig(bool isInit) {
 }
 
 void InstanceConfigManagerUnittest::TestUpdateInstanceConfigs() {
+    std::function<bool()> mCallback = [this]() { return LoadModuleConfig(false); };
     {
         AppConfig::GetInstance()->GetInstance()->LoadAppConfig(STRING_FLAG(ilogtail_config));
         AppConfig::GetInstance()->GetInstance()->RegisterCallback(
-            "bool_true", [this]() { return LoadModuleConfig(false); });
+            "bool_true", &mCallback);
         AppConfig::GetInstance()->GetInstance()->RegisterCallback(
-            "int32_true", [this]() { return LoadModuleConfig(false); });
+            "int32_true", &mCallback);
         AppConfig::GetInstance()->GetInstance()->RegisterCallback(
-            "int64_true", [this]() { return LoadModuleConfig(false); });
+            "int64_true", &mCallback);
         AppConfig::GetInstance()->GetInstance()->RegisterCallback(
-            "double_true", [this]() { return LoadModuleConfig(false); });
+            "double_true", &mCallback);
         AppConfig::GetInstance()->GetInstance()->RegisterCallback(
-            "string_true", [this]() { return LoadModuleConfig(false); });
+            "string_true", &mCallback);
 
         AppConfig::GetInstance()->GetInstance()->RegisterCallback(
-            "bool_false", [this]() { return LoadModuleConfig(false); });
+            "bool_false", &mCallback);
         AppConfig::GetInstance()->GetInstance()->RegisterCallback(
-            "int32_false", [this]() { return LoadModuleConfig(false); });
+            "int32_false", &mCallback);
         AppConfig::GetInstance()->GetInstance()->RegisterCallback(
-            "int64_false", [this]() { return LoadModuleConfig(false); });
+            "int64_false", &mCallback);
         AppConfig::GetInstance()->GetInstance()->RegisterCallback(
-            "double_false", [this]() { return LoadModuleConfig(false); });
+            "double_false", &mCallback);
         AppConfig::GetInstance()->GetInstance()->RegisterCallback(
-            "string_false", [this]() { return LoadModuleConfig(false); });
+            "string_false", &mCallback);
     }
     FlusherRunner::GetInstance()->Init();
     // Added
