@@ -193,17 +193,21 @@ void PipelineUnittest::OnSuccessfulInit() const {
             ]
         }
     )";
-    goPipelineWithInputStr = R"(
+    goPipelineWithInputStr = string(R"(
         {
             "global" : {
-                "AlwaysOnline": true,
                 "EnableTimestampNanosecond": false,
                 "UsingOldContentTag": false,
                 "DefaultLogQueueSize" : 5,
                 "DefaultLogGroupQueueSize": 3,
-                "PipelineMetaTagKey": null,
-                "AgentEnvMetaTagKey": null
-            },
+                "PipelineMetaTagKey": null)")
+        +
+#ifdef __ENTERPRISE__
+        R"(,
+                "AgentEnvMetaTagKey": null)"
+        +
+#endif
+        R"(},
             "inputs": [
                 {
                     "type": "metric_container_info/2",
@@ -223,16 +227,21 @@ void PipelineUnittest::OnSuccessfulInit() const {
             ]
         }
     )";
-    goPipelineWithoutInputStr = R"(
+    goPipelineWithoutInputStr = string(R"(
         {
             "global" : {
                 "EnableTimestampNanosecond": false,
                 "UsingOldContentTag": false,
                 "DefaultLogQueueSize" : 10,
                 "DefaultLogGroupQueueSize": 3,
-                "PipelineMetaTagKey": null,
-                "AgentEnvMetaTagKey": null
-            },
+                "PipelineMetaTagKey": null)")
+        +
+#ifdef __ENTERPRISE__
+        R"(,
+                "AgentEnvMetaTagKey": null)"
+        +
+#endif
+        R"(},
             "aggregators": [
                 {
                     "type": "aggregator_default/5",
@@ -616,15 +625,20 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    goPipelineWithoutInputStr = R"(
+    goPipelineWithoutInputStr = string(R"(
         {
             "global" : {
                 "EnableTimestampNanosecond": false,
                 "UsingOldContentTag": false,
                 "DefaultLogQueueSize" : 10,
-                "PipelineMetaTagKey": null,
-                "AgentEnvMetaTagKey": null
-            },
+                "PipelineMetaTagKey": null)")
+        +
+#ifdef __ENTERPRISE__
+        R"(,
+                "AgentEnvMetaTagKey": null)"
+        +
+#endif
+        R"(},
             "processors": [
                 {
                     "type": "processor_regex/4",
@@ -686,14 +700,19 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    goPipelineWithInputStr = R"(
+    goPipelineWithInputStr = string(R"(
         {
-            "global": {
+            "global" : {
                 "EnableTimestampNanosecond": false,
                 "UsingOldContentTag": false,
-                "PipelineMetaTagKey": null,
-                "AgentEnvMetaTagKey": null
-            },
+                "PipelineMetaTagKey": null)")
+        +
+#ifdef __ENTERPRISE__
+        R"(,
+                "AgentEnvMetaTagKey": null)"
+        +
+#endif
+        R"(},
             "inputs": [
                 {
                     "type": "service_docker_stdout/1",
@@ -806,15 +825,20 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    goPipelineWithoutInputStr = R"(
+    goPipelineWithoutInputStr = string(R"(
         {
             "global" : {
                 "EnableTimestampNanosecond": false,
                 "UsingOldContentTag": false,
                 "DefaultLogQueueSize" : 10,
-                "PipelineMetaTagKey": null,
-                "AgentEnvMetaTagKey": null
-            },
+                "PipelineMetaTagKey": null)")
+        +
+#ifdef __ENTERPRISE__
+        R"(,
+                "AgentEnvMetaTagKey": null)"
+        +
+#endif
+        R"(},
             "processors": [
                 {
                     "type": "processor_regex/5",
@@ -983,14 +1007,19 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    goPipelineWithInputStr = R"(
+    goPipelineWithInputStr = string(R"(
         {
-            "global": {
+            "global" : {
                 "EnableTimestampNanosecond": false,
                 "UsingOldContentTag": false,
-                "PipelineMetaTagKey": null,
-                "AgentEnvMetaTagKey": null
-            },
+                "PipelineMetaTagKey": null)")
+        +
+#ifdef __ENTERPRISE__
+        R"(,
+                "AgentEnvMetaTagKey": null)"
+        +
+#endif
+        R"(},
             "inputs": [
                 {
                     "type": "service_docker_stdout/1",
@@ -1084,15 +1113,20 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    goPipelineWithoutInputStr = R"(
+    goPipelineWithoutInputStr = string(R"(
         {
             "global" : {
                 "EnableTimestampNanosecond": false,
                 "UsingOldContentTag": false,
                 "DefaultLogQueueSize" : 10,
-                "PipelineMetaTagKey": null,
-                "AgentEnvMetaTagKey": null
-            },
+                "PipelineMetaTagKey": null)")
+        +
+#ifdef __ENTERPRISE__
+        R"(,
+                "AgentEnvMetaTagKey": null)"
+        +
+#endif
+        R"(},
             "aggregators": [
                 {
                     "type": "aggregator_default/5",
@@ -1206,15 +1240,20 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    goPipelineWithoutInputStr = R"(
+    goPipelineWithoutInputStr = string(R"(
         {
             "global" : {
                 "EnableTimestampNanosecond": false,
                 "UsingOldContentTag": false,
                 "DefaultLogQueueSize" : 10,
-                "PipelineMetaTagKey": null,
-                "AgentEnvMetaTagKey": null
-            },
+                "PipelineMetaTagKey": null)")
+        +
+#ifdef __ENTERPRISE__
+        R"(,
+                "AgentEnvMetaTagKey": null)"
+        +
+#endif
+        R"(},
             "processors": [
                 {
                     "type": "processor_regex/4",
@@ -1269,14 +1308,19 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    goPipelineWithInputStr = R"(
+    goPipelineWithInputStr = string(R"(
         {
-            "global": {
+            "global" : {
                 "EnableTimestampNanosecond": false,
                 "UsingOldContentTag": false,
-                "PipelineMetaTagKey": null,
-                "AgentEnvMetaTagKey": null
-            },
+                "PipelineMetaTagKey": null)")
+        +
+#ifdef __ENTERPRISE__
+        R"(,
+                "AgentEnvMetaTagKey": null)"
+        +
+#endif
+        R"(},
             "inputs": [
                 {
                     "type": "service_docker_stdout/1",
@@ -1377,15 +1421,20 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    goPipelineWithoutInputStr = R"(
+    goPipelineWithoutInputStr = string(R"(
         {
             "global" : {
                 "EnableTimestampNanosecond": false,
                 "UsingOldContentTag": false,
                 "DefaultLogQueueSize" : 10,
-                "PipelineMetaTagKey": null,
-                "AgentEnvMetaTagKey": null
-            },
+                "PipelineMetaTagKey": null)")
+        +
+#ifdef __ENTERPRISE__
+        R"(,
+                "AgentEnvMetaTagKey": null)"
+        +
+#endif
+        R"(},
             "processors": [
                 {
                     "type": "processor_regex/5",
@@ -1506,15 +1555,20 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    goPipelineWithoutInputStr = R"(
+    goPipelineWithoutInputStr = string(R"(
         {
             "global" : {
                 "EnableTimestampNanosecond": false,
                 "UsingOldContentTag": false,
                 "DefaultLogQueueSize" : 10,
-                "PipelineMetaTagKey": null,
-                "AgentEnvMetaTagKey": null
-            },
+                "PipelineMetaTagKey": null)")
+        +
+#ifdef __ENTERPRISE__
+        R"(,
+                "AgentEnvMetaTagKey": null)"
+        +
+#endif
+        R"(},
             "aggregators": [
                 {
                     "type": "aggregator_default/4",
@@ -1558,14 +1612,19 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    goPipelineWithInputStr = R"(
+    goPipelineWithInputStr = string(R"(
         {
-            "global": {
+            "global" : {
                 "EnableTimestampNanosecond": false,
                 "UsingOldContentTag": false,
-                "PipelineMetaTagKey": null,
-                "AgentEnvMetaTagKey": null
-            },
+                "PipelineMetaTagKey": null)")
+        +
+#ifdef __ENTERPRISE__
+        R"(,
+                "AgentEnvMetaTagKey": null)"
+        +
+#endif
+        R"(},
             "inputs": [
                 {
                     "type": "service_docker_stdout/1",
@@ -1660,15 +1719,20 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    goPipelineWithoutInputStr = R"(
+    goPipelineWithoutInputStr = string(R"(
         {
             "global" : {
                 "EnableTimestampNanosecond": false,
                 "UsingOldContentTag": false,
                 "DefaultLogQueueSize" : 10,
-                "PipelineMetaTagKey": null,
-                "AgentEnvMetaTagKey": null
-            },
+                "PipelineMetaTagKey": null)")
+        +
+#ifdef __ENTERPRISE__
+        R"(,
+                "AgentEnvMetaTagKey": null)"
+        +
+#endif
+        R"(},
             "aggregators": [
                 {
                     "type": "aggregator_default/5",
@@ -1812,15 +1876,20 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    goPipelineWithoutInputStr = R"(
+    goPipelineWithoutInputStr = string(R"(
         {
             "global" : {
                 "EnableTimestampNanosecond": false,
                 "UsingOldContentTag": false,
                 "DefaultLogQueueSize" : 10,
-                "PipelineMetaTagKey": null,
-                "AgentEnvMetaTagKey": null
-            },
+                "PipelineMetaTagKey": null)")
+        +
+#ifdef __ENTERPRISE__
+        R"(,
+                "AgentEnvMetaTagKey": null)"
+        +
+#endif
+        R"(},
             "processors": [
                 {
                     "type": "processor_regex/4",
@@ -1889,14 +1958,19 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    goPipelineWithInputStr = R"(
+    goPipelineWithInputStr = string(R"(
         {
-            "global": {
+            "global" : {
                 "EnableTimestampNanosecond": false,
                 "UsingOldContentTag": false,
-                "PipelineMetaTagKey": null,
-                "AgentEnvMetaTagKey": null
-            },
+                "PipelineMetaTagKey": null)")
+        +
+#ifdef __ENTERPRISE__
+        R"(,
+                "AgentEnvMetaTagKey": null)"
+        +
+#endif
+        R"(},
             "inputs": [
                 {
                     "type": "service_docker_stdout/1",
@@ -2019,15 +2093,20 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    goPipelineWithoutInputStr = R"(
+    goPipelineWithoutInputStr = string(R"(
         {
             "global" : {
                 "EnableTimestampNanosecond": false,
                 "UsingOldContentTag": false,
                 "DefaultLogQueueSize" : 10,
-                "PipelineMetaTagKey": null,
-                "AgentEnvMetaTagKey": null
-            },
+                "PipelineMetaTagKey": null)")
+        +
+#ifdef __ENTERPRISE__
+        R"(,
+                "AgentEnvMetaTagKey": null)"
+        +
+#endif
+        R"(},
             "processors": [
                 {
                     "type": "processor_regex/5",
@@ -2178,15 +2257,20 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    goPipelineWithoutInputStr = R"(
+    goPipelineWithoutInputStr = string(R"(
         {
             "global" : {
                 "EnableTimestampNanosecond": false,
                 "UsingOldContentTag": false,
                 "DefaultLogQueueSize" : 10,
-                "PipelineMetaTagKey": null,
-                "AgentEnvMetaTagKey": null
-            },
+                "PipelineMetaTagKey": null)")
+        +
+#ifdef __ENTERPRISE__
+        R"(,
+                "AgentEnvMetaTagKey": null)"
+        +
+#endif
+        R"(},
             "aggregators": [
                 {
                     "type": "aggregator_default/4",
@@ -2244,14 +2328,19 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    goPipelineWithInputStr = R"(
+    goPipelineWithInputStr = string(R"(
         {
-            "global": {
+            "global" : {
                 "EnableTimestampNanosecond": false,
                 "UsingOldContentTag": false,
-                "PipelineMetaTagKey": null,
-                "AgentEnvMetaTagKey": null
-            },
+                "PipelineMetaTagKey": null)")
+        +
+#ifdef __ENTERPRISE__
+        R"(,
+                "AgentEnvMetaTagKey": null)"
+        +
+#endif
+        R"(},
             "inputs": [
                 {
                     "type": "service_docker_stdout/1",
@@ -2597,16 +2686,20 @@ void PipelineUnittest::OnInputFileWithContainerDiscovery() const {
             ]
         }
     )";
-    goPipelineWithInputStr = R"(
+    goPipelineWithInputStr = string(R"(
         {
             "global" : {
-                "AlwaysOnline": true,
                 "EnableTimestampNanosecond": false,
                 "UsingOldContentTag": false,
                 "DefaultLogQueueSize" : 10,
-                "PipelineMetaTagKey": null,
-                "AgentEnvMetaTagKey": null
-            },
+                "PipelineMetaTagKey": null)")
+        +
+#ifdef __ENTERPRISE__
+        R"(,
+                "AgentEnvMetaTagKey": null)"
+        +
+#endif
+        R"(},
             "inputs": [
                 {
                     "type": "metric_container_info/2",
@@ -2661,16 +2754,20 @@ void PipelineUnittest::OnInputFileWithContainerDiscovery() const {
             ]
         }
     )";
-    goPipelineWithInputStr = R"(
+    goPipelineWithInputStr = string(R"(
         {
             "global" : {
-                "AlwaysOnline": true,
                 "EnableTimestampNanosecond": false,
                 "UsingOldContentTag": false,
                 "DefaultLogQueueSize" : 10,
-                "PipelineMetaTagKey": null,
-                "AgentEnvMetaTagKey": null
-            },
+                "PipelineMetaTagKey": null)")
+        +
+#ifdef __ENTERPRISE__
+        R"(,
+                "AgentEnvMetaTagKey": null)"
+        +
+#endif
+        R"(},
             "inputs": [
                 {
                     "type": "metric_container_info/2",
@@ -2684,15 +2781,20 @@ void PipelineUnittest::OnInputFileWithContainerDiscovery() const {
             ]
         }
     )";
-    goPipelineWithoutInputStr = R"(
+    goPipelineWithoutInputStr = string(R"(
         {
             "global" : {
                 "EnableTimestampNanosecond": false,
                 "UsingOldContentTag": false,
                 "DefaultLogQueueSize" : 10,
-                "PipelineMetaTagKey": null,
-                "AgentEnvMetaTagKey": null
-            },
+                "PipelineMetaTagKey": null)")
+        +
+#ifdef __ENTERPRISE__
+        R"(,
+                "AgentEnvMetaTagKey": null)"
+        +
+#endif
+        R"(},
             "processors": [
                 {
                     "type": "processor_regex/5",

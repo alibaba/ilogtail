@@ -35,6 +35,7 @@ bool FileTagOptions::Init(const Json::Value& config, const PipelineContext& cont
                               context.GetProjectName(),
                               context.GetLogstoreName(),
                               context.GetRegion());
+        return false;
     }
 
     // Tags
@@ -78,6 +79,7 @@ bool FileTagOptions::Init(const Json::Value& config, const PipelineContext& cont
                               context.GetProjectName(),
                               context.GetLogstoreName(),
                               context.GetRegion());
+        return false;
     }
 
     if (enableContainerDiscovery) {

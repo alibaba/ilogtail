@@ -593,9 +593,10 @@ void FlusherSLSUnittest::TestSend() {
             // replayed group
             PipelineEventGroup group(make_shared<SourceBuffer>());
             group.SetMetadata(EventGroupMetaKey::SOURCE_ID, string("source-id"));
+            group.SetMetadata(EventGroupMetaKey::SOURCE, string("172.0.0.1"));
+            group.SetMetadata(EventGroupMetaKey::MACHINE_UUID, string("uuid"));
+            group.SetMetadata(EventGroupMetaKey::TOPIC, TOPIC_VALUE);
             group.SetTag(TagKeyDefaultValue[TagKey::HOST_NAME], "hostname");
-            group.SetTag(LOG_RESERVED_KEY_SOURCE, "172.0.0.1");
-            group.SetTag(LOG_RESERVED_KEY_MACHINE_UUID, "uuid");
             group.SetMetadata(EventGroupMetaKey::TOPIC, TOPIC_VALUE);
             auto cpt = make_shared<RangeCheckpoint>();
             cpt->index = 1;
@@ -650,9 +651,10 @@ void FlusherSLSUnittest::TestSend() {
             flusher.mBatcher.GetEventFlushStrategy().SetMaxCnt(1);
             PipelineEventGroup group(make_shared<SourceBuffer>());
             group.SetMetadata(EventGroupMetaKey::SOURCE_ID, string("source-id"));
+            group.SetMetadata(EventGroupMetaKey::SOURCE, string("172.0.0.1"));
+            group.SetMetadata(EventGroupMetaKey::MACHINE_UUID, string("uuid"));
+            group.SetMetadata(EventGroupMetaKey::TOPIC, TOPIC_VALUE);
             group.SetTag(TagKeyDefaultValue[TagKey::HOST_NAME], "hostname");
-            group.SetTag(LOG_RESERVED_KEY_SOURCE, "172.0.0.1");
-            group.SetTag(LOG_RESERVED_KEY_MACHINE_UUID, "uuid");
             group.SetMetadata(EventGroupMetaKey::TOPIC, TOPIC_VALUE);
             auto cpt = make_shared<RangeCheckpoint>();
             cpt->fbKey = eooKey;
@@ -735,10 +737,10 @@ void FlusherSLSUnittest::TestSend() {
             flusher.mBatcher.GetEventFlushStrategy().SetMaxCnt(1);
             PipelineEventGroup group(make_shared<SourceBuffer>());
             group.SetMetadata(EventGroupMetaKey::SOURCE_ID, string("source-id"));
-            group.SetTag(TagKeyDefaultValue[TagKey::HOST_NAME], "hostname");
-            group.SetTag(LOG_RESERVED_KEY_SOURCE, "172.0.0.1");
-            group.SetTag(LOG_RESERVED_KEY_MACHINE_UUID, "uuid");
+            group.SetMetadata(EventGroupMetaKey::SOURCE, string("172.0.0.1"));
+            group.SetMetadata(EventGroupMetaKey::MACHINE_UUID, string("uuid"));
             group.SetMetadata(EventGroupMetaKey::TOPIC, TOPIC_VALUE);
+            group.SetTag(TagKeyDefaultValue[TagKey::HOST_NAME], "hostname");
             group.SetTag(string("tag_key"), string("tag_value"));
             auto e = group.AddLogEvent();
             e->SetTimestamp(1234567890);
@@ -817,10 +819,10 @@ void FlusherSLSUnittest::TestSend() {
 
         PipelineEventGroup group(make_shared<SourceBuffer>());
         group.SetMetadata(EventGroupMetaKey::SOURCE_ID, string("source-id"));
-        group.SetTag(TagKeyDefaultValue[TagKey::HOST_NAME], "hostname");
-        group.SetTag(LOG_RESERVED_KEY_SOURCE, "172.0.0.1");
-        group.SetTag(LOG_RESERVED_KEY_MACHINE_UUID, "uuid");
+        group.SetMetadata(EventGroupMetaKey::SOURCE, string("172.0.0.1"));
+        group.SetMetadata(EventGroupMetaKey::MACHINE_UUID, string("uuid"));
         group.SetMetadata(EventGroupMetaKey::TOPIC, TOPIC_VALUE);
+        group.SetTag(TagKeyDefaultValue[TagKey::HOST_NAME], "hostname");
         {
             auto e = group.AddLogEvent();
             e->SetTimestamp(1234567890);
@@ -919,10 +921,10 @@ void FlusherSLSUnittest::TestFlush() {
 
     PipelineEventGroup group(make_shared<SourceBuffer>());
     group.SetMetadata(EventGroupMetaKey::SOURCE_ID, string("source-id"));
-    group.SetTag(TagKeyDefaultValue[TagKey::HOST_NAME], "hostname");
-    group.SetTag(LOG_RESERVED_KEY_SOURCE, "172.0.0.1");
-    group.SetTag(LOG_RESERVED_KEY_MACHINE_UUID, "uuid");
+    group.SetMetadata(EventGroupMetaKey::SOURCE, string("172.0.0.1"));
+    group.SetMetadata(EventGroupMetaKey::MACHINE_UUID, string("uuid"));
     group.SetMetadata(EventGroupMetaKey::TOPIC, TOPIC_VALUE);
+    group.SetTag(TagKeyDefaultValue[TagKey::HOST_NAME], "hostname");
     {
         auto e = group.AddLogEvent();
         e->SetTimestamp(1234567890);
@@ -963,10 +965,10 @@ void FlusherSLSUnittest::TestFlushAll() {
 
     PipelineEventGroup group(make_shared<SourceBuffer>());
     group.SetMetadata(EventGroupMetaKey::SOURCE_ID, string("source-id"));
-    group.SetTag(TagKeyDefaultValue[TagKey::HOST_NAME], "hostname");
-    group.SetTag(LOG_RESERVED_KEY_SOURCE, "172.0.0.1");
-    group.SetTag(LOG_RESERVED_KEY_MACHINE_UUID, "uuid");
+    group.SetMetadata(EventGroupMetaKey::SOURCE, string("172.0.0.1"));
+    group.SetMetadata(EventGroupMetaKey::MACHINE_UUID, string("uuid"));
     group.SetMetadata(EventGroupMetaKey::TOPIC, TOPIC_VALUE);
+    group.SetTag(TagKeyDefaultValue[TagKey::HOST_NAME], "hostname");
     {
         auto e = group.AddLogEvent();
         e->SetTimestamp(1234567890);

@@ -122,10 +122,19 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, stri
             return false;
         }
     }
-    auto it = group.mMetadata.find(EventGroupMetaKey::TOPIC);
-    if (it != group.mMetadata.end()) {
-        logGroup.set_topic(it->second.to_string());
+    auto topicIt = group.mMetadata.find(EventGroupMetaKey::TOPIC);
+    if (topicIt != group.mMetadata.end()) {
+        logGroup.set_topic(topicIt->second.to_string());
     }
+    auto machineUUIDIt = group.mMetadata.find(EventGroupMetaKey::MACHINE_UUID);
+    if (machineUUIDIt != group.mMetadata.end()) {
+        logGroup.set_machineuuid(machineUUIDIt->second.to_string());
+    }
+    auto sourceIt = group.mMetadata.find(EventGroupMetaKey::SOURCE);
+    if (sourceIt != group.mMetadata.end()) {
+        logGroup.set_source(sourceIt->second.to_string());
+    }
+
     for (const auto& tag : group.mTags.mInner) {
         auto logTag = logGroup.add_logtags();
         logTag->set_key(tag.first.to_string());

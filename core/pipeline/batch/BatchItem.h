@@ -136,12 +136,14 @@ public:
         Clear();
     }
 
-    void Reset(const SizedMap& tags,
+    void Reset(const GroupMetadata& metadata,
+               const SizedMap& tags,
                const std::shared_ptr<SourceBuffer>& sourceBuffer,
                const RangeCheckpointPtr& exactlyOnceCheckpoint,
                StringView packIdPrefix) {
         Clear();
         // should be copied instead of moved in case of one original group splitted into two
+        mBatch.mMetadata = metadata;
         mBatch.mTags = tags;
         mBatch.mExactlyOnceCheckpoint = exactlyOnceCheckpoint;
         mBatch.mPackIdPrefix = packIdPrefix;

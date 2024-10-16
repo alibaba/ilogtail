@@ -20,8 +20,7 @@
 
 namespace logtail {
 
-const std::string LOG_RESERVED_KEY_SOURCE = "__source__";
-const std::string LOG_RESERVED_KEY_MACHINE_UUID = "__machine_uuid__";
+// TODO: move to metadata
 const std::string LOG_RESERVED_KEY_PACKAGE_ID = "__pack_id__";
 const std::string LOG_RESERVED_KEY_TRUNCATE_INFO = "__truncate_info__";
 

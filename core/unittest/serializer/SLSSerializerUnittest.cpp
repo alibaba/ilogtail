@@ -206,9 +206,9 @@ void SLSSerializerUnittest::TestSerializeEventGroupList() {
 
 BatchedEvents SLSSerializerUnittest::CreateBatchedEvents(bool enableNanosecond) {
     PipelineEventGroup group(make_shared<SourceBuffer>());
+    group.SetMetadata(EventGroupMetaKey::SOURCE, string("source"));
+    group.SetMetadata(EventGroupMetaKey::MACHINE_UUID, string("machine_uuid"));
     group.SetMetadata(EventGroupMetaKey::TOPIC, TOPIC_VALUE);
-    group.SetTag(LOG_RESERVED_KEY_SOURCE, "source");
-    group.SetTag(LOG_RESERVED_KEY_MACHINE_UUID, "machine_uuid");
     group.SetTag(LOG_RESERVED_KEY_PACKAGE_ID, "pack_id");
     StringBuffer b = group.GetSourceBuffer()->CopyString(string("pack_id"));
     group.SetMetadataNoCopy(EventGroupMetaKey::SOURCE_ID, StringView(b.data, b.size));
@@ -234,8 +234,9 @@ BatchedEvents
 SLSSerializerUnittest::CreateBatchedMetricEvents(bool enableNanosecond, uint32_t nanoTimestamp, bool emptyValue) {
     PipelineEventGroup group(make_shared<SourceBuffer>());
     group.SetMetadata(EventGroupMetaKey::TOPIC, TOPIC_VALUE);
-    group.SetTag(LOG_RESERVED_KEY_SOURCE, "source");
-    group.SetTag(LOG_RESERVED_KEY_MACHINE_UUID, "machine_uuid");
+    group.SetMetadata(EventGroupMetaKey::SOURCE, string("127.0.0.1"));
+    group.SetMetadata(EventGroupMetaKey::MACHINE_UUID, string("uuid"));
+    group.SetMetadata(EventGroupMetaKey::TOPIC, TOPIC_VALUE);
     group.SetTag(LOG_RESERVED_KEY_PACKAGE_ID, "pack_id");
 
     StringBuffer b = group.GetSourceBuffer()->CopyString(string("pack_id"));

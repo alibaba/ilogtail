@@ -29,6 +29,7 @@ namespace logtail {
 class FileTagOptionsUnittest : public testing::Test {
 public:
     void OnSuccessfulInit() const;
+    void OnFailInit() const;
 
 private:
     const string pluginType = "test";
@@ -141,7 +142,53 @@ void FileTagOptionsUnittest::OnSuccessfulInit() const {
     APSARA_TEST_EQUAL(config->mFileTags[TagKey::CONTAINER_IMAGE_NAME_TAG_KEY], "test_container_image_name");
 }
 
+void FileTagOptionsUnittest::OnFailInit() const {
+    unique_ptr<FileTagOptions> config;
+    Json::Value configJson;
+    string configStr, errorMsg;
+
+    configStr = R"(
+        {
+            "AppendingLogPositionMeta": "test"
+        }
+    )";
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    config.reset(new FileTagOptions());
+    APSARA_TEST_FALSE(config->Init(configJson, ctx, pluginType));
+
+    configStr = R"(
+        {
+            "Tags": "test"
+        }
+    )";
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    config.reset(new FileTagOptions());
+    APSARA_TEST_FALSE(config->Init(configJson, ctx, pluginType));
+
+    configStr = R"(
+        {
+            "EnableContainerDiscovery": "test"
+        }
+    )";
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    config.reset(new FileTagOptions());
+    APSARA_TEST_FALSE(config->Init(configJson, ctx, pluginType));
+
+    configStr = R"(
+        {
+            "Tags": {
+                "FilePathTagKey": 1
+            }
+        }
+    )";
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    config.reset(new FileTagOptions());
+    APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType));
+    APSARA_TEST_EQUAL(config->mFileTags.size(), 2);
+}
+
 UNIT_TEST_CASE(FileTagOptionsUnittest, OnSuccessfulInit)
+UNIT_TEST_CASE(FileTagOptionsUnittest, OnFailInit)
 
 } // namespace logtail
 

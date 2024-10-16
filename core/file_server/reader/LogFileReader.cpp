@@ -29,6 +29,7 @@
 #include <random>
 
 #include "app_config/AppConfig.h"
+#include "application/Application.h"
 #include "checkpoint/CheckPointManager.h"
 #include "checkpoint/CheckpointManagerV2.h"
 #include "common/Constants.h"
@@ -2446,13 +2447,15 @@ void LogFileReader::SetEventGroupMetaAndTag(PipelineEventGroup& group) {
         group.SetMetadata(EventGroupMetaKey::LOG_FILE_INODE, ToString(GetDevInode().inode));
     }
     group.SetMetadata(EventGroupMetaKey::SOURCE_ID, GetSourceId());
+    group.SetMetadata(EventGroupMetaKey::SOURCE, LogFileProfiler::mIpAddr);
+    group.SetMetadata(EventGroupMetaKey::TOPIC, GetTopicName());
+    group.SetMetadata(EventGroupMetaKey::MACHINE_UUID, Application::GetInstance()->GetUUID());
     if (mTagConfig.first != nullptr) {
         auto offsetKey = mTagConfig.first->GetFileTagKeyName(TagKey::FILE_OFFSET_KEY);
         if (!offsetKey.empty()) {
             group.SetMetadata(EventGroupMetaKey::LOG_FILE_OFFSET_KEY, offsetKey);
         }
     }
-    group.SetMetadata(EventGroupMetaKey::TOPIC, GetTopicName());
 
     // we store info which users can see in tags
     // for log, these includes:

@@ -200,9 +200,7 @@ void InputFileUnittest::OnEnableContainerDiscovery() {
         )";
     optionalGoPipelineStr = R"(
             {
-                "global": {
-                    "AlwaysOnline": true
-                },
+                "global": {},
                 "inputs": [
                     {                
                         "type": "metric_container_info/2",

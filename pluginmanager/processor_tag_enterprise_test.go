@@ -38,25 +38,29 @@ func TestTagDefault(t *testing.T) {
 		AgentEnvMetaTagKey:           map[string]string{},
 	}
 	logCtx := &pipeline.LogWithContext{
-		Context: map[string]interface{}{},
+		Context: map[string]interface{}{
+			"tags": map[string]string{},
+		},
 	}
 	globalConfig := &config.GlobalConfig{}
 	processorTag.ProcessV1(logCtx, globalConfig)
 	tagsMap := logCtx.Context["tags"].(map[string]string)
 	assert.Equal(t, 3, len(tagsMap))
-	assert.Equal(t, util.GetHostName(), tagsMap["HOST_NAME"])
+	assert.Equal(t, util.GetHostName(), tagsMap["__hostname__"])
 	assert.Equal(t, "test_env_tag_value", tagsMap["test_env_tag"])
 
 	processorTag.PipelineMetaTagKey = map[string]string{
 		"HOST_NAME": "__default__",
 	}
 	logCtx = &pipeline.LogWithContext{
-		Context: map[string]interface{}{},
+		Context: map[string]interface{}{
+			"tags": map[string]string{},
+		},
 	}
 	processorTag.ProcessV1(logCtx, globalConfig)
 	tagsMap = logCtx.Context["tags"].(map[string]string)
 	assert.Equal(t, 3, len(tagsMap))
-	assert.Equal(t, util.GetHostName(), tagsMap["HOST_NAME"])
+	assert.Equal(t, util.GetHostName(), tagsMap["__hostname__"])
 	assert.Equal(t, "test_env_tag_value", tagsMap["test_env_tag"])
 }
 
@@ -70,18 +74,26 @@ func TestTagDefaultV2(t *testing.T) {
 		EnableAgentEnvMetaTagControl: false,
 		AgentEnvMetaTagKey:           map[string]string{},
 	}
-	in := &models.PipelineGroupEvents{}
+	in := &models.PipelineGroupEvents{
+		Group: &models.GroupInfo{
+			Tags: models.NewTags(),
+		},
+	}
 	globalConfig := &config.GlobalConfig{}
 	processorTag.ProcessV2(in, globalConfig)
-	assert.Equal(t, util.GetHostName(), in.Group.Tags.Get("HOST_NAME"))
+	assert.Equal(t, util.GetHostName(), in.Group.Tags.Get("__hostname__"))
 	assert.Equal(t, "test_env_tag_value", in.Group.Tags.Get("test_env_tag"))
 
 	processorTag.PipelineMetaTagKey = map[string]string{
 		"HOST_NAME": "__default__",
 	}
-	in = &models.PipelineGroupEvents{}
+	in = &models.PipelineGroupEvents{
+		Group: &models.GroupInfo{
+			Tags: models.NewTags(),
+		},
+	}
 	processorTag.ProcessV2(in, globalConfig)
-	assert.Equal(t, util.GetHostName(), in.Group.Tags.Get("HOST_NAME"))
+	assert.Equal(t, util.GetHostName(), in.Group.Tags.Get("__hostname__"))
 	assert.Equal(t, "test_env_tag_value", in.Group.Tags.Get("test_env_tag"))
 }
 
@@ -98,7 +110,9 @@ func TestTagRename(t *testing.T) {
 		AgentEnvMetaTagKey:           map[string]string{},
 	}
 	logCtx := &pipeline.LogWithContext{
-		Context: map[string]interface{}{},
+		Context: map[string]interface{}{
+			"tags": map[string]string{},
+		},
 	}
 	globalConfig := &config.GlobalConfig{}
 	processorTag.ProcessV1(logCtx, globalConfig)
@@ -120,7 +134,11 @@ func TestTagRenameV2(t *testing.T) {
 		EnableAgentEnvMetaTagControl: false,
 		AgentEnvMetaTagKey:           map[string]string{},
 	}
-	in := &models.PipelineGroupEvents{}
+	in := &models.PipelineGroupEvents{
+		Group: &models.GroupInfo{
+			Tags: models.NewTags(),
+		},
+	}
 	globalConfig := &config.GlobalConfig{}
 	processorTag.ProcessV2(in, globalConfig)
 	assert.Equal(t, util.GetHostName(), in.Group.Tags.Get("test_host_name"))
@@ -144,7 +162,9 @@ func TestTagDelete(t *testing.T) {
 		},
 	}
 	logCtx := &pipeline.LogWithContext{
-		Context: map[string]interface{}{},
+		Context: map[string]interface{}{
+			"tags": map[string]string{},
+		},
 	}
 	globalConfig := &config.GlobalConfig{}
 	processorTag.ProcessV1(logCtx, globalConfig)
@@ -170,9 +190,13 @@ func TestTagDeleteV2(t *testing.T) {
 			"test_env_tag": "test_env_tag_new",
 		},
 	}
-	in := &models.PipelineGroupEvents{}
+	in := &models.PipelineGroupEvents{
+		Group: &models.GroupInfo{
+			Tags: models.NewTags(),
+		},
+	}
 	globalConfig := &config.GlobalConfig{}
 	processorTag.ProcessV2(in, globalConfig)
-	assert.Equal(t, "", in.Group.Tags.Get("HOST_NAME"))
+	assert.Equal(t, "", in.Group.Tags.Get("__hostname__"))
 	assert.Equal(t, "test_env_tag_value", in.Group.Tags.Get("test_env_tag_new"))
 }

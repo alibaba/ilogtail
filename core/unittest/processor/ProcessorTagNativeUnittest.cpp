@@ -306,9 +306,6 @@ void ProcessorTagNativeUnittest::TestProcess() {
 
         APSARA_TEST_TRUE_FATAL(eventGroup.HasTag(TagKeyDefaultValue[TagKey::HOST_NAME]));
         APSARA_TEST_EQUAL_FATAL(LogFileProfiler::mHostname, eventGroup.GetTag(TagKeyDefaultValue[TagKey::HOST_NAME]));
-        APSARA_TEST_TRUE_FATAL(eventGroup.HasTag(LOG_RESERVED_KEY_MACHINE_UUID));
-        APSARA_TEST_EQUAL_FATAL(Application::GetInstance()->GetUUID(),
-                                eventGroup.GetTag(LOG_RESERVED_KEY_MACHINE_UUID));
 #ifdef __ENTERPRISE__
         APSARA_TEST_TRUE_FATAL(eventGroup.HasTag(AGENT_TAG_DEFAULT_KEY));
         APSARA_TEST_EQUAL_FATAL(EnterpriseConfigProvider::GetInstance()->GetUserDefinedIdSet(),
@@ -365,9 +362,6 @@ void ProcessorTagNativeUnittest::TestProcess() {
         processor.Process(eventGroup);
         APSARA_TEST_TRUE_FATAL(eventGroup.HasTag(TagKeyDefaultValue[TagKey::HOST_NAME]));
         APSARA_TEST_EQUAL_FATAL(LogFileProfiler::mHostname, eventGroup.GetTag(TagKeyDefaultValue[TagKey::HOST_NAME]));
-        APSARA_TEST_TRUE_FATAL(eventGroup.HasTag(LOG_RESERVED_KEY_MACHINE_UUID));
-        APSARA_TEST_EQUAL_FATAL(Application::GetInstance()->GetUUID(),
-                                eventGroup.GetTag(LOG_RESERVED_KEY_MACHINE_UUID));
 #ifdef __ENTERPRISE__
         APSARA_TEST_TRUE_FATAL(eventGroup.HasTag(AGENT_TAG_DEFAULT_KEY));
         APSARA_TEST_EQUAL_FATAL(EnterpriseConfigProvider::GetInstance()->GetUserDefinedIdSet(),
@@ -424,9 +418,6 @@ void ProcessorTagNativeUnittest::TestProcess() {
         processor.Process(eventGroup);
         APSARA_TEST_TRUE_FATAL(eventGroup.HasTag("test_host_name"));
         APSARA_TEST_EQUAL_FATAL(LogFileProfiler::mHostname, eventGroup.GetTag("test_host_name"));
-        APSARA_TEST_TRUE_FATAL(eventGroup.HasTag(LOG_RESERVED_KEY_MACHINE_UUID));
-        APSARA_TEST_EQUAL_FATAL(Application::GetInstance()->GetUUID(),
-                                eventGroup.GetTag(LOG_RESERVED_KEY_MACHINE_UUID));
 #ifdef __ENTERPRISE__
         APSARA_TEST_TRUE_FATAL(eventGroup.HasTag("test_agent_tag"));
         APSARA_TEST_EQUAL_FATAL(EnterpriseConfigProvider::GetInstance()->GetUserDefinedIdSet(),
@@ -482,9 +473,6 @@ void ProcessorTagNativeUnittest::TestProcess() {
 
         processor.Process(eventGroup);
         APSARA_TEST_FALSE_FATAL(eventGroup.HasTag(TagKeyDefaultValue[TagKey::HOST_NAME]));
-        APSARA_TEST_TRUE_FATAL(eventGroup.HasTag(LOG_RESERVED_KEY_MACHINE_UUID));
-        APSARA_TEST_EQUAL_FATAL(Application::GetInstance()->GetUUID(),
-                                eventGroup.GetTag(LOG_RESERVED_KEY_MACHINE_UUID));
 #ifdef __ENTERPRISE__
         APSARA_TEST_FALSE_FATAL(eventGroup.HasTag(AGENT_TAG_DEFAULT_KEY));
 #else

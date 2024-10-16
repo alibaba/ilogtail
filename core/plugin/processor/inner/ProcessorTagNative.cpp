@@ -71,8 +71,6 @@ void ProcessorTagNative::Process(PipelineEventGroup& logGroup) {
 #ifndef __ENTERPRISE__
     addTagIfRequired(logGroup, "HOST_IP", HOST_IP_DEFAULT_KEY, LogFileProfiler::mIpAddr);
 #endif
-    auto sb = logGroup.GetSourceBuffer()->CopyString(Application::GetInstance()->GetUUID());
-    logGroup.SetTagNoCopy(LOG_RESERVED_KEY_MACHINE_UUID, StringView(sb.data, sb.size));
 
     static const vector<sls_logs::LogTag>& sEnvTags = AppConfig::GetInstance()->GetEnvTags();
     if (!sEnvTags.empty()) {
