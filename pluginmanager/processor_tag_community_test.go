@@ -19,12 +19,13 @@ package pluginmanager
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/alibaba/ilogtail/pkg/config"
 	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/util"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestTagDefault(t *testing.T) {

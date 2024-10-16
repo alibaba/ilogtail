@@ -29,7 +29,7 @@ namespace logtail {
 class FileTagOptionsUnittest : public testing::Test {
 public:
     void OnSuccessfulInit() const;
-    void OnFailInit() const;
+    void OnInvalidInit() const;
 
 private:
     const string pluginType = "test";
@@ -48,6 +48,7 @@ void FileTagOptionsUnittest::OnSuccessfulInit() const {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new FileTagOptions());
     APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType));
+    APSARA_TEST_EQUAL(1, config->mFileTags.size());
     APSARA_TEST_EQUAL(config->mFileTags[TagKey::FILE_PATH_TAG_KEY], TagKeyDefaultValue[TagKey::FILE_PATH_TAG_KEY]);
 
     // AppendingLogPositionMeta
@@ -59,6 +60,7 @@ void FileTagOptionsUnittest::OnSuccessfulInit() const {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new FileTagOptions());
     APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType));
+    APSARA_TEST_EQUAL(3, config->mFileTags.size());
     APSARA_TEST_EQUAL(config->mFileTags[TagKey::FILE_PATH_TAG_KEY], TagKeyDefaultValue[TagKey::FILE_PATH_TAG_KEY]);
     APSARA_TEST_EQUAL(config->mFileTags[TagKey::FILE_OFFSET_KEY], TagKeyDefaultValue[TagKey::FILE_OFFSET_KEY]);
     APSARA_TEST_EQUAL(config->mFileTags[TagKey::FILE_INODE_TAG_KEY], TagKeyDefaultValue[TagKey::FILE_INODE_TAG_KEY]);
@@ -75,6 +77,7 @@ void FileTagOptionsUnittest::OnSuccessfulInit() const {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new FileTagOptions());
     APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType));
+    APSARA_TEST_EQUAL(3, config->mFileTags.size());
     APSARA_TEST_EQUAL(config->mFileTags[TagKey::FILE_PATH_TAG_KEY], TagKeyDefaultValue[TagKey::FILE_PATH_TAG_KEY]);
     APSARA_TEST_EQUAL(config->mFileTags[TagKey::FILE_OFFSET_KEY], "test_offset");
     APSARA_TEST_EQUAL(config->mFileTags[TagKey::FILE_INODE_TAG_KEY], "test_inode");
@@ -91,6 +94,7 @@ void FileTagOptionsUnittest::OnSuccessfulInit() const {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new FileTagOptions());
     APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType));
+    APSARA_TEST_EQUAL(3, config->mFileTags.size());
     APSARA_TEST_EQUAL(config->mFileTags[TagKey::FILE_PATH_TAG_KEY], TagKeyDefaultValue[TagKey::FILE_PATH_TAG_KEY]);
     APSARA_TEST_EQUAL(config->mFileTags[TagKey::FILE_OFFSET_KEY], "test_offset");
     APSARA_TEST_EQUAL(config->mFileTags[TagKey::FILE_INODE_TAG_KEY], "test_inode");
@@ -104,12 +108,19 @@ void FileTagOptionsUnittest::OnSuccessfulInit() const {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new FileTagOptions());
     APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType));
+    APSARA_TEST_EQUAL(10, config->mFileTags.size());
     APSARA_TEST_EQUAL(config->mFileTags[TagKey::FILE_PATH_TAG_KEY], TagKeyDefaultValue[TagKey::FILE_PATH_TAG_KEY]);
     APSARA_TEST_EQUAL(config->mFileTags[TagKey::K8S_NAMESPACE_TAG_KEY],
                       TagKeyDefaultValue[TagKey::K8S_NAMESPACE_TAG_KEY]);
     APSARA_TEST_EQUAL(config->mFileTags[TagKey::K8S_POD_NAME_TAG_KEY],
                       TagKeyDefaultValue[TagKey::K8S_POD_NAME_TAG_KEY]);
     APSARA_TEST_EQUAL(config->mFileTags[TagKey::K8S_POD_UID_TAG_KEY], TagKeyDefaultValue[TagKey::K8S_POD_UID_TAG_KEY]);
+    APSARA_TEST_EQUAL(config->mFileTags[TagKey::K8S_CONTAINER_NAME_TAG_KEY],
+                      TagKeyDefaultValue[TagKey::K8S_CONTAINER_NAME_TAG_KEY]);
+    APSARA_TEST_EQUAL(config->mFileTags[TagKey::K8S_CONTAINER_IP_TAG_KEY],
+                      TagKeyDefaultValue[TagKey::K8S_CONTAINER_IP_TAG_KEY]);
+    APSARA_TEST_EQUAL(config->mFileTags[TagKey::K8S_CONTAINER_IMAGE_NAME_TAG_KEY],
+                      TagKeyDefaultValue[TagKey::K8S_CONTAINER_IMAGE_NAME_TAG_KEY]);
     APSARA_TEST_EQUAL(config->mFileTags[TagKey::CONTAINER_NAME_TAG_KEY],
                       TagKeyDefaultValue[TagKey::CONTAINER_NAME_TAG_KEY]);
     APSARA_TEST_EQUAL(config->mFileTags[TagKey::CONTAINER_IP_TAG_KEY],
@@ -133,16 +144,20 @@ void FileTagOptionsUnittest::OnSuccessfulInit() const {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new FileTagOptions());
     APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType));
+    APSARA_TEST_EQUAL(10, config->mFileTags.size());
     APSARA_TEST_EQUAL(config->mFileTags[TagKey::FILE_PATH_TAG_KEY], TagKeyDefaultValue[TagKey::FILE_PATH_TAG_KEY]);
     APSARA_TEST_EQUAL(config->mFileTags[TagKey::K8S_NAMESPACE_TAG_KEY], "test_namespace");
     APSARA_TEST_EQUAL(config->mFileTags[TagKey::K8S_POD_NAME_TAG_KEY], "test_pod_name");
     APSARA_TEST_EQUAL(config->mFileTags[TagKey::K8S_POD_UID_TAG_KEY], "test_pod_uid");
+    APSARA_TEST_EQUAL(config->mFileTags[TagKey::K8S_CONTAINER_NAME_TAG_KEY], "test_container_name");
+    APSARA_TEST_EQUAL(config->mFileTags[TagKey::K8S_CONTAINER_IP_TAG_KEY], "test_container_ip");
+    APSARA_TEST_EQUAL(config->mFileTags[TagKey::K8S_CONTAINER_IMAGE_NAME_TAG_KEY], "test_container_image_name");
     APSARA_TEST_EQUAL(config->mFileTags[TagKey::CONTAINER_NAME_TAG_KEY], "test_container_name");
     APSARA_TEST_EQUAL(config->mFileTags[TagKey::CONTAINER_IP_TAG_KEY], "test_container_ip");
     APSARA_TEST_EQUAL(config->mFileTags[TagKey::CONTAINER_IMAGE_NAME_TAG_KEY], "test_container_image_name");
 }
 
-void FileTagOptionsUnittest::OnFailInit() const {
+void FileTagOptionsUnittest::OnInvalidInit() const {
     unique_ptr<FileTagOptions> config;
     Json::Value configJson;
     string configStr, errorMsg;
@@ -154,7 +169,8 @@ void FileTagOptionsUnittest::OnFailInit() const {
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new FileTagOptions());
-    APSARA_TEST_FALSE(config->Init(configJson, ctx, pluginType));
+    APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType));
+    APSARA_TEST_EQUAL(1, config->mFileTags.size());
 
     configStr = R"(
         {
@@ -163,7 +179,8 @@ void FileTagOptionsUnittest::OnFailInit() const {
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new FileTagOptions());
-    APSARA_TEST_FALSE(config->Init(configJson, ctx, pluginType));
+    APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType));
+    APSARA_TEST_EQUAL(1, config->mFileTags.size());
 
     configStr = R"(
         {
@@ -172,7 +189,8 @@ void FileTagOptionsUnittest::OnFailInit() const {
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new FileTagOptions());
-    APSARA_TEST_FALSE(config->Init(configJson, ctx, pluginType));
+    APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType));
+    APSARA_TEST_EQUAL(1, config->mFileTags.size());
 
     configStr = R"(
         {
@@ -184,11 +202,11 @@ void FileTagOptionsUnittest::OnFailInit() const {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new FileTagOptions());
     APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType));
-    APSARA_TEST_EQUAL(config->mFileTags.size(), 2);
+    APSARA_TEST_EQUAL(0, config->mFileTags.size());
 }
 
 UNIT_TEST_CASE(FileTagOptionsUnittest, OnSuccessfulInit)
-UNIT_TEST_CASE(FileTagOptionsUnittest, OnFailInit)
+UNIT_TEST_CASE(FileTagOptionsUnittest, OnInvalidInit)
 
 } // namespace logtail
 

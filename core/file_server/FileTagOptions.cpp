@@ -24,7 +24,7 @@ bool FileTagOptions::Init(const Json::Value& config, const PipelineContext& cont
     std::string errorMsg;
 
     // AppendingLogPositionMeta
-    bool appendingLogPositionMeta;
+    bool appendingLogPositionMeta = false;
     if (!GetOptionalBoolParam(config, "AppendingLogPositionMeta", appendingLogPositionMeta, errorMsg)) {
         PARAM_WARNING_DEFAULT(context.GetLogger(),
                               context.GetAlarm(),
@@ -35,7 +35,6 @@ bool FileTagOptions::Init(const Json::Value& config, const PipelineContext& cont
                               context.GetProjectName(),
                               context.GetLogstoreName(),
                               context.GetRegion());
-        return false;
     }
 
     // Tags
@@ -52,7 +51,7 @@ bool FileTagOptions::Init(const Json::Value& config, const PipelineContext& cont
                                   context.GetProjectName(),
                                   context.GetLogstoreName(),
                                   context.GetRegion());
-            return false;
+            tagConfig = nullptr;
         }
     }
 
@@ -79,7 +78,6 @@ bool FileTagOptions::Init(const Json::Value& config, const PipelineContext& cont
                               context.GetProjectName(),
                               context.GetLogstoreName(),
                               context.GetRegion());
-        return false;
     }
 
     if (enableContainerDiscovery) {
