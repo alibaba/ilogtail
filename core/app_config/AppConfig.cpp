@@ -1806,7 +1806,7 @@ T AppConfig::MergeConfig(T defaultValue,
     tryMerge(remoteInstanceConfig, mRemoteInstanceConfigKeyToConfigName);
     LOG_INFO(
         sLogger,
-        ("merge instance config", name)("key", name)("value", res)("defaultValue", defaultValue)("from", configName));
+        ("merge instance config", name)("key", name)("new value", res)("old value", defaultValue)("from", configName));
     return res;
 }
 
