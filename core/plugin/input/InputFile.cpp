@@ -116,21 +116,8 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
     }
 
     // Tag
-    const char* tagKey = "Tags";
-    const Json::Value* tagItr = config.find(tagKey, tagKey + strlen(tagKey));
-    if (tagItr) {
-        if (!tagItr->isObject()) {
-            PARAM_WARNING_IGNORE(mContext->GetLogger(),
-                                 mContext->GetAlarm(),
-                                 "param Tags is not of type object",
-                                 sName,
-                                 mContext->GetConfigName(),
-                                 mContext->GetProjectName(),
-                                 mContext->GetLogstoreName(),
-                                 mContext->GetRegion());
-        } else if (!mFileTag.Init(*tagItr, *mContext, sName, mEnableContainerDiscovery)) {
-            return false;
-        }
+    if (!mFileTag.Init(config, *mContext, sName)) {
+        return false;
     }
 
     // MaxCheckpointDirSearchDepth

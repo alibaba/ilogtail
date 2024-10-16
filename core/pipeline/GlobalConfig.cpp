@@ -24,8 +24,13 @@ using namespace std;
 
 namespace logtail {
 
-const unordered_set<string> GlobalConfig::sNativeParam
-    = {"TopicType", "TopicFormat", "ProcessPriority", "EnableTimestampNanosecond", "UsingOldContentTag"};
+const unordered_set<string> GlobalConfig::sNativeParam = {"TopicType",
+                                                          "TopicFormat",
+                                                          "ProcessPriority",
+                                                          "EnableTimestampNanosecond",
+                                                          "UsingOldContentTag",
+                                                          "PipelineMetaTagKey",
+                                                          "AgentEnvMetaTagKey"};
 
 bool GlobalConfig::Init(const Json::Value& config, const PipelineContext& ctx, Json::Value& extendedParams) {
     const string moduleName = "global";
@@ -163,18 +168,24 @@ bool GlobalConfig::Init(const Json::Value& config, const PipelineContext& ctx, J
                              ctx.GetRegion());
     }
 
+#ifdef __ENTERPRISE__
     // AgentEnvMetaTagKey
-    if (!GetOptionalMapParam(config, "AgentEnvMetaTagKey", mAgentEnvMetaTagKey, errorMsg)) {
-        PARAM_WARNING_IGNORE(ctx.GetLogger(),
-                             ctx.GetAlarm(),
-                             errorMsg,
-                             moduleName,
-                             ctx.GetConfigName(),
-                             ctx.GetProjectName(),
-                             ctx.GetLogstoreName(),
-                             ctx.GetRegion());
+    const std::string key = "AgentEnvMetaTagKey";
+    const Json::Value* itr = config.find(key.c_str(), key.c_str() + key.length());
+    if (itr) {
+        mEnableAgentEnvMetaTagControl = true;
     }
-
+    if (!GetOptionalMapParam(config, "AgentEnvMetaTagKey", mAgentEnvMetaTagKey, errorMsg)) {
+        PARAM_WARNING_IGNORE(mContext->GetLogger(),
+                             mContext->GetAlarm(),
+                             errorMsg,
+                             sName,
+                             mContext->GetConfigName(),
+                             mContext->GetProjectName(),
+                             mContext->GetLogstoreName(),
+                             mContext->GetRegion());
+    }
+#endif
     return true;
 }
 

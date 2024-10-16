@@ -21,7 +21,6 @@
 namespace logtail {
 
 const std::string LOG_RESERVED_KEY_SOURCE = "__source__";
-const std::string LOG_RESERVED_KEY_TOPIC = "__topic__";
 const std::string LOG_RESERVED_KEY_MACHINE_UUID = "__machine_uuid__";
 const std::string LOG_RESERVED_KEY_PACKAGE_ID = "__pack_id__";
 const std::string LOG_RESERVED_KEY_TRUNCATE_INFO = "__truncate_info__";
@@ -47,7 +46,7 @@ enum TagKey {
 };
 
 #ifdef __ENTERPRISE__
-const std::string TagDefaultKey[NUM_VALUES] = {
+const std::string TagKeyDefaultValue[NUM_VALUES] = {
     "__file_offset__",
     "__inode__",
     "__path__",
@@ -64,7 +63,7 @@ const std::string TagDefaultKey[NUM_VALUES] = {
 };
 const std::string AGENT_TAG_DEFAULT_KEY = "__user_defined_id__";
 #else
-const std::string TagDefaultKey[NUM_VALUES] = {
+const std::string TagKeyDefaultValue[NUM_VALUES] = {
     "log.file.offset",
     "log.file.inode",
     "log.file.path",

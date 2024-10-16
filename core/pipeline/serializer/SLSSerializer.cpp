@@ -122,18 +122,14 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, stri
             return false;
         }
     }
+    auto it = group.mMetadata.find(EventGroupMetaKey::TOPIC);
+    if (it != group.mMetadata.end()) {
+        logGroup.set_topic(it->second.to_string());
+    }
     for (const auto& tag : group.mTags.mInner) {
-        if (tag.first == LOG_RESERVED_KEY_TOPIC) {
-            logGroup.set_topic(tag.second.to_string());
-        } else if (tag.first == LOG_RESERVED_KEY_SOURCE) {
-            logGroup.set_source(tag.second.to_string());
-        } else if (tag.first == LOG_RESERVED_KEY_MACHINE_UUID) {
-            logGroup.set_machineuuid(tag.second.to_string());
-        } else {
-            auto logTag = logGroup.add_logtags();
-            logTag->set_key(tag.first.to_string());
-            logTag->set_value(tag.second.to_string());
-        }
+        auto logTag = logGroup.add_logtags();
+        logTag->set_key(tag.first.to_string());
+        logTag->set_value(tag.second.to_string());
     }
     // loggroup.category is deprecated, no need to set
     size_t size = logGroup.ByteSizeLong();

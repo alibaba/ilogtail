@@ -21,6 +21,7 @@
 
 namespace logtail {
 
+// internal name, used for the communication between C++ and Go
 const std::vector<std::string> containerNameTag = {
     "_image_name_",
     "_container_name_",

@@ -31,8 +31,9 @@ const (
 
 // Processor interface cannot meet the requirements of tag processing, so we need to create a special ProcessorTag struct
 type ProcessorTag struct {
-	PipelineMetaTagKey map[string]string
-	AgentEnvMetaTagKey map[string]string
+	PipelineMetaTagKey           map[string]string
+	EnableAgentEnvMetaTagControl bool
+	AgentEnvMetaTagKey           map[string]string
 }
 
 func (p *ProcessorTag) ProcessV1(logCtx *pipeline.LogWithContext, globalConfig *config.GlobalConfig) {

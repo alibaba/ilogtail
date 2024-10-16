@@ -38,7 +38,7 @@ private:
                           const StringView& value) const;
     std::unordered_map<std::string, std::string> mPipelineMetaTagKey;
 #ifdef __ENTERPRISE__
-    bool mEnableAgentEnvMetaTag = false;
+    bool mEnableAgentEnvMetaTagControl = false;
     std::unordered_map<std::string, std::string> mAgentEnvMetaTagKey;
 #endif
 

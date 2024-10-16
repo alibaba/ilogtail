@@ -14,7 +14,8 @@
 
 #include <cstdlib>
 
-#include "common/Constants.h"
+#include "application/Application.h"
+#include "common/JsonUtil.h"
 #include "config/PipelineConfig.h"
 #include "file_server/ConfigManager.h"
 #include "pipeline/Pipeline.h"
@@ -33,7 +34,6 @@ public:
 
 protected:
     void SetUp() override {
-        mContext.SetConfigName("project##config_0");
         LogFileProfiler::GetInstance();
 #ifdef __ENTERPRISE__
         EnterpriseConfigProvider::GetInstance()->SetUserDefinedIdSet(std::vector<std::string>{"machine_group"});
@@ -41,72 +41,454 @@ protected:
     }
 
 private:
-    PipelineContext mContext;
 };
 
 void ProcessorTagNativeUnittest::TestInit() {
     // make config
     Json::Value config;
     Pipeline pipeline;
-    mContext.SetPipeline(pipeline);
-    mContext.GetPipeline().mGoPipelineWithoutInput = Json::Value("test");
+    PipelineContext context;
+    context.SetConfigName("project##config_0");
+    context.SetPipeline(pipeline);
+    context.GetPipeline().mGoPipelineWithoutInput = Json::Value("test");
 
     {
         ProcessorTagNative processor;
-        processor.SetContext(mContext);
+        processor.SetContext(context);
         APSARA_TEST_TRUE_FATAL(processor.Init(config));
     }
 }
 
 void ProcessorTagNativeUnittest::TestProcess() {
-    // make config
-    Json::Value config;
-    auto sourceBuffer = std::make_shared<logtail::SourceBuffer>();
-    PipelineEventGroup eventGroup(sourceBuffer);
-    std::string filePath = "/var/log/message";
-    eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_PATH, filePath);
-    std::string resolvedFilePath = "/run/var/log/message";
-    eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED, resolvedFilePath);
-    std::string inode = "123456";
-    eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_INODE, inode);
-
-    { // plugin branch
+    { // plugin branch default
+        Json::Value processorConfig;
+        Json::Value config;
+        std::string configStr, errorMsg;
+#ifdef __ENTERPRISE__
+        configStr = R"(
+            {
+                "PipelineMetaTagKey": {},
+                "AgentEnvMetaTagKey": {}
+            }
+        )";
+#else
+        configStr = R"(
+            {
+                "PipelineMetaTagKey": {}
+            }
+        )";
+#endif
+        APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
+        auto sourceBuffer = std::make_shared<logtail::SourceBuffer>();
+        PipelineEventGroup eventGroup(sourceBuffer);
+        std::string filePath = "/var/log/message";
+        eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_PATH, filePath);
+        std::string resolvedFilePath = "/run/var/log/message";
+        eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED, resolvedFilePath);
+        std::string inode = "123456";
+        eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_INODE, inode);
         Pipeline pipeline;
-        mContext.SetPipeline(pipeline);
-        mContext.GetPipeline().mGoPipelineWithoutInput = Json::Value("test");
+        PipelineContext context;
+        context.SetConfigName("project##config_0");
+        context.SetPipeline(pipeline);
+        context.GetPipeline().mGoPipelineWithoutInput = Json::Value("test");
+        Json::Value extendedParams;
+        context.InitGlobalConfig(config, extendedParams);
+
         ProcessorTagNative processor;
-        processor.SetContext(mContext);
-        APSARA_TEST_TRUE_FATAL(processor.Init(config));
+        processor.SetContext(context);
+        APSARA_TEST_TRUE_FATAL(processor.Init(processorConfig));
 
         processor.Process(eventGroup);
-        // APSARA_TEST_TRUE_FATAL(eventGroup.HasTag(LOG_RESERVED_KEY_PATH));
-        // APSARA_TEST_EQUAL_FATAL(eventGroup.GetMetadata(EventGroupMetaKey::LOG_FILE_PATH),
-        //                         eventGroup.GetTag(LOG_RESERVED_KEY_PATH));
-        // APSARA_TEST_FALSE_FATAL(eventGroup.HasTag(LOG_RESERVED_KEY_HOSTNAME));
 #ifdef __ENTERPRISE__
-        // APSARA_TEST_TRUE_FATAL(eventGroup.HasTag(LOG_RESERVED_KEY_USER_DEFINED_ID));
-        // APSARA_TEST_EQUAL_FATAL(EnterpriseConfigProvider::GetInstance()->GetUserDefinedIdSet(),
-        //                         eventGroup.GetTag(LOG_RESERVED_KEY_USER_DEFINED_ID));
+        APSARA_TEST_TRUE_FATAL(eventGroup.HasTag(AGENT_TAG_DEFAULT_KEY));
+        APSARA_TEST_EQUAL_FATAL(EnterpriseConfigProvider::GetInstance()->GetUserDefinedIdSet(),
+                                eventGroup.GetTag(AGENT_TAG_DEFAULT_KEY));
+#else
 #endif
     }
-
-    { // native branch
+    { // plugin branch default
+        Json::Value processorConfig;
+        Json::Value config;
+        std::string configStr, errorMsg;
+#ifdef __ENTERPRISE__
+        configStr = R"(
+            {
+                "PipelineMetaTagKey": {
+                    "HOST_NAME": "__default__",
+                    "AGENT_TAG": "__default__"
+                },
+                "AgentEnvMetaTagKey": {}
+            }
+        )";
+#else
+        configStr = R"(
+            {
+                "PipelineMetaTagKey": {
+                    "HOST_NAME": "__default__",
+                    "HOST_IP": "__default__"
+                }
+            }
+        )";
+#endif
+        APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
+        auto sourceBuffer = std::make_shared<logtail::SourceBuffer>();
+        PipelineEventGroup eventGroup(sourceBuffer);
+        std::string filePath = "/var/log/message";
+        eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_PATH, filePath);
+        std::string resolvedFilePath = "/run/var/log/message";
+        eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED, resolvedFilePath);
+        std::string inode = "123456";
+        eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_INODE, inode);
         Pipeline pipeline;
-        mContext.SetPipeline(pipeline);
+        PipelineContext context;
+        context.SetConfigName("project##config_0");
+        context.SetPipeline(pipeline);
+        context.GetPipeline().mGoPipelineWithoutInput = Json::Value("test");
+        Json::Value extendedParams;
+        context.InitGlobalConfig(config, extendedParams);
+
         ProcessorTagNative processor;
-        processor.SetContext(mContext);
-        APSARA_TEST_TRUE_FATAL(processor.Init(config));
+        processor.SetContext(context);
+        APSARA_TEST_TRUE_FATAL(processor.Init(processorConfig));
 
         processor.Process(eventGroup);
-        // APSARA_TEST_TRUE_FATAL(eventGroup.HasTag(LOG_RESERVED_KEY_PATH));
-        // APSARA_TEST_EQUAL_FATAL(eventGroup.GetMetadata(EventGroupMetaKey::LOG_FILE_PATH),
-        //                         eventGroup.GetTag(LOG_RESERVED_KEY_PATH));
-        // APSARA_TEST_TRUE_FATAL(eventGroup.HasTag(LOG_RESERVED_KEY_HOSTNAME));
-        // APSARA_TEST_EQUAL_FATAL(LogFileProfiler::mHostname, eventGroup.GetTag(LOG_RESERVED_KEY_HOSTNAME));
 #ifdef __ENTERPRISE__
-        APSARA_TEST_TRUE_FATAL(eventGroup.HasTag(LOG_RESERVED_KEY_USER_DEFINED_ID));
+        APSARA_TEST_TRUE_FATAL(eventGroup.HasTag(AGENT_TAG_DEFAULT_KEY));
         APSARA_TEST_EQUAL_FATAL(EnterpriseConfigProvider::GetInstance()->GetUserDefinedIdSet(),
-                                eventGroup.GetTag(LOG_RESERVED_KEY_USER_DEFINED_ID));
+                                eventGroup.GetTag(AGENT_TAG_DEFAULT_KEY));
+#else
+#endif
+    }
+    { // plugin branch rename
+        Json::Value processorConfig;
+        Json::Value config;
+        std::string configStr, errorMsg;
+#ifdef __ENTERPRISE__
+        configStr = R"(
+            {
+                "PipelineMetaTagKey": {
+                    "HOST_NAME": "test_host_name",
+                    "AGENT_TAG": "test_agent_tag"
+                },
+                "AgentEnvMetaTagKey": {}
+            }
+        )";
+#else
+        configStr = R"(
+            {
+                "PipelineMetaTagKey": {
+                    "HOST_NAME": "test_host_name",
+                    "HOST_IP": "test_host_ip"
+                }
+            }
+        )";
+#endif
+        APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
+        auto sourceBuffer = std::make_shared<logtail::SourceBuffer>();
+        PipelineEventGroup eventGroup(sourceBuffer);
+        std::string filePath = "/var/log/message";
+        eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_PATH, filePath);
+        std::string resolvedFilePath = "/run/var/log/message";
+        eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED, resolvedFilePath);
+        std::string inode = "123456";
+        eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_INODE, inode);
+        Pipeline pipeline;
+        PipelineContext context;
+        context.SetConfigName("project##config_0");
+        context.SetPipeline(pipeline);
+        context.GetPipeline().mGoPipelineWithoutInput = Json::Value("test");
+        Json::Value extendedParams;
+        context.InitGlobalConfig(config, extendedParams);
+
+        ProcessorTagNative processor;
+        processor.SetContext(context);
+        APSARA_TEST_TRUE_FATAL(processor.Init(processorConfig));
+
+        processor.Process(eventGroup);
+#ifdef __ENTERPRISE__
+        APSARA_TEST_TRUE_FATAL(eventGroup.HasTag("test_agent_tag"));
+        APSARA_TEST_EQUAL_FATAL(EnterpriseConfigProvider::GetInstance()->GetUserDefinedIdSet(),
+                                eventGroup.GetTag("test_agent_tag"));
+#else
+#endif
+    }
+    { // plugin branch delete
+        Json::Value processorConfig;
+        Json::Value config;
+        std::string configStr, errorMsg;
+#ifdef __ENTERPRISE__
+        configStr = R"(
+            {
+                "PipelineMetaTagKey": {
+                    "HOST_NAME": "",
+                    "AGENT_TAG": ""
+                },
+                "AgentEnvMetaTagKey": {}
+            }
+        )";
+#else
+        configStr = R"(
+            {
+                "PipelineMetaTagKey": {
+                    "HOST_NAME": "",
+                    "HOST_IP": ""
+                }
+            }
+        )";
+#endif
+        APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
+        auto sourceBuffer = std::make_shared<logtail::SourceBuffer>();
+        PipelineEventGroup eventGroup(sourceBuffer);
+        std::string filePath = "/var/log/message";
+        eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_PATH, filePath);
+        std::string resolvedFilePath = "/run/var/log/message";
+        eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED, resolvedFilePath);
+        std::string inode = "123456";
+        eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_INODE, inode);
+        Pipeline pipeline;
+        PipelineContext context;
+        context.SetConfigName("project##config_0");
+        context.SetPipeline(pipeline);
+        context.GetPipeline().mGoPipelineWithoutInput = Json::Value("test");
+        Json::Value extendedParams;
+        context.InitGlobalConfig(config, extendedParams);
+
+        ProcessorTagNative processor;
+        processor.SetContext(context);
+        APSARA_TEST_TRUE_FATAL(processor.Init(processorConfig));
+
+        processor.Process(eventGroup);
+#ifdef __ENTERPRISE__
+        APSARA_TEST_FALSE_FATAL(eventGroup.HasTag("test_agent_tag"));
+#else
+#endif
+    }
+    { // native branch default
+        Json::Value processorConfig;
+        Json::Value config;
+        std::string configStr, errorMsg;
+#ifdef __ENTERPRISE__
+        configStr = R"(
+            {
+                "PipelineMetaTagKey": {},
+                "AgentEnvMetaTagKey": {}
+            }
+        )";
+#else
+        configStr = R"(
+            {
+                "PipelineMetaTagKey": {}
+            }
+        )";
+#endif
+        APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
+        auto sourceBuffer = std::make_shared<logtail::SourceBuffer>();
+        PipelineEventGroup eventGroup(sourceBuffer);
+        std::string filePath = "/var/log/message";
+        eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_PATH, filePath);
+        std::string resolvedFilePath = "/run/var/log/message";
+        eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED, resolvedFilePath);
+        std::string inode = "123456";
+        eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_INODE, inode);
+        Pipeline pipeline;
+        PipelineContext context;
+        context.SetConfigName("project##config_0");
+        context.SetPipeline(pipeline);
+        Json::Value extendedParams;
+        context.InitGlobalConfig(config, extendedParams);
+
+        ProcessorTagNative processor;
+        processor.SetContext(context);
+        APSARA_TEST_TRUE_FATAL(processor.Init(processorConfig));
+
+        processor.Process(eventGroup);
+
+        APSARA_TEST_TRUE_FATAL(eventGroup.HasTag(TagKeyDefaultValue[TagKey::HOST_NAME]));
+        APSARA_TEST_EQUAL_FATAL(LogFileProfiler::mHostname, eventGroup.GetTag(TagKeyDefaultValue[TagKey::HOST_NAME]));
+        APSARA_TEST_TRUE_FATAL(eventGroup.HasTag(LOG_RESERVED_KEY_MACHINE_UUID));
+        APSARA_TEST_EQUAL_FATAL(Application::GetInstance()->GetUUID(),
+                                eventGroup.GetTag(LOG_RESERVED_KEY_MACHINE_UUID));
+#ifdef __ENTERPRISE__
+        APSARA_TEST_TRUE_FATAL(eventGroup.HasTag(AGENT_TAG_DEFAULT_KEY));
+        APSARA_TEST_EQUAL_FATAL(EnterpriseConfigProvider::GetInstance()->GetUserDefinedIdSet(),
+                                eventGroup.GetTag(AGENT_TAG_DEFAULT_KEY));
+#else
+        APSARA_TEST_TRUE_FATAL(eventGroup.HasTag(HOST_IP_DEFAULT_KEY));
+        APSARA_TEST_EQUAL_FATAL(LogFileProfiler::mIpAddr, eventGroup.GetTag(HOST_IP_DEFAULT_KEY));
+#endif
+    }
+    { // native branch default
+        Json::Value processorConfig;
+        Json::Value config;
+        std::string configStr, errorMsg;
+#ifdef __ENTERPRISE__
+        configStr = R"(
+            {
+                "PipelineMetaTagKey": {
+                    "HOST_NAME": "__default__",
+                    "AGENT_TAG": "__default__"
+                },
+                "AgentEnvMetaTagKey": {}
+            }
+        )";
+#else
+        configStr = R"(
+            {
+                "PipelineMetaTagKey": {
+                    "HOST_NAME": "__default__",
+                    "HOST_IP": "__default__"
+                }
+            }
+        )";
+#endif
+        APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
+        auto sourceBuffer = std::make_shared<logtail::SourceBuffer>();
+        PipelineEventGroup eventGroup(sourceBuffer);
+        std::string filePath = "/var/log/message";
+        eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_PATH, filePath);
+        std::string resolvedFilePath = "/run/var/log/message";
+        eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED, resolvedFilePath);
+        std::string inode = "123456";
+        eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_INODE, inode);
+        Pipeline pipeline;
+        PipelineContext context;
+        context.SetConfigName("project##config_0");
+        context.SetPipeline(pipeline);
+        Json::Value extendedParams;
+        context.InitGlobalConfig(config, extendedParams);
+
+        ProcessorTagNative processor;
+        processor.SetContext(context);
+        APSARA_TEST_TRUE_FATAL(processor.Init(processorConfig));
+
+        processor.Process(eventGroup);
+        APSARA_TEST_TRUE_FATAL(eventGroup.HasTag(TagKeyDefaultValue[TagKey::HOST_NAME]));
+        APSARA_TEST_EQUAL_FATAL(LogFileProfiler::mHostname, eventGroup.GetTag(TagKeyDefaultValue[TagKey::HOST_NAME]));
+        APSARA_TEST_TRUE_FATAL(eventGroup.HasTag(LOG_RESERVED_KEY_MACHINE_UUID));
+        APSARA_TEST_EQUAL_FATAL(Application::GetInstance()->GetUUID(),
+                                eventGroup.GetTag(LOG_RESERVED_KEY_MACHINE_UUID));
+#ifdef __ENTERPRISE__
+        APSARA_TEST_TRUE_FATAL(eventGroup.HasTag(AGENT_TAG_DEFAULT_KEY));
+        APSARA_TEST_EQUAL_FATAL(EnterpriseConfigProvider::GetInstance()->GetUserDefinedIdSet(),
+                                eventGroup.GetTag(AGENT_TAG_DEFAULT_KEY));
+#else
+        APSARA_TEST_TRUE_FATAL(eventGroup.HasTag(HOST_IP_DEFAULT_KEY));
+        APSARA_TEST_EQUAL_FATAL(LogFileProfiler::mIpAddr, eventGroup.GetTag(HOST_IP_DEFAULT_KEY));
+#endif
+    }
+    { // native branch rename
+        Json::Value processorConfig;
+        Json::Value config;
+        std::string configStr, errorMsg;
+#ifdef __ENTERPRISE__
+        configStr = R"(
+            {
+                "PipelineMetaTagKey": {
+                    "HOST_NAME": "test_host_name",
+                    "AGENT_TAG": "test_agent_tag"
+                },
+                "AgentEnvMetaTagKey": {}
+            }
+        )";
+#else
+        configStr = R"(
+            {
+                "PipelineMetaTagKey": {
+                    "HOST_NAME": "test_host_name",
+                    "HOST_IP": "test_host_ip"
+                }
+            }
+        )";
+#endif
+        APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
+        auto sourceBuffer = std::make_shared<logtail::SourceBuffer>();
+        PipelineEventGroup eventGroup(sourceBuffer);
+        std::string filePath = "/var/log/message";
+        eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_PATH, filePath);
+        std::string resolvedFilePath = "/run/var/log/message";
+        eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED, resolvedFilePath);
+        std::string inode = "123456";
+        eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_INODE, inode);
+        Pipeline pipeline;
+        PipelineContext context;
+        context.SetConfigName("project##config_0");
+        context.SetPipeline(pipeline);
+        Json::Value extendedParams;
+        context.InitGlobalConfig(config, extendedParams);
+
+        ProcessorTagNative processor;
+        processor.SetContext(context);
+        APSARA_TEST_TRUE_FATAL(processor.Init(processorConfig));
+
+        processor.Process(eventGroup);
+        APSARA_TEST_TRUE_FATAL(eventGroup.HasTag("test_host_name"));
+        APSARA_TEST_EQUAL_FATAL(LogFileProfiler::mHostname, eventGroup.GetTag("test_host_name"));
+        APSARA_TEST_TRUE_FATAL(eventGroup.HasTag(LOG_RESERVED_KEY_MACHINE_UUID));
+        APSARA_TEST_EQUAL_FATAL(Application::GetInstance()->GetUUID(),
+                                eventGroup.GetTag(LOG_RESERVED_KEY_MACHINE_UUID));
+#ifdef __ENTERPRISE__
+        APSARA_TEST_TRUE_FATAL(eventGroup.HasTag("test_agent_tag"));
+        APSARA_TEST_EQUAL_FATAL(EnterpriseConfigProvider::GetInstance()->GetUserDefinedIdSet(),
+                                eventGroup.GetTag("test_agent_tag"));
+#else
+        APSARA_TEST_TRUE_FATAL(eventGroup.HasTag("test_host_ip"));
+        APSARA_TEST_EQUAL_FATAL(LogFileProfiler::mIpAddr, eventGroup.GetTag("test_host_ip"));
+#endif
+    }
+    { // native branch delete
+        Json::Value processorConfig;
+        Json::Value config;
+        std::string configStr, errorMsg;
+#ifdef __ENTERPRISE__
+        configStr = R"(
+            {
+                "PipelineMetaTagKey": {
+                    "HOST_NAME": "",
+                    "AGENT_TAG": ""
+                },
+                "AgentEnvMetaTagKey": {}
+            }
+        )";
+#else
+        configStr = R"(
+            {
+                "PipelineMetaTagKey": {
+                    "HOST_NAME": "",
+                    "HOST_IP": ""
+                }
+            }
+        )";
+#endif
+        APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
+        auto sourceBuffer = std::make_shared<logtail::SourceBuffer>();
+        PipelineEventGroup eventGroup(sourceBuffer);
+        std::string filePath = "/var/log/message";
+        eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_PATH, filePath);
+        std::string resolvedFilePath = "/run/var/log/message";
+        eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED, resolvedFilePath);
+        std::string inode = "123456";
+        eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_INODE, inode);
+        Pipeline pipeline;
+        PipelineContext context;
+        context.SetConfigName("project##config_0");
+        context.SetPipeline(pipeline);
+        Json::Value extendedParams;
+        context.InitGlobalConfig(config, extendedParams);
+
+        ProcessorTagNative processor;
+        processor.SetContext(context);
+        APSARA_TEST_TRUE_FATAL(processor.Init(processorConfig));
+
+        processor.Process(eventGroup);
+        APSARA_TEST_FALSE_FATAL(eventGroup.HasTag(TagKeyDefaultValue[TagKey::HOST_NAME]));
+        APSARA_TEST_TRUE_FATAL(eventGroup.HasTag(LOG_RESERVED_KEY_MACHINE_UUID));
+        APSARA_TEST_EQUAL_FATAL(Application::GetInstance()->GetUUID(),
+                                eventGroup.GetTag(LOG_RESERVED_KEY_MACHINE_UUID));
+#ifdef __ENTERPRISE__
+        APSARA_TEST_FALSE_FATAL(eventGroup.HasTag(AGENT_TAG_DEFAULT_KEY));
+#else
+        APSARA_TEST_FALSE_FATAL(eventGroup.HasTag(HOST_IP_DEFAULT_KEY));
 #endif
     }
 }

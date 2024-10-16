@@ -256,8 +256,9 @@ func (p *pluginv2Runner) runProcessorInternal(cc *pipeline.AsyncControl) {
 	pipeContext := p.ProcessPipeContext
 	pipeChan := p.InputPipeContext.Collector().Observe()
 	processorTag := ProcessorTag{
-		PipelineMetaTagKey: p.LogstoreConfig.GlobalConfig.PipelineMetaTagKey,
-		AgentEnvMetaTagKey: p.LogstoreConfig.GlobalConfig.AgentEnvMetaTagKey,
+		PipelineMetaTagKey:           p.LogstoreConfig.GlobalConfig.PipelineMetaTagKey,
+		EnableAgentEnvMetaTagControl: p.LogstoreConfig.GlobalConfig.EnableAgentEnvMetaTagControl,
+		AgentEnvMetaTagKey:           p.LogstoreConfig.GlobalConfig.AgentEnvMetaTagKey,
 	}
 	for {
 		select {

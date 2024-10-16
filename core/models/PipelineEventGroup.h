@@ -48,6 +48,7 @@ enum class EventGroupMetaKey {
     PROMETHEUS_UP_STATE,
 
     SOURCE_ID,
+    TOPIC,
 };
 
 using GroupMetadata = std::map<EventGroupMetaKey, StringView>;

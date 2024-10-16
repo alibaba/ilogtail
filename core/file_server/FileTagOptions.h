@@ -27,26 +27,27 @@ namespace logtail {
 
 class FileTagOptions {
 public:
-    bool Init(const Json::Value& config,
-              const PipelineContext& context,
-              const std::string& pluginType,
-              bool enableContainerDiscovery);
+    bool Init(const Json::Value& config, const PipelineContext& context, const std::string& pluginType);
     StringView GetFileTagKeyName(TagKey key) const;
 
 
 private:
-    void parseDefaultAddTag(const Json::Value& config,
+    void parseDefaultAddTag(const Json::Value* config,
                             const std::string& keyName,
                             const TagKey& keyEnum,
                             const PipelineContext& context,
                             const std::string& pluginType);
-    void parseDefaultNotAddTag(const Json::Value& config,
+    void parseDefaultNotAddTag(const Json::Value* config,
                                const std::string& keyName,
                                const TagKey& keyEnum,
                                const PipelineContext& context,
                                const std::string& pluginType);
 
     std::unordered_map<TagKey, std::string> mFileTags;
+
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class FileTagOptionsUnittest;
+#endif
 };
 
 using FileTagConfig = std::pair<const FileTagOptions*, const PipelineContext*>;

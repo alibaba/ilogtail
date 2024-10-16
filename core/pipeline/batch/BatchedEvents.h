@@ -26,6 +26,7 @@ namespace logtail {
 
 struct BatchedEvents {
     EventsContainer mEvents;
+    GroupMetadata mMetadata;
     SizedMap mTags;
     std::vector<std::shared_ptr<SourceBuffer>> mSourceBuffers;
     size_t mSizeBytes = 0; // only set on completion
@@ -37,11 +38,13 @@ struct BatchedEvents {
 
     // for flusher_sls only
     BatchedEvents(EventsContainer&& events,
+                  GroupMetadata metadata,
                   SizedMap&& tags,
                   std::shared_ptr<SourceBuffer>&& sourceBuffer,
                   StringView packIdPrefix,
                   RangeCheckpointPtr&& eoo)
         : mEvents(std::move(events)),
+          mMetadata(std::move(metadata)),
           mTags(std::move(tags)),
           mExactlyOnceCheckpoint(std::move(eoo)),
           mPackIdPrefix(packIdPrefix) {
@@ -54,6 +57,7 @@ struct BatchedEvents {
 
     void Clear() {
         mEvents.clear();
+        mMetadata.clear();
         mTags.Clear();
         mSourceBuffers.clear();
         mSizeBytes = 0;

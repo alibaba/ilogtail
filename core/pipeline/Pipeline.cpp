@@ -475,16 +475,11 @@ void Pipeline::CopyNativeGlobalParamToGoPipeline(Json::Value& pipeline) {
         Json::Value& global = pipeline["global"];
         global["EnableTimestampNanosecond"] = mContext.GetGlobalConfig().mEnableTimestampNanosecond;
         global["UsingOldContentTag"] = mContext.GetGlobalConfig().mUsingOldContentTag;
-        Json::Value pipelineMetaTagKey;
-        for (const auto& kv : mContext.GetGlobalConfig().mPipelineMetaTagKey) {
-            pipelineMetaTagKey[kv.first] = kv.second;
-        }
-        global["PipelineMetaTagKey"] = pipelineMetaTagKey;
-        Json::Value agentEnvMetaTagKey;
-        for (const auto& kv : mContext.GetGlobalConfig().mAgentEnvMetaTagKey) {
-            agentEnvMetaTagKey[kv.first] = kv.second;
-        }
-        global["AgentEnvMetaTagKey"] = agentEnvMetaTagKey;
+        global["PipelineMetaTagKey"] = mContext.GetGlobalConfig().GetPipelineMetaTagKeyJsonValue();
+#ifdef __ENTERPRISE__
+        global["EnableAgentEnvMetaTagControl"] = mContext.GetGlobalConfig().mEnableAgentEnvMetaTagControl;
+        global["AgentEnvMetaTagKey"] = mContext.GetGlobalConfig().GetAgentEnvMetaTagKeyJsonValue();
+#endif
     }
 }
 

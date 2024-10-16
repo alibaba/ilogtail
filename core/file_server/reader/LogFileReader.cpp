@@ -2452,18 +2452,16 @@ void LogFileReader::SetEventGroupMetaAndTag(PipelineEventGroup& group) {
             group.SetMetadata(EventGroupMetaKey::LOG_FILE_OFFSET_KEY, offsetKey);
         }
     }
+    group.SetMetadata(EventGroupMetaKey::TOPIC, GetTopicName());
 
     // we store info which users can see in tags
     // for log, these includes:
-    // 1. topic
-    StringBuffer b = group.GetSourceBuffer()->CopyString(GetTopicName());
-    group.SetTagNoCopy(LOG_RESERVED_KEY_TOPIC, StringView(b.data, b.size));
-    // 2. extra topic
+    // 1. extra topic
     auto topicExtraTags = GetTopicExtraTags();
     for (size_t i = 0; i < topicExtraTags.size(); ++i) {
         group.SetTag(topicExtraTags[i].key(), topicExtraTags[i].value());
     }
-    // 3. container name tag, external k8s env/label tag
+    // 2. container name tag, external k8s env/label tag
     auto containerExtraTags = GetContainerExtraTags();
     if (containerExtraTags) {
         for (size_t i = 0; i < containerExtraTags->size(); ++i) {
@@ -2471,7 +2469,7 @@ void LogFileReader::SetEventGroupMetaAndTag(PipelineEventGroup& group) {
             if (key != TagKey::UNKOWN) { // container name tag
                 StringBuffer b = group.GetSourceBuffer()->CopyString((*containerExtraTags)[i].value());
                 if (mTagConfig.first == nullptr) { // no tag config
-                    group.SetTagNoCopy(TagDefaultKey[key], StringView(b.data, b.size));
+                    group.SetTagNoCopy(TagKeyDefaultValue[key], StringView(b.data, b.size));
                 } else {
                     auto keyName = mTagConfig.first->GetFileTagKeyName(key);
                     if (!keyName.empty()) {
@@ -2483,7 +2481,7 @@ void LogFileReader::SetEventGroupMetaAndTag(PipelineEventGroup& group) {
             }
         }
     }
-    // 4. inode
+    // 3. inode
     auto keyName = mTagConfig.first->GetFileTagKeyName(TagKey::FILE_INODE_TAG_KEY);
     if (!keyName.empty()) {
         StringBuffer b = group.GetSourceBuffer()->CopyString(ToString(GetDevInode().inode));

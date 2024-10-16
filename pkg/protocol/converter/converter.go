@@ -89,7 +89,7 @@ type Converter struct {
 	GlobalConfig         *config.GlobalConfig
 }
 
-func NewConverterWithSep(protocol, encoding, sep string, ignoreUnExpectedData bool, tagKeyRenameMap, protocolKeyRenameMap map[string]string, globalConfig *config.GlobalConfig) (*Converter, error) {
+func NewConverterWithSep(protocol, encoding, sep string, ignoreUnExpectedData bool, protocolKeyRenameMap map[string]string, globalConfig *config.GlobalConfig) (*Converter, error) {
 	converter, err := NewConverter(protocol, encoding, protocolKeyRenameMap, globalConfig)
 	if err != nil {
 		return nil, err
@@ -184,7 +184,7 @@ func TrimPrefix(str string) string {
 	}
 }
 
-func convertLogToMap(log *protocol.Log, logTags []*protocol.LogTag, src, topic string) (map[string]string, map[string]string) {
+func convertLogToMap(log *protocol.Log, logTags []*protocol.LogTag) (map[string]string, map[string]string) {
 	contents, tags := make(map[string]string), make(map[string]string)
 	for _, logContent := range log.Contents {
 		contents[logContent.Key] = logContent.Value

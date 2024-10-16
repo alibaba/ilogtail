@@ -40,7 +40,25 @@ struct GlobalConfig {
     bool mEnableTimestampNanosecond = false;
     bool mUsingOldContentTag = false;
     std::unordered_map<std::string, std::string> mPipelineMetaTagKey;
+    Json::Value GetPipelineMetaTagKeyJsonValue() const {
+        Json::Value json;
+        for (const auto& kv : mPipelineMetaTagKey) {
+            json[kv.first] = kv.second;
+        }
+        return json;
+    }
+
+#ifdef __ENTERPRISE__
+    bool mEnableAgentEnvMetaTagControl = false;
     std::unordered_map<std::string, std::string> mAgentEnvMetaTagKey;
+    Json::Value GetAgentEnvMetaTagKeyJsonValue() const {
+        Json::Value json;
+        for (const auto& kv : mAgentEnvMetaTagKey) {
+            json[kv.first] = kv.second;
+        }
+        return json;
+    }
+#endif
 };
 
 } // namespace logtail

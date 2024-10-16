@@ -700,6 +700,7 @@ private:
     friend class LastMatchedDockerJsonFileUnittest;
     friend class LastMatchedContainerdTextWithDockerJsonUnittest;
     friend class ForceReadUnittest;
+    friend class FileTagUnittest;
 
 protected:
     void UpdateReaderManual();
