@@ -42,7 +42,6 @@ using namespace std;
 DEFINE_FLAG_BOOL(logtail_mode, "logtail mode", false);
 DEFINE_FLAG_INT32(max_buffer_num, "max size", 40);
 DEFINE_FLAG_INT32(pub_max_buffer_num, "max size", 8);
-DEFINE_FLAG_INT32(default_max_send_byte_per_sec, "the max send speed per sec, realtime thread", 25 * 1024 * 1024);
 DEFINE_FLAG_INT32(pub_max_send_byte_per_sec, "the max send speed per sec, realtime thread", 20 * 1024 * 1024);
 DEFINE_FLAG_INT32(default_send_byte_per_sec, "the max send speed per sec, replay buffer thread", 2 * 1024 * 1024);
 DEFINE_FLAG_INT32(pub_send_byte_per_sec, "the max send speed per sec, replay buffer thread", 1 * 1024 * 1024);
@@ -185,6 +184,7 @@ DEFINE_FLAG_STRING(sls_observer_ebpf_host_path,
                    "/etc/ilogtail/ebpf/");
 
 namespace logtail {
+constexpr int32_t kDefaultMaxSendBytePerSec = 25 * 1024 * 1024; // the max send speed per sec, realtime thread
 
 std::string AppConfig::sLocalConfigDir = "local";
 void CreateAgentDir() {
@@ -798,7 +798,7 @@ void AppConfig::LoadResourceConf(const Json::Value& confJson) {
         mMaxBytePerSec = INT32_FLAG(pub_max_send_byte_per_sec);
 #endif
     else
-        mMaxBytePerSec = INT32_FLAG(default_max_send_byte_per_sec);
+        mMaxBytePerSec = kDefaultMaxSendBytePerSec;
 
     if (confJson.isMember("bytes_per_sec") && confJson["bytes_per_sec"].isInt())
         mBytePerSec = confJson["bytes_per_sec"].asInt();
@@ -1769,7 +1769,7 @@ T AppConfig::MergeConfig(const T& defaultValue,
     const auto& remoteInstanceConfig = AppConfig::GetInstance()->GetRemoteInstanceConfig();
 
     T res = defaultValue;
-    std::string configName;
+    std::string configName = "default";
 
     auto tryMerge = [&](const Json::Value& config, std::unordered_map<std::string, std::string>& keyToConfigName) {
         if (config.isMember(name)) {

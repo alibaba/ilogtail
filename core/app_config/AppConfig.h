@@ -29,6 +29,8 @@
 #include "protobuf/sls/sls_logs.pb.h"
 
 namespace logtail {
+extern const int32_t kDefaultMaxSendBytePerSec;
+
 void CreateAgentDir();
 
 std::string GetAgentLogDir();
