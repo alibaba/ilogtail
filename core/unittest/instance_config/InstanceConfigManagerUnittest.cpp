@@ -24,7 +24,6 @@ using namespace std;
 
 DECLARE_FLAG_BOOL(enable_send_tps_smoothing);
 DECLARE_FLAG_BOOL(enable_flow_control);
-DECLARE_FLAG_INT32(default_max_send_byte_per_sec);
 
 namespace logtail {
 
@@ -151,7 +150,7 @@ void InstanceConfigManagerUnittest::TestUpdateInstanceConfigs() {
         APSARA_TEST_NOT_EQUAL(nullptr, InstanceConfigManager::GetInstance()->FindConfigByName("test2"));
         APSARA_TEST_EQUAL(nullptr, InstanceConfigManager::GetInstance()->FindConfigByName("test3"));
     }
-    APSARA_TEST_EQUAL(INT32_FLAG(default_max_send_byte_per_sec), AppConfig::GetInstance()->GetMaxBytePerSec());
+    APSARA_TEST_EQUAL(kDefaultMaxSendBytePerSec, AppConfig::GetInstance()->GetMaxBytePerSec());
     APSARA_TEST_EQUAL(true, FlusherRunner::GetInstance()->mSendRandomSleep);
     APSARA_TEST_EQUAL(true, FlusherRunner::GetInstance()->mSendFlowControl);
     // Modified
