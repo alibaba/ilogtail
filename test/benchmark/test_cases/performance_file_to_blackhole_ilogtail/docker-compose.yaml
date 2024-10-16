@@ -15,17 +15,12 @@
 version: '3.8'
 
 services:
-  cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.49.1
+  ilogtailC:
+    image: aliyun/loongcollector:0.0.1
     volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:ro
-      - /sys:/sys:ro
-      - /var/lib/docker/:/var/lib/docker:ro
-      - /dev/disk/:/dev/disk:ro
-    ports:
-      - "8080:8080"
-    privileged: true
-    devices:
-      - /dev/kmsg
-    restart: always
+      - .:/ilogtail.yaml:/loongcollector/conf/pipeline_config/local/ilogtail.yaml
+      - .:/home/ilogtail
+    healthcheck:
+      test: "cat /loongcollector/log/loongcollector.LOG"
+      interval: 15s
+      timeout: 5s
