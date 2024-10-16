@@ -604,3 +604,7 @@ func init() {
 		}
 	}
 }
+
+func (s *Agent) GetMode() pipeline.InputModeType {
+	return pipeline.PUSH
+}

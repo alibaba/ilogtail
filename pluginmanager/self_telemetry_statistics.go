@@ -67,6 +67,10 @@ func (r *InputStatistics) Collect(collector pipeline.Collector) error {
 	return nil
 }
 
+func (r *InputStatistics) GetMode() pipeline.InputModeType {
+	return pipeline.PUSH
+}
+
 func init() {
 	pipeline.MetricInputs["metric_statistics"] = func() pipeline.MetricInput {
 		return &InputStatistics{}

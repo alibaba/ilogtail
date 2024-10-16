@@ -557,3 +557,7 @@ func init() {
 		}
 	}
 }
+
+func (sds *ServiceDockerStdout) GetMode() pipeline.InputModeType {
+	return pipeline.PUSH
+}

@@ -47,6 +47,11 @@ type GlobalConfig struct {
 	UsingOldContentTag             bool
 	EnableContainerdUpperDirDetect bool
 	EnableSlsMetricsFormat         bool
+
+	// Go Input to Native Processor
+	GoInputToNativeProcessor bool
+	PushNativeMaxCachedSize  int
+	PushNativeTimeoutMs      int
 }
 
 // LoongcollectorGlobalConfig is the singleton instance of GlobalConfig.
@@ -69,6 +74,8 @@ func newGlobalConfig() (cfg GlobalConfig) {
 		LoongcollectorDebugDir:      "./debug/",
 		LoongcollectorThirdPartyDir: "./thirdparty/",
 		DelayStopSec:                300,
+		PushNativeMaxCachedSize:     100,
+		PushNativeTimeoutMs:         1000,
 	}
 	return
 }

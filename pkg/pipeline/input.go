@@ -14,6 +14,14 @@
 
 package pipeline
 
+type InputModeType int
+
+const (
+	UNKNOWN InputModeType = iota
+	PUSH
+	PULL
+)
+
 // MetricInput ...
 type MetricInput interface {
 	// Init called for init some system resources, like socket, mutex...
@@ -22,6 +30,9 @@ type MetricInput interface {
 
 	// Description returns a one-sentence description on the Input
 	Description() string
+
+	// Input mode (push or pull)
+	GetMode() InputModeType
 }
 
 type MetricInputV1 interface {
@@ -49,6 +60,9 @@ type ServiceInput interface {
 
 	// Stop stops the services and closes any necessary channels and connections
 	Stop() error
+
+	// Input mode (push or pull)
+	GetMode() InputModeType
 }
 
 type ServiceInputV1 interface {

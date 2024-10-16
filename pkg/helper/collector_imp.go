@@ -15,6 +15,9 @@
 package helper
 
 import (
+	"time"
+
+	"github.com/alibaba/ilogtail/pkg/logtail"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 )
@@ -114,6 +117,54 @@ func (p *groupedPipeCollector) Close() {
 	}
 }
 
+type nativeProcessPipeCollector struct {
+	configName string
+	inputMode  pipeline.InputModeType
+}
+
+func (p *nativeProcessPipeCollector) Collect(group *models.GroupInfo, events ...models.PipelineEvent) {
+	if len(events) == 0 {
+		return
+	}
+
+	pipelineEventGroup, err := TransferPipelineEventGroupToPB(group, events)
+	if err != nil {
+		return
+	}
+
+	buffer, _ := pipelineEventGroup.Marshal()
+	switch p.inputMode {
+	case pipeline.PUSH:
+		for i := 0; i < 5; i++ {
+			if logtail.IsValidToProcess(p.configName) && logtail.PushQueue(p.configName, buffer) == 0 {
+				break
+			}
+			time.Sleep(time.Duration(10) * time.Millisecond)
+		}
+	case pipeline.PULL:
+		logtail.PushQueue(p.configName, buffer)
+	default:
+	}
+
+}
+
+func (p *nativeProcessPipeCollector) CollectList(groups ...*models.PipelineGroupEvents) {
+	for _, g := range groups {
+		p.Collect(g.Group, g.Events...)
+	}
+}
+
+func (p *nativeProcessPipeCollector) ToArray() []*models.PipelineGroupEvents {
+	return nil
+}
+
+func (p *nativeProcessPipeCollector) Observe() chan *models.PipelineGroupEvents {
+	return nil
+}
+
+func (p *nativeProcessPipeCollector) Close() {
+}
+
 // noopPipeCollector is an empty collector implementation.
 type noopPipeCollector struct {
 }
@@ -157,6 +208,10 @@ func NewGroupedPipelineConext() pipeline.PipelineContext {
 
 func NewNoopPipelineConext() pipeline.PipelineContext {
 	return newPipelineConext(&noopPipeCollector{})
+}
+
+func NewNativeProcessPipelineContext(configName string, inputMode pipeline.InputModeType) pipeline.PipelineContext {
+	return &defaultPipelineContext{&nativeProcessPipeCollector{configName: configName, inputMode: inputMode}}
 }
 
 func newPipelineConext(collector pipeline.PipelineCollector) pipeline.PipelineContext {

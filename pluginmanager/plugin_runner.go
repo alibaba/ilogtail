@@ -60,5 +60,7 @@ type PluginRunner interface {
 
 	Stop(exit bool) error
 
+	GetInputMode() (pipeline.InputModeType, error)
+
 	IsWithInputPlugin() bool
 }

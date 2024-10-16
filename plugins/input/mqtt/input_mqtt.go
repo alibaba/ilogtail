@@ -262,3 +262,7 @@ func init() {
 		}
 	}
 }
+
+func (p *ServiceMQTT) GetMode() pipeline.InputModeType {
+	return pipeline.PUSH
+}

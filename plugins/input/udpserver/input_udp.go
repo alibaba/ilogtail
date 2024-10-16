@@ -150,3 +150,7 @@ func init() {
 		}
 	}
 }
+
+func (u *UDPServer) GetMode() pipeline.InputModeType {
+	return pipeline.PUSH
+}
