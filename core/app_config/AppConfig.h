@@ -314,23 +314,29 @@ public:
     const Json::Value& GetRemoteInstanceConfig() { return mRemoteInstanceConfig; };
 
     template <typename T>
-    T MergeConfig(T currentValue,
+    T MergeConfig(const T& defaultValue,
+                  const T& currentValue,
                   const std::string& name,
                   const std::function<bool(const std::string&, const T&)>& validateFn);
-    int32_t MergeInt32(int32_t currentValue,
+    int32_t MergeInt32(int32_t defaultValue,
+                       int32_t currentValue,
                        const std::string& name,
                        const std::function<bool(const std::string&, const int32_t)>& validateFn);
 
-    int64_t MergeInt64(int64_t currentValue,
+    int64_t MergeInt64(int64_t defaultValue,
+                       int64_t currentValue,
                        const std::string& name,
                        const std::function<bool(const std::string&, const int64_t)>& validateFn);
-    bool MergeBool(bool currentValue,
+    bool MergeBool(bool defaultValue,
+                   bool currentValue,
                    const std::string& name,
                    const std::function<bool(const std::string&, const bool)>& validateFn);
-    std::string MergeString(const std::string& currentValue,
+    std::string MergeString(const std::string& defaultValue,
+                            const std::string& currentValue,
                             const std::string& name,
                             const std::function<bool(const std::string&, const std::string&)>& validateFn);
-    double MergeDouble(double currentValue,
+    double MergeDouble(double defaultValue,
+                       double currentValue,
                        const std::string& name,
                        const std::function<bool(const std::string&, const double)>& validateFn);
 

@@ -41,43 +41,43 @@ bool InstanceConfigManagerUnittest::LoadModuleConfig(bool isInit) {
 
     if (status == 0) {
         // Added
-        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeBool(false, "bool_true", ValidateFn), true);
-        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeInt32(0, "int32_true", ValidateFn), 1234);
-        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeInt64(0, "int64_true", ValidateFn), 1234567890);
-        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeDouble(0, "double_true", ValidateFn), 1234.56789);
-        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeString("", "string_true", ValidateFn), "string");
+        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeBool(false, false, "bool_true", ValidateFn), true);
+        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeInt32(0, 0, "int32_true", ValidateFn), 1234);
+        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeInt64(0, 0, "int64_true", ValidateFn), 1234567890);
+        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeDouble(0, 0, "double_true", ValidateFn), 1234.56789);
+        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeString("", "", "string_true", ValidateFn), "string");
 
-        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeBool(false, "bool_false", ValidateFn), false);
-        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeInt32(0, "int32_false", ValidateFn), 0);
-        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeInt64(0, "int64_false", ValidateFn), 0);
-        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeDouble(0, "double_false", ValidateFn), 0);
-        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeString("", "string_false", ValidateFn), "");
+        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeBool(false, false, "bool_false", ValidateFn), false);
+        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeInt32(0, 0, "int32_false", ValidateFn), 0);
+        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeInt64(0, 0, "int64_false", ValidateFn), 0);
+        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeDouble(0, 0, "double_false", ValidateFn), 0);
+        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeString("", "", "string_false", ValidateFn), "");
     } else if (status == 1) {
         // Modified
-        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeBool(true, "bool_true", ValidateFn), false);
-        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeInt32(0, "int32_true", ValidateFn), 12340);
-        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeInt64(0, "int64_true", ValidateFn), 12345678900);
-        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeDouble(0, "double_true", ValidateFn), 12340.56789);
-        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeString("", "string_true", ValidateFn), "string0");
+        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeBool(true, true, "bool_true", ValidateFn), false);
+        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeInt32(0, 0, "int32_true", ValidateFn), 12340);
+        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeInt64(0, 0, "int64_true", ValidateFn), 12345678900);
+        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeDouble(0, 0, "double_true", ValidateFn), 12340.56789);
+        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeString("", "", "string_true", ValidateFn), "string0");
 
-        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeBool(true, "bool_false", ValidateFn), true);
-        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeInt32(10, "int32_false", ValidateFn), 10);
-        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeInt64(10, "int64_false", ValidateFn), 10);
-        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeDouble(10.1, "double_false", ValidateFn), 10.1);
-        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeString("10.1", "string_false", ValidateFn), "10.1");
+        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeBool(true, true, "bool_false", ValidateFn), true);
+        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeInt32(10, 10, "int32_false", ValidateFn), 10);
+        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeInt64(10, 10, "int64_false", ValidateFn), 10);
+        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeDouble(10.1, 10.1, "double_false", ValidateFn), 10.1);
+        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeString("10.1", "10.1", "string_false", ValidateFn), "10.1");
     } else if (status == 2) {
         status = 3;
-        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeBool(false, "bool_true", ValidateFn), false);
-        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeInt32(0, "int32_true", ValidateFn), 0);
-        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeInt64(0, "int64_true", ValidateFn), 0);
-        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeDouble(0, "double_true", ValidateFn), 0);
-        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeString("", "string_true", ValidateFn), "");
+        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeBool(false, false, "bool_true", ValidateFn), false);
+        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeInt32(0, 0, "int32_true", ValidateFn), 0);
+        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeInt64(0, 0, "int64_true", ValidateFn), 0);
+        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeDouble(0, 0, "double_true", ValidateFn), 0);
+        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeString("", "", "string_true", ValidateFn), "");
 
-        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeBool(false, "bool_false", ValidateFn), false);
-        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeInt32(0, "int32_false", ValidateFn), 0);
-        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeInt64(0, "int64_false", ValidateFn), 0);
-        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeDouble(0, "double_false", ValidateFn), 0);
-        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeString("", "string_false", ValidateFn), "");
+        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeBool(false, false, "bool_false", ValidateFn), false);
+        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeInt32(0, 0, "int32_false", ValidateFn), 0);
+        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeInt64(0, 0, "int64_false", ValidateFn), 0);
+        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeDouble(0, 0, "double_false", ValidateFn), 0);
+        APSARA_TEST_EQUAL(AppConfig::GetInstance()->MergeString("", "", "string_false", ValidateFn), "");
     }
 
     return true;
@@ -87,27 +87,17 @@ void InstanceConfigManagerUnittest::TestUpdateInstanceConfigs() {
     std::function<bool()> mCallback = [this]() { return LoadModuleConfig(false); };
     {
         AppConfig::GetInstance()->GetInstance()->LoadAppConfig(STRING_FLAG(ilogtail_config));
-        AppConfig::GetInstance()->GetInstance()->RegisterCallback(
-            "bool_true", &mCallback);
-        AppConfig::GetInstance()->GetInstance()->RegisterCallback(
-            "int32_true", &mCallback);
-        AppConfig::GetInstance()->GetInstance()->RegisterCallback(
-            "int64_true", &mCallback);
-        AppConfig::GetInstance()->GetInstance()->RegisterCallback(
-            "double_true", &mCallback);
-        AppConfig::GetInstance()->GetInstance()->RegisterCallback(
-            "string_true", &mCallback);
+        AppConfig::GetInstance()->GetInstance()->RegisterCallback("bool_true", &mCallback);
+        AppConfig::GetInstance()->GetInstance()->RegisterCallback("int32_true", &mCallback);
+        AppConfig::GetInstance()->GetInstance()->RegisterCallback("int64_true", &mCallback);
+        AppConfig::GetInstance()->GetInstance()->RegisterCallback("double_true", &mCallback);
+        AppConfig::GetInstance()->GetInstance()->RegisterCallback("string_true", &mCallback);
 
-        AppConfig::GetInstance()->GetInstance()->RegisterCallback(
-            "bool_false", &mCallback);
-        AppConfig::GetInstance()->GetInstance()->RegisterCallback(
-            "int32_false", &mCallback);
-        AppConfig::GetInstance()->GetInstance()->RegisterCallback(
-            "int64_false", &mCallback);
-        AppConfig::GetInstance()->GetInstance()->RegisterCallback(
-            "double_false", &mCallback);
-        AppConfig::GetInstance()->GetInstance()->RegisterCallback(
-            "string_false", &mCallback);
+        AppConfig::GetInstance()->GetInstance()->RegisterCallback("bool_false", &mCallback);
+        AppConfig::GetInstance()->GetInstance()->RegisterCallback("int32_false", &mCallback);
+        AppConfig::GetInstance()->GetInstance()->RegisterCallback("int64_false", &mCallback);
+        AppConfig::GetInstance()->GetInstance()->RegisterCallback("double_false", &mCallback);
+        AppConfig::GetInstance()->GetInstance()->RegisterCallback("string_false", &mCallback);
     }
     FlusherRunner::GetInstance()->Init();
     // Added

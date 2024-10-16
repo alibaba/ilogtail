@@ -37,6 +37,8 @@ DEFINE_FLAG_INT32(check_send_client_timeout_interval, "", 600);
 DEFINE_FLAG_BOOL(enable_flow_control, "if enable flow control", true);
 DEFINE_FLAG_BOOL(enable_send_tps_smoothing, "avoid web server load burst", true);
 
+DECLARE_FLAG_INT32(default_max_send_byte_per_sec);
+
 static const int SEND_BLOCK_COST_TIME_ALARM_INTERVAL_SECOND = 3;
 
 namespace logtail {
@@ -74,7 +76,7 @@ bool FlusherRunner::LoadModuleConfig(bool isInit) {
     if (isInit) {
         // Only handle parameters that do not allow hot loading
     }
-    auto maxBytePerSec = AppConfig::GetInstance()->MergeInt32(
+    auto maxBytePerSec = AppConfig::GetInstance()->MergeInt32(INT32_FLAG(default_max_send_byte_per_sec), 
         AppConfig::GetInstance()->GetMaxBytePerSec(), "max_bytes_per_sec", ValidateFn);
     AppConfig::GetInstance()->SetMaxBytePerSec(maxBytePerSec);
     UpdateSendFlowControl();

@@ -1760,14 +1760,15 @@ void AppConfig::RegisterCallback(const std::string& key, std::function<bool()>* 
 }
 
 template<typename T>
-T AppConfig::MergeConfig(T currentValue,
+T AppConfig::MergeConfig(const T& defaultValue,
+                         const T& currentValue,
                          const std::string& name,
                          const std::function<bool(const std::string&, const T&)>& validateFn) {
     const auto& localInstanceConfig = AppConfig::GetInstance()->GetLocalInstanceConfig();
     const auto& envConfig = AppConfig::GetInstance()->GetEnvConfig();
     const auto& remoteInstanceConfig = AppConfig::GetInstance()->GetRemoteInstanceConfig();
 
-    T res = currentValue;
+    T res = defaultValue;
     std::string configName;
 
     auto tryMerge = [&](const Json::Value& config, std::unordered_map<std::string, std::string>& keyToConfigName) {
@@ -1810,34 +1811,39 @@ T AppConfig::MergeConfig(T currentValue,
     return res;
 }
 
-int32_t AppConfig::MergeInt32(int32_t currentValue,
+int32_t AppConfig::MergeInt32(int32_t defaultValue,
+                              int32_t currentValue,
                               const std::string& name,
                               const std::function<bool(const std::string&, const int32_t)>& validateFn) {
-    return MergeConfig<int32_t>(currentValue, name, validateFn);
+    return MergeConfig<int32_t>(defaultValue, currentValue, name, validateFn);
 }
 
-int64_t AppConfig::MergeInt64(int64_t currentValue,
+int64_t AppConfig::MergeInt64(int64_t defaultValue,
+                              int64_t currentValue,
                               const std::string& name,
                               const std::function<bool(const std::string&, const int64_t)>& validateFn) {
-    return MergeConfig<int64_t>(currentValue, name, validateFn);
+    return MergeConfig<int64_t>(defaultValue, currentValue, name, validateFn);
 }
 
-bool AppConfig::MergeBool(bool currentValue,
+bool AppConfig::MergeBool(bool defaultValue,
+                          bool currentValue,
                           const std::string& name,
                           const std::function<bool(const std::string&, const bool)>& validateFn) {
-    return MergeConfig<bool>(currentValue, name, validateFn);
+    return MergeConfig<bool>(defaultValue, currentValue, name, validateFn);
 }
 
-std::string AppConfig::MergeString(const std::string& currentValue,
+std::string AppConfig::MergeString(const std::string& defaultValue,
+                                   const std::string& currentValue,
                                    const std::string& name,
                                    const std::function<bool(const std::string&, const std::string&)>& validateFn) {
-    return MergeConfig<std::string>(currentValue, name, validateFn);
+    return MergeConfig<std::string>(defaultValue, currentValue, name, validateFn);
 }
 
-double AppConfig::MergeDouble(double currentValue,
+double AppConfig::MergeDouble(double defaultValue,
+                              double currentValue,
                               const std::string& name,
                               const std::function<bool(const std::string&, const double)>& validateFn) {
-    return MergeConfig<double>(currentValue, name, validateFn);
+    return MergeConfig<double>(defaultValue, currentValue, name, validateFn);
 }
 
 } // namespace logtail
