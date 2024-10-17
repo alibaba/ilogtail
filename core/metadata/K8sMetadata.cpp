@@ -14,7 +14,7 @@
 #include <ctime>
 #include <chrono>
 #include <thread>
-#include "k8sMetadata.h"
+#include "K8sMetadata.h"
 #include "common/MachineInfoUtil.h"
 #include "logger/Logger.h"
 #include "common/http/HttpRequest.h"

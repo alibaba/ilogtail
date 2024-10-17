@@ -17,7 +17,7 @@
 #include <memory>
 #include <vector>
 #include "metadata/LabelingK8sMetadata.h"
-#include "metadata/k8sMetadata.h"
+#include "metadata/K8sMetadata.h"
 #include "models/PipelineEventGroup.h"
 
 using namespace std;

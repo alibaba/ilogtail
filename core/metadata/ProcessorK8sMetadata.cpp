@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "LabelingK8sMetadata.h"
+#include "ProcessorK8sMetadata.h"
 
 #include <vector>
 #include <string>
@@ -30,7 +30,7 @@ using logtail::StringView;
 
 namespace logtail {
 
-void LabelingK8sMetadata::AddLabelToLogGroup(PipelineEventGroup& logGroup) {
+void ProcessorK8sMetadata::Process(PipelineEventGroup& logGroup) {
     if (logGroup.GetEvents().empty()) {
         return;
     }
@@ -58,21 +58,21 @@ void LabelingK8sMetadata::AddLabelToLogGroup(PipelineEventGroup& logGroup) {
     remoteIpVec.clear();
 }
 
-bool LabelingK8sMetadata::ProcessEvent(PipelineEventPtr& e,  std::vector<std::string>& containerVec,  std::vector<std::string>& remoteIpVec) {
+bool ProcessorK8sMetadata::ProcessEvent(PipelineEventPtr& e,  std::vector<std::string>& containerVec,  std::vector<std::string>& remoteIpVec) {
     if (!IsSupportedEvent(e)) {
         return true;
     }
 
     if (e.Is<MetricEvent>()) {
-        return AddLabelToMetric(e.Cast<MetricEvent>(), containerVec, remoteIpVec);
+        return ProcessEventForMetric(e.Cast<MetricEvent>(), containerVec, remoteIpVec);
     } else if (e.Is<SpanEvent>()) {
-        return AddLabelToSpan(e.Cast<SpanEvent>(), containerVec, remoteIpVec);
+        return ProcessEventForSpan(e.Cast<SpanEvent>(), containerVec, remoteIpVec);
     }
 
     return true;
 }
 
-bool LabelingK8sMetadata::AddLabelToSpan(SpanEvent& e, std::vector<std::string>& containerVec, std::vector<std::string>& remoteIpVec) {
+bool ProcessorK8sMetadata::ProcessEventForSpan(SpanEvent& e, std::vector<std::string>& containerVec, std::vector<std::string>& remoteIpVec) {
     bool res = true;
     
     auto& k8sMetadata = K8sMetadata::GetInstance();
@@ -89,7 +89,7 @@ bool LabelingK8sMetadata::AddLabelToSpan(SpanEvent& e, std::vector<std::string>&
             e.SetTag("workloadKind", containerInfo->workloadKind);
             e.SetTag("namespace", containerInfo->k8sNamespace);
             e.SetTag("serviceName", containerInfo->serviceName);
-            e.SetTag("pid", containerInfo->appId);
+            e.SetTag("pid", containerInfo->armsAppId);
         }
     }
 
@@ -111,7 +111,7 @@ bool LabelingK8sMetadata::AddLabelToSpan(SpanEvent& e, std::vector<std::string>&
     return res;
 }
 
-bool LabelingK8sMetadata::AddLabelToMetric(MetricEvent& e, std::vector<std::string>& containerVec, std::vector<std::string>& remoteIpVec) {
+bool ProcessorK8sMetadata::ProcessEventForMetric(MetricEvent& e, std::vector<std::string>& containerVec, std::vector<std::string>& remoteIpVec) {
     bool res = true;
     
     auto& k8sMetadata = K8sMetadata::GetInstance();
@@ -128,7 +128,7 @@ bool LabelingK8sMetadata::AddLabelToMetric(MetricEvent& e, std::vector<std::stri
             e.SetTag("workloadKind", containerInfo->workloadKind);
             e.SetTag("namespace", containerInfo->k8sNamespace);
             e.SetTag("serviceName", containerInfo->serviceName);
-            e.SetTag("pid", containerInfo->appId);
+            e.SetTag("pid", containerInfo->armsAppId);
         }
     }
 
@@ -150,7 +150,7 @@ bool LabelingK8sMetadata::AddLabelToMetric(MetricEvent& e, std::vector<std::stri
     return res;
 }
 
-bool LabelingK8sMetadata::IsSupportedEvent(const PipelineEventPtr& e) const {
+bool ProcessorK8sMetadata::IsSupportedEvent(const PipelineEventPtr& e) const {
     return e.Is<MetricEvent>() || e.Is<SpanEvent>();
 }
 
