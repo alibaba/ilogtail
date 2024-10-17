@@ -81,7 +81,6 @@ namespace logtail {
             int SendRequestToOperator(const std::string& urlHost, const std::string& output, containerInfoType infoType);
     
     #ifdef __ENTERPRISE__
-
         const static std::string appIdKey = "armsAppId";
     #endif    
     #ifdef APSARA_UNIT_TEST_MAIN
