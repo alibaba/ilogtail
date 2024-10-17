@@ -60,7 +60,6 @@ namespace logtail {
         info.workloadKind = json["workloadKind"].asString();
         info.workloadName = json["workloadName"].asString();
         info.timestamp = std::time(0);
-
     }
 
     bool ContainerInfoIsExpired(std::shared_ptr<k8sContainerInfo> info) {
