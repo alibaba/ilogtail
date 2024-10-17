@@ -20,8 +20,28 @@ import (
 	"sync"
 
 	"github.com/alibaba/ilogtail/pkg/config"
+	"github.com/alibaba/ilogtail/pkg/flags"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
+)
+
+const (
+	tagHostIP                = "host.ip"
+	tagLogTopic              = "log.topic"
+	tagLogFilePath           = "log.file.path"
+	tagHostname              = "host.name"
+	tagK8sNodeIP             = "k8s.node.ip"
+	tagK8sNodeName           = "k8s.node.name"
+	tagK8sNamespace          = "k8s.namespace.name"
+	tagK8sPodName            = "k8s.pod.name"
+	tagK8sPodIP              = "k8s.pod.ip"
+	tagK8sPodUID             = "k8s.pod.uid"
+	tagContainerName         = "container.name"
+	tagContainerIP           = "container.ip"
+	tagContainerImageName    = "container.image.name"
+	tagK8sContainerName      = "k8s.container.name"
+	tagK8sContainerIP        = "k8s.container.ip"
+	tagK8sContainerImageName = "k8s.container.image.name"
 )
 
 const (
@@ -54,6 +74,27 @@ var byteBufPool = sync.Pool{
 		buf := make([]byte, 0, 1024)
 		return &buf
 	},
+}
+
+var tagConversionMap = map[string]string{
+	"__path__":         tagLogFilePath,
+	"__hostname__":     tagHostname,
+	"_node_ip_":        tagK8sNodeIP,
+	"_node_name_":      tagK8sNodeName,
+	"_namespace_":      tagK8sNamespace,
+	"_pod_name_":       tagK8sPodName,
+	"_pod_ip_":         tagK8sPodIP,
+	"_pod_uid_":        tagK8sPodUID,
+	"_container_name_": tagContainerName,
+	"_container_ip_":   tagContainerIP,
+	"_image_name_":     tagContainerImageName,
+}
+
+// When in k8s, the following tags should be renamed to k8s-specific names.
+var specialTagConversionMap = map[string]string{
+	"_container_name_": tagK8sContainerName,
+	"_container_ip_":   tagK8sContainerIP,
+	"_image_name_":     tagK8sContainerImageName,
 }
 
 var supportedEncodingMap = map[string]map[string]bool{
@@ -184,14 +225,58 @@ func TrimPrefix(str string) string {
 	}
 }
 
-func convertLogToMap(log *protocol.Log, logTags []*protocol.LogTag) (map[string]string, map[string]string) {
+func convertLogToMap(log *protocol.Log, logTags []*protocol.LogTag, src, topic string) (map[string]string, map[string]string) {
 	contents, tags := make(map[string]string), make(map[string]string)
+	// compatible with the old version tag
 	for _, logContent := range log.Contents {
-		contents[logContent.Key] = logContent.Value
+		switch logContent.Key {
+		case "__log_topic__":
+			tags[tagLogTopic] = logContent.Value
+		case tagPrefix + "__user_defined_id__":
+			continue
+		default:
+			var tagName string
+			if strings.HasPrefix(logContent.Key, tagPrefix) {
+				tagName = logContent.Key[len(tagPrefix):]
+				if _, ok := specialTagConversionMap[tagName]; *flags.K8sFlag && ok {
+					tagName = specialTagConversionMap[tagName]
+				} else if _, ok := tagConversionMap[tagName]; ok {
+					tagName = tagConversionMap[tagName]
+				}
+			} else {
+				if _, ok := specialTagConversionMap[logContent.Key]; *flags.K8sFlag && ok {
+					tagName = specialTagConversionMap[logContent.Key]
+				} else if _, ok := tagConversionMap[logContent.Key]; ok {
+					tagName = tagConversionMap[logContent.Key]
+				}
+			}
+			if len(tagName) != 0 {
+				tags[tagName] = logContent.Value
+			} else {
+				contents[logContent.Key] = logContent.Value
+			}
+		}
 	}
+
 	for _, logTag := range logTags {
-		tags[logTag.Key] = logTag.Value
+		if logTag.Key == "__user_defined_id__" || logTag.Key == "__pack_id__" {
+			continue
+		}
+
+		tagName := logTag.Key
+		if _, ok := specialTagConversionMap[logTag.Key]; *flags.K8sFlag && ok {
+			tagName = specialTagConversionMap[logTag.Key]
+		} else if _, ok := tagConversionMap[logTag.Key]; ok {
+			tagName = tagConversionMap[logTag.Key]
+		}
+		tags[tagName] = logTag.Value
 	}
+
+	tags[tagHostIP] = src
+	if topic != "" {
+		tags[tagLogTopic] = topic
+	}
+
 	return contents, tags
 }
 
