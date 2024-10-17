@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <chrono>
 #include <cstdint>
 #include <memory>
@@ -36,19 +37,14 @@ public:
     AtomicSendingStatusEnum(SendingStatus initialValue) : value(initialValue) {}
 
     // Set new value
-    void Set(SendingStatus newValue) {
-        value.store(newValue);
-    }
+    void Set(SendingStatus newValue) { value.store(newValue); }
 
     // Get current value
-    SendingStatus Get() const {
-        return value.load();
-    }
+    SendingStatus Get() const { return value.load(); }
 
 private:
     std::atomic<SendingStatus> value;
 };
-
 
 struct SenderQueueItem {
     std::string mData;
@@ -60,7 +56,8 @@ struct SenderQueueItem {
     QueueKey mQueueKey;
 
     AtomicSendingStatusEnum mStatus;
-    std::chrono::system_clock::time_point mEnqueTime;
+    std::chrono::system_clock::time_point mFirstEnqueTime;
+    std::chrono::system_clock::time_point mLastEnqueTime;
     time_t mLastSendTime = 0;
     uint32_t mTryCnt = 1;
 
@@ -76,21 +73,23 @@ struct SenderQueueItem {
           mBufferOrNot(bufferOrNot),
           mFlusher(flusher),
           mQueueKey(key),
-          mStatus(SendingStatus::IDLE){}
-    
-    SenderQueueItem(const SenderQueueItem& item) 
+          mStatus(SendingStatus::IDLE) {}
+    virtual ~SenderQueueItem() = default;
+
+    // for Clone only
+    SenderQueueItem(const SenderQueueItem& item)
         : mData(item.mData),
           mRawSize(item.mRawSize),
           mType(item.mType),
           mBufferOrNot(item.mBufferOrNot),
+          mPipeline(item.mPipeline),
           mFlusher(item.mFlusher),
           mQueueKey(item.mQueueKey),
-          mStatus(item.mStatus.Get()) {
-        mEnqueTime = item.mEnqueTime;
-        mLastSendTime = item.mLastSendTime;
-        mTryCnt = item.mTryCnt;
-    }
-    virtual ~SenderQueueItem() = default;
+          mStatus(item.mStatus.Get()),
+          mFirstEnqueTime(item.mFirstEnqueTime),
+          mLastEnqueTime(item.mLastEnqueTime),
+          mLastSendTime(item.mLastSendTime),
+          mTryCnt(item.mTryCnt) {}
 
     virtual SenderQueueItem* Clone() { return new SenderQueueItem(*this); }
 };
