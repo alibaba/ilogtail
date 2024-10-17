@@ -48,10 +48,6 @@ public:
             std::cerr << "Failed to parse JSON: " << errors << std::endl;
             return;
         }
-
-
-     
-
         auto& k8sMetadata = K8sMetadata::GetInstance("armsAppId");
         k8sMetadata.SetContainerCache(root);
         k8sMetadata.GetByLocalHostFromServer();
