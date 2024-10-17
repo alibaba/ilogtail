@@ -594,7 +594,7 @@ void eBPFServerUnittest::TestEnableNetworkPlugin() {
         }
     )";
     std::string errorMsg;
-    Json::Value configJson;
+    Json::Value configJson, optionalGoPipeline;
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     
     nami::ObserverNetworkOption network_option;
@@ -603,13 +603,15 @@ void eBPFServerUnittest::TestEnableNetworkPlugin() {
     // observer_options.Init(ObserverType::NETWORK, configJson, &ctx, "test");
     auto input = new InputNetworkObserver();
     input->SetContext(ctx);
-    input->SetMetricsRecordRef("test", "1");
+    input->SetMetricsRecordRef("test", "1");    
+    auto initStatus = input->Init(configJson, optionalGoPipeline);
+    EXPECT_TRUE(initStatus);
     std::cout << "1" << std::endl;
     res = ebpf::eBPFServer::GetInstance()->EnablePlugin(
         "test", 1,
         nami::PluginType::NETWORK_OBSERVE,
         &ctx,
-        &network_option, input->GetMetricsRecordRef());
+        &network_option, input->mPluginMgr);
     std::cout << "2" << std::endl;
 
     EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mMonitorMgr->mInited[int(nami::PluginType::NETWORK_OBSERVE)], true);
@@ -654,7 +656,7 @@ void eBPFServerUnittest::TestEnableNetworkPlugin() {
         "test", 8,
         nami::PluginType::NETWORK_OBSERVE,
         &ctx,
-        &network_option, input->GetMetricsRecordRef());
+        &network_option, input->mPluginMgr);
     EXPECT_TRUE(res);
     conf = ebpf::eBPFServer::GetInstance()->mSourceManager->mConfig.get();
     EXPECT_EQ(conf->plugin_type_, nami::PluginType::NETWORK_OBSERVE);
@@ -689,18 +691,19 @@ void eBPFServerUnittest::TestEnableProcessPlugin() {
     )";
 
     std::string errorMsg;
-    Json::Value configJson;
+    Json::Value configJson, optionalGoPipeline;
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     SecurityOptions security_options;
     security_options.Init(SecurityProbeType::PROCESS, configJson, &ctx, "input_process_security");
     auto input = new InputProcessSecurity();
     input->SetContext(ctx);
     input->SetMetricsRecordRef("test", "1");
+    input->Init(configJson, optionalGoPipeline);
     bool res = ebpf::eBPFServer::GetInstance()->EnablePlugin(
         "test", 0,
         nami::PluginType::PROCESS_SECURITY,
         &ctx,
-        &security_options, input->GetMetricsRecordRef());
+        &security_options, input->mPluginMgr);
     EXPECT_TRUE(res);
     auto conf = ebpf::eBPFServer::GetInstance()->mSourceManager->mConfig.get();
     EXPECT_EQ(conf->plugin_type_, nami::PluginType::PROCESS_SECURITY);
@@ -722,8 +725,9 @@ void eBPFServerUnittest::TestEnableProcessPlugin() {
         "test", 0,
         nami::PluginType::PROCESS_SECURITY,
         &ctx,
-        &security_options, input->GetMetricsRecordRef());
+        &security_options, input->mPluginMgr);
     EXPECT_TRUE(res);
+    EXPECT_TRUE(ebpf::eBPFServer::GetInstance()->mStartPluginTotal->GetValue() > 0);
     conf = ebpf::eBPFServer::GetInstance()->mSourceManager->mConfig.get();
     EXPECT_EQ(conf->plugin_type_, nami::PluginType::PROCESS_SECURITY);
     EXPECT_EQ(conf->type, UpdataType::SECURE_UPDATE_TYPE_CONFIG_CHAGE);
@@ -754,15 +758,16 @@ void eBPFServerUnittest::TestEnableNetworkSecurePlugin() {
     input->SetMetricsRecordRef("test", "1");
     
     std::string errorMsg;
-    Json::Value configJson;
+    Json::Value configJson, optionalGoPipeline;;
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     SecurityOptions security_options;
     security_options.Init(SecurityProbeType::NETWORK, configJson, &ctx, "input_network_security");
+    input->Init(configJson, optionalGoPipeline);
     bool res = ebpf::eBPFServer::GetInstance()->EnablePlugin(
         "input_network_security", 5,
         nami::PluginType::NETWORK_SECURITY,
         &ctx,
-        &security_options, input->GetMetricsRecordRef());
+        &security_options, input->mPluginMgr);
     EXPECT_TRUE(res);
     auto conf = ebpf::eBPFServer::GetInstance()->mSourceManager->mConfig.get();
     EXPECT_EQ(conf->plugin_type_, nami::PluginType::NETWORK_SECURITY);
@@ -789,7 +794,7 @@ void eBPFServerUnittest::TestEnableNetworkSecurePlugin() {
         "input_network_security", 0,
         nami::PluginType::NETWORK_SECURITY,
         &ctx,
-        &security_options, input->GetMetricsRecordRef());
+        &security_options, input->mPluginMgr);
     EXPECT_TRUE(res);
     conf = ebpf::eBPFServer::GetInstance()->mSourceManager->mConfig.get();
     EXPECT_EQ(conf->plugin_type_, nami::PluginType::NETWORK_SECURITY);
@@ -824,15 +829,16 @@ void eBPFServerUnittest::TestEnableFileSecurePlugin() {
     input->SetMetricsRecordRef("test", "1");
 
     std::string errorMsg;
-    Json::Value configJson;
+    Json::Value configJson, optionalGoPipeline;;
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     SecurityOptions security_options;
     security_options.Init(SecurityProbeType::FILE, configJson, &ctx, "input_file_security");
+    input->Init(configJson, optionalGoPipeline);
     bool res = ebpf::eBPFServer::GetInstance()->EnablePlugin(
         "input_file_security", 0,
         nami::PluginType::FILE_SECURITY,
         &ctx,
-        &security_options, input->GetMetricsRecordRef());
+        &security_options, input->mPluginMgr);
     EXPECT_EQ(std::get<nami::SecurityFileFilter>(security_options.mOptionList[0].filter_).mFilePathList.size(), 3);
     EXPECT_TRUE(res);
     auto conf = ebpf::eBPFServer::GetInstance()->mSourceManager->mConfig.get();
@@ -858,7 +864,7 @@ void eBPFServerUnittest::TestEnableFileSecurePlugin() {
         "input_file_security", 0,
         nami::PluginType::FILE_SECURITY,
         &ctx,
-        &security_options, input->GetMetricsRecordRef());
+        &security_options, input->mPluginMgr);
     EXPECT_TRUE(res);
     conf = ebpf::eBPFServer::GetInstance()->mSourceManager->mConfig.get();
     EXPECT_EQ(conf->plugin_type_, nami::PluginType::FILE_SECURITY);
