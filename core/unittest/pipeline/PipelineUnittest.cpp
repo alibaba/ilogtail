@@ -2710,7 +2710,7 @@ void PipelineUnittest::TestProcess() const {
     pipeline.mProcessorsInSizeBytes
         = pipeline.mMetricsRecordRef.CreateCounter(METRIC_PIPELINE_PROCESSORS_IN_SIZE_BYTES);
     pipeline.mProcessorsTotalProcessTimeMs
-        = pipeline.mMetricsRecordRef.CreateCounter(METRIC_PIPELINE_PROCESSORS_TOTAL_PROCESS_TIME_MS);
+        = pipeline.mMetricsRecordRef.CreateTimeCounter(METRIC_PIPELINE_PROCESSORS_TOTAL_PROCESS_TIME_MS);
 
     vector<PipelineEventGroup> groups;
     groups.emplace_back(make_shared<SourceBuffer>());

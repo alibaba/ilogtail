@@ -36,7 +36,7 @@ public:
         mInItemsTotal = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_IN_ITEMS_TOTAL);
         mInItemDataSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_IN_SIZE_BYTES);
         mOutItemsTotal = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_OUT_ITEMS_TOTAL);
-        mTotalDelayMs = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_TOTAL_DELAY_MS);
+        mTotalDelayMs = mMetricsRecordRef.CreateTimeCounter(METRIC_COMPONENT_TOTAL_DELAY_MS);
         mQueueSizeTotal = mMetricsRecordRef.CreateIntGauge(METRIC_COMPONENT_QUEUE_SIZE);
         mQueueDataSizeByte = mMetricsRecordRef.CreateIntGauge(METRIC_COMPONENT_QUEUE_SIZE_BYTES);
     }
@@ -62,7 +62,7 @@ protected:
     CounterPtr mInItemsTotal;
     CounterPtr mInItemDataSizeBytes;
     CounterPtr mOutItemsTotal;
-    CounterPtr mTotalDelayMs;
+    TimeCounterPtr mTotalDelayMs;
     IntGaugePtr mQueueSizeTotal;
     IntGaugePtr mQueueDataSizeByte;
 

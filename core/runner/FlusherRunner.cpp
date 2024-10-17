@@ -46,7 +46,7 @@ bool FlusherRunner::Init() {
     mInItemsTotal = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_ITEMS_TOTAL);
     mInItemDataSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_SIZE_BYTES);
     mOutItemsTotal = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_OUT_ITEMS_TOTAL);
-    mTotalDelayMs = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_TOTAL_DELAY_MS);
+    mTotalDelayMs = mMetricsRecordRef.CreateTimeCounter(METRIC_RUNNER_TOTAL_DELAY_MS);
     mLastRunTime = mMetricsRecordRef.CreateIntGauge(METRIC_RUNNER_LAST_RUN_TIME);
     mInItemRawDataSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_FLUSHER_IN_RAW_SIZE_BYTES);
     mWaitingItemsTotal = mMetricsRecordRef.CreateIntGauge(METRIC_RUNNER_FLUSHER_WAITING_ITEMS_TOTAL);
@@ -153,8 +153,7 @@ void FlusherRunner::Run() {
             Dispatch(*itr);
             mWaitingItemsTotal->Sub(1);
             mOutItemsTotal->Add(1);
-            mTotalDelayMs->Add(
-                chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - curTime).count());
+            mTotalDelayMs->Add(chrono::system_clock::now() - curTime);
         }
 
         // TODO: move the following logic to scheduler
