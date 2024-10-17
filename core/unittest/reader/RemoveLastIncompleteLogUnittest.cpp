@@ -70,6 +70,7 @@ public:
 
     std::unique_ptr<char[]> expectedContent;
     FileReaderOptions readerOpts;
+    FileTagOptions tagOpts;
     PipelineContext ctx;
     static std::string logPathDir;
     static std::string gbkFile;
@@ -85,8 +86,12 @@ std::string RemoveLastIncompleteLogUnittest::utf8File;
 
 void RemoveLastIncompleteLogUnittest::TestSingleline() {
     MultilineOptions multilineOpts;
-    LogFileReader logFileReader(
-        logPathDir, utf8File, DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
+    LogFileReader logFileReader(logPathDir,
+                                utf8File,
+                                DevInode(),
+                                std::make_pair(&readerOpts, &ctx),
+                                std::make_pair(&multilineOpts, &ctx),
+                                std::make_pair(&tagOpts, &ctx));
     { // case single line
         std::string line1 = "first.";
         std::string line2 = "second.";
@@ -139,8 +144,12 @@ void RemoveLastIncompleteLogUnittest::TestMultiline() {
     config["StartPattern"] = LOG_BEGIN_REGEX;
     MultilineOptions multilineOpts;
     multilineOpts.Init(config, ctx, "");
-    LogFileReader logFileReader(
-        logPathDir, utf8File, DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
+    LogFileReader logFileReader(logPathDir,
+                                utf8File,
+                                DevInode(),
+                                std::make_pair(&readerOpts, &ctx),
+                                std::make_pair(&multilineOpts, &ctx),
+                                std::make_pair(&tagOpts, &ctx));
     { // case multi line
         std::vector<int32_t> index;
         std::string firstLog = LOG_BEGIN_STRING + "first.\nmultiline1\nmultiline2";
@@ -206,6 +215,7 @@ public:
 
 private:
     FileReaderOptions readerOpts;
+    FileTagOptions tagOpts;
     PipelineContext ctx;
 };
 
@@ -221,8 +231,12 @@ void RemoveLastIncompleteLogMultilineUnittest::TestRemoveLastIncompleteLogWithBe
     config["ContinuePattern"] = LOG_CONTINUE_REGEX;
     MultilineOptions multilineOpts;
     multilineOpts.Init(config, ctx, "");
-    LogFileReader logFileReader(
-        "dir", "file", DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
+    LogFileReader logFileReader("dir",
+                                "file",
+                                DevInode(),
+                                std::make_pair(&readerOpts, &ctx),
+                                std::make_pair(&multilineOpts, &ctx),
+                                std::make_pair(&tagOpts, &ctx));
     // logFileReader.mDiscardUnmatch = true;
     { // case: end with begin continue
         std::string expectMatch = LOG_BEGIN_STRING + "\n" + LOG_CONTINUE_STRING + "\n" + LOG_CONTINUE_STRING + '\n';
@@ -272,8 +286,12 @@ void RemoveLastIncompleteLogMultilineUnittest::TestRemoveLastIncompleteLogWithBe
     config["EndPattern"] = LOG_END_REGEX;
     MultilineOptions multilineOpts;
     multilineOpts.Init(config, ctx, "");
-    LogFileReader logFileReader(
-        "dir", "file", DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
+    LogFileReader logFileReader("dir",
+                                "file",
+                                DevInode(),
+                                std::make_pair(&readerOpts, &ctx),
+                                std::make_pair(&multilineOpts, &ctx),
+                                std::make_pair(&tagOpts, &ctx));
     // logFileReader.mDiscardUnmatch = true;
     { // case: end with begin end
         std::string expectMatch = LOG_BEGIN_STRING + "\n" + LOG_UNMATCH + "\n" + LOG_END_STRING + '\n';
@@ -322,8 +340,12 @@ void RemoveLastIncompleteLogMultilineUnittest::TestRemoveLastIncompleteLogWithBe
     config["StartPattern"] = LOG_BEGIN_REGEX;
     MultilineOptions multilineOpts;
     multilineOpts.Init(config, ctx, "");
-    LogFileReader logFileReader(
-        "dir", "file", DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
+    LogFileReader logFileReader("dir",
+                                "file",
+                                DevInode(),
+                                std::make_pair(&readerOpts, &ctx),
+                                std::make_pair(&multilineOpts, &ctx),
+                                std::make_pair(&tagOpts, &ctx));
     // logFileReader.mDiscardUnmatch = true;
     { // case: end with begin
         std::string expectMatch = LOG_BEGIN_STRING + "\n" + LOG_UNMATCH + "\n" + LOG_UNMATCH + '\n';
@@ -363,8 +385,12 @@ void RemoveLastIncompleteLogMultilineUnittest::TestRemoveLastIncompleteLogWithCo
     config["EndPattern"] = LOG_END_REGEX;
     MultilineOptions multilineOpts;
     multilineOpts.Init(config, ctx, "");
-    LogFileReader logFileReader(
-        "dir", "file", DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
+    LogFileReader logFileReader("dir",
+                                "file",
+                                DevInode(),
+                                std::make_pair(&readerOpts, &ctx),
+                                std::make_pair(&multilineOpts, &ctx),
+                                std::make_pair(&tagOpts, &ctx));
     // logFileReader.mDiscardUnmatch = true;
     { // case: end with continue end
         std::string expectMatch = LOG_CONTINUE_STRING + "\n" + LOG_CONTINUE_STRING + "\n" + LOG_END_STRING + '\n';
@@ -413,8 +439,12 @@ void RemoveLastIncompleteLogMultilineUnittest::TestRemoveLastIncompleteLogWithEn
     config["EndPattern"] = LOG_END_REGEX;
     MultilineOptions multilineOpts;
     multilineOpts.Init(config, ctx, "");
-    LogFileReader logFileReader(
-        "dir", "file", DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
+    LogFileReader logFileReader("dir",
+                                "file",
+                                DevInode(),
+                                std::make_pair(&readerOpts, &ctx),
+                                std::make_pair(&multilineOpts, &ctx),
+                                std::make_pair(&tagOpts, &ctx));
     // logFileReader.mDiscardUnmatch = true;
     { // case: end with end
         std::string expectMatch = LOG_UNMATCH + "\n" + LOG_UNMATCH + "\n" + LOG_END_STRING + '\n';

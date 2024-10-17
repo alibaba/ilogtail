@@ -93,7 +93,8 @@ void ProcessorRunner::Run(uint32_t threadNo) {
 
     // thread local metrics should be initialized in each thread
     WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
-        sMetricsRecordRef, {{METRIC_LABEL_KEY_RUNNER_NAME, METRIC_LABEL_VALUE_RUNNER_NAME_PROCESSOR}, {"thread_no", ToString(threadNo)}});
+        sMetricsRecordRef,
+        {{METRIC_LABEL_KEY_RUNNER_NAME, METRIC_LABEL_VALUE_RUNNER_NAME_PROCESSOR}, {"thread_no", ToString(threadNo)}});
     sInGroupsCnt = sMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_EVENT_GROUPS_TOTAL);
     sInEventsCnt = sMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_EVENTS_TOTAL);
     sInGroupDataSizeBytes = sMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_SIZE_BYTES);
@@ -207,7 +208,8 @@ void ProcessorRunner::Run(uint32_t threadNo) {
                         pipeline->GetContext().GetLogstoreName(),
                         convertedPath,
                         hostLogPath,
-                        vector<sls_logs::LogTag>(), // warning: this cannot be recovered!
+                        make_shared<vector<sls_logs::LogTag>>(
+                            vector<sls_logs::LogTag>()), // warning: this cannot be recovered!
                         profile.readBytes,
                         profile.skipBytes,
                         profile.splitLines,
@@ -247,14 +249,13 @@ bool ProcessorRunner::Serialize(
             return false;
         }
     }
+    if (group.HasMetadata(EventGroupMetaKey::TOPIC)) {
+        logGroup.set_topic(group.GetMetadata(EventGroupMetaKey::TOPIC).to_string());
+    }
     for (const auto& tag : group.GetTags()) {
-        if (tag.first == LOG_RESERVED_KEY_TOPIC) {
-            logGroup.set_topic(tag.second.to_string());
-        } else {
-            auto logTag = logGroup.add_logtags();
-            logTag->set_key(tag.first.to_string());
-            logTag->set_value(tag.second.to_string());
-        }
+        auto logTag = logGroup.add_logtags();
+        logTag->set_key(tag.first.to_string());
+        logTag->set_value(tag.second.to_string());
     }
     logGroup.set_category(logstore);
     size_t size = logGroup.ByteSizeLong();

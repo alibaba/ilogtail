@@ -352,6 +352,7 @@ LogFileReaderPtr ModifyHandler::CreateLogFileReaderPtr(const string& path,
                                                        const FileReaderConfig& readerConfig,
                                                        const MultilineConfig& multilineConfig,
                                                        const FileDiscoveryConfig& discoveryConfig,
+                                                       const FileTagConfig& tagConfig,
                                                        uint32_t exactlyonceConcurrency,
                                                        bool forceBeginingFlag) {
     if (mNameReaderMap.find(name) == mNameReaderMap.end()) {
@@ -369,6 +370,7 @@ LogFileReaderPtr ModifyHandler::CreateLogFileReaderPtr(const string& path,
                                                                   readerConfig,
                                                                   multilineConfig,
                                                                   discoveryConfig,
+                                                                  tagConfig,
                                                                   exactlyonceConcurrency,
                                                                   forceBeginingFlag));
     if (readerPtr.get() == NULL)
@@ -615,15 +617,16 @@ void ModifyHandler::Handle(const Event& event) {
                 return;
             }
         } else if (devInodeIter == mDevInodeReaderMap.end()) {
-            FileDiscoveryConfig config = FileServer::GetInstance()->GetFileDiscoveryConfig(mConfigName);
+            FileDiscoveryConfig discoverConfig = FileServer::GetInstance()->GetFileDiscoveryConfig(mConfigName);
             // double check
             // if event with config name, skip check
-            if (config.first && (!event.GetConfigName().empty() || config.first->IsMatch(path, name))) {
+            if (discoverConfig.first && (!event.GetConfigName().empty() || discoverConfig.first->IsMatch(path, name))) {
                 FileReaderConfig readerConfig = FileServer::GetInstance()->GetFileReaderConfig(mConfigName);
                 MultilineConfig multilineConfig = FileServer::GetInstance()->GetMultilineConfig(mConfigName);
+                FileTagConfig tagConfig = FileServer::GetInstance()->GetFileTagConfig(mConfigName);
                 uint32_t concurrency = FileServer::GetInstance()->GetExactlyOnceConcurrency(mConfigName);
-                LogFileReaderPtr readerPtr
-                    = CreateLogFileReaderPtr(path, name, devInode, readerConfig, multilineConfig, config, concurrency);
+                LogFileReaderPtr readerPtr = CreateLogFileReaderPtr(
+                    path, name, devInode, readerConfig, multilineConfig, discoverConfig, tagConfig, concurrency);
                 if (readerPtr.get() == NULL) {
                     LogFileReaderPtrArray& readerArray = mNameReaderMap[name];
                     // if rotate queue is full, try read array header
@@ -872,13 +875,14 @@ void ModifyHandler::Handle(const Event& event) {
             return;
         }
         if (devInodeIter == mDevInodeReaderMap.end()) {
-            FileDiscoveryConfig config = FileServer::GetInstance()->GetFileDiscoveryConfig(mConfigName);
-            if (config.first && (!event.GetConfigName().empty() || config.first->IsMatch(path, name))) {
+            FileDiscoveryConfig discoverConfig = FileServer::GetInstance()->GetFileDiscoveryConfig(mConfigName);
+            if (discoverConfig.first && (!event.GetConfigName().empty() || discoverConfig.first->IsMatch(path, name))) {
                 FileReaderConfig readerConfig = FileServer::GetInstance()->GetFileReaderConfig(mConfigName);
                 MultilineConfig multilineConfig = FileServer::GetInstance()->GetMultilineConfig(mConfigName);
+                FileTagConfig tagConfig = FileServer::GetInstance()->GetFileTagConfig(mConfigName);
                 uint32_t concurrency = FileServer::GetInstance()->GetExactlyOnceConcurrency(mConfigName);
                 LogFileReaderPtr readerPtr = CreateLogFileReaderPtr(
-                    path, name, devInode, readerConfig, multilineConfig, config, concurrency, true);
+                    path, name, devInode, readerConfig, multilineConfig, discoverConfig, tagConfig, concurrency, true);
                 if (readerPtr.get() == NULL) {
                     return;
                 }
@@ -1082,7 +1086,7 @@ int32_t ModifyHandler::PushLogToProcessor(LogFileReaderPtr reader, LogBuffer* lo
                                                               reader->GetLogstore(),
                                                               reader->GetConvertedPath(),
                                                               reader->GetHostLogPath(),
-                                                              reader->GetExtraTags(),
+                                                              reader->GetContainerExtraTags(),
                                                               reader->GetDevInode().dev,
                                                               reader->GetDevInode().inode,
                                                               reader->GetFileSize(),

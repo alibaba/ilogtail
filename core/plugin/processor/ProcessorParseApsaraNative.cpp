@@ -98,7 +98,7 @@ void ProcessorParseApsaraNative::Process(PipelineEventGroup& logGroup) {
 
     size_t wIdx = 0;
     for (size_t rIdx = 0; rIdx < events.size(); ++rIdx) {
-        if (ProcessEvent(logPath, events[rIdx], cachedLogTime, timeStrCache)) {
+        if (ProcessEvent(logPath, events[rIdx], cachedLogTime, timeStrCache, logGroup.GetAllMetadata())) {
             if (wIdx != rIdx) {
                 events[wIdx] = std::move(events[rIdx]);
             }
@@ -120,7 +120,8 @@ void ProcessorParseApsaraNative::Process(PipelineEventGroup& logGroup) {
 bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath,
                                               PipelineEventPtr& e,
                                               LogtailTime& cachedLogTime,
-                                              StringView& timeStrCache) {
+                                              StringView& timeStrCache,
+                                              const GroupMetadata& metadata) {
     if (!IsSupportedEvent(e)) {
         mOutFailedEventsTotal->Add(1);
         return true;
@@ -167,7 +168,7 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath,
         if (mCommonParserOptions.ShouldAddLegacyUnmatchedRawLog(false)) {
             AddLog(mCommonParserOptions.legacyUnmatchedRawLogKey, buffer, sourceEvent, false);
         }
-        if (mCommonParserOptions.ShouldEraseEvent(false, sourceEvent)) {
+        if (mCommonParserOptions.ShouldEraseEvent(false, sourceEvent, metadata)) {
             mDiscardedEventsTotal->Add(1);
             return false;
         }

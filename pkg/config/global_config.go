@@ -40,13 +40,16 @@ type GlobalConfig struct {
 	// Network identification from loongcollector.
 	HostIP       string
 	Hostname     string
-	AlwaysOnline bool
 	DelayStopSec int
 
 	EnableTimestampNanosecond      bool
 	UsingOldContentTag             bool
 	EnableContainerdUpperDirDetect bool
 	EnableSlsMetricsFormat         bool
+
+	PipelineMetaTagKey           map[string]string
+	EnableAgentEnvMetaTagControl bool
+	AgentEnvMetaTagKey           map[string]string
 }
 
 // LoongcollectorGlobalConfig is the singleton instance of GlobalConfig.

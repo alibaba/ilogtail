@@ -440,6 +440,12 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 			}
 		}
 		logstoreC.GlobalConfig = pluginConfig
+		if logstoreC.GlobalConfig.PipelineMetaTagKey == nil {
+			logstoreC.GlobalConfig.PipelineMetaTagKey = make(map[string]string)
+		}
+		if logstoreC.GlobalConfig.AgentEnvMetaTagKey == nil {
+			logstoreC.GlobalConfig.AgentEnvMetaTagKey = make(map[string]string)
+		}
 		logger.Debug(contextImp.GetRuntimeContext(), "load plugin config", *logstoreC.GlobalConfig)
 	}
 

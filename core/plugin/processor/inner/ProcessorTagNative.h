@@ -31,6 +31,17 @@ public:
 protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
+private:
+    void addTagIfRequired(PipelineEventGroup& logGroup,
+                          const std::string& configKey,
+                          const std::string& defaultKey,
+                          const StringView& value) const;
+    std::unordered_map<std::string, std::string> mPipelineMetaTagKey;
+#ifdef __ENTERPRISE__
+    bool mEnableAgentEnvMetaTagControl = false;
+    std::unordered_map<std::string, std::string> mAgentEnvMetaTagKey;
+#endif
+
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorTagNativeUnittest;
 #endif

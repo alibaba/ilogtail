@@ -545,7 +545,7 @@ int NetworkObserver::OutputDirectly(std::vector<sls_logs::Log>& logs, const Pipe
         }
         sls_logs::LogGroup logGroup;
         sls_logs::LogTag* logTagPtr = logGroup.add_logtags();
-        logTagPtr->set_key(LOG_RESERVED_KEY_HOSTNAME);
+        // logTagPtr->set_key(LOG_RESERVED_KEY_HOSTNAME);
         logTagPtr->set_value(LogFileProfiler::mHostname.substr(0, 99));
 #ifdef __ENTERPRISE__
         std::string userDefinedId = EnterpriseConfigProvider::GetInstance()->GetUserDefinedIdSet();

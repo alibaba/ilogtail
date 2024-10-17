@@ -17,7 +17,6 @@
 #pragma once
 
 #include <boost/regex.hpp>
-
 #include <vector>
 
 #include "models/LogEvent.h"
@@ -47,7 +46,7 @@ protected:
 
 private:
     /// @return false if data need to be discarded
-    bool ProcessEvent(const StringView& logPath, PipelineEventPtr& e);
+    bool ProcessEvent(const StringView& logPath, PipelineEventPtr& e, const GroupMetadata& metadata);
     bool WholeLineModeParser(LogEvent& sourceEvent, const std::string& key);
     bool RegexLogLineParser(LogEvent& sourceEvent,
                             const boost::regex& reg,

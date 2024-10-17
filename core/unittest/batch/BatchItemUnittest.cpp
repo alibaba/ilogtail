@@ -41,7 +41,8 @@ protected:
 
     void SetUp() override {
         StringBuffer b = sEventGroup->GetSourceBuffer()->CopyString(string("pack_id"));
-        mItem.Reset(sEventGroup->GetSizedTags(),
+        mItem.Reset(sEventGroup->GetAllMetadata(),
+                    sEventGroup->GetSizedTags(),
                     sEventGroup->GetSourceBuffer(),
                     sEventGroup->GetExactlyOnceCheckpoint(),
                     StringView(b.data, b.size));

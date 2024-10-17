@@ -14,7 +14,6 @@ func TestConverter_ConvertToRawStream(t *testing.T) {
 		Protocol             string
 		Encoding             string
 		Separator            string
-		TagKeyRenameMap      map[string]string
 		ProtocolKeyRenameMap map[string]string
 	}
 	type args struct {
@@ -86,7 +85,6 @@ func TestConverter_ConvertToRawStream(t *testing.T) {
 				Protocol:             tt.fields.Protocol,
 				Encoding:             tt.fields.Encoding,
 				Separator:            tt.fields.Separator,
-				TagKeyRenameMap:      tt.fields.TagKeyRenameMap,
 				ProtocolKeyRenameMap: tt.fields.ProtocolKeyRenameMap,
 			}
 			gotStream, gotValues, err := c.ConvertToRawStream(tt.args.groupEvents, tt.args.targetFields)
@@ -104,7 +102,6 @@ func TestConverter_ConvertToRawStreamSeparator(t *testing.T) {
 		Protocol             string
 		Encoding             string
 		Separator            string
-		TagKeyRenameMap      map[string]string
 		ProtocolKeyRenameMap map[string]string
 	}
 	type args struct {
@@ -160,7 +157,6 @@ func TestConverter_ConvertToRawStreamSeparator(t *testing.T) {
 				Protocol:             tt.fields.Protocol,
 				Encoding:             tt.fields.Encoding,
 				Separator:            tt.fields.Separator,
-				TagKeyRenameMap:      tt.fields.TagKeyRenameMap,
 				ProtocolKeyRenameMap: tt.fields.ProtocolKeyRenameMap,
 			}
 			gotStream, gotValues, err := c.ConvertToRawStream(tt.args.groupEvents, tt.args.targetFields)

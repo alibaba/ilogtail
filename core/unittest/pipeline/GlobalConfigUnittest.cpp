@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <json/json.h>
+
 #include <memory>
 #include <string>
-
-#include <json/json.h>
 
 #include "common/JsonUtil.h"
 #include "pipeline/GlobalConfig.h"
@@ -48,6 +48,10 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
     APSARA_TEST_EQUAL(0U, config->mProcessPriority);
     APSARA_TEST_FALSE(config->mEnableTimestampNanosecond);
     APSARA_TEST_FALSE(config->mUsingOldContentTag);
+    APSARA_TEST_EQUAL(config->mPipelineMetaTagKey.size(), 0);
+#ifdef __ENTERPRISE__
+    APSARA_TEST_EQUAL(config->mAgentEnvMetaTagKey.size(), 0);
+#endif
 
     // valid optional param
     configStr = R"(
@@ -56,7 +60,15 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
             "TopicFormat": "test_topic",
             "ProcessPriority": 1,
             "EnableTimestampNanosecond": true,
-            "UsingOldContentTag": true
+            "UsingOldContentTag": true,
+            "PipelineMetaTagKey": {
+                "key1": "value1",
+                "key2": "value2"
+            },
+            "AgentEnvMetaTagKey": {
+                "key3": "value3",
+                "key4": "value4"
+            }
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
@@ -68,6 +80,14 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
     APSARA_TEST_EQUAL(1U, config->mProcessPriority);
     APSARA_TEST_TRUE(config->mEnableTimestampNanosecond);
     APSARA_TEST_TRUE(config->mUsingOldContentTag);
+    APSARA_TEST_EQUAL(config->mPipelineMetaTagKey.size(), 2);
+    APSARA_TEST_EQUAL(config->mPipelineMetaTagKey["key1"], "value1");
+    APSARA_TEST_EQUAL(config->mPipelineMetaTagKey["key2"], "value2");
+#ifdef __ENTERPRISE__
+    APSARA_TEST_EQUAL(config->mAgentEnvMetaTagKey.size(), 2);
+    APSARA_TEST_EQUAL(config->mAgentEnvMetaTagKey["key3"], "value3");
+    APSARA_TEST_EQUAL(config->mAgentEnvMetaTagKey["key4"], "value4");
+#endif
 
     // invalid optional param
     configStr = R"(
@@ -76,7 +96,9 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
             "TopicFormat": true,
             "ProcessPriority": "1",
             "EnableTimestampNanosecond": "true",
-            "UsingOldContentTag": "true"
+            "UsingOldContentTag": "true",
+            "PipelineMetaTagKey": "key1",
+            "AgentEnvMetaTagKey": "key2"
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
@@ -88,6 +110,10 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
     APSARA_TEST_EQUAL(0U, config->mProcessPriority);
     APSARA_TEST_FALSE(config->mEnableTimestampNanosecond);
     APSARA_TEST_FALSE(config->mUsingOldContentTag);
+    APSARA_TEST_EQUAL(config->mPipelineMetaTagKey.size(), 0);
+#ifdef __ENTERPRISE__
+    APSARA_TEST_EQUAL(config->mAgentEnvMetaTagKey.size(), 0);
+#endif
 
     // topicFormat
     configStr = R"(

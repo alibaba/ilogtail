@@ -51,19 +51,6 @@ bool ProcessorSplitMultilineLogStringNative::Init(const Json::Value& config) {
         return false;
     }
 
-    // AppendingLogPositionMeta
-    if (!GetOptionalBoolParam(config, "AppendingLogPositionMeta", mAppendingLogPositionMeta, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
-                              mContext->GetAlarm(),
-                              errorMsg,
-                              mAppendingLogPositionMeta,
-                              sName,
-                              mContext->GetConfigName(),
-                              mContext->GetProjectName(),
-                              mContext->GetLogstoreName(),
-                              mContext->GetRegion());
-    }
-
     mMatchedEventsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_MATCHED_EVENTS_TOTAL);
     mMatchedLinesTotal = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_MATCHED_LINES_TOTAL);
     mUnmatchedLinesTotal = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_UNMATCHED_LINES_TOTAL);
@@ -313,9 +300,11 @@ void ProcessorSplitMultilineLogStringNative::CreateNewEvent(const StringView& co
     auto const length
         = isLastLog ? sourceEvent.GetPosition().second - (content.data() - sourceVal.data()) : content.size() + 1;
     targetEvent->SetPosition(offset, length);
-    if (mAppendingLogPositionMeta) {
+    // offset tag
+    if (logGroup.HasMetadata(EventGroupMetaKey::LOG_FILE_OFFSET_KEY)) {
         StringBuffer offsetStr = logGroup.GetSourceBuffer()->CopyString(ToString(offset));
-        targetEvent->SetContentNoCopy(LOG_RESERVED_KEY_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));
+        targetEvent->SetContentNoCopy(logGroup.GetMetadata(EventGroupMetaKey::LOG_FILE_OFFSET_KEY),
+                                      StringView(offsetStr.data, offsetStr.size));
     }
     // TODO: remove the following code after the flusher refactorization
     if (logGroup.GetExactlyOnceCheckpoint() != nullptr) {

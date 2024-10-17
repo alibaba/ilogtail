@@ -475,6 +475,11 @@ void Pipeline::CopyNativeGlobalParamToGoPipeline(Json::Value& pipeline) {
         Json::Value& global = pipeline["global"];
         global["EnableTimestampNanosecond"] = mContext.GetGlobalConfig().mEnableTimestampNanosecond;
         global["UsingOldContentTag"] = mContext.GetGlobalConfig().mUsingOldContentTag;
+        global["PipelineMetaTagKey"] = mContext.GetGlobalConfig().GetPipelineMetaTagKeyJsonValue();
+#ifdef __ENTERPRISE__
+        global["EnableAgentEnvMetaTagControl"] = mContext.GetGlobalConfig().mEnableAgentEnvMetaTagControl;
+        global["AgentEnvMetaTagKey"] = mContext.GetGlobalConfig().GetAgentEnvMetaTagKeyJsonValue();
+#endif
     }
 }
 
@@ -529,8 +534,7 @@ std::string Pipeline::GetNowPluginID() {
 
 PluginInstance::PluginMeta Pipeline::GenNextPluginMeta(bool lastOne) {
     mPluginID.fetch_add(1);
-    return PluginInstance::PluginMeta(
-        std::to_string(mPluginID.load()));
+    return PluginInstance::PluginMeta(std::to_string(mPluginID.load()));
 }
 
 void Pipeline::WaitAllItemsInProcessFinished() {

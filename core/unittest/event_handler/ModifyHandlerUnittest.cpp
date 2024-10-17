@@ -118,8 +118,12 @@ protected:
         ProcessQueueManager::GetInstance()->CreateOrUpdateBoundedQueue(0, 0, ctx);
 
         // build a reader
-        mReaderPtr = std::make_shared<LogFileReader>(
-            gRootDir, gLogName, DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
+        mReaderPtr = std::make_shared<LogFileReader>(gRootDir,
+                                                     gLogName,
+                                                     DevInode(),
+                                                     std::make_pair(&readerOpts, &ctx),
+                                                     std::make_pair(&multilineOpts, &ctx),
+                                                     std::make_pair(&tagOpts, &ctx));
         mReaderPtr->UpdateReaderManual();
         APSARA_TEST_TRUE_FATAL(mReaderPtr->CheckFileSignatureAndOffset(true));
 
@@ -140,6 +144,7 @@ private:
     FileDiscoveryOptions discoveryOpts;
     FileReaderOptions readerOpts;
     MultilineOptions multilineOpts;
+    FileTagOptions tagOpts;
     PipelineContext ctx;
     FileDiscoveryConfig mConfig;
 
@@ -214,8 +219,12 @@ void ModifyHandlerUnittest::TestRecoverReaderFromCheckpoint() {
     std::string logPath1 = logPath + ".1";
     writeLog(logPath1, "a sample log\n");
     auto devInode1 = GetFileDevInode(logPath1);
-    auto reader1 = std::make_shared<LogFileReader>(
-        gRootDir, basicLogName, devInode1, std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
+    auto reader1 = std::make_shared<LogFileReader>(gRootDir,
+                                                   basicLogName,
+                                                   devInode1,
+                                                   std::make_pair(&readerOpts, &ctx),
+                                                   std::make_pair(&multilineOpts, &ctx),
+                                                   std::make_pair(&tagOpts, &ctx));
     reader1->mRealLogPath = logPath1;
     reader1->mLastFileSignatureSize = sigSize;
     reader1->mLastFileSignatureHash = sigHash;
@@ -223,8 +232,12 @@ void ModifyHandlerUnittest::TestRecoverReaderFromCheckpoint() {
     std::string logPath2 = logPath + ".2";
     writeLog(logPath2, "a sample log\n");
     auto devInode2 = GetFileDevInode(logPath2);
-    auto reader2 = std::make_shared<LogFileReader>(
-        gRootDir, basicLogName, devInode2, std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
+    auto reader2 = std::make_shared<LogFileReader>(gRootDir,
+                                                   basicLogName,
+                                                   devInode2,
+                                                   std::make_pair(&readerOpts, &ctx),
+                                                   std::make_pair(&multilineOpts, &ctx),
+                                                   std::make_pair(&tagOpts, &ctx));
     reader2->mRealLogPath = logPath2;
     reader2->mLastFileSignatureSize = sigSize;
     reader2->mLastFileSignatureHash = sigHash;
@@ -240,8 +253,12 @@ void ModifyHandlerUnittest::TestRecoverReaderFromCheckpoint() {
     std::string logPath3 = logPath + ".3";
     writeLog(logPath3, "a sample log\n");
     auto devInode3 = GetFileDevInode(logPath3);
-    auto reader3 = std::make_shared<LogFileReader>(
-        gRootDir, basicLogName, devInode3, std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
+    auto reader3 = std::make_shared<LogFileReader>(gRootDir,
+                                                   basicLogName,
+                                                   devInode3,
+                                                   std::make_pair(&readerOpts, &ctx),
+                                                   std::make_pair(&multilineOpts, &ctx),
+                                                   std::make_pair(&tagOpts, &ctx));
     reader3->mRealLogPath = logPath3;
     reader3->mLastFileSignatureSize = sigSize;
     reader3->mLastFileSignatureHash = sigHash;
@@ -249,8 +266,12 @@ void ModifyHandlerUnittest::TestRecoverReaderFromCheckpoint() {
     std::string logPath4 = logPath + ".4";
     writeLog(logPath4, "a sample log\n");
     auto devInode4 = GetFileDevInode(logPath4);
-    auto reader4 = std::make_shared<LogFileReader>(
-        gRootDir, basicLogName, devInode4, std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
+    auto reader4 = std::make_shared<LogFileReader>(gRootDir,
+                                                   basicLogName,
+                                                   devInode4,
+                                                   std::make_pair(&readerOpts, &ctx),
+                                                   std::make_pair(&multilineOpts, &ctx),
+                                                   std::make_pair(&tagOpts, &ctx));
     reader4->mRealLogPath = logPath4;
     reader4->mLastFileSignatureSize = sigSize;
     reader4->mLastFileSignatureHash = sigHash;
@@ -269,6 +290,7 @@ void ModifyHandlerUnittest::TestRecoverReaderFromCheckpoint() {
                                        std::make_pair(&readerOpts, &ctx),
                                        std::make_pair(&multilineOpts, &ctx),
                                        std::make_pair(&discoveryOpts, &ctx),
+                                       std::make_pair(&tagOpts, &ctx),
                                        0,
                                        false);
     // recover reader from checkpoint, random order
@@ -278,6 +300,7 @@ void ModifyHandlerUnittest::TestRecoverReaderFromCheckpoint() {
                                        std::make_pair(&readerOpts, &ctx),
                                        std::make_pair(&multilineOpts, &ctx),
                                        std::make_pair(&discoveryOpts, &ctx),
+                                       std::make_pair(&tagOpts, &ctx),
                                        0,
                                        false);
     handlerPtr->CreateLogFileReaderPtr(gRootDir,
@@ -286,6 +309,7 @@ void ModifyHandlerUnittest::TestRecoverReaderFromCheckpoint() {
                                        std::make_pair(&readerOpts, &ctx),
                                        std::make_pair(&multilineOpts, &ctx),
                                        std::make_pair(&discoveryOpts, &ctx),
+                                       std::make_pair(&tagOpts, &ctx),
                                        0,
                                        false);
     handlerPtr->CreateLogFileReaderPtr(gRootDir,
@@ -294,6 +318,7 @@ void ModifyHandlerUnittest::TestRecoverReaderFromCheckpoint() {
                                        std::make_pair(&readerOpts, &ctx),
                                        std::make_pair(&multilineOpts, &ctx),
                                        std::make_pair(&discoveryOpts, &ctx),
+                                       std::make_pair(&tagOpts, &ctx),
                                        0,
                                        false);
     handlerPtr->CreateLogFileReaderPtr(gRootDir,
@@ -302,6 +327,7 @@ void ModifyHandlerUnittest::TestRecoverReaderFromCheckpoint() {
                                        std::make_pair(&readerOpts, &ctx),
                                        std::make_pair(&multilineOpts, &ctx),
                                        std::make_pair(&discoveryOpts, &ctx),
+                                       std::make_pair(&tagOpts, &ctx),
                                        0,
                                        false);
     APSARA_TEST_EQUAL_FATAL(handlerPtr->mNameReaderMap.size(), 1);

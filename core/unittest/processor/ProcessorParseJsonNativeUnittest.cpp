@@ -58,7 +58,7 @@ UNIT_TEST_CASE(ProcessorParseJsonNativeUnittest, TestProcessJsonRaw);
 
 UNIT_TEST_CASE(ProcessorParseJsonNativeUnittest, TestMultipleLines);
 
-PluginInstance::PluginMeta getPluginMeta(){
+PluginInstance::PluginMeta getPluginMeta() {
     PluginInstance::PluginMeta pluginMeta{"1"};
     return pluginMeta;
 }
@@ -123,8 +123,6 @@ void ProcessorParseJsonNativeUnittest::TestMultipleLines() {
             config["CopingRawLog"] = true;
             config["RenamedSourceKey"] = "rawLog";
             config["SplitChar"] = '\0';
-            config["AppendingLogPositionMeta"] = false;
-
 
             // run function ProcessorSplitLogStringNative
             ProcessorSplitLogStringNative processor;
@@ -206,8 +204,6 @@ void ProcessorParseJsonNativeUnittest::TestMultipleLines() {
             config["CopingRawLog"] = true;
             config["RenamedSourceKey"] = "rawLog";
             config["SplitChar"] = '\0';
-            config["AppendingLogPositionMeta"] = false;
-
 
             // run function ProcessorSplitLogStringNative
             ProcessorSplitLogStringNative processor;

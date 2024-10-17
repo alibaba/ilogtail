@@ -21,8 +21,9 @@
 #include "app_config/AppConfig.h"
 #include "application/Application.h"
 #include "common/Flags.h"
-#include "protobuf/sls/sls_logs.pb.h"
+#include "common/ParamExtractor.h"
 #include "pipeline/Pipeline.h"
+#include "protobuf/sls/sls_logs.pb.h"
 #ifdef __ENTERPRISE__
 #include "config/provider/EnterpriseConfigProvider.h"
 #endif
@@ -36,22 +37,20 @@ namespace logtail {
 const string ProcessorTagNative::sName = "processor_tag_native";
 
 bool ProcessorTagNative::Init(const Json::Value& config) {
+    mPipelineMetaTagKey = mContext->GetGlobalConfig().mPipelineMetaTagKey;
+#ifdef __ENTERPRISE__
+    mEnableAgentEnvMetaTagControl = mContext->GetGlobalConfig().mEnableAgentEnvMetaTagControl;
+    mAgentEnvMetaTagKey = mContext->GetGlobalConfig().mAgentEnvMetaTagKey;
+#endif
     return true;
 }
 
 void ProcessorTagNative::Process(PipelineEventGroup& logGroup) {
-    // group level
-    StringView filePath = logGroup.GetMetadata(EventGroupMetaKey::LOG_FILE_PATH);
-    if (!filePath.empty()) {
-        logGroup.SetTagNoCopy(LOG_RESERVED_KEY_PATH, filePath.substr(0, 511));
-    }
-
-    // process level
 #ifdef __ENTERPRISE__
     string agentTag = EnterpriseConfigProvider::GetInstance()->GetUserDefinedIdSet();
     if (!agentTag.empty()) {
         auto sb = logGroup.GetSourceBuffer()->CopyString(agentTag);
-        logGroup.SetTagNoCopy(LOG_RESERVED_KEY_USER_DEFINED_ID, StringView(sb.data, sb.size));
+        addTagIfRequired(logGroup, "AGENT_TAG", AGENT_TAG_DEFAULT_KEY, StringView(sb.data, sb.size));
     }
 #endif
 
@@ -68,14 +67,25 @@ void ProcessorTagNative::Process(PipelineEventGroup& logGroup) {
         return;
     }
 
-    // process level
-    logGroup.SetTagNoCopy(LOG_RESERVED_KEY_HOSTNAME, LogFileProfiler::mHostname);
-    logGroup.SetTagNoCopy(LOG_RESERVED_KEY_SOURCE, LogFileProfiler::mIpAddr);
-    auto sb = logGroup.GetSourceBuffer()->CopyString(Application::GetInstance()->GetUUID());
-    logGroup.SetTagNoCopy(LOG_RESERVED_KEY_MACHINE_UUID, StringView(sb.data, sb.size));
+    addTagIfRequired(logGroup, "HOST_NAME", TagKeyDefaultValue[TagKey::HOST_NAME], LogFileProfiler::mHostname);
+#ifndef __ENTERPRISE__
+    addTagIfRequired(logGroup, "HOST_IP", HOST_IP_DEFAULT_KEY, LogFileProfiler::mIpAddr);
+#endif
+
     static const vector<sls_logs::LogTag>& sEnvTags = AppConfig::GetInstance()->GetEnvTags();
     if (!sEnvTags.empty()) {
         for (size_t i = 0; i < sEnvTags.size(); ++i) {
+#ifdef __ENTERPRISE__
+            if (mEnableAgentEnvMetaTagControl) {
+                auto envTagKey = sEnvTags[i].key();
+                if (mAgentEnvMetaTagKey.find(envTagKey) != mAgentEnvMetaTagKey.end()) {
+                    if (!mAgentEnvMetaTagKey[envTagKey].empty()) {
+                        logGroup.SetTagNoCopy(mAgentEnvMetaTagKey[envTagKey], sEnvTags[i].value());
+                    }
+                }
+                continue;
+            }
+#endif
             logGroup.SetTagNoCopy(sEnvTags[i].key(), sEnvTags[i].value());
         }
     }
@@ -83,6 +93,25 @@ void ProcessorTagNative::Process(PipelineEventGroup& logGroup) {
 
 bool ProcessorTagNative::IsSupportedEvent(const PipelineEventPtr& /*e*/) const {
     return true;
+}
+
+void ProcessorTagNative::addTagIfRequired(PipelineEventGroup& logGroup,
+                                          const std::string& configKey,
+                                          const std::string& defaultKey,
+                                          const StringView& value) const {
+    auto it = mPipelineMetaTagKey.find(configKey);
+    if (it != mPipelineMetaTagKey.end()) {
+        if (!it->second.empty()) {
+            if (it->second == DEFAULT_CONFIG_TAG_KEY_VALUE) {
+                logGroup.SetTagNoCopy(defaultKey, value);
+            } else {
+                logGroup.SetTagNoCopy(it->second, value);
+            }
+        }
+        // emtpy value means not set
+    } else {
+        logGroup.SetTagNoCopy(defaultKey, value);
+    }
 }
 
 } // namespace logtail

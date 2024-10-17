@@ -17,8 +17,9 @@
 #pragma once
 #include <string>
 #include <unordered_map>
-#include "common/StringTools.h"
+
 #include "common/CircularBuffer.h"
+#include "common/StringTools.h"
 #include "common/Thread.h"
 #include "plugin/input/InputFile.h"
 
@@ -32,6 +33,7 @@ struct HistoryFileEvent {
     FileDiscoveryConfig mDiscoveryconfig;
     FileReaderConfig mReaderConfig;
     MultilineConfig mMultilineConfig;
+    FileTagConfig mTagConfig;
     uint32_t mEOConcurrency = 0;
 
     HistoryFileEvent() : mStartPos(0) {}

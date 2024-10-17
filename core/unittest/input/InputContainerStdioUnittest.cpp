@@ -22,10 +22,10 @@
 #include "app_config/AppConfig.h"
 #include "common/JsonUtil.h"
 #include "file_server/FileServer.h"
-#include "plugin/input/InputContainerStdio.h"
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineContext.h"
 #include "pipeline/plugin/PluginRegistry.h"
+#include "plugin/input/InputContainerStdio.h"
 #include "unittest/Unittest.h"
 
 DECLARE_FLAG_INT32(default_plugin_log_queue_size);
@@ -198,9 +198,7 @@ void InputContainerStdioUnittest::OnEnableContainerDiscovery() {
     )";
     optionalGoPipelineStr = R"(
         {
-            "global": {
-                "AlwaysOnline": true
-            },
+            "global": {},
             "inputs": [
                 {                
                     "type": "metric_container_info/2",

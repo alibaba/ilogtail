@@ -15,12 +15,14 @@
  */
 
 #pragma once
-#include <stdint.h>
-#include <string>
-#include <mutex>
-#include <unordered_map>
-#include <map>
 #include <json/json.h>
+#include <stdint.h>
+
+#include <map>
+#include <mutex>
+#include <string>
+#include <unordered_map>
+
 #include "protobuf/sls/sls_logs.pb.h"
 
 namespace sls_logs {
@@ -42,7 +44,7 @@ public:
                           const std::string& category,
                           const std::string& convertedPath,
                           const std::string& hostLogPath,
-                          const std::vector<sls_logs::LogTag>& tags,
+                          const std::shared_ptr<std::vector<sls_logs::LogTag>>& tags,
                           uint64_t readBytes,
                           uint64_t skipBytes,
                           uint64_t splitLines,
@@ -58,7 +60,7 @@ public:
                                const std::string& category,
                                const std::string& convertedPath,
                                const std::string& hostLogPath,
-                               const std::vector<sls_logs::LogTag>& tags,
+                               const std::shared_ptr<std::vector<sls_logs::LogTag>>& tags,
                                uint64_t skipBytes);
 
     void AddProfilingReadBytes(const std::string& configName,
@@ -67,7 +69,7 @@ public:
                                const std::string& category,
                                const std::string& convertedPath,
                                const std::string& host,
-                               const std::vector<sls_logs::LogTag>& tags,
+                               const std::shared_ptr<std::vector<sls_logs::LogTag>>& tags,
                                uint64_t dev,
                                uint64_t inode,
                                uint64_t fileSize,
@@ -97,7 +99,7 @@ private:
                           const std::string& category,
                           const std::string& convertedPath,
                           const std::string& hostLogPath,
-                          const std::vector<sls_logs::LogTag>& tags,
+                          const std::shared_ptr<std::vector<sls_logs::LogTag>>& tags,
                           uint64_t readBytes = 0,
                           uint64_t skipBytes = 0,
                           uint64_t splitLines = 0,
@@ -167,7 +169,7 @@ private:
         std::string mCategory;
         std::string mConvertedPath;
         std::string mHostLogPath;
-        std::vector<sls_logs::LogTag> mTags;
+        std::shared_ptr<std::vector<sls_logs::LogTag>> mTags;
         // how many bytes processed
         uint64_t mReadBytes;
         // how many bytes skiped

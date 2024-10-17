@@ -10,7 +10,7 @@ Feature: flusher loki
     address: http://loki:3100
     tenant_id: ilogtail
     target_labels:
-      loki_name: hello
+      name: hello
       source: ilogtail
     """
     Given {flusher-loki-case} local config as below
@@ -25,9 +25,6 @@ Feature: flusher loki
           value: "log contents"
     flushers:
       - Type: flusher_loki
-        Convert:
-          TagFieldsRename:
-            loki_name: name
         URL: http://loki:3100/loki/api/v1/push
         TenantID: ilogtail
         MaxMessageWait: 100000000
@@ -37,7 +34,7 @@ Feature: flusher loki
         MaxBackoff: 1000000000000
         MaxRetries: 10
         DynamicLabels:
-          - tag.loki_name
+          - tag.name
         StaticLabels:
           source: ilogtail
     """
