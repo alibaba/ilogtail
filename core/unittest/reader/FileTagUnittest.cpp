@@ -106,7 +106,7 @@ void FileTagUnittest::TestDefaultTag() {
         )";
         APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
         config.reset(new FileTagOptions());
-        APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType));
+        APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType, false));
         LogFileReader reader = LogFileReader(hostLogPathDir,
                                              hostLogPathFile,
                                              DevInode(),
@@ -130,7 +130,7 @@ void FileTagUnittest::TestDefaultTag() {
         )";
         APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
         config.reset(new FileTagOptions());
-        APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType));
+        APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType, true));
         LogFileReader reader = LogFileReader(hostLogPathDir,
                                              hostLogPathFile,
                                              DevInode(),
@@ -178,7 +178,7 @@ void FileTagUnittest::TestDefaultTag() {
         )";
         APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
         config.reset(new FileTagOptions());
-        APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType));
+        APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType, false));
         LogFileReader reader = LogFileReader(hostLogPathDir,
                                              hostLogPathFile,
                                              DevInode(),
@@ -221,7 +221,7 @@ void FileTagUnittest::TestDefaultTag() {
         )";
         APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
         config.reset(new FileTagOptions());
-        APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType));
+        APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType, false));
         LogFileReader reader = LogFileReader(hostLogPathDir,
                                              hostLogPathFile,
                                              DevInode(),
@@ -271,7 +271,7 @@ void FileTagUnittest::TestDefaultTag() {
         )";
         APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
         config.reset(new FileTagOptions());
-        APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType));
+        APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType, true));
         LogFileReader reader = LogFileReader(hostLogPathDir,
                                              hostLogPathFile,
                                              DevInode(),
@@ -332,7 +332,7 @@ void FileTagUnittest::TestDefaultTag() {
         )";
         APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
         config.reset(new FileTagOptions());
-        APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType));
+        APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType, true));
         LogFileReader reader = LogFileReader(hostLogPathDir,
                                              hostLogPathFile,
                                              DevInode(),
@@ -386,7 +386,7 @@ void FileTagUnittest::TestRenameTag() {
         )";
         APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
         config.reset(new FileTagOptions());
-        APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType));
+        APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType, false));
         LogFileReader reader = LogFileReader(hostLogPathDir,
                                              hostLogPathFile,
                                              DevInode(),
@@ -427,7 +427,7 @@ void FileTagUnittest::TestRenameTag() {
         )";
         APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
         config.reset(new FileTagOptions());
-        APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType));
+        APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType, false));
         LogFileReader reader = LogFileReader(hostLogPathDir,
                                              hostLogPathFile,
                                              DevInode(),
@@ -475,7 +475,7 @@ void FileTagUnittest::TestRenameTag() {
         )";
         APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
         config.reset(new FileTagOptions());
-        APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType));
+        APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType, true));
         LogFileReader reader = LogFileReader(hostLogPathDir,
                                              hostLogPathFile,
                                              DevInode(),
@@ -528,7 +528,7 @@ void FileTagUnittest::TestRenameTag() {
         )";
         APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
         config.reset(new FileTagOptions());
-        APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType));
+        APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType, true));
         LogFileReader reader = LogFileReader(hostLogPathDir,
                                              hostLogPathFile,
                                              DevInode(),
@@ -583,7 +583,7 @@ void FileTagUnittest::TestDeleteTag() {
         )";
         APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
         config.reset(new FileTagOptions());
-        APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType));
+        APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType, false));
         LogFileReader reader = LogFileReader(hostLogPathDir,
                                              hostLogPathFile,
                                              DevInode(),
@@ -621,7 +621,7 @@ void FileTagUnittest::TestDeleteTag() {
         )";
         APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
         config.reset(new FileTagOptions());
-        APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType));
+        APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType, false));
         LogFileReader reader = LogFileReader(hostLogPathDir,
                                              hostLogPathFile,
                                              DevInode(),
@@ -661,7 +661,7 @@ void FileTagUnittest::TestDeleteTag() {
         )";
         APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
         config.reset(new FileTagOptions());
-        APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType));
+        APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType, true));
         LogFileReader reader = LogFileReader(hostLogPathDir,
                                              hostLogPathFile,
                                              DevInode(),
@@ -706,7 +706,7 @@ void FileTagUnittest::TestDeleteTag() {
         )";
         APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
         config.reset(new FileTagOptions());
-        APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType));
+        APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginType, true));
         LogFileReader reader = LogFileReader(hostLogPathDir,
                                              hostLogPathFile,
                                              DevInode(),
