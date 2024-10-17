@@ -69,14 +69,17 @@ namespace logtail {
         std::chrono::system_clock::time_point th1 = std::chrono::system_clock::from_time_t(info->timestamp);
         std::chrono::system_clock::time_point th2 = std::chrono::system_clock::from_time_t(now);
         std::chrono::duration<double> diff = th2 - th1;
-        double minutes_diff = diff.count() / 60.0;
-        if (minutes_diff > 10) {
+        double seconds_diff = diff.count();
+        if (seconds_diff > 600) { // 10 minutes in seconds
             return true;
         }
         return false;
     }  
 
     void K8sMetadata::FromContainerJson(const Json::Value& json, std::shared_ptr<ContainerData> data) {
+        if (!json.isObject()) {
+            return;
+        }
         for (const auto& key : json.getMemberNames()) {
             k8sContainerInfo info;
             FromInfoJson(json[key], info);
