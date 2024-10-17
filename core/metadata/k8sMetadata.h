@@ -38,7 +38,6 @@ namespace logtail {
     struct ContainerData {
         std::unordered_map<std::string, k8sContainerInfo> containers;
     };
-
     
     enum class containerInfoType {
         ContainerIdInfo,
