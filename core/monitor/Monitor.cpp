@@ -699,8 +699,8 @@ LoongCollectorMonitor* LoongCollectorMonitor::GetInstance() {
 void LoongCollectorMonitor::Init() {
     // create metric record
     MetricLabels labels;
+    labels.emplace_back(METRIC_LABEL_KEY_METRIC_CATEGORY, METRIC_LABEL_KEY_METRIC_CATEGORY_AGENT);
     labels.emplace_back(METRIC_LABEL_KEY_INSTANCE_ID, Application::GetInstance()->GetInstanceId());
-    labels.emplace_back(METRIC_LABEL_KEY_IP, LogFileProfiler::mIpAddr);
     labels.emplace_back(METRIC_LABEL_KEY_START_TIME, LogFileProfiler::mStartTime);
     labels.emplace_back(METRIC_LABEL_KEY_OS, OS_NAME);
     labels.emplace_back(METRIC_LABEL_KEY_OS_DETAIL, LogFileProfiler::mOsDetail);

@@ -19,14 +19,22 @@
 
 namespace logtail {
 
+// label keys
+extern const std::string METRIC_LABEL_KEY_METRIC_CATEGORY;
+
+// label values
+extern const std::string METRIC_LABEL_KEY_METRIC_CATEGORY_AGENT;
+extern const std::string METRIC_LABEL_KEY_METRIC_CATEGORY_COMPONENT;
+extern const std::string METRIC_LABEL_KEY_METRIC_CATEGORY_PIPELINE;
+extern const std::string METRIC_LABEL_KEY_METRIC_CATEGORY_PLUGIN;
+extern const std::string METRIC_LABEL_KEY_METRIC_CATEGORY_RUNNER;
+
 //////////////////////////////////////////////////////////////////////////
 // agent
 //////////////////////////////////////////////////////////////////////////
 
-// label keys
 extern const std::string METRIC_LABEL_KEY_ALIUIDS;
 extern const std::string METRIC_LABEL_KEY_INSTANCE_ID;
-extern const std::string METRIC_LABEL_KEY_IP;
 extern const std::string METRIC_LABEL_KEY_START_TIME;
 extern const std::string METRIC_LABEL_KEY_OS;
 extern const std::string METRIC_LABEL_KEY_OS_DETAIL;
@@ -165,7 +173,6 @@ extern const std::string METRIC_PLUGIN_FLUSHER_SLS_REQUEST_EXPRIRED_ERROR_TOTAL;
 // component
 //////////////////////////////////////////////////////////////////////////
 
-
 // label keys
 extern const std::string METRIC_LABEL_KEY_COMPONENT_NAME;
 extern const std::string METRIC_LABEL_KEY_FLUSHER_PLUGIN_ID;
@@ -216,7 +223,6 @@ extern const std::string METRIC_COMPONENT_FETCH_REJECTED_BY_REGION_LIMITER_TIMES
 extern const std::string METRIC_COMPONENT_FETCH_REJECTED_BY_PROJECT_LIMITER_TIMES_TOTAL;
 extern const std::string METRIC_COMPONENT_FETCH_REJECTED_BY_LOGSTORE_LIMITER_TIMES_TOTAL;
 extern const std::string METRIC_COMPONENT_FETCH_REJECTED_BY_RATE_LIMITER_TIMES_TOTAL;
-
 
 //////////////////////////////////////////////////////////////////////////
 // runner
