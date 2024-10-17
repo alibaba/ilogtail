@@ -2450,9 +2450,11 @@ void LogFileReader::SetEventGroupMetaAndTag(PipelineEventGroup& group) {
     group.SetMetadata(EventGroupMetaKey::SOURCE, LogFileProfiler::mIpAddr);
     group.SetMetadata(EventGroupMetaKey::TOPIC, GetTopicName());
     group.SetMetadata(EventGroupMetaKey::MACHINE_UUID, Application::GetInstance()->GetUUID());
-    auto offsetKey = mTagConfig.first->GetFileTagKeyName(TagKey::FILE_OFFSET_KEY);
-    if (!offsetKey.empty()) {
-        group.SetMetadata(EventGroupMetaKey::LOG_FILE_OFFSET_KEY, offsetKey);
+    if (mTagConfig.first != nullptr) {
+        auto offsetKey = mTagConfig.first->GetFileTagKeyName(TagKey::FILE_OFFSET_KEY);
+        if (!offsetKey.empty()) {
+            group.SetMetadata(EventGroupMetaKey::LOG_FILE_OFFSET_KEY, offsetKey);
+        }
     }
 
     // we store info which users can see in tags
@@ -2472,9 +2474,11 @@ void LogFileReader::SetEventGroupMetaAndTag(PipelineEventGroup& group) {
                 if (mTagConfig.first == nullptr) { // no tag config
                     group.SetTagNoCopy(TagKeyDefaultValue[key], StringView(b.data, b.size));
                 } else {
-                    auto keyName = mTagConfig.first->GetFileTagKeyName(key);
-                    if (!keyName.empty()) {
-                        group.SetTagNoCopy(keyName, StringView(b.data, b.size));
+                    if (mTagConfig.first != nullptr) {
+                        auto keyName = mTagConfig.first->GetFileTagKeyName(key);
+                        if (!keyName.empty()) {
+                            group.SetTagNoCopy(keyName, StringView(b.data, b.size));
+                        }
                     }
                 }
             } else { // external k8s env/label tag
@@ -2482,17 +2486,19 @@ void LogFileReader::SetEventGroupMetaAndTag(PipelineEventGroup& group) {
             }
         }
     }
-    // 3. inode
-    auto keyName = mTagConfig.first->GetFileTagKeyName(TagKey::FILE_INODE_TAG_KEY);
-    if (!keyName.empty()) {
-        StringBuffer b = group.GetSourceBuffer()->CopyString(ToString(GetDevInode().inode));
-        group.SetTagNoCopy(keyName, StringView(b.data, b.size));
-    }
-    // 4. path
-    keyName = mTagConfig.first->GetFileTagKeyName(TagKey::FILE_PATH_TAG_KEY);
-    if (!keyName.empty()) {
-        StringBuffer b = group.GetSourceBuffer()->CopyString(GetConvertedPath());
-        group.SetTagNoCopy(keyName, StringView(b.data, b.size));
+    if (mTagConfig.first != nullptr) {
+        // 3. inode
+        auto keyName = mTagConfig.first->GetFileTagKeyName(TagKey::FILE_INODE_TAG_KEY);
+        if (!keyName.empty()) {
+            StringBuffer b = group.GetSourceBuffer()->CopyString(ToString(GetDevInode().inode));
+            group.SetTagNoCopy(keyName, StringView(b.data, b.size));
+        }
+        // 4. path
+        keyName = mTagConfig.first->GetFileTagKeyName(TagKey::FILE_PATH_TAG_KEY);
+        if (!keyName.empty()) {
+            StringBuffer b = group.GetSourceBuffer()->CopyString(GetConvertedPath());
+            group.SetTagNoCopy(keyName, StringView(b.data, b.size));
+        }
     }
 }
 

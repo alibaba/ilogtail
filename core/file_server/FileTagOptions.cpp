@@ -89,9 +89,6 @@ bool FileTagOptions::Init(const Json::Value& config,
 }
 
 StringView FileTagOptions::GetFileTagKeyName(TagKey key) const {
-    if (this == nullptr) {
-        return StringView();
-    }
     auto it = mFileTags.find(key);
     if (it != mFileTags.end()) {
         // FileTagOption will not be deconstructed or changed before all event be sent
