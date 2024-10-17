@@ -149,6 +149,15 @@ void eBPFServer::Init() {
     // check env
 
     mMonitorMgr = std::make_unique<eBPFSelfMonitorMgr>();
+    DynamicMetricLabels dynamicLabels;
+    dynamicLabels.emplace_back(METRIC_LABEL_KEY_PROJECT, [this]() -> std::string { return this->GetAllProjects(); });
+    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mRef,
+                                            {{METRIC_LABEL_KEY_RUNNER_NAME, METRIC_LABEL_VALUE_RUNNER_NAME_EBPF_SERVER}}, 
+                                            std::move(dynamicLabels));
+
+    mStartPluginTotal = mRef.CreateCounter(METRIC_RUNNER_EBPF_START_PLUGIN_TOTAL);
+    mStopPluginTotal = mRef.CreateCounter(METRIC_RUNNER_EBPF_STOP_PLUGIN_TOTAL);
+    mSuspendPluginTotal = mRef.CreateCounter(METRIC_RUNNER_EBPF_SUSPEND_PLUGIN_TOTAL);
 
     mSourceManager = std::make_unique<SourceManager>();
     mSourceManager->Init();
@@ -176,8 +185,8 @@ void eBPFServer::Stop() {
     mSourceManager->StopAll();
     // destroy source manager 
     mSourceManager.reset();
-    for (std::size_t i = 0; i < mLoadedPipeline.size(); i ++) {
-        UpdatePipelineName(static_cast<nami::PluginType>(i), "");
+    for (int i = 0; i < int(nami::PluginType::MAX); i ++) {
+        UpdatePipelineName(static_cast<nami::PluginType>(i), "", "");
     }
     
     // UpdateContext must after than StopPlugin
@@ -192,7 +201,7 @@ void eBPFServer::Stop() {
 bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t plugin_index,
                         nami::PluginType type, 
                         const logtail::PipelineContext* ctx, 
-                        const std::variant<SecurityOptions*, nami::ObserverNetworkOption*> options, MetricsRecordRef& ref) {
+                        const std::variant<SecurityOptions*, nami::ObserverNetworkOption*> options, std::shared_ptr<PluginMetricManager> mgr) {
 
     std::string prev_pipeline_name = CheckLoadedPipelineName(type);
     if (prev_pipeline_name.size() && prev_pipeline_name != pipeline_name) {
@@ -201,10 +210,10 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
         return false;
     }
 
-    UpdatePipelineName(type, pipeline_name);
+    UpdatePipelineName(type, pipeline_name, ctx->GetProjectName());
 
     // init self monitor
-    mMonitorMgr->Init(type, ref, pipeline_name, ctx->GetLogstoreName());
+    mMonitorMgr->Init(type, mgr, pipeline_name, ctx->GetProjectName());
 
     // step1: convert options to export type
     std::variant<nami::NetworkObserveConfig, nami::ProcessConfig, nami::NetworkSecurityConfig, nami::FileSecurityConfig> config;
@@ -286,6 +295,10 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
         return false;
     }
 
+    if (ret) {
+        mStartPluginTotal->Add(1);
+    }
+
     return ret;
 }
 
@@ -300,11 +313,11 @@ bool eBPFServer::HasRegisteredPlugins() const {
 bool eBPFServer::EnablePlugin(const std::string& pipeline_name, uint32_t plugin_index,
                         nami::PluginType type, 
                         const PipelineContext* ctx, 
-                        const std::variant<SecurityOptions*, nami::ObserverNetworkOption*> options, MetricsRecordRef& ref) {
+                        const std::variant<SecurityOptions*, nami::ObserverNetworkOption*> options, std::shared_ptr<PluginMetricManager> mgr) {
     if (!IsSupportedEnv(type)) {
         return false;
     }
-    return StartPluginInternal(pipeline_name, plugin_index, type, ctx, options, ref);
+    return StartPluginInternal(pipeline_name, plugin_index, type, ctx, options, mgr);
 }
 
 bool eBPFServer::DisablePlugin(const std::string& pipeline_name, nami::PluginType type) {
@@ -313,14 +326,17 @@ bool eBPFServer::DisablePlugin(const std::string& pipeline_name, nami::PluginTyp
     }
     std::string prev_pipeline = CheckLoadedPipelineName(type);
     if (prev_pipeline == pipeline_name) {
-        UpdatePipelineName(type, "");
+        UpdatePipelineName(type, "", "");
     } else {
         LOG_WARNING(sLogger, ("prev pipeline", prev_pipeline)("curr pipeline", pipeline_name));
         return true;
     }
     bool ret = mSourceManager->StopPlugin(type);
     // UpdateContext must after than StopPlugin
-    if (ret) UpdateCBContext(type, nullptr, -1, -1);
+    if (ret) {
+        UpdateCBContext(type, nullptr, -1, -1);
+        mStopPluginTotal->Add(1);
+    }
     return ret;
 }
 
@@ -329,9 +345,22 @@ std::string eBPFServer::CheckLoadedPipelineName(nami::PluginType type) {
     return mLoadedPipeline[int(type)];
 }
 
-void eBPFServer::UpdatePipelineName(nami::PluginType type, const std::string& name) {
+std::string eBPFServer::GetAllProjects() {
+    std::lock_guard<std::mutex> lk(mMtx);
+    std::string res;
+    for (int i = 0; i < int(nami::PluginType::MAX); i ++) {
+        if (mPluginProject[i] != "") {
+            res += mPluginProject[i];
+            res += "";
+        }
+    }
+    return res;
+}
+
+void eBPFServer::UpdatePipelineName(nami::PluginType type, const std::string& name, const std::string& project) {
     std::lock_guard<std::mutex> lk(mMtx);
     mLoadedPipeline[int(type)] = name;
+    mPluginProject[int(type)] = project;
     return;
 }
 
@@ -341,7 +370,10 @@ bool eBPFServer::SuspendPlugin(const std::string& pipeline_name, nami::PluginTyp
     }
     // mark plugin status is update
     bool ret = mSourceManager->SuspendPlugin(type);
-    if (ret) UpdateCBContext(type, nullptr, -1, -1);
+    if (ret) {
+        UpdateCBContext(type, nullptr, -1, -1);
+        mSuspendPluginTotal->Add(1);
+    }
     return ret;
 }
 

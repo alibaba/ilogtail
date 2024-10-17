@@ -67,12 +67,12 @@ public:
 
     std::string CheckLoadedPipelineName(nami::PluginType type);
 
-    void UpdatePipelineName(nami::PluginType type, const std::string& name);
+    void UpdatePipelineName(nami::PluginType type, const std::string& name, const std::string& project);
 
     bool EnablePlugin(const std::string& pipeline_name, uint32_t plugin_index,
                         nami::PluginType type, 
                         const logtail::PipelineContext* ctx, 
-                        const std::variant<SecurityOptions*, nami::ObserverNetworkOption*> options, MetricsRecordRef& ref);
+                        const std::variant<SecurityOptions*, nami::ObserverNetworkOption*> options, std::shared_ptr<PluginMetricManager> mgr);
 
     bool DisablePlugin(const std::string& pipeline_name, nami::PluginType type);
 
@@ -82,11 +82,13 @@ public:
 
     bool IsSupportedEnv(nami::PluginType type);
 
+    std::string GetAllProjects();
+
 private:
     bool StartPluginInternal(const std::string& pipeline_name, uint32_t plugin_index,
                         nami::PluginType type, 
                         const logtail::PipelineContext* ctx, 
-                        const std::variant<SecurityOptions*, nami::ObserverNetworkOption*> options, MetricsRecordRef& ref);
+                        const std::variant<SecurityOptions*, nami::ObserverNetworkOption*> options, std::shared_ptr<PluginMetricManager> mgr);
     eBPFServer() = default;
     ~eBPFServer() = default;
 
@@ -103,12 +105,18 @@ private:
 
     mutable std::mutex mMtx;
     std::array<std::string, (int)nami::PluginType::MAX> mLoadedPipeline = {};
+    std::array<std::string, (int)nami::PluginType::MAX> mPluginProject = {};
 
     eBPFAdminConfig mAdminConfig;
     volatile bool mInited = false;
 
     EnvManager mEnvMgr;
     std::unique_ptr<eBPFSelfMonitorMgr> mMonitorMgr;
+    MetricsRecordRef mRef;
+
+    CounterPtr mStartPluginTotal;
+    CounterPtr mStopPluginTotal;
+    CounterPtr mSuspendPluginTotal;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class eBPFServerUnittest;

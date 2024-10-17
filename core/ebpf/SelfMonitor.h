@@ -34,10 +34,8 @@ public:
     virtual void ReleaseMetric();
     virtual ~BaseBPFMonitor() = default;
 protected:
-    BaseBPFMonitor(const std::string& name, PluginMetricManagerPtr mgr, MetricsRecordRef& ref) 
-        : mPipelineName(name), mPluginMetricMgr(mgr), mRef(ref) {}
-
-    std::string PluginTypeToString(const nami::PluginType pluginType);
+    BaseBPFMonitor(const std::string& name, PluginMetricManagerPtr mgr) 
+        : mPipelineName(name), mPluginMetricMgr(mgr) {}
 
     // attention: not thread safe!!
     void InitInnerMetric();
@@ -47,7 +45,7 @@ protected:
 
     std::string mPipelineName;
     PluginMetricManagerPtr mPluginMetricMgr;
-    MetricsRecordRef& mRef;
+    // MetricsRecordRef& mRef;
     std::vector<std::pair<ReentrantMetricsRecordRef, MetricLabels>> mRefAndLabels;
 
     std::atomic_bool mMetricInited = false;
@@ -67,8 +65,8 @@ protected:
 
 class NetworkObserverSelfMonitor : public BaseBPFMonitor {
 public:
-    NetworkObserverSelfMonitor(const std::string& name, PluginMetricManagerPtr mgr, MetricsRecordRef& ref) 
-        : BaseBPFMonitor(name, mgr, ref) {}
+    NetworkObserverSelfMonitor(const std::string& name, PluginMetricManagerPtr mgr/**/) 
+        : BaseBPFMonitor(name, mgr) {}
 
     void InitMetric() override;
 
@@ -97,8 +95,8 @@ private:
 
 class NetworkSecuritySelfMonitor : public BaseBPFMonitor {
 public:
-    NetworkSecuritySelfMonitor(const std::string& name, PluginMetricManagerPtr mgr, MetricsRecordRef& ref) 
-        : BaseBPFMonitor(name, mgr, ref) {}
+    NetworkSecuritySelfMonitor(const std::string& name, PluginMetricManagerPtr mgr) 
+        : BaseBPFMonitor(name, mgr) {}
 
     void HandleStatistic(nami::eBPFStatistics& stats) override {
         if (!stats.updated_) return;
@@ -108,14 +106,14 @@ public:
 
 class ProcessSecuritySelfMonitor : public BaseBPFMonitor {
 public:
-    ProcessSecuritySelfMonitor(const std::string& name, PluginMetricManagerPtr mgr, MetricsRecordRef& ref) 
-        : BaseBPFMonitor(name, mgr, ref) {}
+    ProcessSecuritySelfMonitor(const std::string& name, PluginMetricManagerPtr mgr) 
+        : BaseBPFMonitor(name, mgr) {}
 };
 
 class FileSecuritySelfMonitor : public BaseBPFMonitor {
 public:
-    FileSecuritySelfMonitor(const std::string& name, PluginMetricManagerPtr mgr, MetricsRecordRef& ref) 
-        : BaseBPFMonitor(name, mgr, ref) {}
+    FileSecuritySelfMonitor(const std::string& name, PluginMetricManagerPtr mgr) 
+        : BaseBPFMonitor(name, mgr) {}
 };
 
 /**
@@ -123,12 +121,14 @@ public:
  */
 class eBPFSelfMonitorMgr {
 public:
-    eBPFSelfMonitorMgr() : mSelfMonitors({}), mInited({}) {}
-    void Init(const nami::PluginType type, MetricsRecordRef& ref, const std::string& name, const std::string& logstore);
+    eBPFSelfMonitorMgr();
+    void Init(const nami::PluginType type, std::shared_ptr<PluginMetricManager> mgr, const std::string& name, const std::string& project);
     void Release(const nami::PluginType type);
     void Suspend(const nami::PluginType type);
     void HandleStatistic(std::vector<nami::eBPFStatistics>&& stats);
 private:
+    // `mLock` is used to protect mSelfMonitors
+    ReadWriteLock mLock;
     std::array<std::unique_ptr<BaseBPFMonitor>, int(nami::PluginType::MAX)> mSelfMonitors;
     std::array<std::atomic_bool, int(nami::PluginType::MAX)> mInited;
     
