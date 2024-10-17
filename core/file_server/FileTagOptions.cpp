@@ -20,7 +20,10 @@
 
 namespace logtail {
 
-bool FileTagOptions::Init(const Json::Value& config, const PipelineContext& context, const std::string& pluginType) {
+bool FileTagOptions::Init(const Json::Value& config,
+                          const PipelineContext& context,
+                          const std::string& pluginType,
+                          bool enableContainerDiscovery) {
     std::string errorMsg;
 
     // AppendingLogPositionMeta
@@ -67,19 +70,6 @@ bool FileTagOptions::Init(const Json::Value& config, const PipelineContext& cont
     parseDefaultAddTag(tagConfig, "FilePathTagKey", TagKey::FILE_PATH_TAG_KEY, context, pluginType);
 
     // ContainerDiscovery
-    bool enableContainerDiscovery = false;
-    if (!GetOptionalBoolParam(config, "EnableContainerDiscovery", enableContainerDiscovery, errorMsg)) {
-        PARAM_WARNING_DEFAULT(context.GetLogger(),
-                              context.GetAlarm(),
-                              errorMsg,
-                              false,
-                              pluginType,
-                              context.GetConfigName(),
-                              context.GetProjectName(),
-                              context.GetLogstoreName(),
-                              context.GetRegion());
-    }
-
     if (enableContainerDiscovery) {
         parseDefaultAddTag(tagConfig, "K8sNamespaceTagKey", TagKey::K8S_NAMESPACE_TAG_KEY, context, pluginType);
         parseDefaultAddTag(tagConfig, "K8sPodNameTagKey", TagKey::K8S_POD_NAME_TAG_KEY, context, pluginType);
@@ -99,6 +89,9 @@ bool FileTagOptions::Init(const Json::Value& config, const PipelineContext& cont
 }
 
 StringView FileTagOptions::GetFileTagKeyName(TagKey key) const {
+    if (this == nullptr) {
+        return StringView();
+    }
     auto it = mFileTags.find(key);
     if (it != mFileTags.end()) {
         // FileTagOption will not be deconstructed or changed before all event be sent

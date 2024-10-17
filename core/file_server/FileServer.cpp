@@ -14,6 +14,7 @@
 
 #include "file_server/FileServer.h"
 
+#include "FileTagOptions.h"
 #include "checkpoint/CheckPointManager.h"
 #include "common/Flags.h"
 #include "common/StringTools.h"

@@ -116,7 +116,7 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
     }
 
     // Tag
-    if (!mFileTag.Init(config, *mContext, sName)) {
+    if (!mFileTag.Init(config, *mContext, sName, mEnableContainerDiscovery)) {
         return false;
     }
 

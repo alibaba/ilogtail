@@ -19,6 +19,7 @@
 #include <json/json.h>
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -48,6 +49,11 @@ struct ContainerInfo {
     std::shared_ptr<std::vector<sls_logs::LogTag>> mTags; // ContainerNameTag, ExternalEnvTag and ExternalK8sLabelTag.
     std::shared_ptr<std::vector<sls_logs::LogTag>> mMetadatas;
     Json::Value mJson; // this obj's json, for saving to local file
+
+    ContainerInfo() {
+        mTags = std::make_shared<std::vector<sls_logs::LogTag>>();
+        mMetadatas = std::make_shared<std::vector<sls_logs::LogTag>>();
+    }
 
     static bool ParseByJSONObj(const Json::Value&, ContainerInfo&, std::string&);
     static bool ParseAllByJSONObj(const Json::Value&, std::unordered_map<std::string, ContainerInfo>&, std::string&);

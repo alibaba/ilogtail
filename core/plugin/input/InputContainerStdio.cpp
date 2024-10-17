@@ -96,6 +96,11 @@ bool InputContainerStdio::Init(const Json::Value& config, Json::Value& optionalG
         }
     }
 
+    // Tag
+    if (!mFileTag.Init(config, *mContext, sName, true)) {
+        return false;
+    }
+
     // IgnoringStdout
     if (!GetOptionalBoolParam(config, "IgnoringStdout", mIgnoringStdout, errorMsg)) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(),
@@ -273,6 +278,8 @@ bool InputContainerStdio::Start() {
     FileServer::GetInstance()->AddFileDiscoveryConfig(mContext->GetConfigName(), &mFileDiscovery, mContext);
     FileServer::GetInstance()->AddFileReaderConfig(mContext->GetConfigName(), &mFileReader, mContext);
     FileServer::GetInstance()->AddMultilineConfig(mContext->GetConfigName(), &mMultiline, mContext);
+    FileServer::GetInstance()->AddFileTagConfig(mContext->GetConfigName(), &mFileTag, mContext);
+
     return true;
 }
 
@@ -283,6 +290,7 @@ bool InputContainerStdio::Stop(bool isPipelineRemoving) {
     FileServer::GetInstance()->RemoveFileDiscoveryConfig(mContext->GetConfigName());
     FileServer::GetInstance()->RemoveFileReaderConfig(mContext->GetConfigName());
     FileServer::GetInstance()->RemoveMultilineConfig(mContext->GetConfigName());
+    FileServer::GetInstance()->RemoveFileTagConfig(mContext->GetConfigName());
     FileServer::GetInstance()->RemovePluginMetricManager(mContext->GetConfigName());
     return true;
 }

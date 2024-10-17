@@ -680,7 +680,7 @@ void LogFileReader::SetFilePosBackwardToFixedPos(LogFileOperator& op) {
 
 void LogFileReader::checkContainerType(LogFileOperator& op) {
     // 判断container类型
-    char containerBOMBuffer[1] = {0};
+    char containerBOMBuffer[2] = {0};
     size_t readBOMByte = 1;
     int64_t filePos = 0;
     TruncateInfo* truncateInfo = NULL;
@@ -2450,11 +2450,9 @@ void LogFileReader::SetEventGroupMetaAndTag(PipelineEventGroup& group) {
     group.SetMetadata(EventGroupMetaKey::SOURCE, LogFileProfiler::mIpAddr);
     group.SetMetadata(EventGroupMetaKey::TOPIC, GetTopicName());
     group.SetMetadata(EventGroupMetaKey::MACHINE_UUID, Application::GetInstance()->GetUUID());
-    if (mTagConfig.first != nullptr) {
-        auto offsetKey = mTagConfig.first->GetFileTagKeyName(TagKey::FILE_OFFSET_KEY);
-        if (!offsetKey.empty()) {
-            group.SetMetadata(EventGroupMetaKey::LOG_FILE_OFFSET_KEY, offsetKey);
-        }
+    auto offsetKey = mTagConfig.first->GetFileTagKeyName(TagKey::FILE_OFFSET_KEY);
+    if (!offsetKey.empty()) {
+        group.SetMetadata(EventGroupMetaKey::LOG_FILE_OFFSET_KEY, offsetKey);
     }
 
     // we store info which users can see in tags
@@ -2490,7 +2488,7 @@ void LogFileReader::SetEventGroupMetaAndTag(PipelineEventGroup& group) {
         StringBuffer b = group.GetSourceBuffer()->CopyString(ToString(GetDevInode().inode));
         group.SetTagNoCopy(keyName, StringView(b.data, b.size));
     }
-    // 5. path
+    // 4. path
     keyName = mTagConfig.first->GetFileTagKeyName(TagKey::FILE_PATH_TAG_KEY);
     if (!keyName.empty()) {
         StringBuffer b = group.GetSourceBuffer()->CopyString(GetConvertedPath());

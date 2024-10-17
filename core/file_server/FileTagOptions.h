@@ -27,7 +27,10 @@ namespace logtail {
 
 class FileTagOptions {
 public:
-    bool Init(const Json::Value& config, const PipelineContext& context, const std::string& pluginType);
+    bool Init(const Json::Value& config,
+              const PipelineContext& context,
+              const std::string& pluginType,
+              bool enableContainerDiscovery);
     StringView GetFileTagKeyName(TagKey key) const;
 
 
