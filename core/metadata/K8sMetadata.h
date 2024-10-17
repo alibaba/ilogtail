@@ -50,7 +50,6 @@ namespace logtail {
             lru11::Cache<std::string, std::shared_ptr<k8sContainerInfo>> ipCache;
             std::string mServiceHost;
             int32_t mServicePort;
-            std::string appIdKey;
             K8sMetadata(size_t cacheSize)
               : containerCache(cacheSize, 0), ipCache(cacheSize, 0){
                 mServiceHost = STRING_FLAG(loong_collector_operator_service);
@@ -80,6 +79,11 @@ namespace logtail {
             // get info by ip from cache
             std::shared_ptr<k8sContainerInfo> GetInfoByIpFromCache(const std::string& ip);
             int SendRequestToOperator(const std::string& urlHost, const std::string& output, containerInfoType infoType);
+    
+    #ifdef __ENTERPRISE__
+
+        const static std::string appIdKey = "armsAppId";
+    #endif    
     #ifdef APSARA_UNIT_TEST_MAIN
         friend class k8sMetadataUnittest;
     #endif

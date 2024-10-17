@@ -45,9 +45,11 @@ namespace logtail {
         for (const auto& key : json["labels"].getMemberNames()) {
             if (json["labels"].isMember(key)) {
                 info.labels[key] = json["labels"][key].asString();
+                #ifdef __ENTERPRISE__
                 if (key == appIdKey) {
                     info.appId = json["labels"][key].asString();
                 }
+                #endif
             }
         }
 
