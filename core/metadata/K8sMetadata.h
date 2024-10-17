@@ -19,7 +19,7 @@
 #include <json/json.h>
 #include "common/Flags.h"
 
-DECLARE_FLAG_STRING(loong_collector_k8s_meta_service);
+DECLARE_FLAG_STRING(loong_collector_operator_service);
 DECLARE_FLAG_INT32(loong_collector_k8s_meta_service_port);
 
 namespace logtail {
@@ -49,11 +49,11 @@ namespace logtail {
             lru11::Cache<std::string, std::shared_ptr<k8sContainerInfo>> containerCache;
             lru11::Cache<std::string, std::shared_ptr<k8sContainerInfo>> ipCache;
             std::string mServiceHost;
-            std::string appIdKey;
             int32_t mServicePort;
-            K8sMetadata(size_t cacheSize, std::string appIdKey)
-              : appIdKey(appIdKey), containerCache(cacheSize, 0), ipCache(cacheSize, 0){
-                mServiceHost = STRING_FLAG(loong_collector_k8s_meta_service);
+            std::string appIdKey;
+            K8sMetadata(size_t cacheSize)
+              : containerCache(cacheSize, 0), ipCache(cacheSize, 0){
+                mServiceHost = STRING_FLAG(loong_collector_operator_service);
                 mServicePort = INT32_FLAG(loong_collector_k8s_meta_service_port);
               }
             K8sMetadata(const K8sMetadata&) = delete;
@@ -65,8 +65,8 @@ namespace logtail {
             void FromContainerJson(const Json::Value& json, std::shared_ptr<ContainerData> data);
 
         public:
-            static K8sMetadata& GetInstance(const std::string& appIdKey) {
-                static K8sMetadata instance(500, appIdKey);
+            static K8sMetadata& GetInstance() {
+                static K8sMetadata instance(500);
                 return instance;
             }
 

@@ -48,7 +48,7 @@ public:
             std::cerr << "Failed to parse JSON: " << errors << std::endl;
             return;
         }
-        auto& k8sMetadata = K8sMetadata::GetInstance("armsAppId");
+        auto& k8sMetadata = K8sMetadata::GetInstance();
         k8sMetadata.SetContainerCache(root);
         k8sMetadata.GetByLocalHostFromServer();
         
@@ -136,7 +136,7 @@ public:
         }
 
 
-        auto& k8sMetadata = K8sMetadata::GetInstance("armsAppId");
+        auto& k8sMetadata = K8sMetadata::GetInstance();
         k8sMetadata.SetIpCache(root);
         
         auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -256,7 +256,7 @@ public:
         }
 
 
-        auto& k8sMetadata = K8sMetadata::GetInstance("armsAppId");
+        auto& k8sMetadata = K8sMetadata::GetInstance();
         k8sMetadata.SetIpCache(root);
         k8sMetadata.GetByLocalHostFromServer();
         unique_ptr<SpanEvent> mSpanEvent;
@@ -370,7 +370,7 @@ public:
         }
 
 
-        auto& k8sMetadata = K8sMetadata::GetInstance("armsAppId");
+        auto& k8sMetadata = K8sMetadata::GetInstance();
         k8sMetadata.SetIpCache(root);
         k8sMetadata.GetByLocalHostFromServer();
         
