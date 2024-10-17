@@ -687,7 +687,7 @@ void LogFileReader::SetFilePosBackwardToFixedPos(LogFileOperator& op) {
 
 void LogFileReader::checkContainerType(LogFileOperator& op) {
     // 判断container类型
-    char containerBOMBuffer[1] = {0};
+    char containerBOMBuffer[2] = {0};
     size_t readBOMByte = 1;
     int64_t filePos = 0;
     TruncateInfo* truncateInfo = NULL;
