@@ -42,7 +42,6 @@ func ScenarioInitializer(ctx *godog.ScenarioContext) {
 	ctx.When(`^query through \{(.*)\}`, control.SetQuery)
 	ctx.When(`^begin trigger`, trigger.BeginTrigger)
 	ctx.When(`^execute \{(\d+)\} commands to generate file security events on files \{(.*)\}$`, trigger.TrigerFileSecurityEvents)
-	ctx.When(`^generate logs to file, speed \{(\d+)\}MB/s, total \{(\d+)\}min, to file \{(.*)\}, template`, trigger.GenerateLogToFile)
 	ctx.When(`^generate random json logs to file, speed \{(\d+)\}MB/s, total \{(\d+)\}min, to file \{(.*)\}`, trigger.GenerateRandomJSONLogToFile)
 	ctx.When(`^start monitor \{(\S+)\}`, monitor.StartMonitor)
 	ctx.When(`^wait monitor until log processing finished$`, monitor.WaitMonitorUntilProcessingFinished)
