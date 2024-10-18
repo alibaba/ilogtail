@@ -25,6 +25,7 @@ const string METRIC_LABEL_KEY_EXACTLY_ONCE_FLAG = "exactly_once_enabled";
 const string METRIC_LABEL_KEY_QUEUE_TYPE = "queue_type";
 
 // label values
+const string METRIC_LABEL_KEY_METRIC_CATEGORY_COMPONENT = "component";
 const string METRIC_LABEL_VALUE_COMPONENT_NAME_BATCHER = "batcher";
 const string METRIC_LABEL_VALUE_COMPONENT_NAME_COMPRESSOR = "compressor";
 const string METRIC_LABEL_VALUE_COMPONENT_NAME_PROCESS_QUEUE = "process_queue";
