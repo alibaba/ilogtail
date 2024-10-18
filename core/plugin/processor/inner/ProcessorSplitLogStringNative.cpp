@@ -133,7 +133,7 @@ void ProcessorSplitLogStringNative::ProcessEvent(PipelineEventGroup& logGroup,
 
     size_t begin = 0;
     while (begin < sourceVal.size()) {
-        std::unique_ptr<LogEvent> targetEvent = logGroup.CreateLogEvent();
+        std::unique_ptr<LogEvent> targetEvent = logGroup.CreateLogEvent(true);
         StringView content = GetNextLine(sourceVal, begin);
         targetEvent->SetContentNoCopy(StringView(sourceKey.data, sourceKey.size), content);
         targetEvent->SetTimestamp(
@@ -152,7 +152,7 @@ void ProcessorSplitLogStringNative::ProcessEvent(PipelineEventGroup& logGroup,
         if (logGroup.GetExactlyOnceCheckpoint() != nullptr) {
             logGroup.GetExactlyOnceCheckpoint()->positions.emplace_back(offset, content.size());
         }
-        newEvents.emplace_back(std::move(targetEvent));
+        newEvents.emplace_back(std::move(targetEvent), true, nullptr);
         begin += content.size() + 1;
     }
 }
