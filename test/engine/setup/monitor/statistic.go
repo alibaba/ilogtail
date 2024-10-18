@@ -28,9 +28,7 @@ func (s *Info) CalculateMax() float64 {
 
 func (s *Info) CalculateAvg() float64 {
 	values_copy := make([]float64, len(s.values))
-	for i, val := range s.values {
-		values_copy[i] = val
-	}
+	copy(values_copy, s.values)
 
 	// Step 1: Sort the values_copy
 	sort.Float64s(values_copy)
@@ -54,7 +52,7 @@ func (s *Info) CalculateAvg() float64 {
 			if cnt == 0 {
 				avg = value
 			} else {
-				avg = float64(cnt)/float64(cnt+1)*avg + float64(value)/float64(cnt+1)
+				avg = float64(cnt)/float64(cnt+1)*avg + value/float64(cnt+1)
 			}
 			cnt++
 		}
@@ -98,9 +96,7 @@ func (m *Statistic) ClearStatistic() {
 
 func (m *Statistic) GetCpuRawData() []float64 {
 	cpuRawData := make([]float64, len(m.cpu.values))
-	for i, val := range m.cpu.values {
-		cpuRawData[i] = val
-	}
+	copy(cpuRawData, m.cpu.values)
 	return cpuRawData
 }
 

@@ -25,7 +25,6 @@ const (
 var monitor Monitor
 
 type Monitor struct {
-	ctx          context.Context
 	stopCh       chan bool
 	isMonitoring atomic.Bool
 	statistic    *Statistic
@@ -42,8 +41,8 @@ func StopMonitor() error {
 
 func StopMonitorAndVerifyFinished(ctx context.Context, timeout int) (context.Context, error) {
 	time.Sleep(time.Duration(timeout) * time.Second)
-	cpuRawData := monitor.getCpuRawData()
-	lastCpuRawData := cpuRawData[len(cpuRawData)-1]
+	cpuRawData := monitor.getCPURawData()
+	lastCPURawData := cpuRawData[len(cpuRawData)-1]
 
 	// Step 1: Sort the data
 	sort.Float64s(cpuRawData)
@@ -59,7 +58,7 @@ func StopMonitorAndVerifyFinished(ctx context.Context, timeout int) (context.Con
 	lowerBound := Q1 - 1.5*IQR
 
 	// Step 5: Find out if the outliers exist at the tail
-	if lastCpuRawData > lowerBound {
+	if lastCPURawData > lowerBound {
 		return ctx, fmt.Errorf("Benchmark not finished, CPU usage is still high")
 	}
 	return ctx, nil
@@ -135,8 +134,8 @@ func (m *Monitor) monitoring(client *client.Client, containerName string) {
 	}
 }
 
-func (m *Monitor) getCpuRawData() []float64 {
+func (m *Monitor) getCPURawData() []float64 {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	return m.statistic.GetCpuRawData()
+	return m.statistic.GetCPURawData()
 }

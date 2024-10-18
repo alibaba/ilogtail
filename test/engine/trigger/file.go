@@ -43,9 +43,9 @@ func GenerateLogToFile(ctx context.Context, speed, totalTime int, path string, t
 	}
 }
 
-func GenerateRandomJsonLogToFile(ctx context.Context, speed, totalTime int, path string) (context.Context, error) {
-	// json template
-	jsonTemplates := []string{
+func GenerateRandomJSONLogToFile(ctx context.Context, speed, totalTime int, path string) (context.Context, error) {
+	// JSON template
+	JSONTemplates := []string{
 		`{"url": "POST /PutData?Category=paskdnkwja HTTP/1.1", "ip": "10.200.98.220", "user-agent": "aliyun-sdk-java", "request": {"status": "200", "latency": "18"}, "time": "12/Sep/2024:11:30:02"}`,
 		`{"url": "GET /PutData?Category=dwds HTTP/1.1", "ip": "10.7.159.1", "user-agent": "aliyun-sdk-java", "request": {"status": "404", "latency": "22024"}, "time": "06/Jun/2001:09:35:59"}`,
 		`{"url": "GET /PutData?Category=ubkjbkjgiuiu HTTP/1.1", "ip": "172.130.98.250", "user-agent": "aliyun-sdk-java", "request": {"301": "200", "latency": "12334"}, "time": "08/Aug/2018:10:30:28"}`,
@@ -53,9 +53,9 @@ func GenerateRandomJsonLogToFile(ctx context.Context, speed, totalTime int, path
 		`{"url": "POST /PutData?Category=asdjhoiasjdoOpLog HTTP/1.1", "ip": "172.168.0.1", "user-agent": "aliyun-sdk-java", "request": {"status": "200", "latency": "8815"}, "time": "01/Jan/2022:10:30:28"}`,
 	}
 	maxLen := 0
-	for i := 0; i < len(jsonTemplates); i++ {
-		if len(jsonTemplates[i]) > maxLen {
-			maxLen = len(jsonTemplates[i])
+	for i := 0; i < len(JSONTemplates); i++ {
+		if len(JSONTemplates[i]) > maxLen {
+			maxLen = len(JSONTemplates[i])
 		}
 	}
 
@@ -85,8 +85,8 @@ func GenerateRandomJsonLogToFile(ctx context.Context, speed, totalTime int, path
 			return ctx, nil
 		default:
 			if limiter.AllowN(time.Now(), maxLen) {
-				randomIndex := rand.Intn(len(jsonTemplates))
-				_, _ = file.WriteString(jsonTemplates[randomIndex] + "\n")
+				randomIndex := rand.Intn(len(JSONTemplates)) // #nosec G404
+				_, _ = file.WriteString(JSONTemplates[randomIndex] + "\n")
 			}
 		}
 	}
