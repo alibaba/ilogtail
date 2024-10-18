@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -25,42 +24,17 @@ const (
 var monitor Monitor
 
 type Monitor struct {
-	stopCh       chan bool
 	isMonitoring atomic.Bool
 	statistic    *Statistic
-	mu           sync.Mutex
+	stopCh       chan struct{}
 }
 
 func StartMonitor(ctx context.Context, containerName string) (context.Context, error) {
 	return monitor.Start(ctx, containerName)
 }
 
-func StopMonitor() error {
-	return monitor.Stop()
-}
-
-func StopMonitorAndVerifyFinished(ctx context.Context, timeout int) (context.Context, error) {
-	time.Sleep(time.Duration(timeout) * time.Second)
-	cpuRawData := monitor.getCPURawData()
-	lastCPURawData := cpuRawData[len(cpuRawData)-1]
-
-	// Step 1: Sort the data
-	sort.Float64s(cpuRawData)
-
-	// Step 2: Calculate Q1 and Q3
-	Q1 := cpuRawData[len(cpuRawData)/4]
-	Q3 := cpuRawData[3*len(cpuRawData)/4]
-
-	// Step 3: Calculate IQR
-	IQR := Q3 - Q1
-
-	// Step 4: Determine the lower bounds for outliers
-	lowerBound := Q1 - 1.5*IQR
-
-	// Step 5: Find out if the outliers exist at the tail
-	if lastCPURawData > lowerBound {
-		return ctx, fmt.Errorf("Benchmark not finished, CPU usage is still high")
-	}
+func WaitMonitorUntilProcessingFinished(ctx context.Context) (context.Context, error) {
+	<-monitor.Done()
 	return ctx, nil
 }
 
@@ -79,8 +53,9 @@ func (m *Monitor) Start(ctx context.Context, containerName string) (context.Cont
 	for _, container := range allContainers {
 		containerFullName := container.Aliases[0]
 		if strings.Contains(containerFullName, containerName) {
-			m.stopCh = make(chan bool)
 			m.isMonitoring.Store(true)
+			m.statistic = NewMonitorStatistic(config.CaseName)
+			m.stopCh = make(chan struct{})
 			fmt.Println("Start monitoring container:", containerFullName)
 			go m.monitoring(client, containerFullName)
 			return ctx, nil
@@ -90,34 +65,31 @@ func (m *Monitor) Start(ctx context.Context, containerName string) (context.Cont
 	return ctx, err
 }
 
-func (m *Monitor) Stop() error {
-	if m.isMonitoring.Load() {
-		m.stopCh <- true
-	}
-	return nil
-}
-
 func (m *Monitor) monitoring(client *client.Client, containerName string) {
 	// create csv file
 	root, _ := filepath.Abs(".")
 	reportDir := root + "/report/"
 	statisticFile := reportDir + config.CaseName + "_statistic.json"
 	recordsFile := reportDir + config.CaseName + "_records.json"
-	// new ticker
+	// calculate low threshold after 60 seconds
+	timer := time.NewTimer(60 * time.Second)
+	lowThreshold := 0.0
+	// read from cadvisor per interval seconds
 	ticker := time.NewTicker(interval * time.Second)
 	defer ticker.Stop()
-	// read from cadvisor per interval seconds
 	request := &v1.ContainerInfoRequest{NumStats: 10}
-	m.statistic = NewMonitorStatistic(config.CaseName)
 	for {
 		select {
-		case <-m.stopCh:
-			m.isMonitoring.Store(false)
-			bytes, _ := m.statistic.MarshalStatisticJSON()
-			_ = os.WriteFile(statisticFile, bytes, 0600)
-			bytes, _ = m.statistic.MarshalRecordsJSON()
-			_ = os.WriteFile(recordsFile, bytes, 0600)
-			return
+		case <-timer.C:
+			// 计算CPU使用率的下阈值
+			cpuRawData := make([]float64, len(m.statistic.GetCPURawData()))
+			copy(cpuRawData, m.statistic.GetCPURawData())
+			sort.Float64s(cpuRawData)
+			Q1 := cpuRawData[len(cpuRawData)/4]
+			Q3 := cpuRawData[3*len(cpuRawData)/4]
+			IQR := Q3 - Q1
+			lowThreshold = Q1 - 1.5*IQR
+			fmt.Println("Low threshold of CPU usage rate(%):", lowThreshold)
 		case <-ticker.C:
 			// 获取容器信息
 			containerInfo, err := client.DockerContainer(containerName, request)
@@ -125,17 +97,23 @@ func (m *Monitor) monitoring(client *client.Client, containerName string) {
 				fmt.Println("Error getting container info:", err)
 				return
 			}
-			m.mu.Lock()
 			for _, stat := range containerInfo.Stats {
 				m.statistic.UpdateStatistic(stat)
 			}
-			m.mu.Unlock()
+			cpuRawData := m.statistic.GetCPURawData()
+			if (cpuRawData[len(cpuRawData)-1] < lowThreshold) && (lowThreshold > 0) {
+				m.isMonitoring.Store(false)
+				m.stopCh <- struct{}{}
+				bytes, _ := m.statistic.MarshalStatisticJSON()
+				_ = os.WriteFile(statisticFile, bytes, 0600)
+				bytes, _ = m.statistic.MarshalRecordsJSON()
+				_ = os.WriteFile(recordsFile, bytes, 0600)
+				return
+			}
 		}
 	}
 }
 
-func (m *Monitor) getCPURawData() []float64 {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	return m.statistic.GetCPURawData()
+func (m *Monitor) Done() <-chan struct{} {
+	return m.stopCh
 }

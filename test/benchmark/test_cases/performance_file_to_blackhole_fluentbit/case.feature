@@ -9,4 +9,4 @@ Feature: performance file to blackhole fluentbit
     When start docker-compose {performance_file_to_blackhole_fluentbit}
     When start monitor {fluent-bit}
     When generate random json logs to file, speed {10}MB/s, total {1}min, to file {./a.log}
-    When stop monitor in {30} seconds and verify if log processing is finished
+    When wait monitor until log processing finished

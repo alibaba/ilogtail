@@ -94,10 +94,8 @@ func (m *Statistic) ClearStatistic() {
 	m.lastStat = nil
 }
 
-func (m *Statistic) GetCpuRawData() []float64 {
-	cpuRawData := make([]float64, len(m.cpu.values))
-	copy(cpuRawData, m.cpu.values)
-	return cpuRawData
+func (m *Statistic) GetCPURawData() []float64 {
+	return m.cpu.values
 }
 
 func calculateCPUUsageRate(lastStat, stat *v1.ContainerStats) float64 {
