@@ -74,6 +74,7 @@ func (m *Monitor) monitoring(client *client.Client, containerName string) {
 	// calculate low threshold after 60 seconds
 	timer := time.NewTimer(60 * time.Second)
 	lowThreshold := 0.0
+	outlierCnt := 0
 	// read from cadvisor per interval seconds
 	ticker := time.NewTicker(interval * time.Second)
 	defer ticker.Stop()
@@ -90,6 +91,9 @@ func (m *Monitor) monitoring(client *client.Client, containerName string) {
 			IQR := Q3 - Q1
 			lowThreshold = Q1 - 1.5*IQR
 			fmt.Println("Low threshold of CPU usage rate(%):", lowThreshold)
+			if lowThreshold < 0 {
+				m.stopCh <- struct{}{}
+			}
 		case <-ticker.C:
 			// 获取容器信息
 			containerInfo, err := client.DockerContainer(containerName, request)
@@ -102,6 +106,9 @@ func (m *Monitor) monitoring(client *client.Client, containerName string) {
 			}
 			cpuRawData := m.statistic.GetCPURawData()
 			if (cpuRawData[len(cpuRawData)-1] < lowThreshold) && (lowThreshold > 0) {
+				outlierCnt++
+			}
+			if outlierCnt > 5 {
 				m.isMonitoring.Store(false)
 				m.stopCh <- struct{}{}
 				bytes, _ := m.statistic.MarshalStatisticJSON()
