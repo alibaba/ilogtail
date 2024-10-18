@@ -262,14 +262,14 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
     SetLogTime(logPtr, AppConfig::GetInstance()->EnableLogTimeAutoAdjust() ? now.tv_sec + GetTimeDelta() : now.tv_sec);
     // CPU usage of Logtail process.
     AddLogContent(logPtr, "cpu", mCpuStat.mCpuUsage);
-    LoongCollectorMonitor::GetInstance()->mAgentCpu->Set(mCpuStat.mCpuUsage);
+    LoongCollectorMonitor::GetInstance()->SetAgentCpu(mCpuStat.mCpuUsage);
 #if defined(__linux__) // TODO: Remove this if auto scale is available on Windows.
     // CPU usage of system.
     AddLogContent(logPtr, "os_cpu", mOsCpuStatForScale.mOsCpuUsage);
 #endif
     // Memory usage of Logtail process.
     AddLogContent(logPtr, "mem", mMemStat.mRss);
-    LoongCollectorMonitor::GetInstance()->mAgentMemory->Set(mMemStat.mRss);
+    LoongCollectorMonitor::GetInstance()->SetAgentMemory(mMemStat.mRss);
     // The version, uuid of Logtail.
     AddLogContent(logPtr, "version", ILOGTAIL_VERSION);
     AddLogContent(logPtr, "uuid", Application::GetInstance()->GetUUID());

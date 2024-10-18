@@ -348,7 +348,7 @@ void LogInput::UpdateCriticalMetric(int32_t curTime) {
                                                 1.0 * mEventProcessCount / (curTime - mLastUpdateMetricTime));
     int32_t openFdTotal = GloablFileDescriptorManager::GetInstance()->GetOpenedFilePtrSize();
     LogtailMonitor::GetInstance()->UpdateMetric("open_fd", openFdTotal);
-    LoongCollectorMonitor::GetInstance()->mAgentOpenFdTotal->Set(openFdTotal);
+    LoongCollectorMonitor::GetInstance()->SetAgentOpenFdTotal(openFdTotal);
     size_t handlerCount = EventDispatcher::GetInstance()->GetHandlerCount();
     LogtailMonitor::GetInstance()->UpdateMetric("register_handler", handlerCount);
     mRegisterdHandlersTotal->Set(handlerCount);

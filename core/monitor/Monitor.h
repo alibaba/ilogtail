@@ -192,16 +192,23 @@ public:
     void Init();
     void Stop();
 
+    void SetAgentCpu(double cpu) { mAgentCpu->Set(cpu); }
+    void SetAgentMemory(uint64_t mem) { mAgentMemory->Set(mem); }
+    void SetAgentGoMemory(uint64_t mem) { mAgentGoMemory->Set(mem); }
+    void SetAgentGoRoutinesTotal(uint64_t total) { mAgentGoRoutinesTotal->Set(total); }
+    void SetAgentOpenFdTotal(uint64_t total) { mAgentOpenFdTotal->Set(total); }
+    void SetAgentConfigTotal(uint64_t total) { mAgentConfigTotal->Set(total); }
+
+private:
+    // MetricRecord
+    MetricsRecordRef mMetricsRecordRef;
+
     DoubleGaugePtr mAgentCpu;
     IntGaugePtr mAgentMemory;
     IntGaugePtr mAgentGoMemory;
     IntGaugePtr mAgentGoRoutinesTotal;
     IntGaugePtr mAgentOpenFdTotal;
     IntGaugePtr mAgentConfigTotal;
-
-private:
-    // MetricRecord
-    MetricsRecordRef mMetricsRecordRef;
 };
 
 } // namespace logtail

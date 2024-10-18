@@ -152,7 +152,7 @@ void PollingDirFile::Polling() {
 
             size_t configTotal = nameConfigMap.size();
             LogtailMonitor::GetInstance()->UpdateMetric("config_count", configTotal);
-            LoongCollectorMonitor::GetInstance()->mAgentConfigTotal->Set(configTotal);
+            LoongCollectorMonitor::GetInstance()->SetAgentConfigTotal(configTotal);
             {
                 ScopedSpinLock lock(mCacheLock);
                 size_t pollingDirCacheSize = mDirCacheMap.size();
