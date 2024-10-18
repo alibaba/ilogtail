@@ -83,13 +83,16 @@ func (m *Monitor) monitoring(client *client.Client, containerName string) {
 		select {
 		case <-timer.C:
 			// 计算CPU使用率的下阈值
-			cpuRawData := make([]float64, len(m.statistic.GetCPURawData()))
-			copy(cpuRawData, m.statistic.GetCPURawData())
+			cpuRawData := make([]float64, len(m.statistic.GetCPURawData())-5)
+			copy(cpuRawData, m.statistic.GetCPURawData()[5:])
 			sort.Float64s(cpuRawData)
 			Q1 := cpuRawData[len(cpuRawData)/4]
 			Q3 := cpuRawData[3*len(cpuRawData)/4]
 			IQR := Q3 - Q1
 			lowThreshold = Q1 - 1.5*IQR
+			fmt.Println("median of CPU usage rate(%):", cpuRawData[len(cpuRawData)/2])
+			fmt.Println("1/4 of CPU usage rate(%):", cpuRawData[len(cpuRawData)/4])
+			fmt.Println("3/4 of CPU usage rate(%):", cpuRawData[3*len(cpuRawData)/4])
 			fmt.Println("Low threshold of CPU usage rate(%):", lowThreshold)
 			if lowThreshold < 0 {
 				m.stopCh <- struct{}{}
@@ -109,12 +112,13 @@ func (m *Monitor) monitoring(client *client.Client, containerName string) {
 				outlierCnt++
 			}
 			if outlierCnt > 5 {
-				m.isMonitoring.Store(false)
-				m.stopCh <- struct{}{}
 				bytes, _ := m.statistic.MarshalStatisticJSON()
 				_ = os.WriteFile(statisticFile, bytes, 0600)
 				bytes, _ = m.statistic.MarshalRecordsJSON()
 				_ = os.WriteFile(recordsFile, bytes, 0600)
+				m.isMonitoring.Store(false)
+				m.stopCh <- struct{}{}
+				m.statistic.ClearStatistic()
 				return
 			}
 		}
