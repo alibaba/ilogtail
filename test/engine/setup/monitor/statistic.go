@@ -3,30 +3,62 @@ package monitor
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 
 	v1 "github.com/google/cadvisor/info/v1"
 )
 
 type Info struct {
-	maxVal float64
-	avgVal float64
-	cnt    int64
 	values []float64
 }
 
 func (s *Info) Add(val float64) {
 	s.values = append(s.values, val)
-	if s.cnt < 1 {
-		s.maxVal = val
-		s.avgVal = val
-		s.cnt++
-		return
+}
+
+func (s *Info) CalculateMax() float64 {
+	maxVal := 0.0
+	for _, val := range s.values {
+		if val > maxVal {
+			maxVal = val
+		}
 	}
-	if s.maxVal < val {
-		s.maxVal = val
+	return maxVal
+}
+
+func (s *Info) CalculateAvg() float64 {
+	values_copy := make([]float64, len(s.values))
+	copy(values_copy, s.values)
+
+	// Step 1: Sort the values_copy
+	sort.Float64s(values_copy)
+
+	// Step 2: Calculate Q1 and Q3
+	Q1 := values_copy[len(values_copy)/4]
+	Q3 := values_copy[3*len(values_copy)/4]
+
+	// Step 3: Calculate IQR
+	IQR := Q3 - Q1
+
+	// Step 4: Determine the lower and upper bounds for outliers
+	lowerBound := Q1 - 1.5*IQR
+	upperBound := Q3 + 1.5*IQR
+
+	// Step 5: Filter out the outliers
+	cnt := 0
+	avg := 0.0
+	for _, value := range values_copy {
+		if value >= lowerBound && value <= upperBound {
+			if cnt == 0 {
+				avg = value
+			} else {
+				avg = float64(cnt)/float64(cnt+1)*avg + value/float64(cnt+1)
+			}
+			cnt++
+		}
 	}
-	s.avgVal = float64(s.cnt)/float64(s.cnt+1)*s.avgVal + val/float64(s.cnt+1)
-	s.cnt++
+
+	return avg
 }
 
 type Statistic struct {
@@ -56,6 +88,16 @@ func (m *Statistic) UpdateStatistic(stat *v1.ContainerStats) {
 	// fmt.Println("CPU Usage Rate(%):", cpuUsageRateTotal, "CPU Usage Rate Max(%):", m.cpu.maxVal, "CPU Usage Rate Avg(%):", m.cpu.avgVal, "Memory Usage Max(MB):", m.mem.maxVal, "Memory Usage Avg(MB):", m.mem.avgVal)
 }
 
+func (m *Statistic) ClearStatistic() {
+	m.cpu.values = m.cpu.values[:0]
+	m.mem.values = m.mem.values[:0]
+	m.lastStat = nil
+}
+
+func (m *Statistic) GetCPURawData() []float64 {
+	return m.cpu.values
+}
+
 func calculateCPUUsageRate(lastStat, stat *v1.ContainerStats) float64 {
 	if lastStat == nil {
 		return 0
@@ -73,10 +115,10 @@ type StatisticItem struct {
 
 func (m *Statistic) MarshalStatisticJSON() ([]byte, error) {
 	items := []StatisticItem{
-		{"CPU_Usage_Max - " + m.name, m.cpu.maxVal, "%"},
-		{"CPU_Usage_Avg - " + m.name, m.cpu.avgVal, "%"},
-		{"Memory_Usage_Max - " + m.name, m.mem.maxVal, "MB"},
-		{"Memory_Usage_Avg - " + m.name, m.mem.avgVal, "MB"},
+		{"CPU_Usage_Max - " + m.name, m.cpu.CalculateMax(), "%"},
+		{"CPU_Usage_Avg - " + m.name, m.cpu.CalculateAvg(), "%"},
+		{"Memory_Usage_Max - " + m.name, m.mem.CalculateMax(), "MB"},
+		{"Memory_Usage_Avg - " + m.name, m.mem.CalculateAvg(), "MB"},
 	}
 
 	// Serialize the slice to JSON
