@@ -33,9 +33,9 @@ func GenerateRandomJSONLogToFile(ctx context.Context, speed, totalTime int, path
 				`{"url": "POST /PutData?Category=asdjhoiasjdoOpLog HTTP/1.1", "ip": "172.168.0.1", "user-agent": "aliyun-sdk-java", "request": {"status": "200", "latency": "8815"}, "time": "01/Jan/2022:10:30:28"}\n`,
 			}
 			maxLen := 0
-			for i := 0; i < len(JSONTemplates); i++ {
-				if len(JSONTemplates[i]) > maxLen {
-					maxLen = len(JSONTemplates[i])
+			for j := 0; j < len(JSONTemplates); j++ {
+				if len(JSONTemplates[j]) > maxLen {
+					maxLen = len(JSONTemplates[j])
 				}
 			}
 

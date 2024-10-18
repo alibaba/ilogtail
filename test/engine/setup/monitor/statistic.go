@@ -27,15 +27,15 @@ func (s *Info) CalculateMax() float64 {
 }
 
 func (s *Info) CalculateAvg() float64 {
-	values_copy := make([]float64, len(s.values))
-	copy(values_copy, s.values)
+	valuesCopy := make([]float64, len(s.values))
+	copy(valuesCopy, s.values)
 
-	// Step 1: Sort the values_copy
-	sort.Float64s(values_copy)
+	// Step 1: Sort the valuesCopy
+	sort.Float64s(valuesCopy)
 
 	// Step 2: Calculate Q1 and Q3
-	Q1 := values_copy[len(values_copy)/4]
-	Q3 := values_copy[3*len(values_copy)/4]
+	Q1 := valuesCopy[len(valuesCopy)/4]
+	Q3 := valuesCopy[3*len(valuesCopy)/4]
 
 	// Step 3: Calculate IQR
 	IQR := Q3 - Q1
@@ -47,7 +47,7 @@ func (s *Info) CalculateAvg() float64 {
 	// Step 5: Filter out the outliers
 	cnt := 0
 	avg := 0.0
-	for _, value := range values_copy {
+	for _, value := range valuesCopy {
 		if value >= lowerBound && value <= upperBound {
 			if cnt == 0 {
 				avg = value
