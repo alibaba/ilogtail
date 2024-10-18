@@ -27,7 +27,6 @@ import (
 
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/test/config"
-	"github.com/alibaba/ilogtail/test/engine/setup/monitor"
 )
 
 const (
@@ -104,7 +103,6 @@ func (c *ComposeBenchmarkBooter) Start(ctx context.Context) error {
 }
 
 func (c *ComposeBenchmarkBooter) Stop() error {
-	_ = monitor.StopMonitor()
 	execError := testcontainers.NewLocalDockerCompose([]string{config.CaseHome + finalFileName}, benchmarkIdentifier).Down()
 	if execError.Error != nil {
 		logger.Error(context.Background(), "STOP_DOCKER_COMPOSE_ERROR",
