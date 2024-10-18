@@ -1,0 +1,19 @@
+enable: true
+inputs:
+  - Type: input_file
+    FilePaths: 
+      - /home/ilogtail/*.log
+processors:
+  - Type: processor_parse_json_native
+    SourceKey: content
+  - Type: processor_filter_regex_native
+    FilterKey:
+      - user-agent
+    FilterRegex:
+      - ^no-agent$
+flushers:
+  - Type: flusher_sls
+    Region: cn-hangzhou
+    Endpoint: cn-hangzhou.log.aliyuncs.com
+    Project: test_project
+    Logstore: test_logstore
