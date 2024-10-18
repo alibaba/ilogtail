@@ -38,10 +38,10 @@ protected:
         : mPipelineName(name), mPluginMetricMgr(mgr) {}
 
     // attention: not thread safe!!
-    void InitInnerMetric();
+    void InitMetricInner();
 
     // attention: not thread safe!!
-    void UpdateInnerMetric(nami::eBPFStatistics& currStat);
+    void UpdateMetricInner(nami::eBPFStatistics& currStat);
 
     std::string mPipelineName;
     PluginMetricManagerPtr mPluginMetricMgr;
@@ -100,7 +100,7 @@ public:
 
     void HandleStatistic(nami::eBPFStatistics& stats) override {
         if (!stats.updated_) return;
-        UpdateInnerMetric(stats);
+        UpdateMetricInner(stats);
     }
 };
 

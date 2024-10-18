@@ -20,13 +20,13 @@ namespace ebpf {
 
 void BaseBPFMonitor::HandleStatistic(nami::eBPFStatistics& stats) {
     if (!stats.updated_) return;
-    UpdateInnerMetric(stats);
+    UpdateMetricInner(stats);
 }
 
 void BaseBPFMonitor::InitMetric() {
     if (mMetricInited) return;
     mMetricInited = true;
-    InitInnerMetric();
+    InitMetricInner();
 }
 
 void BaseBPFMonitor::ReleaseMetric() {
@@ -41,7 +41,7 @@ void BaseBPFMonitor::ReleaseMetric() {
     mMetricInited = false;
 }
 
-void BaseBPFMonitor::InitInnerMetric() {
+void BaseBPFMonitor::InitMetricInner() {
     // init base metrics, only plugin relative
     // poll kernel events
     MetricLabels pollKernelEventsLabels = {
@@ -81,7 +81,7 @@ void BaseBPFMonitor::InitInnerMetric() {
     mRefAndLabels.emplace_back(std::make_pair<>(ref, pushSpansLabels));
 }
 
-void BaseBPFMonitor::UpdateInnerMetric(nami::eBPFStatistics& currStat) {
+void BaseBPFMonitor::UpdateMetricInner(nami::eBPFStatistics& currStat) {
     if (!currStat.updated_) return;
     mProcessCacheEntitiesNum->Set(currStat.process_cache_entities_num_);
     mRecvKernelEventsTotal->Add(currStat.recv_kernel_events_total_);
@@ -97,7 +97,7 @@ void NetworkObserverSelfMonitor::InitMetric() {
     if (mMetricInited) return;
     mMetricInited = true;
 
-    InitInnerMetric();
+    InitMetricInner();
 
     // use default labels ... 
     MetricLabels recvEventLabels = {
@@ -160,7 +160,7 @@ void NetworkObserverSelfMonitor::InitMetric() {
 
 void NetworkObserverSelfMonitor::HandleStatistic(nami::eBPFStatistics& stats) {
     if (!stats.updated_) return;
-    UpdateInnerMetric(stats);
+    UpdateMetricInner(stats);
     // recv kernel events metric
     assert(stats.plugin_type_ == nami::PluginType::NETWORK_OBSERVE);
     nami::NetworkObserverStatistics* currNetworkStatsPtr = static_cast<nami::NetworkObserverStatistics*>(&stats);
