@@ -97,11 +97,11 @@ namespace logtail {
         }
         request = std::make_unique<HttpRequest>("GET", false, mServiceHost, mServicePort, path, "", map<std::string, std::string>(), output, 30, 3);
         bool success = SendHttpRequest(std::move(request), res);
-        if (res.mStatusCode != 200) {
-            LOG_DEBUG(sLogger, ("fetch k8s meta from one operator fail, code is ", res.mStatusCode));
-            return res.mStatusCode;
-        }
         if (success) {
+            if (res.mStatusCode != 200) {
+                LOG_DEBUG(sLogger, ("fetch k8s meta from one operator fail, code is ", res.mStatusCode));
+                return res.mStatusCode;
+            }
             Json::CharReaderBuilder readerBuilder;
             Json::CharReader* reader = readerBuilder.newCharReader();
             Json::Value root;
@@ -118,6 +118,7 @@ namespace logtail {
                     }
                 }
             } else {
+                delete reader;
                 return 200;
             }
 
