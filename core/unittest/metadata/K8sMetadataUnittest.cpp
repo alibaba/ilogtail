@@ -285,7 +285,7 @@ public:
         mSpanEvent->SetStatus(SpanEvent::StatusCode::Ok);
         mSpanEvent->SetScopeTag(string("key2"), string("value2"));
         LabelingK8sMetadata& processor = *(new LabelingK8sMetadata);
-        processor.AddLabelToSpan(*mSpanEvent, container_vec, remote_ip_vec);
+        processor.AddLabels(*mSpanEvent, container_vec, remote_ip_vec);
         APSARA_TEST_EQUAL("kube-proxy-worker", mSpanEvent->GetTag("peerWorkloadName").to_string());
         APSARA_TEST_TRUE_FATAL(k8sMetadata.GetInfoByIpFromCache("10.41.0.2") != nullptr);
     }
@@ -408,7 +408,7 @@ public:
         std::vector<std::string> container_vec;
         std::vector<std::string> remote_ip_vec;
         EventsContainer& events = eventGroup.MutableEvents();
-        processor.AddLabelToMetric(events[0].Cast<MetricEvent>(), container_vec, remote_ip_vec);
+        processor.AddLabels(events[0].Cast<MetricEvent>(), container_vec, remote_ip_vec);
         EventsContainer& eventsEnd = eventGroup.MutableEvents();
         auto& metricEvent = eventsEnd[0].Cast<MetricEvent>();
         APSARA_TEST_EQUAL("kube-proxy-worker", metricEvent.GetTag("peerWorkloadName").to_string());
