@@ -64,20 +64,12 @@ bool LabelingK8sMetadata::ProcessEvent(PipelineEventPtr& e, std::vector<std::str
     }
 
     if (e.Is<MetricEvent>()) {
-        return AddLabelToMetric(e.Cast<MetricEvent>(), containerVec, remoteIpVec);
+        return AddLabels(e.Cast<MetricEvent>(), containerVec, remoteIpVec);
     } else if (e.Is<SpanEvent>()) {
-        return AddLabelToSpan(e.Cast<SpanEvent>(), containerVec, remoteIpVec);
+        return AddLabels(e.Cast<SpanEvent>(), containerVec, remoteIpVec);
     }
 
     return true;
-}
-
-bool LabelingK8sMetadata::AddLabelToSpan(SpanEvent& e, std::vector<std::string>& containerVec, std::vector<std::string>& remoteIpVec) {
-    return AddLabels(e, containerVec, remoteIpVec);
-}
-
-bool LabelingK8sMetadata::AddLabelToMetric(MetricEvent& e, std::vector<std::string>& containerVec, std::vector<std::string>& remoteIpVec) {
-    return AddLabels(e, containerVec, remoteIpVec);
 }
 
 template <typename Event>
