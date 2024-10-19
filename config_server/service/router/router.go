@@ -47,7 +47,7 @@ func initAgentRouter(router *gin.Engine) {
 		agentRouter.POST("/FetchPipelineConfig", handler.FetchPipelineConfig)
 		agentRouter.POST("/FetchInstanceConfig", handler.FetchInstanceConfig)
 	}
-	handler.CheckAgentExist()
+	//handler.CheckAgentExist()
 	//handler.AppliedOrRemoveConfigForAgentGroup()
 }
 

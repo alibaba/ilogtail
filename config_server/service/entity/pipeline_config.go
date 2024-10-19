@@ -2,6 +2,9 @@ package entity
 
 import (
 	proto "config-server/protov2"
+	"database/sql/driver"
+	"encoding/json"
+	"errors"
 )
 
 type PipelineConfig struct {
@@ -51,4 +54,35 @@ func ParseProtoPipelineConfigStatus2PipelineConfigStatus(c *proto.ConfigInfo) *P
 		Status:  ConfigStatus(c.Status),
 		Message: c.Message,
 	}
+}
+
+func (p PipelineConfigStatus) Parse2ProtoConfigInfo() *proto.ConfigInfo {
+	return &proto.ConfigInfo{
+		Name:    p.Name,
+		Version: p.Version,
+		Status:  proto.ConfigStatus(p.Status),
+		Message: p.Message,
+	}
+}
+
+type PipelineConfigStatusList []*PipelineConfigStatus
+
+func (p PipelineConfigStatusList) ConfigStatus2ProtoConfigStatus() []*proto.ConfigInfo {
+	protoConfigInfos := make([]*proto.ConfigInfo, 0)
+	for _, status := range p {
+		protoConfigInfos = append(protoConfigInfos, status.Parse2ProtoConfigInfo())
+	}
+	return protoConfigInfos
+}
+
+func (p PipelineConfigStatusList) Value() (driver.Value, error) {
+	return json.Marshal(p)
+}
+
+func (p PipelineConfigStatusList) Scan(value any) error {
+	bytes, ok := value.([]byte)
+	if !ok {
+		return errors.New("type assertion to []byte failed")
+	}
+	return json.Unmarshal(bytes, &p)
 }

@@ -10,6 +10,9 @@ message Agent{
   AgentAttributes attributes = 4;             // Agent's basic attributes
   string running_status = 5;                  // Human readable running status
   int64 startup_time = 6;                     // Required, Agent's startup time
+  repeated ConfigInfo pipeline_configs = 7;  // Information about the current PIPELINE_CONFIG held by the Agent
+  repeated ConfigInfo instance_configs = 8;  // Information about the current AGENT_CONFIG held by the Agent
+  repeated CommandInfo custom_commands = 9;  // Information about command history
 }
 
 message AgentConfigStatus{

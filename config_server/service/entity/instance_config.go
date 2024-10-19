@@ -47,18 +47,6 @@ type InstanceConfigStatus struct {
 	Message string
 }
 
-func (i InstanceConfigStatus) Value() (driver.Value, error) {
-	return json.Marshal(i)
-}
-
-func (i *InstanceConfigStatus) Scan(value any) error {
-	bytes, ok := value.([]byte)
-	if !ok {
-		return errors.New("type assertion to []byte failed")
-	}
-	return json.Unmarshal(bytes, i)
-}
-
 func ParseProtoInstanceConfigStatus2InstanceConfigStatus(c *proto.ConfigInfo) *InstanceConfigStatus {
 	return &InstanceConfigStatus{
 		Name:    c.Name,
@@ -66,4 +54,35 @@ func ParseProtoInstanceConfigStatus2InstanceConfigStatus(c *proto.ConfigInfo) *I
 		Status:  ConfigStatus(c.Status),
 		Message: c.Message,
 	}
+}
+
+func (i InstanceConfigStatus) Parse2ProtoConfigInfo() *proto.ConfigInfo {
+	return &proto.ConfigInfo{
+		Name:    i.Name,
+		Version: i.Version,
+		Status:  proto.ConfigStatus(i.Status),
+		Message: i.Message,
+	}
+}
+
+type InstanceConfigStatusList []*InstanceConfigStatus
+
+func (i InstanceConfigStatusList) ConfigStatus2ProtoConfigStatus() []*proto.ConfigInfo {
+	protoConfigInfos := make([]*proto.ConfigInfo, 0)
+	for _, status := range i {
+		protoConfigInfos = append(protoConfigInfos, status.Parse2ProtoConfigInfo())
+	}
+	return protoConfigInfos
+}
+
+func (i InstanceConfigStatusList) Value() (driver.Value, error) {
+	return json.Marshal(i)
+}
+
+func (i InstanceConfigStatusList) Scan(value any) error {
+	bytes, ok := value.([]byte)
+	if !ok {
+		return errors.New("type assertion to []byte failed")
+	}
+	return json.Unmarshal(bytes, &i)
 }

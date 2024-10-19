@@ -4,7 +4,6 @@ import (
 	proto "config-server/protov2"
 	"database/sql/driver"
 	"encoding/json"
-	"errors"
 	"fmt"
 )
 
@@ -54,37 +53,6 @@ func (a *AgentAttributes) Value() (driver.Value, error) {
 	return v, nil
 }
 
-//------------------------------------------------
-
-type PipelineConfigStatusList []*PipelineConfigStatus
-
-func (p PipelineConfigStatusList) Value() (driver.Value, error) {
-	return json.Marshal(p)
-}
-
-func (p PipelineConfigStatusList) Scan(value any) error {
-	bytes, ok := value.([]byte)
-	if !ok {
-		return errors.New("type assertion to []byte failed")
-	}
-	return json.Unmarshal(bytes, &p)
-}
-
-type InstanceConfigStatusList []*InstanceConfigStatus
-
-func (i InstanceConfigStatusList) Value() (driver.Value, error) {
-	return json.Marshal(i)
-}
-
-func (i InstanceConfigStatusList) Scan(value any) error {
-	bytes, ok := value.([]byte)
-	if !ok {
-		return errors.New("type assertion to []byte failed")
-	}
-	return json.Unmarshal(bytes, &i)
-}
-
-// ------------------------------
 // Preload should write the name of the structure associated field, not the name of the data table or the name of the associated model structure
 
 type Agent struct {
@@ -112,7 +80,8 @@ func (a Agent) Parse2Proto() *proto.Agent {
 	protoAgent.Attributes = a.Attributes.Parse2Proto()
 	protoAgent.RunningStatus = a.RunningStatus
 	protoAgent.StartupTime = a.StartupTime
-
+	protoAgent.PipelineConfigs = a.PipelineConfigStatuses.ConfigStatus2ProtoConfigStatus()
+	protoAgent.InstanceConfigs = a.InstanceConfigStatuses.ConfigStatus2ProtoConfigStatus()
 	return protoAgent
 }
 

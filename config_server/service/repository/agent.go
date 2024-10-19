@@ -59,6 +59,10 @@ func CreateOrUpdateAgentBasicInfo(conflictColumnNames []string, agent ...*entity
 func ListAgentsByGroupName(groupName string) ([]*entity.Agent, error) {
 	agentGroup := entity.AgentGroup{}
 	err := s.Db.Preload("Agents").Where("name=?", groupName).Find(&agentGroup).Error
+
+	agent := new(entity.Agent)
+	s.Db.First(agent)
+
 	if err != nil {
 		return nil, err
 	}

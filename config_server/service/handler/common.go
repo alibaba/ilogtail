@@ -35,8 +35,8 @@ func ProtobufHandler[T any, R any](handler ProtobufFunc[T, R]) gin.HandlerFunc {
 			return
 		}
 
-		//err = (RequestLogger(c.Request.URL.String(), handler))(request, response)
-		err = (handler)(request, response)
+		err = (RequestLogger(c.Request.URL.String(), handler))(request, response)
+		//err = (handler)(request, response)
 		if err != nil {
 			err = common.SystemError(err)
 			return
