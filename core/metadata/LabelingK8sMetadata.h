@@ -20,6 +20,33 @@
 
 namespace logtail {
 
+class SpanEvent {
+public:
+    bool HasTag(const StringView& key) const {
+        // 模拟检查标签是否存在
+        return true;
+    }
+
+    StringView GetTag(const StringView& key) const {
+        // 模拟获取标签值
+        return StringView("value");
+    }
+
+    void SetTag(const std::string& key, const std::string& value) {
+        // 模拟设置标签
+    }
+
+    template <typename T>
+    bool Is() const {
+        return false;
+    }
+
+    template <typename T>
+    T Cast() const {
+        return T();
+    }
+};    
+
 class LabelingK8sMetadata {
 public:
     void AddLabelToLogGroup(PipelineEventGroup& logGroup);

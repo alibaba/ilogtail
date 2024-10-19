@@ -30,11 +30,11 @@ namespace logtail {
         return size * nmemb;
     }
 
-    void K8sMetadata::FromInfoJson(const Json::Value& json, k8sContainerInfo& info) {
+    bool K8sMetadata::FromInfoJson(const Json::Value& json, k8sContainerInfo& info) {
         if (!json.isMember("images") || !json.isMember("labels") ||
             !json.isMember("namespace") ||
             !json.isMember("workloadKind") || !json.isMember("workloadName")) {
-            return;
+            return false;
         }
 
         for (const auto& key : json["images"].getMemberNames()) {
@@ -60,6 +60,7 @@ namespace logtail {
         info.workloadKind = json["workloadKind"].asString();
         info.workloadName = json["workloadName"].asString();
         info.timestamp = std::time(0);
+        return true;
     }
 
     bool ContainerInfoIsExpired(std::shared_ptr<k8sContainerInfo> info) {
@@ -77,15 +78,19 @@ namespace logtail {
         return false;
     }  
 
-    void K8sMetadata::FromContainerJson(const Json::Value& json, std::shared_ptr<ContainerData> data) {
+    bool K8sMetadata::FromContainerJson(const Json::Value& json, std::shared_ptr<ContainerData> data) {
         if (!json.isObject()) {
-            return;
+            return false;
         }
         for (const auto& key : json.getMemberNames()) {
             k8sContainerInfo info;
-            FromInfoJson(json[key], info);
+            bool fromJsonIsOk = FromInfoJson(json[key], info);
+            if (!fromJsonIsOk) {
+                continue;
+            }
             data->containers[key] = info;
         }
+        return true;
     }
 
     int K8sMetadata::SendRequestToOperator(const std::string& urlHost, const std::string& output, containerInfoType infoType) {    
@@ -109,15 +114,19 @@ namespace logtail {
 
             if (reader->parse(res.mBody.c_str(), res.mBody.c_str() + res.mBody.size(), &root, &errors)) {
                 std::shared_ptr<ContainerData> data = std::make_shared<ContainerData>();
-                FromContainerJson(root, data); 
-                for (const auto& pair : data->containers) {
+                if (!FromContainerJson(root, data)) {
+                    LOG_DEBUG(sLogger, ("fetch k8s meta from json fail", urlHost));
+                } else {
+                    for (const auto& pair : data->containers) {
                     if (infoType == containerInfoType::ContainerIdInfo) {
                         containerCache.insert(pair.first, std::make_shared<k8sContainerInfo>(pair.second));
                     } else {
                         ipCache.insert(pair.first, std::make_shared<k8sContainerInfo>(pair.second));
                     }
                 }
+                }
             } else {
+                LOG_DEBUG(sLogger, ("JSON parse error:", errors));
                 delete reader;
                 return 200;
             }
@@ -158,10 +167,14 @@ namespace logtail {
         if (data == nullptr) {
             return;
         }
-        FromContainerJson(root, data);  
-        for (const auto& pair : data->containers) {
-           containerCache.insert(pair.first, std::make_shared<k8sContainerInfo>(pair.second));
+        if (!FromContainerJson(root, data)) {
+            LOG_DEBUG(sLogger, ("from container json error:", "SetContainerCache"));
+        } else {
+            for (const auto& pair : data->containers) {
+              containerCache.insert(pair.first, std::make_shared<k8sContainerInfo>(pair.second));
+            }
         }
+        
     }
 
     void K8sMetadata::SetIpCache(const Json::Value& root) {
@@ -169,9 +182,12 @@ namespace logtail {
         if (data == nullptr) {
             return;
         }
-        FromContainerJson(root, data);  
-        for (const auto& pair : data->containers) {
+       if (!FromContainerJson(root, data)) {
+            LOG_DEBUG(sLogger, ("from container json error:", "SetIpCache"));
+        } else {
+            for (const auto& pair : data->containers) {
            ipCache.insert(pair.first, std::make_shared<k8sContainerInfo>(pair.second));
+        }
         }
     }
 

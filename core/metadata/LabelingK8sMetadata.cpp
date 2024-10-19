@@ -58,7 +58,7 @@ void LabelingK8sMetadata::AddLabelToLogGroup(PipelineEventGroup& logGroup) {
     remoteIpVec.clear();
 }
 
-bool LabelingK8sMetadata::ProcessEvent(PipelineEventPtr& e,  std::vector<std::string>& containerVec,  std::vector<std::string>& remoteIpVec) {
+bool LabelingK8sMetadata::ProcessEvent(PipelineEventPtr& e, std::vector<std::string>& containerVec, std::vector<std::string>& remoteIpVec) {
     if (!IsSupportedEvent(e)) {
         return true;
     }
@@ -73,45 +73,15 @@ bool LabelingK8sMetadata::ProcessEvent(PipelineEventPtr& e,  std::vector<std::st
 }
 
 bool LabelingK8sMetadata::AddLabelToSpan(SpanEvent& e, std::vector<std::string>& containerVec, std::vector<std::string>& remoteIpVec) {
-    bool res = true;
-    
-    auto& k8sMetadata = K8sMetadata::GetInstance();
-    StringView containerIdViewKey("container.id");
-    StringView containerIdView = e.HasTag(containerIdViewKey) ? e.GetTag(containerIdViewKey) : StringView{};
-    if (!containerIdView.empty()) {
-        std::string containerId(containerIdView);
-        std::shared_ptr<k8sContainerInfo> containerInfo = k8sMetadata.GetInfoByContainerIdFromCache(containerId);
-        if (containerInfo == nullptr) {
-            containerVec.push_back(containerId);
-            res = false;
-        } else {
-            e.SetTag("workloadName", containerInfo->workloadName);
-            e.SetTag("workloadKind", containerInfo->workloadKind);
-            e.SetTag("namespace", containerInfo->k8sNamespace);
-            e.SetTag("serviceName", containerInfo->serviceName);
-            e.SetTag("pid", containerInfo->appId);
-        }
-    }
-
-    StringView ipView("remote_ip");
-    StringView remoteIpView = e.HasTag(ipView) ? e.GetTag(ipView) : StringView{};
-    if (!remoteIpView.empty()) {
-        std::string remoteIp(remoteIpView);
-        std::shared_ptr<k8sContainerInfo> ipInfo = k8sMetadata.GetInfoByIpFromCache(remoteIp);
-        if (ipInfo == nullptr) {
-            remoteIpVec.push_back(remoteIp);
-            res = false;
-        } else {
-            e.SetTag("peerWorkloadName", ipInfo->workloadName);
-            e.SetTag("peerWorkloadKind", ipInfo->workloadKind);
-            e.SetTag("peerNamespace", ipInfo->k8sNamespace);
-        }
-    }
-
-    return res;
+    return AddLabels(e, containerVec, remoteIpVec);
 }
 
 bool LabelingK8sMetadata::AddLabelToMetric(MetricEvent& e, std::vector<std::string>& containerVec, std::vector<std::string>& remoteIpVec) {
+    return AddLabels(e, containerVec, remoteIpVec);
+}
+
+template <typename Event>
+bool LabelingK8sMetadata::AddLabels(Event& e, std::vector<std::string>& containerVec, std::vector<std::string>& remoteIpVec) {
     bool res = true;
     
     auto& k8sMetadata = K8sMetadata::GetInstance();

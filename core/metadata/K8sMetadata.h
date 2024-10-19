@@ -60,8 +60,8 @@ namespace logtail {
 
             void SetIpCache(const Json::Value& root);
             void SetContainerCache(const Json::Value& root);
-            void FromInfoJson(const Json::Value& json, k8sContainerInfo& info);
-            void FromContainerJson(const Json::Value& json, std::shared_ptr<ContainerData> data);
+            bool FromInfoJson(const Json::Value& json, k8sContainerInfo& info);
+            bool FromContainerJson(const Json::Value& json, std::shared_ptr<ContainerData> data);
 
         public:
             static K8sMetadata& GetInstance() {
