@@ -24,6 +24,8 @@ func CreatePipelineConfig(req *proto.CreateConfigRequest, res *proto.CreateConfi
 
 }
 
+//更新配置的时候version也要更新
+
 func UpdatePipelineConfig(req *proto.UpdateConfigRequest, res *proto.UpdateConfigResponse) error {
 	configDetail := req.ConfigDetail
 	if configDetail.Name == "" {
@@ -33,6 +35,7 @@ func UpdatePipelineConfig(req *proto.UpdateConfigRequest, res *proto.UpdateConfi
 	if configDetail.Version == 0 {
 		return common.ValidateErrorWithMsg("required field version could not be null")
 	}
+	//configDetail.Version += 1
 	pipelineConfig := entity.ParseProtoPipelineConfig2PipelineConfig(configDetail)
 	err := repository.UpdatePipelineConfig(pipelineConfig)
 	return common.SystemError(err)
@@ -91,17 +94,6 @@ func ApplyPipelineConfigToAgentGroup(req *proto.ApplyConfigToAgentGroupRequest, 
 		return common.SystemError(err)
 	}
 
-	agents, err := repository.ListAgentsByGroupName(groupName)
-	if err != nil {
-		return common.SystemError(err)
-	}
-
-	for _, agent := range agents {
-		err := repository.CreatePipelineConfigForAgent(agent.InstanceId, configName)
-		if err != nil {
-			return err
-		}
-	}
 	return nil
 }
 
@@ -120,17 +112,7 @@ func RemovePipelineConfigFromAgentGroup(req *proto.RemoveConfigFromAgentGroupReq
 		return common.SystemError(err)
 	}
 
-	agents, err := repository.ListAgentsByGroupName(groupName)
-	if err != nil {
-		return common.SystemError(err)
-	}
-
-	agentInstanceIds := make([]string, 0)
-	for _, agent := range agents {
-		agentInstanceIds = append(agentInstanceIds, agent.InstanceId)
-	}
-
-	return repository.DeletePipelineConfigForAgentInGroup(agentInstanceIds, configName)
+	return nil
 }
 
 func GetAppliedPipelineConfigsForAgentGroup(req *proto.GetAppliedConfigsForAgentGroupRequest, res *proto.GetAppliedConfigsForAgentGroupResponse) error {

@@ -1,5 +1,7 @@
 package entity
 
+type ConfigStatus int32
+
 type CommandInfo struct {
 	Type       string
 	Name       string       `gorm:"primarykey"`

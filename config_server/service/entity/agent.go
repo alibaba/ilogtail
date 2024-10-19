@@ -4,6 +4,7 @@ import (
 	proto "config-server/protov2"
 	"database/sql/driver"
 	"encoding/json"
+	"errors"
 	"fmt"
 )
 
@@ -53,19 +54,50 @@ func (a *AgentAttributes) Value() (driver.Value, error) {
 	return v, nil
 }
 
+//------------------------------------------------
+
+type PipelineConfigStatusList []*PipelineConfigStatus
+
+func (p PipelineConfigStatusList) Value() (driver.Value, error) {
+	return json.Marshal(p)
+}
+
+func (p PipelineConfigStatusList) Scan(value any) error {
+	bytes, ok := value.([]byte)
+	if !ok {
+		return errors.New("type assertion to []byte failed")
+	}
+	return json.Unmarshal(bytes, &p)
+}
+
+type InstanceConfigStatusList []*InstanceConfigStatus
+
+func (i InstanceConfigStatusList) Value() (driver.Value, error) {
+	return json.Marshal(i)
+}
+
+func (i InstanceConfigStatusList) Scan(value any) error {
+	bytes, ok := value.([]byte)
+	if !ok {
+		return errors.New("type assertion to []byte failed")
+	}
+	return json.Unmarshal(bytes, &i)
+}
+
+// ------------------------------
 // Preload should write the name of the structure associated field, not the name of the data table or the name of the associated model structure
 
 type Agent struct {
-	SequenceNum     uint64
-	Capabilities    uint64
-	InstanceId      string `gorm:"primarykey"`
-	AgentType       string
-	Attributes      *AgentAttributes
-	Tags            []*AgentGroup `gorm:"many2many:agent_and_agent_group;foreignKey:InstanceId;joinForeignKey:AgentInstanceId;References:Name;joinReferences:AgentGroupName;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	RunningStatus   string
-	StartupTime     int64
-	PipelineConfigs []*PipelineConfig `gorm:"many2many:agent_pipeline_config;foreignKey:InstanceId;joinForeignKey:AgentInstanceId;References:Name;joinReferences:PipelineConfigName;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	InstanceConfigs []*InstanceConfig `gorm:"many2many:agent_instance_config;foreignKey:InstanceId;joinForeignKey:AgentInstanceId;References:Name;joinReferences:InstanceConfigName;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	SequenceNum            uint64
+	Capabilities           uint64
+	InstanceId             string `gorm:"primarykey"`
+	AgentType              string
+	Attributes             *AgentAttributes
+	Tags                   []*AgentGroup `gorm:"many2many:agent_and_agent_group;foreignKey:InstanceId;joinForeignKey:AgentInstanceId;References:Name;joinReferences:AgentGroupName;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	RunningStatus          string
+	StartupTime            int64
+	PipelineConfigStatuses PipelineConfigStatusList
+	InstanceConfigStatuses InstanceConfigStatusList
 	//CustomCommands  []*CommandInfo
 	Flags             uint64
 	Opaque            []byte
@@ -80,6 +112,7 @@ func (a Agent) Parse2Proto() *proto.Agent {
 	protoAgent.Attributes = a.Attributes.Parse2Proto()
 	protoAgent.RunningStatus = a.RunningStatus
 	protoAgent.StartupTime = a.StartupTime
+
 	return protoAgent
 }
 
@@ -99,7 +132,6 @@ func ParseHeartBeatRequest2BasicAgent(req *proto.HeartbeatRequest, lastHeartBeat
 
 	agent.RunningStatus = req.RunningStatus
 	agent.StartupTime = req.StartupTime
-
 	agent.Flags = req.Flags
 	agent.Opaque = req.Opaque
 	agent.LastHeartBeatTime = lastHeartBeatTime

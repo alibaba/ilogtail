@@ -49,7 +49,20 @@ services:
       - "host.docker.internal:host-gateway"
     networks:
       - server
-
+  agent:
+    build:
+      context: ${AGENT}
+      dockerfile: Dockerfile-Agent
+    image: ilogtail:nzh
+    environment:
+      CONFIG_SERVER_ADDRESSES: '["host.docker.internal:9090"]'
+      TZ: Asia/Shanghai
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    deploy:
+      replicas: 3
+    networks:
+      - server
 
 #替换成你自己的网络
 networks:

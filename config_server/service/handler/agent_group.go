@@ -4,9 +4,9 @@ import (
 	"config-server/service"
 )
 
-func AppliedOrRemoveConfigForAgentGroup() {
-	go service.AppliedOrRemoveConfigForAgentGroup(30)
-}
+//func AppliedOrRemoveConfigForAgentGroup() {
+//	go service.AppliedOrRemoveConfigForAgentGroup(30)
+//}
 
 var (
 	CreateAgentGroup                       = ProtobufHandler(service.CreateAgentGroup)

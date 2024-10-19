@@ -4,6 +4,7 @@ import (
 	"config-server/common"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	"log"
 	"reflect"
 )
 
@@ -34,10 +35,23 @@ func ProtobufHandler[T any, R any](handler ProtobufFunc[T, R]) gin.HandlerFunc {
 			return
 		}
 
-		err = handler(request, response)
+		//err = (RequestLogger(c.Request.URL.String(), handler))(request, response)
+		err = (handler)(request, response)
 		if err != nil {
 			err = common.SystemError(err)
 			return
 		}
+	}
+}
+
+func RequestLogger[T any, R any](url string, handler ProtobufFunc[T, R]) ProtobufFunc[T, R] {
+	return func(req *T, res *R) error {
+		log.Printf("%s REQUEST:%+v", url, req)
+		err := handler(req, res)
+		if err != nil {
+			return common.SystemError(err)
+		}
+		log.Printf("%s RESPONSE:%+v", url, res)
+		return err
 	}
 }

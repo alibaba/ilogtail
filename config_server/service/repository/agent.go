@@ -4,7 +4,6 @@ import (
 	"config-server/common"
 	"config-server/entity"
 	"config-server/store"
-	"gorm.io/gorm"
 )
 
 var s = store.S
@@ -32,14 +31,10 @@ func GetAllAgents(containPipelineConfigs bool, containInstanceConfigs bool) []en
 }
 
 func RemoveAgentById(instanceId string) error {
-	var tx *gorm.DB
-
-	tx = s.Db.Where("instance_id=?", instanceId).Delete(&entity.Agent{})
+	tx := s.Db.Where("instance_id=?", instanceId).Delete(&entity.Agent{})
 	if tx.RowsAffected != 1 {
 		return common.ServerErrorWithMsg("Agent failed to delete record %s", instanceId)
 	}
-	s.Db.Where("agent_instance_id=?", instanceId).Delete(&entity.AgentPipelineConfig{})
-	s.Db.Where("agent_instance_id=?", instanceId).Delete(&entity.AgentInstanceConfig{})
 	return nil
 }
 
@@ -68,22 +63,4 @@ func ListAgentsByGroupName(groupName string) ([]*entity.Agent, error) {
 		return nil, err
 	}
 	return agentGroup.Agents, nil
-}
-
-func GetPipelineConfigStatusList(instanceId string) ([]*entity.AgentPipelineConfig, error) {
-	configs := make([]*entity.AgentPipelineConfig, 0)
-	err := s.Db.Where("agent_instance_id=?", instanceId).Find(&configs).Error
-	if err != nil {
-		return nil, err
-	}
-	return configs, err
-}
-
-func GetInstanceConfigStatusList(instanceId string) ([]*entity.AgentInstanceConfig, error) {
-	configs := make([]*entity.AgentInstanceConfig, 0)
-	err := s.Db.Where("agent_instance_id=?", instanceId).Find(&configs).Error
-	if err != nil {
-		return nil, err
-	}
-	return configs, err
 }

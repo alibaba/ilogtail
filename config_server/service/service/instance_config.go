@@ -90,17 +90,17 @@ func ApplyInstanceConfigToAgentGroup(req *proto.ApplyConfigToAgentGroupRequest, 
 		return common.SystemError(err)
 	}
 
-	agents, err := repository.ListAgentsByGroupName(groupName)
-	if err != nil {
-		return common.SystemError(err)
-	}
-
-	for _, agent := range agents {
-		err := repository.CreateInstanceConfigForAgent(agent.InstanceId, configName)
-		if err != nil {
-			return err
-		}
-	}
+	//agents, err := repository.ListAgentsByGroupName(groupName)
+	//if err != nil {
+	//	return common.SystemError(err)
+	//}
+	//
+	//for _, agent := range agents {
+	//	err := repository.CreateInstanceConfigForAgent(agent.InstanceId, configName)
+	//	if err != nil {
+	//		return err
+	//	}
+	//}
 	return nil
 }
 
@@ -115,18 +115,7 @@ func RemoveInstanceConfigFromAgentGroup(req *proto.RemoveConfigFromAgentGroupReq
 	if err != nil {
 		return common.SystemError(err)
 	}
-
-	agents, err := repository.ListAgentsByGroupName(groupName)
-	if err != nil {
-		return common.SystemError(err)
-	}
-
-	agentInstanceIds := make([]string, 0)
-	for _, agent := range agents {
-		agentInstanceIds = append(agentInstanceIds, agent.InstanceId)
-	}
-
-	return repository.DeleteInstanceConfigForAgentInGroup(agentInstanceIds, configName)
+	return nil
 }
 
 func GetAppliedInstanceConfigsForAgentGroup(req *proto.GetAppliedConfigsForAgentGroupRequest, res *proto.GetAppliedConfigsForAgentGroupResponse) error {
