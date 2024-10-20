@@ -60,7 +60,7 @@
   </el-table>
 
 
-  <el-dialog v-model="showAgentInfoDialog" width="80%">
+  <el-dialog v-model="showAgentInfoDialog" width="90%">
   <el-table :data="selectedRow.agentList" >
     <el-table-column type="expand">
       <template #default="props">
@@ -78,8 +78,9 @@
     <el-table-column property="version"  label="版本" width="100" />
     <el-table-column property="ip"  label="ip" width="100" />
     <el-table-column property="hostname"  label="hostname" width="150" />
-<!--    <el-table-column property="extras"  label="额外信息" width="100" />-->
-    <el-table-column property="capabilities" label="能力" width="100"/>
+    <el-table-column property="extras"  label="额外信息" width="600" />
+    <el-table-column property="capabilities" label="能力" :formatter="(row, column, cellValue) =>
+    {return this.calculateAgentCapabilities(cellValue).join('\n')}" width="200"/>
     <el-table-column property="runningStatus" label="运行状态" />
     <el-table-column property="startupTime" label="开始时间" width="120"/>
   </el-table>
@@ -175,6 +176,19 @@ export default {
         ]
       },
 
+      configInfoMap:{
+        0:"UNSET",
+        1:"APPLYING",
+        2:"APPLIED",
+        3:"FAILED"
+      },
+
+      agentCapabilityMap:{
+        0:"UnspecifiedAgentCapability",
+        1:"AcceptsPipelineConfig",
+        2:"AcceptsInstanceConfig",
+        4:"AcceptsCustomCommand"
+      },
     }
   },
   async created() {
@@ -183,6 +197,19 @@ export default {
   },
 
   methods: {
+    calculateAgentCapabilities(num) {
+      if (num === 0) {
+        return [this.agentCapabilityMap[num]]
+      }
+      let capabilities = []
+      for (let key in this.agentCapabilityMap) {
+        if ((parseInt(key) & num) === parseInt(key) && parseInt(key) !== 0) {
+          capabilities.push(this.agentCapabilityMap[key])
+        }
+      }
+      return capabilities
+    },
+
     addAgentGroup() {
       this.createAgentGroup={}
       this.showCreateForm = true
@@ -199,20 +226,6 @@ export default {
       })
 
     },
-
-    formatAttributes(row, column, cellValue) {
-      console.log(cellValue);
-      if (typeof cellValue === 'object') {
-        return Object.entries(cellValue)
-            .map(([key, value]) => {
-
-              return `${key}: ${value}`
-            })
-            .join('\n\n');
-      }
-      return cellValue;
-    },
-
     async initAllTable() {
       let data = await listAgentGroups()
 
@@ -278,17 +291,18 @@ export default {
       this.showAgentInfoDialog = agentCount !== 0
       if (this.showAgentInfoDialog){
         for(let agent of this.selectedRow.agentList){
-          console.log(agent)
           agent.agentConfigStatusList=[]
           for(let pipelineConfigStatus of agent.pipelineConfigsList){
             pipelineConfigStatus.type="pipelineConfig"
+            pipelineConfigStatus.status=this.configInfoMap[pipelineConfigStatus.status]
           }
-          console.log("after")
           for(let instanceConfigStatus of agent.instanceConfigsList){
             instanceConfigStatus.type="instanceConfig"
+            instanceConfigStatus.status=this.configInfoMap[instanceConfigStatus.status]
           }
           agent.agentConfigStatusList=agent.agentConfigStatusList.concat(agent.pipelineConfigsList)
           agent.agentConfigStatusList=agent.agentConfigStatusList.concat(agent.instanceConfigsList)
+
         }
       }
     },

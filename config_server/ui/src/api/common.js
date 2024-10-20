@@ -2,13 +2,16 @@ import axios from "axios";
 import {ElMessage} from "element-plus";
 import {Base64} from "js-base64";
 import {isBase64} from "is-base64"
+import {logRefObj} from "@/utils/log";
 export function strToBytes(str){
     const encoder = new TextEncoder();
     return encoder.encode(str);
 }
 
-export function base64ToStr(base64){
-    if(isBase64(base64)){
+let notBase64=["osDetail"]
+
+export function base64ToStr(base64) {
+    if (isBase64(base64) && !(notBase64.includes(base64))) {
         return Base64.decode(base64)
     }
     return base64
@@ -35,27 +38,47 @@ export function messageShow(data,message) {
 }
 
 export function decodeBase64(obj) {
-    // 判断是否为对象或数组
     if (typeof obj === 'object' && obj !== null) {
         for (let key in obj) {
-            // 检查属性是否是对象本身的属性
-            if (obj.hasOwnProperty(key)) {
-                // 递归处理子对象
-                if (typeof obj[key] === 'object' && obj[key] !== null) {
-                    decodeBase64(obj[key]);
-                }
-                // 如果是字符串，使用 atob 解码
-                else if (typeof obj[key] === 'string') {
-                    try {
-                        obj[key] = base64ToStr(obj[key]);
-                    } catch (e) {
-                        console.warn(`Failed to decode value for key: ${key}, value: ${obj[key]}`);
-                    }
+            if (obj[key] instanceof Uint8Array){
+                obj[key]=new TextDecoder().decode(obj[key]);
+            } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+                decodeBase64(obj[key]);
+            } else if (typeof obj[key] === 'string') {
+                try {
+                    obj[key] = base64ToStr(obj[key]);
+                } catch (e) {
+                    console.warn(`Failed to decode value for key: ${key}, value: ${obj[key]}`);
                 }
             }
+
         }
     }
+
 }
+
+
+// export function decodeBase64(data){
+//     if (typeof data === 'string') {
+//         // 如果数据是字符串且符合 Base64 编码格式，则解码
+//         try {
+//             return base64ToStr(data);
+//         } catch (e) {
+//             return data; // 如果解码失败，返回原始值
+//         }
+//     } else if (Array.isArray(data)) {
+//         // 如果是数组，递归解码每个元素
+//         return data.map(decodeBase64);
+//     } else if (typeof data === 'object' && data !== null) {
+//         // 如果是对象，递归解码每个键值对
+//         const decodedObj = {};
+//         for (const key in data) {
+//             decodedObj[key] = decodeBase64(data[key]);
+//         }
+//         return decodedObj;
+//     }
+//     return data; // 如果不是字符串、数组或对象，直接返回
+// }
 
 
 
@@ -75,8 +98,6 @@ export async function constructProtobufRequest(url,req,resType) {
         responseType: 'arraybuffer'
     }).then(res => {
         let data = resType.deserializeBinary(new Uint8Array(res.data)).toObject()
-        // data.requestId = atob(data.requestId)
-        // data.commonResponse.errorMessage = atob(data.commonResponse.errorMessage)
         decodeBase64(data)
         if (data.requestId !== requestStr) {
             ElMessage.error("no the same request")

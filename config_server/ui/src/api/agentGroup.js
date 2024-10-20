@@ -47,7 +47,6 @@ export async function listAgentsForAgentGroup(groupName){
     let req = new userProto.ListAgentsRequest()
     req.setGroupName(groupName)
     let res=await constructProtobufRequest(url, req, userProto.ListAgentsResponse);
-    console.log("request",res)
     return res
 }
 
