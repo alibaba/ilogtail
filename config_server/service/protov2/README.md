@@ -18,7 +18,7 @@ yum install -y protobuf-compiler
 
 ```shell
 protoc --version
-# libprotoc 3.5.0
+# libprotoc 3.20.0
 ```
 
 安装`protoc-gen-go`插件，默认路径为`$GOPATH/bin`

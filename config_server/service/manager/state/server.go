@@ -16,10 +16,7 @@ type ServerAction struct {
 
 func (a ServerAction) Action(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse) error {
 	serverCapabilityType := a.Value
-	hasServerCapability, ok := config.ServerConfigInstance.Capabilities[serverCapabilityType]
-	if !ok {
-		return common.ServerErrorWithMsg("error serverCapability type(%s)", serverCapabilityType)
-	}
+	hasServerCapability := config.ServerConfigInstance.Capabilities[serverCapabilityType]
 
 	if hasServerCapability {
 		err := a.Run(req, res)
@@ -92,7 +89,7 @@ func RememberPipelineConfigStatusCapabilityRun(req *proto.HeartbeatRequest, res 
 		return nil
 	}
 
-	err := manager.SavePipelineConfig(configs, string(req.InstanceId))
+	err := manager.SavePipelineConfigStatus(configs, string(req.InstanceId))
 	return common.SystemError(err)
 }
 
@@ -102,7 +99,7 @@ func RememberInstanceConfigStatusCapabilityRun(req *proto.HeartbeatRequest, res 
 		return nil
 	}
 
-	err := manager.SaveInstanceConfig(configs, string(req.InstanceId))
+	err := manager.SaveInstanceConfigStatus(configs, string(req.InstanceId))
 	return common.SystemError(err)
 }
 

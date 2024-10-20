@@ -6,7 +6,7 @@
         <el-input v-model="createInstanceConfig.name" />
       </el-form-item>
       <el-form-item label="版本" prop="version">
-        <el-input v-model.number="createInstanceConfig.version" />
+        <el-input v-model.number="createInstanceConfig.version" :disabled="true"/>
       </el-form-item>
       <div style="text-align: left">
         配置详情
@@ -28,7 +28,7 @@
         <el-input disabled v-model="selectedRow.name" />
       </el-form-item>
       <el-form-item label="版本" prop="version">
-        <el-input v-model.number="selectedRow.version" />
+        <el-input v-model.number="selectedRow.version" :disabled="true"/>
       </el-form-item>
       <div style="text-align: left">
         配置详情
@@ -171,9 +171,13 @@ export default {
 
     },
 
-    addInstanceConfig(){
-      this.showCreateForm=true
-      this.createInstanceConfig={}
+    addInstanceConfig() {
+      this.showCreateForm = true
+      this.createInstanceConfig = {
+        name: "",
+        version: 1,
+        detail: "",
+      }
     },
 
     async onSubmit() {
@@ -183,10 +187,9 @@ export default {
             ElMessage.error("detail不能为空")
             return
           }
-          if(!this.checkConfigDetail(this.createPipelineConfig.detail)){
+          if(!this.checkConfigDetail(this.createInstanceConfig.detail)){
             return
           }
-          console.log(this.createInstanceConfig)
           let data=await createInstanceConfig(this.createInstanceConfig.name,this.createInstanceConfig.version,this.createInstanceConfig.detail)
           messageShow(data, "新增成功")
           this.showCreateForm = false
@@ -238,7 +241,6 @@ export default {
     checkConfigDetail(detail) {
       try {
         const obj = yaml.load(detail);
-        console.log(obj);
         if (!obj || !obj.inputs || !obj.flushers ||
             this.someDoesNotHaveType(obj.inputs) ||
             this.someDoesNotHaveType(obj.flushers) ||
@@ -267,7 +269,7 @@ export default {
     },
 
     async saveInstanceConfig() {
-      console.log(this.selectedRow)
+
       let row=this.selectedRow
       if(row.version==null||row.version===""){
         ElMessage.error("version不能为空")

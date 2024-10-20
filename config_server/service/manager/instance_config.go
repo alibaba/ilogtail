@@ -8,7 +8,7 @@ import (
 	"config-server/utils"
 )
 
-func SaveInstanceConfig(configs []*proto.ConfigInfo, instanceId string) error {
+func SaveInstanceConfigStatus(configs []*proto.ConfigInfo, instanceId string) error {
 	if configs == nil {
 		return nil
 	}

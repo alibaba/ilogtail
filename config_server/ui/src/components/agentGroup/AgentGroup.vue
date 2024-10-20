@@ -60,21 +60,25 @@
   </el-table>
 
 
-  <el-dialog v-model="showAgentInfoDialog" >
-  <el-table :data="selectedRow.agentList">
+  <el-dialog v-model="showAgentInfoDialog" width="80%">
+  <el-table :data="selectedRow.agentList" >
     <el-table-column type="expand">
       <template #default="props">
           <el-table :data="props.row.agentConfigStatusList">
-            <el-table-column label="type" prop="type"/>
-            <el-table-column label="name" prop="name"/>
-            <el-table-column label="status"  prop="status"/>
-            <el-table-column label="message" prop="message"/>
+            <el-table-column label="类型" prop="type"/>
+            <el-table-column label="名字" prop="name"/>
+            <el-table-column label="版本" prop="version"/>
+            <el-table-column label="状态"  prop="status"/>
+            <el-table-column label="信息" prop="message"/>
           </el-table>
       </template>
     </el-table-column>
-    <el-table-column property="instanceId" label="实例Id" width="300" />
+    <el-table-column property="instanceId" label="实例Id" width="500" />
     <el-table-column property="agentType" label="类型" width="200" />
-    <el-table-column property="attributes" :formatter="formatAttributes" label="属性" width="100" />
+    <el-table-column property="version"  label="版本" width="100" />
+    <el-table-column property="ip"  label="ip" width="100" />
+    <el-table-column property="hostname"  label="hostname" width="150" />
+<!--    <el-table-column property="extras"  label="额外信息" width="100" />-->
     <el-table-column property="capabilities" label="能力" width="100"/>
     <el-table-column property="runningStatus" label="运行状态" />
     <el-table-column property="startupTime" label="开始时间" width="120"/>
@@ -135,7 +139,7 @@ import {
   listAgentGroups,
   listAgentsForAgentGroup, updateAgentGroup
 } from "@/api/agentGroup";
-import {messageShow} from "@/api/common"
+import { messageShow} from "@/api/common"
 import {
   applyPipelineConfigToAgentGroup,
   getPipelineConfig,
@@ -147,7 +151,7 @@ import {
   listInstanceConfigs,
   removeInstanceConfigFromAgentGroup
 } from "@/api/instanceConfig";
-import {getInstanceConfigStatusList, getPipelineConfigStatusList} from "@/api/agent";
+
 
 export default {
   name: "AgentGroup",
@@ -179,7 +183,6 @@ export default {
   },
 
   methods: {
-
     addAgentGroup() {
       this.createAgentGroup={}
       this.showCreateForm = true
@@ -198,9 +201,13 @@ export default {
     },
 
     formatAttributes(row, column, cellValue) {
+      console.log(cellValue);
       if (typeof cellValue === 'object') {
         return Object.entries(cellValue)
-            .map(([key, value]) => `${key}: ${value}`)
+            .map(([key, value]) => {
+
+              return `${key}: ${value}`
+            })
             .join('\n\n');
       }
       return cellValue;
@@ -208,13 +215,27 @@ export default {
 
     async initAllTable() {
       let data = await listAgentGroups()
+
       if (!data.commonResponse.status) {
         this.tableData = await Promise.all(data.agentGroupsList.map(async item => {
-          console.log((await getAppliedInstanceConfigsForAgentGroup(item.name)))
           return {
             name: item.name,
             value: item.value,
-            agentList: (await listAgentsForAgentGroup(item.name)).agentsList,
+            agentList: (await listAgentsForAgentGroup(item.name)).agentsList.map(agent=>{
+              return {
+                "instanceId":agent.instanceId,
+                "agentType":agent.agentType,
+                "capabilities":agent.capabilities,
+                "runningStatus":agent.runningStatus,
+                "startupTime":agent.startupTime,
+                "version":agent.attributes.version,
+                "ip":agent.attributes.ip,
+                "hostname":agent.attributes.hostname,
+                "extras":agent.attributes.extrasMap,
+                "pipelineConfigsList":agent.pipelineConfigsList,
+                "instanceConfigsList":agent.instanceConfigsList
+              }
+            }),
             appliedPipelineConfigList: (await getAppliedPipelineConfigsForAgentGroup(item.name)).configNamesList.map(res => {
               return {name: res}
             }),
@@ -257,20 +278,18 @@ export default {
       this.showAgentInfoDialog = agentCount !== 0
       if (this.showAgentInfoDialog){
         for(let agent of this.selectedRow.agentList){
+          console.log(agent)
           agent.agentConfigStatusList=[]
-          let pipelineConfigStatusList=(await getPipelineConfigStatusList(agent.instanceId)).agentConfigStatusList
-          for(let pipelineConfigStatus of pipelineConfigStatusList){
+          for(let pipelineConfigStatus of agent.pipelineConfigsList){
             pipelineConfigStatus.type="pipelineConfig"
           }
-
-          let instanceConfigStatusList=(await getInstanceConfigStatusList(agent.instanceId)).agentConfigStatusList
-          for(let instanceConfigStatus of instanceConfigStatusList){
+          console.log("after")
+          for(let instanceConfigStatus of agent.instanceConfigsList){
             instanceConfigStatus.type="instanceConfig"
           }
-          agent.agentConfigStatusList=agent.agentConfigStatusList.concat(pipelineConfigStatusList)
-          agent.agentConfigStatusList=agent.agentConfigStatusList.concat(instanceConfigStatusList)
+          agent.agentConfigStatusList=agent.agentConfigStatusList.concat(agent.pipelineConfigsList)
+          agent.agentConfigStatusList=agent.agentConfigStatusList.concat(agent.instanceConfigsList)
         }
-        console.log(this.selectedRow.agentList)
       }
     },
 
@@ -355,7 +374,6 @@ export default {
 
   async getInstanceConfigInfo(row) {
     let allInstanceConfigList = (await listInstanceConfigs()).configDetailsList
-    console.log(allInstanceConfigList)
     let appliedInstanceConfigList = await Promise.all(
         row.appliedInstanceConfigList.map(async config => (await getInstanceConfig(config.name)).configDetail))
 

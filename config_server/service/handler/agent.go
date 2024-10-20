@@ -14,6 +14,4 @@ var (
 	FetchPipelineConfig = ProtobufHandler(service.FetchPipelineConfigDetail)
 	FetchInstanceConfig = ProtobufHandler(service.FetchInstanceConfigDetail)
 	ListAgentsInGroup   = ProtobufHandler(service.ListAgentsInGroup)
-	//GetPipelineConfigStatusList = ProtobufHandler(service.GetPipelineConfigStatusList)
-	//GetInstanceConfigStatusList = ProtobufHandler(service.GetInstanceConfigStatusList)
 )

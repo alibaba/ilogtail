@@ -35,7 +35,7 @@ func UpdatePipelineConfig(req *proto.UpdateConfigRequest, res *proto.UpdateConfi
 	if configDetail.Version == 0 {
 		return common.ValidateErrorWithMsg("required field version could not be null")
 	}
-	//configDetail.Version += 1
+	configDetail.Version += 1
 	pipelineConfig := entity.ParseProtoPipelineConfig2PipelineConfig(configDetail)
 	err := repository.UpdatePipelineConfig(pipelineConfig)
 	return common.SystemError(err)

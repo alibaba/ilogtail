@@ -28,7 +28,9 @@ var requestActionList = []*RequestAction{
 
 // RequestUnspecifiedRun agent上报简单信息
 func RequestUnspecifiedRun(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse) error {
-	return nil
+	//todo agent的flag一点用都没有啊，上传全量信息的时候也置为0
+	return RequestReportFullStateRun(req, res)
+	//return nil
 }
 
 // RequestReportFullStateRun agent上传全量信息

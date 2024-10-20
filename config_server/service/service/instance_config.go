@@ -32,6 +32,7 @@ func UpdateInstanceConfig(req *proto.UpdateConfigRequest, res *proto.UpdateConfi
 	if configDetail.Version == 0 {
 		return common.ValidateErrorWithMsg("required field version could not be null")
 	}
+	configDetail.Version += 1
 	instanceConfig := entity.ParseProtoInstanceConfig2InstanceConfig(configDetail)
 	err := repository.UpdateInstanceConfig(instanceConfig)
 	return common.SystemError(err)

@@ -40,14 +40,14 @@ func RemoveAgentById(instanceId string) error {
 
 func UpdateAgentById(agent *entity.Agent, filed ...string) error {
 	if filed == nil {
-		row := s.Db.Model(agent).Updates(*agent).RowsAffected
-		if row != 1 {
-			return common.ServerErrorWithMsg("update agent error")
+		err := s.Db.Model(agent).Updates(*agent).Error
+		if err != nil {
+			return common.SystemError(err)
 		}
 	}
-	row := s.Db.Model(agent).Select(filed).Updates(*agent).RowsAffected
-	if row != 1 {
-		return common.ServerErrorWithMsg("update agent filed error")
+	err := s.Db.Model(agent).Select(filed).Updates(*agent).Error
+	if err != nil {
+		return common.SystemError(err)
 	}
 	return nil
 }
@@ -59,10 +59,6 @@ func CreateOrUpdateAgentBasicInfo(conflictColumnNames []string, agent ...*entity
 func ListAgentsByGroupName(groupName string) ([]*entity.Agent, error) {
 	agentGroup := entity.AgentGroup{}
 	err := s.Db.Preload("Agents").Where("name=?", groupName).Find(&agentGroup).Error
-
-	agent := new(entity.Agent)
-	s.Db.First(agent)
-
 	if err != nil {
 		return nil, err
 	}

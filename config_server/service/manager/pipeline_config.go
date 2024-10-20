@@ -8,7 +8,7 @@ import (
 	"config-server/utils"
 )
 
-func SavePipelineConfig(configs []*proto.ConfigInfo, instanceId string) error {
+func SavePipelineConfigStatus(configs []*proto.ConfigInfo, instanceId string) error {
 	if configs == nil {
 		return nil
 	}

@@ -75,7 +75,7 @@ func FetchPipelineConfigDetail(req *proto.FetchConfigRequest, res *proto.FetchCo
 	strInstanceId := string(instanceId)
 
 	//需要更新配置状态
-	err = manager.SavePipelineConfig(req.ReqConfigs, strInstanceId)
+	err = manager.SavePipelineConfigStatus(req.ReqConfigs, strInstanceId)
 	if err != nil {
 		return common.SystemError(err)
 	}
@@ -104,7 +104,7 @@ func FetchInstanceConfigDetail(req *proto.FetchConfigRequest, res *proto.FetchCo
 	strInstanceId := string(instanceId)
 
 	//需要更新配置状态
-	err = manager.SaveInstanceConfig(req.ReqConfigs, strInstanceId)
+	err = manager.SaveInstanceConfigStatus(req.ReqConfigs, strInstanceId)
 	if err != nil {
 		return common.SystemError(err)
 	}
@@ -139,37 +139,3 @@ func ListAgentsInGroup(req *proto.ListAgentsRequest, res *proto.ListAgentsRespon
 	res.Agents = protoAgents
 	return nil
 }
-
-//func GetPipelineConfigStatusList(req *proto.GetConfigStatusListRequest, res *proto.GetConfigStatusListResponse) error {
-//	instanceId := req.InstanceId
-//	if instanceId == nil {
-//		return common.ValidateErrorWithMsg("required fields instanceId could not be null")
-//	}
-//	configs, err := repository.GetPipelineConfigStatusList(string(instanceId))
-//	if err != nil {
-//		return common.SystemError(err)
-//	}
-//	agentConfigStatusList := make([]*proto.AgentConfigStatus, 0)
-//	for _, config := range configs {
-//		agentConfigStatusList = append(agentConfigStatusList, config.Parse2ProtoAgentConfigStatus())
-//	}
-//	res.AgentConfigStatus = agentConfigStatusList
-//	return nil
-//}
-
-//func GetInstanceConfigStatusList(req *proto.GetConfigStatusListRequest, res *proto.GetConfigStatusListResponse) error {
-//	instanceId := req.InstanceId
-//	if instanceId == nil {
-//		return common.ValidateErrorWithMsg("required fields instanceId could not be null")
-//	}
-//	configs, err := repository.GetInstanceConfigStatusList(string(instanceId))
-//	if err != nil {
-//		return common.SystemError(err)
-//	}
-//	agentConfigStatusList := make([]*proto.AgentConfigStatus, 0)
-//	for _, config := range configs {
-//		agentConfigStatusList = append(agentConfigStatusList, config.Parse2ProtoAgentConfigStatus())
-//	}
-//	res.AgentConfigStatus = agentConfigStatusList
-//	return nil
-//}

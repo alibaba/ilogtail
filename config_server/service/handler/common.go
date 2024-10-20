@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"log"
 	"reflect"
+	"strings"
 )
 
 type ProtobufFunc[T any, R any] func(request *T, response *R) error
@@ -46,12 +47,16 @@ func ProtobufHandler[T any, R any](handler ProtobufFunc[T, R]) gin.HandlerFunc {
 
 func RequestLogger[T any, R any](url string, handler ProtobufFunc[T, R]) ProtobufFunc[T, R] {
 	return func(req *T, res *R) error {
-		log.Printf("%s REQUEST:%+v", url, req)
+		if strings.Contains(url, "Heart") {
+			log.Printf("%s REQUEST:%+v", url, req)
+		}
 		err := handler(req, res)
 		if err != nil {
 			return common.SystemError(err)
 		}
-		log.Printf("%s RESPONSE:%+v", url, res)
-		return err
+		if strings.Contains(url, "Heart") {
+			log.Printf("%s RESPONSE:%+v", url, res)
+		}
+		return nil
 	}
 }
