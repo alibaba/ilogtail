@@ -113,17 +113,10 @@ namespace logtail {
             std::string errors;
 
             if (reader->parse(res.mBody.c_str(), res.mBody.c_str() + res.mBody.size(), &root, &errors)) {
-                std::shared_ptr<ContainerData> data = std::make_shared<ContainerData>();
-                if (!FromContainerJson(root, data)) {
-                    LOG_DEBUG(sLogger, ("fetch k8s meta from json fail", urlHost));
+                if (infoType == containerInfoType::ContainerIdInfo) {
+                    SetContainerCache(root);
                 } else {
-                    for (const auto& pair : data->containers) {
-                    if (infoType == containerInfoType::ContainerIdInfo) {
-                        containerCache.insert(pair.first, std::make_shared<k8sContainerInfo>(pair.second));
-                    } else {
-                        ipCache.insert(pair.first, std::make_shared<k8sContainerInfo>(pair.second));
-                    }
-                }
+                    SetIpCache(root);
                 }
             } else {
                 LOG_DEBUG(sLogger, ("JSON parse error:", errors));
@@ -215,7 +208,7 @@ namespace logtail {
         }
         std::shared_ptr<k8sContainerInfo> ip_info =  ipCache.get(ip);
         if (ip_info == nullptr) {
-            return ip_info;
+            return nullptr;
         }
         if (ContainerInfoIsExpired(ip_info)) {
             return nullptr;
