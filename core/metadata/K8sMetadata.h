@@ -89,7 +89,7 @@ namespace logtail {
         const static std::string workloadNameKey = "workloadName";
         const static std::string serviceNameKey = "serviceName";
     #endif
-    const static std::string keys = "keys";    
+    const static std::string infoKeys = "keys";    
     #ifdef APSARA_UNIT_TEST_MAIN
         friend class k8sMetadataUnittest;
     #endif
