@@ -57,12 +57,12 @@ bool TransferPBToPipelineEventGroup(const logtail::models::PipelineEventGroup& s
         dst.SetTag(tag.first, tag.second);
     }
 
-    // metadatas
-    for (auto& metaData : src.metadata()) {
-        if (metaData.first == "source_id") {
-            dst.SetMetadata(logtail::EventGroupMetaKey::SOURCE_ID, metaData.second);
-        }
-    }
+    // TODO: transfer metadatas
+    // for (auto& metaData : src.metadata()) {
+    //     if (metaData.first == "source_id") {
+    //         dst.SetMetadata(logtail::EventGroupMetaKey::SOURCE_ID, metaData.second);
+    //     }
+    // }
 
     return true;
 }
@@ -215,11 +215,11 @@ bool TransferPipelineEventGroupToPB(const logtail::PipelineEventGroup& src, logt
         dst.mutable_tags()->insert({tag.first.to_string(), tag.second.to_string()});
     }
 
-    // metadatas
-    auto sourceId = src.GetMetadata(logtail::EventGroupMetaKey::SOURCE_ID);
-    if (!sourceId.empty()) {
-        dst.mutable_metadata()->insert({"source_id", sourceId.to_string()});
-    }
+    // TODO: transfer metadatas
+    // auto sourceId = src.GetMetadata(logtail::EventGroupMetaKey::SOURCE_ID);
+    // if (!sourceId.empty()) {
+    //     dst.mutable_metadata()->insert({"source_id", sourceId.to_string()});
+    // }
     return true;
 }
 
