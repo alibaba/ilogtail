@@ -25,7 +25,7 @@ namespace logtail {
     const static std::string remoteIpKey = "remote_ip";
     const static std::string peerWorkloadNameKey = "peerWorkloadName";
     const static std::string peerWorkloadKindKey = "peerWorkloadKind";
-    const statid std::string peerNamespaceKey = "peerNamespace";
+    const static std::string peerNamespaceKey = "peerNamespace";
 
     class LabelingK8sMetadata {
     public:
