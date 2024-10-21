@@ -29,38 +29,14 @@ EventPool::~EventPool() {
     if (mEnableLock) {
         {
             lock_guard<mutex> lock(mPoolMux);
-            for (auto& item : mLogEventPool) {
-                delete item;
-            }
-            for (auto& item : mMetricEventPool) {
-                delete item;
-            }
-            for (auto& item : mSpanEventPool) {
-                delete item;
-            }
+            DestroyAllEventPool();
         }
         {
             lock_guard<mutex> lockBak(mPoolBakMux);
-            for (auto& item : mLogEventPoolBak) {
-                delete item;
-            }
-            for (auto& item : mMetricEventPoolBak) {
-                delete item;
-            }
-            for (auto& item : mSpanEventPoolBak) {
-                delete item;
-            }
+            DestroyAllEventPoolBak();
         }
     } else {
-        for (auto& item : mLogEventPool) {
-            delete item;
-        }
-        for (auto& item : mMetricEventPool) {
-            delete item;
-        }
-        for (auto& item : mSpanEventPool) {
-            delete item;
-        }
+        DestroyAllEventPool();
     }
 }
 
@@ -160,21 +136,37 @@ void EventPool::CheckGC() {
     }
 }
 
+void EventPool::DestroyAllEventPool() {
+    for (auto& item : mLogEventPool) {
+        delete item;
+    }
+    for (auto& item : mMetricEventPool) {
+        delete item;
+    }
+    for (auto& item : mSpanEventPool) {
+        delete item;
+    }
+}
+
+void EventPool::DestroyAllEventPoolBak() {
+    for (auto& item : mLogEventPoolBak) {
+        delete item;
+    }
+    for (auto& item : mMetricEventPoolBak) {
+        delete item;
+    }
+    for (auto& item : mSpanEventPoolBak) {
+        delete item;
+    }
+}
+
 #ifdef APSARA_UNIT_TEST_MAIN
 void EventPool::Clear() {
     {
         lock_guard<mutex> lock(mPoolMux);
-        for (auto& item : mLogEventPool) {
-            delete item;
-        }
+        DestroyAllEventPool();
         mLogEventPool.clear();
-        for (auto& item : mMetricEventPool) {
-            delete item;
-        }
         mMetricEventPool.clear();
-        for (auto& item : mSpanEventPool) {
-            delete item;
-        }
         mSpanEventPool.clear();
         mMinUnusedLogEventsCnt = numeric_limits<size_t>::max();
         mMinUnusedMetricEventsCnt = numeric_limits<size_t>::max();
@@ -182,17 +174,9 @@ void EventPool::Clear() {
     }
     {
         lock_guard<mutex> lock(mPoolBakMux);
-        for (auto& item : mLogEventPoolBak) {
-            delete item;
-        }
+        DestroyAllEventPoolBak();
         mLogEventPoolBak.clear();
-        for (auto& item : mMetricEventPoolBak) {
-            delete item;
-        }
         mMetricEventPoolBak.clear();
-        for (auto& item : mSpanEventPoolBak) {
-            delete item;
-        }
         mSpanEventPoolBak.clear();
     }
     mLastGCTime = 0;

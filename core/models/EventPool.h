@@ -70,6 +70,9 @@ private:
         return obj;
     }
 
+    void DestroyAllEventPool();
+    void DestroyAllEventPoolBak();
+
     bool mEnableLock = true;
 
     std::mutex mPoolMux;
@@ -77,6 +80,7 @@ private:
     std::vector<MetricEvent*> mMetricEventPool;
     std::vector<SpanEvent*> mSpanEventPool;
 
+    // only meaningful when mEnableLock is true
     std::mutex mPoolBakMux;
     std::vector<LogEvent*> mLogEventPoolBak;
     std::vector<MetricEvent*> mMetricEventPoolBak;
