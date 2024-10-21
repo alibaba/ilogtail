@@ -1,4 +1,4 @@
-import {base64ToStr, constructProtobufRequest, strToBytes, URL_PREFIX} from "@/api/common";
+import { constructProtobufRequest, strToBytes, URL_PREFIX} from "@/api/common";
 import userProto from "@/proto/user_pb";
 import agentProto from "@/proto/agent_pb"
 
@@ -6,9 +6,6 @@ export async function listInstanceConfigs(){
     let url=URL_PREFIX+"ListInstanceConfigs"
     let req = new userProto.ListConfigsRequest()
     let res=await constructProtobufRequest(url, req, userProto.ListConfigsResponse)
-    res.configDetailsList.forEach(res => {
-        res.detail =  base64ToStr(res.detail)
-    })
     return res
 }
 

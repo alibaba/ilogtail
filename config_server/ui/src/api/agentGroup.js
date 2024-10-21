@@ -46,7 +46,8 @@ export async function listAgentsForAgentGroup(groupName){
     let url=URL_PREFIX+"ListAgents"
     let req = new userProto.ListAgentsRequest()
     req.setGroupName(groupName)
-    return await constructProtobufRequest(url, req, userProto.ListAgentsResponse);
+    let res=await constructProtobufRequest(url, req, userProto.ListAgentsResponse);
+    return res
 }
 
 export async function getAppliedInstanceConfigsForAgentGroup(groupName){

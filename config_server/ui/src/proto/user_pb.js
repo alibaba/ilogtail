@@ -62,7 +62,7 @@ goog.exportSymbol('proto.UpdateConfigResponse', null, global);
  * @constructor
  */
 proto.Agent = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+  jspb.Message.initialize(this, opt_data, 0, -1, proto.Agent.repeatedFields_, null);
 };
 goog.inherits(proto.Agent, jspb.Message);
 if (goog.DEBUG && !COMPILED) {
@@ -766,6 +766,13 @@ if (goog.DEBUG && !COMPILED) {
   proto.ListAgentsResponse.displayName = 'proto.ListAgentsResponse';
 }
 
+/**
+ * List of repeated fields within this message type.
+ * @private {!Array<number>}
+ * @const
+ */
+proto.Agent.repeatedFields_ = [7,8,9];
+
 
 
 if (jspb.Message.GENERATE_TO_OBJECT) {
@@ -802,7 +809,13 @@ proto.Agent.toObject = function(includeInstance, msg) {
     agentType: jspb.Message.getFieldWithDefault(msg, 3, ""),
     attributes: (f = msg.getAttributes()) && agent_pb.AgentAttributes.toObject(includeInstance, f),
     runningStatus: jspb.Message.getFieldWithDefault(msg, 5, ""),
-    startupTime: jspb.Message.getFieldWithDefault(msg, 6, 0)
+    startupTime: jspb.Message.getFieldWithDefault(msg, 6, 0),
+    pipelineConfigsList: jspb.Message.toObjectList(msg.getPipelineConfigsList(),
+    agent_pb.ConfigInfo.toObject, includeInstance),
+    instanceConfigsList: jspb.Message.toObjectList(msg.getInstanceConfigsList(),
+    agent_pb.ConfigInfo.toObject, includeInstance),
+    customCommandsList: jspb.Message.toObjectList(msg.getCustomCommandsList(),
+    agent_pb.CommandInfo.toObject, includeInstance)
   };
 
   if (includeInstance) {
@@ -863,6 +876,21 @@ proto.Agent.deserializeBinaryFromReader = function(msg, reader) {
     case 6:
       var value = /** @type {number} */ (reader.readInt64());
       msg.setStartupTime(value);
+      break;
+    case 7:
+      var value = new agent_pb.ConfigInfo;
+      reader.readMessage(value,agent_pb.ConfigInfo.deserializeBinaryFromReader);
+      msg.addPipelineConfigs(value);
+      break;
+    case 8:
+      var value = new agent_pb.ConfigInfo;
+      reader.readMessage(value,agent_pb.ConfigInfo.deserializeBinaryFromReader);
+      msg.addInstanceConfigs(value);
+      break;
+    case 9:
+      var value = new agent_pb.CommandInfo;
+      reader.readMessage(value,agent_pb.CommandInfo.deserializeBinaryFromReader);
+      msg.addCustomCommands(value);
       break;
     default:
       reader.skipField();
@@ -934,6 +962,30 @@ proto.Agent.serializeBinaryToWriter = function(message, writer) {
     writer.writeInt64(
       6,
       f
+    );
+  }
+  f = message.getPipelineConfigsList();
+  if (f.length > 0) {
+    writer.writeRepeatedMessage(
+      7,
+      f,
+      agent_pb.ConfigInfo.serializeBinaryToWriter
+    );
+  }
+  f = message.getInstanceConfigsList();
+  if (f.length > 0) {
+    writer.writeRepeatedMessage(
+      8,
+      f,
+      agent_pb.ConfigInfo.serializeBinaryToWriter
+    );
+  }
+  f = message.getCustomCommandsList();
+  if (f.length > 0) {
+    writer.writeRepeatedMessage(
+      9,
+      f,
+      agent_pb.CommandInfo.serializeBinaryToWriter
     );
   }
 };
@@ -1087,6 +1139,120 @@ proto.Agent.prototype.getStartupTime = function() {
  */
 proto.Agent.prototype.setStartupTime = function(value) {
   return jspb.Message.setProto3IntField(this, 6, value);
+};
+
+
+/**
+ * repeated ConfigInfo pipeline_configs = 7;
+ * @return {!Array<!proto.ConfigInfo>}
+ */
+proto.Agent.prototype.getPipelineConfigsList = function() {
+  return /** @type{!Array<!proto.ConfigInfo>} */ (
+    jspb.Message.getRepeatedWrapperField(this, agent_pb.ConfigInfo, 7));
+};
+
+
+/**
+ * @param {!Array<!proto.ConfigInfo>} value
+ * @return {!proto.Agent} returns this
+*/
+proto.Agent.prototype.setPipelineConfigsList = function(value) {
+  return jspb.Message.setRepeatedWrapperField(this, 7, value);
+};
+
+
+/**
+ * @param {!proto.ConfigInfo=} opt_value
+ * @param {number=} opt_index
+ * @return {!proto.ConfigInfo}
+ */
+proto.Agent.prototype.addPipelineConfigs = function(opt_value, opt_index) {
+  return jspb.Message.addToRepeatedWrapperField(this, 7, opt_value, proto.ConfigInfo, opt_index);
+};
+
+
+/**
+ * Clears the list making it empty but non-null.
+ * @return {!proto.Agent} returns this
+ */
+proto.Agent.prototype.clearPipelineConfigsList = function() {
+  return this.setPipelineConfigsList([]);
+};
+
+
+/**
+ * repeated ConfigInfo instance_configs = 8;
+ * @return {!Array<!proto.ConfigInfo>}
+ */
+proto.Agent.prototype.getInstanceConfigsList = function() {
+  return /** @type{!Array<!proto.ConfigInfo>} */ (
+    jspb.Message.getRepeatedWrapperField(this, agent_pb.ConfigInfo, 8));
+};
+
+
+/**
+ * @param {!Array<!proto.ConfigInfo>} value
+ * @return {!proto.Agent} returns this
+*/
+proto.Agent.prototype.setInstanceConfigsList = function(value) {
+  return jspb.Message.setRepeatedWrapperField(this, 8, value);
+};
+
+
+/**
+ * @param {!proto.ConfigInfo=} opt_value
+ * @param {number=} opt_index
+ * @return {!proto.ConfigInfo}
+ */
+proto.Agent.prototype.addInstanceConfigs = function(opt_value, opt_index) {
+  return jspb.Message.addToRepeatedWrapperField(this, 8, opt_value, proto.ConfigInfo, opt_index);
+};
+
+
+/**
+ * Clears the list making it empty but non-null.
+ * @return {!proto.Agent} returns this
+ */
+proto.Agent.prototype.clearInstanceConfigsList = function() {
+  return this.setInstanceConfigsList([]);
+};
+
+
+/**
+ * repeated CommandInfo custom_commands = 9;
+ * @return {!Array<!proto.CommandInfo>}
+ */
+proto.Agent.prototype.getCustomCommandsList = function() {
+  return /** @type{!Array<!proto.CommandInfo>} */ (
+    jspb.Message.getRepeatedWrapperField(this, agent_pb.CommandInfo, 9));
+};
+
+
+/**
+ * @param {!Array<!proto.CommandInfo>} value
+ * @return {!proto.Agent} returns this
+*/
+proto.Agent.prototype.setCustomCommandsList = function(value) {
+  return jspb.Message.setRepeatedWrapperField(this, 9, value);
+};
+
+
+/**
+ * @param {!proto.CommandInfo=} opt_value
+ * @param {number=} opt_index
+ * @return {!proto.CommandInfo}
+ */
+proto.Agent.prototype.addCustomCommands = function(opt_value, opt_index) {
+  return jspb.Message.addToRepeatedWrapperField(this, 9, opt_value, proto.CommandInfo, opt_index);
+};
+
+
+/**
+ * Clears the list making it empty but non-null.
+ * @return {!proto.Agent} returns this
+ */
+proto.Agent.prototype.clearCustomCommandsList = function() {
+  return this.setCustomCommandsList([]);
 };
 
 
