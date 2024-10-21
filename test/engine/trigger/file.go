@@ -14,7 +14,7 @@ import (
 )
 
 // JSON template
-func GenerateRandomJSONLogToFile(ctx context.Context, speed, totalTime int, path string) (context.Context, error) {
+func GenerateRandomNginxLogToFile(ctx context.Context, speed, totalTime int, path string) (context.Context, error) {
 
 	// clear file
 	path = filepath.Clean(path)
@@ -93,13 +93,13 @@ var statusCodes = []string{
 func genNginxLog() string {
 	nginxLogTemplate := `%s - - [%s] "DELETE http://www.districtdot-com.biz/syndicate HTTP/1.1" %s 3715 "http://www.chiefscalable.biz/webservices" "%s"`
 	currentTime := time.Now().Format("02/Jan/2006:15:04:05 +0800")
-	ipAddress := ipAddresses[rand.Intn(len(ipAddresses))] // nosec G404
-	statusIdx := rand.Intn(len(statusCodes) * 10)         // nosec G404
+	ipAddress := ipAddresses[rand.Intn(len(ipAddresses))] // #nosec G404
+	statusIdx := rand.Intn(len(statusCodes) * 10)         // #nosec G404
 	if statusIdx >= len(statusCodes) {
 		statusIdx = len(statusCodes) - 1
 	}
 	statusCode := statusCodes[statusIdx]
-	userAgent := userAgents[rand.Intn(len(userAgents))] // nosec G404
+	userAgent := userAgents[rand.Intn(len(userAgents))] // #nosec G404
 
 	return fmt.Sprintf(nginxLogTemplate, ipAddress, currentTime, statusCode, userAgent)
 }
