@@ -26,12 +26,11 @@ SenderQueue::SenderQueue(
     mQueue.resize(cap);
     mFetchTimesCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_QUEUE_FETCH_TIMES_TOTAL);
     mFetchedItemsCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_QUEUE_FETCHED_ITEMS_TOTAL);
-    mTotalFetchDelayMs = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_QUEUE_TOTAL_FETCH_DELAY_MS);
     WriteMetrics::GetInstance()->CommitMetricsRecordRef(mMetricsRecordRef);
 }
 
 bool SenderQueue::Push(unique_ptr<SenderQueueItem>&& item) {
-    item->mFirstEnqueTime = item->mLastEnqueTime = chrono::system_clock::now();
+    item->mFirstEnqueTime = chrono::system_clock::now();
     auto size = item->mData.size();
 
     mInItemsTotal->Add(1);
@@ -122,11 +121,8 @@ void SenderQueue::GetAvailableItems(vector<SenderQueueItem*>& items, int32_t lim
                 continue;
             }
             mFetchedItemsCnt->Add(1);
-            mTotalFetchDelayMs->Add(
-                chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - item->mLastEnqueTime)
-                    .count());
-            if (item->mStatus.Get() == SendingStatus::IDLE) {
-                item->mStatus.Set(SendingStatus::SENDING);
+            if (item->mStatus.load() == SendingStatus::IDLE) {
+                item->mStatus = SendingStatus::SENDING;
                 items.emplace_back(item);
             }
         }
@@ -138,7 +134,7 @@ void SenderQueue::GetAvailableItems(vector<SenderQueueItem*>& items, int32_t lim
         if (item == nullptr) {
             continue;
         }
-        if (item->mStatus.Get() != SendingStatus::IDLE) {
+        if (item->mStatus.load() != SendingStatus::IDLE) {
             continue;
         }
         if (limit == 0) {
@@ -156,9 +152,7 @@ void SenderQueue::GetAvailableItems(vector<SenderQueueItem*>& items, int32_t lim
         }
 
         mFetchedItemsCnt->Add(1);
-        mTotalFetchDelayMs->Add(
-            chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - item->mLastEnqueTime).count());
-        item->mStatus.Set(SendingStatus::SENDING);
+        item->mStatus = SendingStatus::SENDING;
         items.emplace_back(item);
         for (auto& limiter : mConcurrencyLimiters) {
             if (limiter.first != nullptr) {

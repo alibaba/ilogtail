@@ -73,7 +73,6 @@ const string METRIC_COMPONENT_QUEUE_DISCARDED_EVENTS_TOTAL = "component_discarde
 
 const string METRIC_COMPONENT_QUEUE_FETCH_TIMES_TOTAL = "component_fetch_times_total";
 const string METRIC_COMPONENT_QUEUE_FETCHED_ITEMS_TOTAL = "componet_fetched_items_total";
-const string METRIC_COMPONENT_QUEUE_TOTAL_FETCH_DELAY_MS = "component_total_fetch_delay_ms";
 const string METRIC_COMPONENT_QUEUE_FETCH_REJECTED_BY_REGION_LIMITER_TIMES_TOTAL = "component_fetch_rejected_by_region_limiter_times_total";
 const string METRIC_COMPONENT_QUEUE_FETCH_REJECTED_BY_PROJECT_LIMITER_TIMES_TOTAL = "component_fetch_rejected_by_project_limiter_times_total";
 const string METRIC_COMPONENT_QUEUE_FETCH_REJECTED_BY_LOGSTORE_LIMITER_TIMES_TOTAL = "component_fetch_rejected_by_logstore_limiter_times_total";

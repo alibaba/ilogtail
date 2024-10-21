@@ -32,20 +32,6 @@ class Pipeline;
 enum class SendingStatus { IDLE, SENDING };
 enum class RawDataType { EVENT_GROUP_LIST, EVENT_GROUP }; // the order must not be changed for backward compatibility
 
-class AtomicSendingStatusEnum {
-public:
-    AtomicSendingStatusEnum(SendingStatus initialValue) : value(initialValue) {}
-
-    // Set new value
-    void Set(SendingStatus newValue) { value.store(newValue); }
-
-    // Get current value
-    SendingStatus Get() const { return value.load(); }
-
-private:
-    std::atomic<SendingStatus> value;
-};
-
 struct SenderQueueItem {
     std::string mData;
     size_t mRawSize = 0;
@@ -55,9 +41,8 @@ struct SenderQueueItem {
     Flusher* mFlusher = nullptr;
     QueueKey mQueueKey;
 
-    AtomicSendingStatusEnum mStatus;
+    std::atomic<SendingStatus> mStatus;
     std::chrono::system_clock::time_point mFirstEnqueTime;
-    std::chrono::system_clock::time_point mLastEnqueTime;
     time_t mLastSendTime = 0;
     uint32_t mTryCnt = 1;
 
@@ -85,9 +70,8 @@ struct SenderQueueItem {
           mPipeline(item.mPipeline),
           mFlusher(item.mFlusher),
           mQueueKey(item.mQueueKey),
-          mStatus(item.mStatus.Get()),
+          mStatus(item.mStatus.load()),
           mFirstEnqueTime(item.mFirstEnqueTime),
-          mLastEnqueTime(item.mLastEnqueTime),
           mLastSendTime(item.mLastSendTime),
           mTryCnt(item.mTryCnt) {}
 

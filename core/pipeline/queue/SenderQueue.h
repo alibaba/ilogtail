@@ -48,7 +48,6 @@ private:
 
     CounterPtr mFetchTimesCnt;
     CounterPtr mFetchedItemsCnt;
-    CounterPtr mTotalFetchDelayMs;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class SenderQueueUnittest;
