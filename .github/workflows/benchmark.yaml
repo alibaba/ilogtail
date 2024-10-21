@@ -28,6 +28,9 @@ on:
       - 'CHANGELOG.md'
     # types:
     #   - closed
+  push:
+    branched:
+      - benchmark
 
 jobs:
   CI:

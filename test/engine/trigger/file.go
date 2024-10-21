@@ -23,14 +23,13 @@ func GenerateRandomJSONLogToFile(ctx context.Context, speed, totalTime int, path
 	_ = os.WriteFile(path, []byte{}, 0600)
 	file, _ := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600) // #nosec G304
 
+	rand.Seed(time.Now().UnixNano())
 	maxLogLen := 1024
 	nginxLog := genNginxLog()
 
 	limiter := rate.NewLimiter(rate.Limit(speed*1024*1024), maxLogLen)
 
 	timeout := time.After(time.Minute * time.Duration(totalTime))
-
-	rand.Seed(time.Now().UnixNano())
 
 	for {
 		select {
@@ -91,16 +90,16 @@ var statusCodes = []string{
 	"200",
 }
 
-func genNginxLog() string { // nosec G404
+func genNginxLog() string {
 	nginxLogTemplate := `%s - - [%s] "DELETE http://www.districtdot-com.biz/syndicate HTTP/1.1" %s 3715 "http://www.chiefscalable.biz/webservices" "%s"`
 	currentTime := time.Now().Format("02/Jan/2006:15:04:05 +0800")
-	ipAddress := ipAddresses[rand.Intn(len(ipAddresses))]
-	statusIdx := rand.Intn(len(statusCodes) * 10)
+	ipAddress := ipAddresses[rand.Intn(len(ipAddresses))] // nosec G404
+	statusIdx := rand.Intn(len(statusCodes) * 10)         // nosec G404
 	if statusIdx >= len(statusCodes) {
 		statusIdx = len(statusCodes) - 1
 	}
 	statusCode := statusCodes[statusIdx]
-	userAgent := userAgents[rand.Intn(len(userAgents))]
+	userAgent := userAgents[rand.Intn(len(userAgents))] // nosec G404
 
 	return fmt.Sprintf(nginxLogTemplate, ipAddress, currentTime, statusCode, userAgent)
 }
