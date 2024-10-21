@@ -21,12 +21,17 @@ const (
 	interval    = 3
 )
 
+const (
+	exitCodeSuccess = iota
+	exitCodeErrorNotProcessing
+)
+
 var monitor Monitor
 
 type Monitor struct {
 	isMonitoring atomic.Bool
 	statistic    *Statistic
-	stopCh       chan struct{}
+	stopCh       chan int
 }
 
 func StartMonitor(ctx context.Context, containerName string) (context.Context, error) {
@@ -34,8 +39,15 @@ func StartMonitor(ctx context.Context, containerName string) (context.Context, e
 }
 
 func WaitMonitorUntilProcessingFinished(ctx context.Context) (context.Context, error) {
-	<-monitor.Done()
-	return ctx, nil
+	errCode := <-monitor.Done()
+	switch errCode {
+	case exitCodeSuccess:
+		return ctx, nil
+	case exitCodeErrorNotProcessing:
+		return ctx, fmt.Errorf("monitoring error: CPU usage is too low, not processing")
+	default:
+		return ctx, fmt.Errorf("monitoring error: unknown error")
+	}
 }
 
 func (m *Monitor) Start(ctx context.Context, containerName string) (context.Context, error) {
@@ -55,7 +67,7 @@ func (m *Monitor) Start(ctx context.Context, containerName string) (context.Cont
 		if strings.Contains(containerFullName, containerName) {
 			m.isMonitoring.Store(true)
 			m.statistic = NewMonitorStatistic(config.CaseName)
-			m.stopCh = make(chan struct{})
+			m.stopCh = make(chan int)
 			fmt.Println("Start monitoring container:", containerFullName)
 			go m.monitoring(client, containerFullName)
 			return ctx, nil
@@ -72,7 +84,7 @@ func (m *Monitor) monitoring(client *client.Client, containerName string) {
 	statisticFile := reportDir + config.CaseName + "_statistic.json"
 	recordsFile := reportDir + config.CaseName + "_records.json"
 	// calculate low threshold after 60 seconds
-	timer := time.NewTimer(60 * time.Second)
+	timerCal := time.NewTimer(60 * time.Second)
 	lowThreshold := 0.0
 	outlierCnt := 0
 	// read from cadvisor per interval seconds
@@ -81,7 +93,7 @@ func (m *Monitor) monitoring(client *client.Client, containerName string) {
 	request := &v1.ContainerInfoRequest{NumStats: 10}
 	for {
 		select {
-		case <-timer.C:
+		case <-timerCal.C:
 			// 计算CPU使用率的下阈值
 			cpuRawData := make([]float64, len(m.statistic.GetCPURawData())-5)
 			copy(cpuRawData, m.statistic.GetCPURawData()[5:])
@@ -95,7 +107,8 @@ func (m *Monitor) monitoring(client *client.Client, containerName string) {
 			fmt.Println("3/4 of CPU usage rate(%):", cpuRawData[3*len(cpuRawData)/4])
 			fmt.Println("Low threshold of CPU usage rate(%):", lowThreshold)
 			if lowThreshold < 0 {
-				m.stopCh <- struct{}{}
+				m.stopCh <- exitCodeErrorNotProcessing
+				return
 			}
 		case <-ticker.C:
 			// 获取容器信息
@@ -117,7 +130,7 @@ func (m *Monitor) monitoring(client *client.Client, containerName string) {
 				bytes, _ = m.statistic.MarshalRecordsJSON()
 				_ = os.WriteFile(recordsFile, bytes, 0600)
 				m.isMonitoring.Store(false)
-				m.stopCh <- struct{}{}
+				m.stopCh <- exitCodeSuccess
 				m.statistic.ClearStatistic()
 				return
 			}
@@ -125,6 +138,6 @@ func (m *Monitor) monitoring(client *client.Client, containerName string) {
 	}
 }
 
-func (m *Monitor) Done() <-chan struct{} {
+func (m *Monitor) Done() <-chan int {
 	return m.stopCh
 }

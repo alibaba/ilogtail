@@ -15,19 +15,6 @@ import (
 
 // JSON template
 func GenerateRandomJSONLogToFile(ctx context.Context, speed, totalTime int, path string) (context.Context, error) {
-	JSONTemplates := []string{
-		`{"url": "POST /PutData?Category=paskdnkwja HTTP/1.1", "ip": "10.200.98.220", "user-agent": "aliyun-sdk-java", "request": {"status": "200", "latency": "18"}, "time": "12/Sep/2024:11:30:02"}\n`,
-		`{"url": "GET /PutData?Category=dwds HTTP/1.1", "ip": "10.7.159.1", "user-agent": "aliyun-sdk-java", "request": {"status": "404", "latency": "22024"}, "time": "06/Jun/2001:09:35:59"}\n`,
-		`{"url": "GET /PutData?Category=ubkjbkjgiuiu HTTP/1.1", "ip": "172.130.98.250", "user-agent": "aliyun-sdk-java", "request": {"301": "200", "latency": "12334"}, "time": "08/Aug/2018:10:30:28"}\n`,
-		`{"url": "POST /PutData?Category=oasjdwbjkbjkg HTTP/1.1", "ip": "1.20.9.220", "user-agent": "aliyun-sdk-java", "request": {"401": "200", "latency": "112"}, "time": "09/Sep/2024:15:25:28"}\n`,
-		`{"url": "POST /PutData?Category=asdjhoiasjdoOpLog HTTP/1.1", "ip": "172.168.0.1", "user-agent": "aliyun-sdk-java", "request": {"status": "200", "latency": "8815"}, "time": "01/Jan/2022:10:30:28"}\n`,
-	}
-	maxLen := 0
-	for j := 0; j < len(JSONTemplates); j++ {
-		if len(JSONTemplates[j]) > maxLen {
-			maxLen = len(JSONTemplates[j])
-		}
-	}
 
 	// clear file
 	path = filepath.Clean(path)
@@ -36,7 +23,10 @@ func GenerateRandomJSONLogToFile(ctx context.Context, speed, totalTime int, path
 	_ = os.WriteFile(path, []byte{}, 0600)
 	file, _ := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600) // #nosec G304
 
-	limiter := rate.NewLimiter(rate.Limit(speed*1024*1024), maxLen)
+	maxLogLen := 1024
+	nginxLog := genNginxLog()
+
+	limiter := rate.NewLimiter(rate.Limit(speed*1024*1024), maxLogLen)
 
 	timeout := time.After(time.Minute * time.Duration(totalTime))
 
@@ -55,10 +45,62 @@ func GenerateRandomJSONLogToFile(ctx context.Context, speed, totalTime int, path
 			_ = file.Close()
 			return ctx, nil
 		default:
-			if limiter.AllowN(time.Now(), maxLen) {
-				randomIndex := rand.Intn(len(JSONTemplates)) // #nosec G404
-				_, _ = file.WriteString(JSONTemplates[randomIndex])
+			if limiter.AllowN(time.Now(), len(nginxLog)) {
+				_, _ = file.WriteString(nginxLog + "\n") // #nosec G307
+				nginxLog = genNginxLog()
 			}
 		}
 	}
+}
+
+var ipAddresses = []string{
+	"103.159.151.180",
+	"12.55.18.241",
+	"182.233.128.102",
+	"221.85.57.231",
+	"76.245.65.224",
+	"86.250.231.93",
+	"44.201.253.252",
+	"218.7.2.219",
+	"172.118.174.109",
+	"208.16.46.154",
+	"7.138.80.41",
+	"214.73.25.80",
+	"83.124.20.79",
+	"80.226.48.153",
+	"92.129.204.161",
+	"212.103.145.159",
+	"148.188.8.90",
+	"148.212.244.121",
+	"106.186.172.157",
+	"30.127.196.158",
+}
+
+var userAgents = []string{
+	"aliyun-sdk-java",
+	"aliyun-sdk-golang",
+	"aliyun-sdk-python",
+}
+
+var statusCodes = []string{
+	"400",
+	"401",
+	"402",
+	"403",
+	"404",
+	"200",
+}
+
+func genNginxLog() string { // nosec G404
+	nginxLogTemplate := `%s - - [%s] "DELETE http://www.districtdot-com.biz/syndicate HTTP/1.1" %s 3715 "http://www.chiefscalable.biz/webservices" "%s"`
+	currentTime := time.Now().Format("02/Jan/2006:15:04:05 +0800")
+	ipAddress := ipAddresses[rand.Intn(len(ipAddresses))]
+	statusIdx := rand.Intn(len(statusCodes) * 10)
+	if statusIdx >= len(statusCodes) {
+		statusIdx = len(statusCodes) - 1
+	}
+	statusCode := statusCodes[statusIdx]
+	userAgent := userAgents[rand.Intn(len(userAgents))]
+
+	return fmt.Sprintf(nginxLogTemplate, ipAddress, currentTime, statusCode, userAgent)
 }

@@ -29,10 +29,8 @@ Feature: performance file to blackhole vector
     Given docker-compose type {benchmark}
     When start docker-compose {performance_file_to_blackhole_vector}
     When start monitor {vector}
-    When generate logs to file, speed {10}MB/s, total {1}min, to file {./a.log}, template
-    """
-    {"url": "POST /PutData?Category=YunOsAccountOpLog HTTP/1.1", "ip": "10.200.98.220", "user-agent": "aliyun-sdk-java", "request": {"status": "200", "latency": "18204"}, "time": "07/Jul/2022:10:30:28"}
-    """
+    When generate random json logs to file, speed {10}MB/s, total {1}min, to file {./a.log}
+    When wait monitor until log processing finished
 ```
 
 - `@e2e-performance @docker-compose`: 表示测试场景为e2e-performance，测试场景由本地docker-compose运行
@@ -40,7 +38,7 @@ Feature: performance file to blackhole vector
 - `Given docker-compose boot type {benchmark}`: 配置docker-compose启动模式，以benchmark模式启动docker-compose，`{}`中参数有两种选项，`e2e`/`benchmark`。以`e2e`模式启动会默认启动ilogtail、goc-server容器，用作e2e测试；以`benchmark`模式启动会默认启动cadvisor容器，用于监控容器运行过程中的资源占用；若在配置文件中不配置该参数，则默认以上一个scenario的启动模式启动。
 - `When start docker-compose {directory}`: `{}`中参数为当前scenario的文件夹名，该行动作会读取`directory`文件夹下的docker-compose.yaml文件，通过docker-compose命令启动所有容器
 - `When start monitor {vector}`: `{}`中参数为待监控的容器，该参数需要与docker-compose中的service name相同
-- `When generate logs to file`: 生成测试数据，其他生成测试数据的方法请参考[e2e-test-step.md](./e2e-test-step.md)
+- `When generate random json logs to file`: 向文件中按照固定速率随机生成json格式测试数据，其他生成测试数据的方法请参考[e2e-test-step.md](./e2e-test-step.md)
 
 ### 运行测试
 
