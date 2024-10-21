@@ -31,40 +31,36 @@ namespace logtail {
     }
 
     bool K8sMetadata::FromInfoJson(const Json::Value& json, k8sContainerInfo& info) {
-        #ifdef __ENTERPRISE__
-            if (!json.isMember(imageKey) || !json.isMember(labelsKey) ||
-                !json.isMember(namespaceKey) ||
-                !json.isMember(workloadKindKey) || !json.isMember(workloadNameKey)) {
-                return false;
-            }
-
-            for (const auto& key : json[imageKey].getMemberNames()) {
-                if (json[imageKey].isMember(key)) {
-                    info.images[key] = json[imageKey][key].asString();
-                }
-            }
-            for (const auto& key : json[labelsKey].getMemberNames()) {
-                if (json[labelsKey].isMember(key)) {
-                    info.labels[key] = json[labelsKey][key].asString();
-                    
-                    if (key == appIdKey) {
-                        info.appId = json[labelsKey][key].asString();
-                    }
-                
-                }
-            }
-
-            info.k8sNamespace = json[namespaceKey].asString();
-            if (json.isMember(serviceNameKey)) {
-                info.serviceName = json[serviceNameKey].asString();
-            }
-            info.workloadKind = json[workloadKindKey].asString();
-            info.workloadName = json[workloadNameKey].asString();
-            info.timestamp = std::time(0);
-            return true;
-        #else
+        if (!json.isMember(imageKey) || !json.isMember(labelsKey) ||
+            !json.isMember(namespaceKey) ||
+            !json.isMember(workloadKindKey) || !json.isMember(workloadNameKey)) {
             return false;
-        #endif
+        }
+
+        for (const auto& key : json[imageKey].getMemberNames()) {
+            if (json[imageKey].isMember(key)) {
+                info.images[key] = json[imageKey][key].asString();
+            }
+        }
+        for (const auto& key : json[labelsKey].getMemberNames()) {
+            if (json[labelsKey].isMember(key)) {
+                info.labels[key] = json[labelsKey][key].asString();
+                
+                if (key == appIdKey) {
+                    info.appId = json[labelsKey][key].asString();
+                }
+            
+            }
+        }
+
+        info.k8sNamespace = json[namespaceKey].asString();
+        if (json.isMember(serviceNameKey)) {
+            info.serviceName = json[serviceNameKey].asString();
+        }
+        info.workloadKind = json[workloadKindKey].asString();
+        info.workloadName = json[workloadNameKey].asString();
+        info.timestamp = std::time(0);
+        return true;
     }
 
     bool ContainerInfoIsExpired(std::shared_ptr<k8sContainerInfo> info) {

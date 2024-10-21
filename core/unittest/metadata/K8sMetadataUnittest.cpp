@@ -55,6 +55,7 @@ public:
         // Assume GetInfoByContainerIdFromCache returns non-null shared_ptr for valid IDs,
         // and check for some expectations.
         APSARA_TEST_TRUE_FATAL(k8sMetadata.GetInfoByContainerIdFromCache("containerd://286effd2650c0689b779018e42e9ec7aa3d2cb843005e038204e85fc3d4f9144") != nullptr);
+
     }
 
     void TestGetByLocalHost() {

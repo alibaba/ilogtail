@@ -74,7 +74,6 @@ bool LabelingK8sMetadata::ProcessEvent(PipelineEventPtr& e, std::vector<std::str
 
 template <typename Event>
 bool LabelingK8sMetadata::AddLabels(Event& e, std::vector<std::string>& containerVec, std::vector<std::string>& remoteIpVec) {
-    #ifdef __ENTERPRISE__
     bool res = true;
     
     auto& k8sMetadata = K8sMetadata::GetInstance();
@@ -110,9 +109,6 @@ bool LabelingK8sMetadata::AddLabels(Event& e, std::vector<std::string>& containe
         }
     }
     return res;
-    #else
-    return false;
-    #endif
 }
 
 bool LabelingK8sMetadata::IsSupportedEvent(const PipelineEventPtr& e) const {
