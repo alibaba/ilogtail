@@ -68,7 +68,6 @@ namespace logtail {
                 static K8sMetadata instance(500);
                 return instance;
             }
-
             // 公共方法
             //if cache not have,get from server
             void GetByContainerIdsFromServer(std::vector<std::string> containerIds);
