@@ -82,7 +82,14 @@ namespace logtail {
     
     #ifdef __ENTERPRISE__
         const static std::string appIdKey = "armsAppId";
-    #endif    
+        const static std::string imageKey = "images";
+        const static std::string labelsKey = "labels";
+        const static std::string namespaceKey = "namespace";
+        const static std::string workloadKindKey = "workloadKind";
+        const static std::string workloadNameKey = "workloadName";
+        const static std::string serviceNameKey = "serviceName";
+    #endif
+    const static std::string keys = "keys";    
     #ifdef APSARA_UNIT_TEST_MAIN
         friend class k8sMetadataUnittest;
     #endif

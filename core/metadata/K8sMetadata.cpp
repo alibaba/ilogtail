@@ -31,36 +31,40 @@ namespace logtail {
     }
 
     bool K8sMetadata::FromInfoJson(const Json::Value& json, k8sContainerInfo& info) {
-        if (!json.isMember("images") || !json.isMember("labels") ||
-            !json.isMember("namespace") ||
-            !json.isMember("workloadKind") || !json.isMember("workloadName")) {
-            return false;
-        }
-
-        for (const auto& key : json["images"].getMemberNames()) {
-            if (json["images"].isMember(key)) {
-                info.images[key] = json["images"][key].asString();
+        #ifdef __ENTERPRISE__
+            if (!json.isMember(imageKey) || !json.isMember(labelsKey) ||
+                !json.isMember(namespaceKey) ||
+                !json.isMember(workloadKindKey) || !json.isMember(workloadNameKey)) {
+                return false;
             }
-        }
-        for (const auto& key : json["labels"].getMemberNames()) {
-            if (json["labels"].isMember(key)) {
-                info.labels[key] = json["labels"][key].asString();
-                #ifdef __ENTERPRISE__
-                if (key == appIdKey) {
-                    info.appId = json["labels"][key].asString();
+
+            for (const auto& key : json[imageKey].getMemberNames()) {
+                if (json[imageKey].isMember(key)) {
+                    info.images[key] = json[imageKey][key].asString();
                 }
-                #endif
             }
-        }
+            for (const auto& key : json[labelsKey].getMemberNames()) {
+                if (json[labelsKey].isMember(key)) {
+                    info.labels[key] = json[labelsKey][key].asString();
+                    
+                    if (key == appIdKey) {
+                        info.appId = json[labelsKey][key].asString();
+                    }
+                
+                }
+            }
 
-        info.k8sNamespace = json["namespace"].asString();
-        if (json.isMember("serviceName")) {
-            info.serviceName = json["serviceName"].asString();
-        }
-        info.workloadKind = json["workloadKind"].asString();
-        info.workloadName = json["workloadName"].asString();
-        info.timestamp = std::time(0);
-        return true;
+            info.k8sNamespace = json[namespaceKey].asString();
+            if (json.isMember(serviceNameKey)) {
+                info.serviceName = json[serviceNameKey].asString();
+            }
+            info.workloadKind = json[workloadKindKey].asString();
+            info.workloadName = json[workloadNameKey].asString();
+            info.timestamp = std::time(0);
+            return true;
+        #else
+            return false;
+        #endif
     }
 
     bool ContainerInfoIsExpired(std::shared_ptr<k8sContainerInfo> info) {
@@ -134,7 +138,7 @@ namespace logtail {
     void K8sMetadata::GetByContainerIdsFromServer(std::vector<std::string> containerIds) {
         Json::Value jsonObj;
         for (auto& str : containerIds) {
-            jsonObj["keys"].append(str);
+            jsonObj[keys].append(str);
         }
         Json::StreamWriterBuilder writer;
         std::string output = Json::writeString(writer, jsonObj);
@@ -146,7 +150,7 @@ namespace logtail {
         std::list<std::string> strList{hostIp};
         Json::Value jsonObj;
         for (const auto& str : strList) {
-            jsonObj["keys"].append(str);
+            jsonObj[keys].append(str);
         }
         Json::StreamWriterBuilder writer;
         std::string output = Json::writeString(writer, jsonObj);
@@ -187,7 +191,7 @@ namespace logtail {
     void K8sMetadata::GetByIpsFromServer(std::vector<std::string> ips) {
         Json::Value jsonObj;
         for (auto& str : ips) {
-            jsonObj["keys"].append(str);
+            jsonObj[keys].append(str);
         }
         Json::StreamWriterBuilder writer;
         std::string output = Json::writeString(writer, jsonObj);
