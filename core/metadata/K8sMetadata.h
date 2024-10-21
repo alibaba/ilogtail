@@ -23,6 +23,15 @@ DECLARE_FLAG_STRING(loong_collector_operator_service);
 DECLARE_FLAG_INT32(loong_collector_k8s_meta_service_port);
 
 namespace logtail {
+
+    const static std::string appIdKey = "armsAppId";
+    const static std::string imageKey = "images";
+    const static std::string labelsKey = "labels";
+    const static std::string namespaceKey = "namespace";
+    const static std::string workloadKindKey = "workloadKind";
+    const static std::string workloadNameKey = "workloadName";
+    const static std::string serviceNameKey = "serviceName";
+
     struct k8sContainerInfo {
         std::unordered_map<std::string, std::string> images;
         std::unordered_map<std::string, std::string> labels;
@@ -79,15 +88,6 @@ namespace logtail {
             std::shared_ptr<k8sContainerInfo> GetInfoByIpFromCache(const std::string& ip);
             int SendRequestToOperator(const std::string& urlHost, const std::string& output, containerInfoType infoType);
     
-    #ifdef __ENTERPRISE__
-        const static std::string appIdKey = "armsAppId";
-        const static std::string imageKey = "images";
-        const static std::string labelsKey = "labels";
-        const static std::string namespaceKey = "namespace";
-        const static std::string workloadKindKey = "workloadKind";
-        const static std::string workloadNameKey = "workloadName";
-        const static std::string serviceNameKey = "serviceName";
-    #endif
     #ifdef APSARA_UNIT_TEST_MAIN
         friend class k8sMetadataUnittest;
     #endif

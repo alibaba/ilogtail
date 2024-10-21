@@ -20,23 +20,22 @@
 
 namespace logtail {
 
-class LabelingK8sMetadata {
-public:
-    void AddLabelToLogGroup(PipelineEventGroup& logGroup);
-    bool ProcessEvent(PipelineEventPtr& e,  std::vector<std::string>& container_vec,  std::vector<std::string>& remote_ip_vec);
-    // 声明模板函数
-    template <typename Event>
-    bool AddLabels(Event& e, std::vector<std::string>& containerVec, std::vector<std::string>& remoteIpVec);
-protected:
-    bool IsSupportedEvent(const PipelineEventPtr& e) const;
-#ifdef __ENTERPRISE__
     const static std::string containerIdKey = "container.id";
     const static std::string pidKey = "pid";
     const static std::string remoteIpKey = "remote_ip";
     const static std::string peerWorkloadNameKey = "peerWorkloadName";
     const static std::string peerWorkloadKindKey = "peerWorkloadKind";
     const statid std::string peerNamespaceKey = "peerNamespace";
-#endif    
-};
+
+    class LabelingK8sMetadata {
+    public:
+        void AddLabelToLogGroup(PipelineEventGroup& logGroup);
+        bool ProcessEvent(PipelineEventPtr& e,  std::vector<std::string>& container_vec,  std::vector<std::string>& remote_ip_vec);
+        // 声明模板函数
+        template <typename Event>
+        bool AddLabels(Event& e, std::vector<std::string>& containerVec, std::vector<std::string>& remoteIpVec);
+    protected:
+        bool IsSupportedEvent(const PipelineEventPtr& e) const;   
+    };
 
 } // namespace logtail
