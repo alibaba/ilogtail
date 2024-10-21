@@ -138,7 +138,7 @@ namespace logtail {
     void K8sMetadata::GetByContainerIdsFromServer(std::vector<std::string> containerIds) {
         Json::Value jsonObj;
         for (auto& str : containerIds) {
-            jsonObj[infoKeys].append(str);
+            jsonObj["keys"].append(str);
         }
         Json::StreamWriterBuilder writer;
         std::string output = Json::writeString(writer, jsonObj);
@@ -150,7 +150,7 @@ namespace logtail {
         std::list<std::string> strList{hostIp};
         Json::Value jsonObj;
         for (const auto& str : strList) {
-            jsonObj[infoKeys].append(str);
+            jsonObj["keys"].append(str);
         }
         Json::StreamWriterBuilder writer;
         std::string output = Json::writeString(writer, jsonObj);
@@ -191,7 +191,7 @@ namespace logtail {
     void K8sMetadata::GetByIpsFromServer(std::vector<std::string> ips) {
         Json::Value jsonObj;
         for (auto& str : ips) {
-            jsonObj[infoKeys].append(str);
+            jsonObj["keys"].append(str);
         }
         Json::StreamWriterBuilder writer;
         std::string output = Json::writeString(writer, jsonObj);
