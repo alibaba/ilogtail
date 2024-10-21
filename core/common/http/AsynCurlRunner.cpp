@@ -205,7 +205,7 @@ void AsynCurlRunner::HandleCompletedRequests(int& runningHandlers) {
                             request->mPrivateData = nullptr;
                         }
                         AddRequestToClient(unique_ptr<AsynHttpRequest>(request));
-                        runningHandlers++;
+                        ++runningHandlers;
                         requestReused = true;
                     } else {
                         request->OnSendDone(request->mResponse);
