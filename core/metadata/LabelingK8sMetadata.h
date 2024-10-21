@@ -29,6 +29,20 @@ public:
     bool AddLabels(Event& e, std::vector<std::string>& containerVec, std::vector<std::string>& remoteIpVec);
 protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const;
+#ifdef __ENTERPRISE__
+    const static std::string imageKey = "images";
+    const static std::string labelsKey = "labels";
+    const static std::string namespaceKey = "namespace";
+    const static std::string workloadKindKey = "workloadKind";
+    const static std::string workloadNameKey = "workloadName";
+    const static std::string serviceNameKey = "serviceName";
+    const static std::string containerIdKey = "container.id";
+    const static std::string pidKey = "pid";
+    const static std::string remoteIpKey = "remote_ip";
+    const static std::string peerWorkloadNameKey = "peerWorkloadName";
+    const static std::string peerWorkloadKindKey = "peerWorkloadKind";
+    const statid std::string peerNamespaceKey = "peerNamespace";
+#endif    
 };
 
 } // namespace logtail
