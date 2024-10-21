@@ -130,7 +130,17 @@ endmacro()
 logtail_define(protobuf_BIN "Absolute path to protoc" "${DEPS_BINARY_ROOT}/protoc")
 set(PROTO_FILE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/protobuf/sls")
 set(PROTO_FILES ${PROTO_FILE_PATH}/sls_logs.proto ${PROTO_FILE_PATH}/logtail_buffer_meta.proto ${PROTO_FILE_PATH}/metric.proto ${PROTO_FILE_PATH}/checkpoint.proto)
-execute_process(COMMAND ${protobuf_BIN} --proto_path=${PROTO_FILE_PATH} --cpp_out=${PROTO_FILE_PATH} ${PROTO_FILES})
+foreach(PROTO_FILE ${PROTO_FILES})
+    string(REGEX REPLACE "[.]proto$" ".pb.cc" PB_OUTPUT_SOURCE ${PROTO_FILE})
+    list(APPEND PB_OUTPUT_SOURCES ${PB_OUTPUT_SOURCE})
+endforeach()
+message("pb output: ${PB_OUTPUT_SOURCES}")
+add_custom_command(
+    OUTPUT ${PB_OUTPUT_SOURCES}
+    COMMAND ${protobuf_BIN} --proto_path=${PROTO_FILE_PATH} --cpp_out=${PROTO_FILE_PATH} ${PROTO_FILES}
+    DEPENDS ${PROTO_FILES}
+    COMMENT "generate log protobuf files"
+)
 
 # re2
 macro(link_re2 target_name)
