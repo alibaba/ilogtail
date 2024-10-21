@@ -9,19 +9,6 @@ import (
 	"config-server/utils"
 )
 
-// AppliedOrRemoveConfigForAgentGroup 定期检查在group中的agent与config的关系是否符合group与config的关系
-//func AppliedOrRemoveConfigForAgentGroup(timeLimit int64) {
-//	utils.TimedTask(timeLimit, func(int64) {
-//		agentGroupDetails, err := repository.GetAllAgentGroupDetail(true, true, true)
-//		if err != nil {
-//			panic(err)
-//		}
-//		utils.ParallelProcessTask(agentGroupDetails,
-//			manager.AppliedOrRemovePipelineConfigForAgentGroup,
-//			manager.AppliedOrRemoveInstanceConfigForAgentGroup)
-//	})
-//}
-
 func CreateAgentGroup(req *proto.CreateAgentGroupRequest, res *proto.CreateAgentGroupResponse) error {
 	agentGroup := req.AgentGroup
 	if agentGroup == nil {

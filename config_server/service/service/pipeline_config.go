@@ -103,15 +103,11 @@ func RemovePipelineConfigFromAgentGroup(req *proto.RemoveConfigFromAgentGroupReq
 		return common.ValidateErrorWithMsg("required fields groupName could not be null")
 	}
 	configName := req.ConfigName
-	if configName == "" {
-		return common.ValidateErrorWithMsg("required fields configName could not be null")
-	}
 
 	err := repository.DeletePipelineConfigForAgentGroup(groupName, configName)
 	if err != nil {
 		return common.SystemError(err)
 	}
-
 	return nil
 }
 

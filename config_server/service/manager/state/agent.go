@@ -11,15 +11,6 @@ type AgentAction struct {
 	Run func(*proto.HeartbeatRequest, *proto.HeartbeatResponse) error
 }
 
-//func (a AgentAction) Action(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse) error {
-//	code := a.Code
-//	if int(req.Capabilities)&code == code {
-//		err := a.Run(req, res)
-//		return common.SystemError(err)
-//	}
-//	return nil
-//}
-
 var (
 	AgentUnSpecified      = Base{Code: 0, Value: "unspecified"}
 	AcceptsPipelineConfig = Base{Code: 1, Value: "acceptsPipelineConfig"}

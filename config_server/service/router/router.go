@@ -25,7 +25,6 @@ func initUserRouter(router *gin.Engine) {
 		userRouter.POST("/ApplyPipelineConfigToAgentGroup", handler.ApplyPipelineConfigToAgentGroup)
 		userRouter.POST("/RemovePipelineConfigFromAgentGroup", handler.RemovePipelineConfigFromAgentGroup)
 		userRouter.POST("/GetAppliedAgentGroupsWithPipelineConfig", handler.GetAppliedAgentGroupsWithPipelineConfig)
-		//userRouter.POST("/GetPipelineConfigStatusList", handler.GetPipelineConfigStatusList)
 
 		userRouter.POST("/CreateInstanceConfig", handler.CreateInstanceConfig)
 		userRouter.POST("/UpdateInstanceConfig", handler.UpdateInstanceConfig)
@@ -35,7 +34,6 @@ func initUserRouter(router *gin.Engine) {
 		userRouter.POST("/ApplyInstanceConfigToAgentGroup", handler.ApplyInstanceConfigToAgentGroup)
 		userRouter.POST("/RemoveInstanceConfigFromAgentGroup", handler.RemoveInstanceConfigFromAgentGroup)
 		userRouter.POST("/GetAppliedAgentGroupsWithInstanceConfig", handler.GetAppliedAgentGroupsWithInstanceConfig)
-		//userRouter.POST("/GetInstanceConfigStatusList", handler.GetInstanceConfigStatusList)
 	}
 
 }
@@ -48,7 +46,6 @@ func initAgentRouter(router *gin.Engine) {
 		agentRouter.POST("/FetchInstanceConfig", handler.FetchInstanceConfig)
 	}
 	handler.CheckAgentExist()
-	//handler.AppliedOrRemoveConfigForAgentGroup()
 }
 
 func initTest(router *gin.Engine) {

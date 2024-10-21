@@ -90,18 +90,6 @@ func ApplyInstanceConfigToAgentGroup(req *proto.ApplyConfigToAgentGroupRequest, 
 	if err != nil {
 		return common.SystemError(err)
 	}
-
-	//agents, err := repository.ListAgentsByGroupName(groupName)
-	//if err != nil {
-	//	return common.SystemError(err)
-	//}
-	//
-	//for _, agent := range agents {
-	//	err := repository.CreateInstanceConfigForAgent(agent.InstanceId, configName)
-	//	if err != nil {
-	//		return err
-	//	}
-	//}
 	return nil
 }
 

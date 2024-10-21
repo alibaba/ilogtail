@@ -140,31 +140,3 @@ func HandleResponseFlags(res *proto.HeartbeatResponse) error {
 	}
 	return nil
 }
-
-//func HandleResponseFlags(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse) error {
-//	for key, value := range config.ServerConfigInstance.ResponseFlags {
-//		action, ok := ResponseMap[key]
-//		if !ok {
-//			panic("not the correct responseFlags config...")
-//		}
-//		if value {
-//			res.Flags = res.Flags | uint64(action.Code)
-//			if action.Run1 == nil {
-//				continue
-//			}
-//			err := action.Run1(req, res)
-//			if err != nil {
-//				return common.SystemError(err)
-//			}
-//		} else {
-//			if action.Run2 == nil {
-//				continue
-//			}
-//			err := action.Run2(req, res)
-//			if err != nil {
-//				return common.SystemError(err)
-//			}
-//		}
-//	}
-//	return nil
-//}
