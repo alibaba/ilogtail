@@ -4,7 +4,7 @@ import (
 	"config-server/common"
 	"config-server/entity"
 	"config-server/manager"
-	"config-server/manager/flag"
+	"config-server/manager/state"
 	proto "config-server/protov2"
 	"config-server/repository"
 	"config-server/utils"
@@ -36,12 +36,12 @@ func HeartBeat(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse) error 
 	//假设数据库保存的sequenceNum=3,agent给的是10，
 	//如果在判断rationality=false立即return,数据库中保存的一直是3，agent一直重传全部状态
 	if !rationality {
-		res.Flags = res.Flags | uint64(flag.ResponseMap[flag.ReportFullState].Code)
+		res.Flags = res.Flags | uint64(state.ReportFullState.Code)
 	}
 
 	currentHeatBeatTime := time.Now().UnixNano()
+	req.Tags = manager.AddDefaultAgentGroup(req.Tags)
 	agent := entity.ParseHeartBeatRequest2BasicAgent(req, currentHeatBeatTime)
-	agent.Tags = manager.AddDefaultAgentGroup(agent.Tags)
 
 	//Regardless of whether sequenceN is legal or not, we should keep the basic information of the agent (sequenceNum, instanceId, capabilities, flags, etc.)
 	err = manager.CreateOrUpdateAgentBasicInfo(agent)
@@ -49,19 +49,21 @@ func HeartBeat(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse) error 
 		return common.SystemError(err)
 	}
 
-	//如果req未设置fullState,agent会不会上传其他的configStatus
-	err = flag.HandleRequestFlags(req, res)
+	//如果req未设置fullState,agent不会上传configStatus
+	err = state.HandleRequestFlags(req, res)
 	if err != nil {
 		return common.SystemError(err)
 	}
 
-	err = flag.HandleResponseFlags(req, res)
+	err = state.HandleAgentCapabilities(req, res)
 	if err != nil {
 		return common.SystemError(err)
 	}
 
 	return nil
 }
+
+// 心跳检测中的tag只是为了获取某个组的配置，而不是让某个agent加入到某个组
 
 func FetchPipelineConfigDetail(req *proto.FetchConfigRequest, res *proto.FetchConfigResponse) error {
 	instanceId := req.InstanceId
@@ -72,24 +74,23 @@ func FetchPipelineConfigDetail(req *proto.FetchConfigRequest, res *proto.FetchCo
 	var err error
 	strInstanceId := string(instanceId)
 
-	//创建或更新pipelineConfig的status and message
-	agentPipelineConfigs := make([]*entity.AgentPipelineConfig, 0)
-	for _, reqConfig := range req.ReqConfigs {
-		agentPipelineConfig := entity.ParseProtoConfigInfo2AgentPipelineConfig(strInstanceId, reqConfig)
-		agentPipelineConfigs = append(agentPipelineConfigs, agentPipelineConfig)
-	}
-
-	err = manager.CreateOrUpdateAgentPipelineConfigs(agentPipelineConfigs)
+	//需要更新配置状态
+	err = manager.SavePipelineConfigStatus(req.ReqConfigs, strInstanceId)
 	if err != nil {
 		return common.SystemError(err)
 	}
 
-	//返回pipelineConfigDetail
-	pipelineConfigUpdates, err := manager.GetPipelineConfigs(strInstanceId, true)
+	configNames := utils.Map(req.ReqConfigs, func(info *proto.ConfigInfo) string {
+		return info.Name
+	})
+	pipelineConfigUpdates, err := repository.GetPipelineConfigByNames(configNames...)
 	if err != nil {
-		return common.SystemError(err)
+		return err
 	}
-	res.ConfigDetails = pipelineConfigUpdates
+
+	res.ConfigDetails = utils.Map(pipelineConfigUpdates, func(config *entity.PipelineConfig) *proto.ConfigDetail {
+		return config.Parse2ProtoPipelineConfigDetail(true)
+	})
 	return nil
 }
 
@@ -102,23 +103,23 @@ func FetchInstanceConfigDetail(req *proto.FetchConfigRequest, res *proto.FetchCo
 	var err error
 	strInstanceId := string(instanceId)
 
-	agentInstanceConfigs := make([]*entity.AgentInstanceConfig, 0)
-	for _, reqConfig := range req.ReqConfigs {
-		agentInstanceConfig := entity.ParseProtoConfigInfo2AgentInstanceConfig(strInstanceId, reqConfig)
-		agentInstanceConfigs = append(agentInstanceConfigs, agentInstanceConfig)
-	}
-
-	err = manager.CreateOrUpdateAgentInstanceConfigs(agentInstanceConfigs)
+	//需要更新配置状态
+	err = manager.SaveInstanceConfigStatus(req.ReqConfigs, strInstanceId)
 	if err != nil {
 		return common.SystemError(err)
 	}
 
-	//获取对应的configDetails
-	instanceConfigUpdates, err := manager.GetInstanceConfigs(strInstanceId, true)
+	configNames := utils.Map(req.ReqConfigs, func(info *proto.ConfigInfo) string {
+		return info.Name
+	})
+	instanceConfigUpdates, err := repository.GetInstanceConfigByNames(configNames...)
 	if err != nil {
-		return common.SystemError(err)
+		return err
 	}
-	res.ConfigDetails = instanceConfigUpdates
+
+	res.ConfigDetails = utils.Map(instanceConfigUpdates, func(config *entity.InstanceConfig) *proto.ConfigDetail {
+		return config.Parse2ProtoInstanceConfigDetail(true)
+	})
 	return nil
 }
 
@@ -136,39 +137,5 @@ func ListAgentsInGroup(req *proto.ListAgentsRequest, res *proto.ListAgentsRespon
 		protoAgents = append(protoAgents, (*agent).Parse2Proto())
 	}
 	res.Agents = protoAgents
-	return nil
-}
-
-func GetPipelineConfigStatusList(req *proto.GetConfigStatusListRequest, res *proto.GetConfigStatusListResponse) error {
-	instanceId := req.InstanceId
-	if instanceId == nil {
-		return common.ValidateErrorWithMsg("required fields instanceId could not be null")
-	}
-	configs, err := repository.GetPipelineConfigStatusList(string(instanceId))
-	if err != nil {
-		return common.SystemError(err)
-	}
-	agentConfigStatusList := make([]*proto.AgentConfigStatus, 0)
-	for _, config := range configs {
-		agentConfigStatusList = append(agentConfigStatusList, config.Parse2ProtoAgentConfigStatus())
-	}
-	res.AgentConfigStatus = agentConfigStatusList
-	return nil
-}
-
-func GetInstanceConfigStatusList(req *proto.GetConfigStatusListRequest, res *proto.GetConfigStatusListResponse) error {
-	instanceId := req.InstanceId
-	if instanceId == nil {
-		return common.ValidateErrorWithMsg("required fields instanceId could not be null")
-	}
-	configs, err := repository.GetInstanceConfigStatusList(string(instanceId))
-	if err != nil {
-		return common.SystemError(err)
-	}
-	agentConfigStatusList := make([]*proto.AgentConfigStatus, 0)
-	for _, config := range configs {
-		agentConfigStatusList = append(agentConfigStatusList, config.Parse2ProtoAgentConfigStatus())
-	}
-	res.AgentConfigStatus = agentConfigStatusList
 	return nil
 }

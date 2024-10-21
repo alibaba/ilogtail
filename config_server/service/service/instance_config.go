@@ -32,6 +32,7 @@ func UpdateInstanceConfig(req *proto.UpdateConfigRequest, res *proto.UpdateConfi
 	if configDetail.Version == 0 {
 		return common.ValidateErrorWithMsg("required field version could not be null")
 	}
+	configDetail.Version += 1
 	instanceConfig := entity.ParseProtoInstanceConfig2InstanceConfig(configDetail)
 	err := repository.UpdateInstanceConfig(instanceConfig)
 	return common.SystemError(err)
@@ -89,18 +90,6 @@ func ApplyInstanceConfigToAgentGroup(req *proto.ApplyConfigToAgentGroupRequest, 
 	if err != nil {
 		return common.SystemError(err)
 	}
-
-	agents, err := repository.ListAgentsByGroupName(groupName)
-	if err != nil {
-		return common.SystemError(err)
-	}
-
-	for _, agent := range agents {
-		err := repository.CreateInstanceConfigForAgent(agent.InstanceId, configName)
-		if err != nil {
-			return err
-		}
-	}
 	return nil
 }
 
@@ -115,18 +104,7 @@ func RemoveInstanceConfigFromAgentGroup(req *proto.RemoveConfigFromAgentGroupReq
 	if err != nil {
 		return common.SystemError(err)
 	}
-
-	agents, err := repository.ListAgentsByGroupName(groupName)
-	if err != nil {
-		return common.SystemError(err)
-	}
-
-	agentInstanceIds := make([]string, 0)
-	for _, agent := range agents {
-		agentInstanceIds = append(agentInstanceIds, agent.InstanceId)
-	}
-
-	return repository.DeleteInstanceConfigForAgentInGroup(agentInstanceIds, configName)
+	return nil
 }
 
 func GetAppliedInstanceConfigsForAgentGroup(req *proto.GetAppliedConfigsForAgentGroupRequest, res *proto.GetAppliedConfigsForAgentGroupResponse) error {

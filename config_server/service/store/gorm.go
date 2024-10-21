@@ -20,8 +20,6 @@ var tableList = []any{
 	&entity.PipelineConfig{},
 	&entity.AgentGroup{},
 	&entity.Agent{},
-	&entity.AgentPipelineConfig{},
-	&entity.AgentInstanceConfig{},
 }
 
 var tableNameList = []string{
@@ -35,8 +33,6 @@ var tableNameList = []string{
 
 	entity.InstanceConfig{}.TableName(),
 	entity.PipelineConfig{}.TableName(),
-	entity.AgentPipelineConfig{}.TableName(),
-	entity.AgentInstanceConfig{}.TableName(),
 }
 
 func (s *GormStore) Connect2Db() error {

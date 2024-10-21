@@ -18,6 +18,7 @@ WORKDIR /backend
 COPY --from=build /backend/cmd /backend/cmd
 COPY --from=build /backend/ConfigServer /backend/ConfigServer
 ENV GIN_MODE=release
+ENV GO_ENV=prod
 
 CMD sh -c "./ConfigServer"
 
