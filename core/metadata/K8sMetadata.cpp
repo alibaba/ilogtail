@@ -105,7 +105,7 @@ namespace logtail {
         if (success) {
             if (res.mStatusCode != 200) {
                 LOG_DEBUG(sLogger, ("fetch k8s meta from one operator fail, code is ", res.mStatusCode));
-                return res.mStatusCode;
+                return false;
             }
             Json::CharReaderBuilder readerBuilder;
             Json::CharReader* reader = readerBuilder.newCharReader();
@@ -121,14 +121,16 @@ namespace logtail {
             } else {
                 LOG_DEBUG(sLogger, ("JSON parse error:", errors));
                 delete reader;
-                return 200;
+                return false;
             }
 
             delete reader;
+            return true;
         } else {
             LOG_DEBUG(sLogger, ("fetch k8s meta from one operator fail", urlHost));
+            return false;
         }
-        return 200;
+        
     }
 
     bool K8sMetadata::GetByContainerIdsFromServer(std::vector<std::string> containerIds) {

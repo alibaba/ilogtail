@@ -53,9 +53,7 @@ void LabelingK8sMetadata::AddLabelToLogGroup(PipelineEventGroup& logGroup) {
     for (size_t i = 0; i < cotainerNotTag.size(); ++i) {
         ProcessEvent(events[i], containerVec, remoteIpVec);
     }
-    cotainerNotTag.clear();
-    containerVec.clear();
-    remoteIpVec.clear();
+    return;
 }
 
 bool LabelingK8sMetadata::ProcessEvent(PipelineEventPtr& e, std::vector<std::string>& containerVec, std::vector<std::string>& remoteIpVec) {
