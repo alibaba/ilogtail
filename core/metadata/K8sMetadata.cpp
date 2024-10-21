@@ -93,7 +93,7 @@ namespace logtail {
         return true;
     }
 
-    int K8sMetadata::SendRequestToOperator(const std::string& urlHost, const std::string& output, containerInfoType infoType) {    
+    bool K8sMetadata::SendRequestToOperator(const std::string& urlHost, const std::string& output, containerInfoType infoType) {    
         std::unique_ptr<HttpRequest> request;
         HttpResponse res;
         std::string path = "/metadata/containerid";
@@ -131,14 +131,14 @@ namespace logtail {
         return 200;
     }
 
-    void K8sMetadata::GetByContainerIdsFromServer(std::vector<std::string> containerIds) {
+    bool K8sMetadata::GetByContainerIdsFromServer(std::vector<std::string> containerIds) {
         Json::Value jsonObj;
         for (auto& str : containerIds) {
             jsonObj["keys"].append(str);
         }
         Json::StreamWriterBuilder writer;
         std::string output = Json::writeString(writer, jsonObj);
-        SendRequestToOperator(mServiceHost, output, containerInfoType::ContainerIdInfo);
+        return SendRequestToOperator(mServiceHost, output, containerInfoType::ContainerIdInfo);
     }
 
     void K8sMetadata::GetByLocalHostFromServer() {
@@ -184,7 +184,7 @@ namespace logtail {
         }
     }
 
-    void K8sMetadata::GetByIpsFromServer(std::vector<std::string> ips) {
+    bool K8sMetadata::GetByIpsFromServer(std::vector<std::string> ips) {
         Json::Value jsonObj;
         for (auto& str : ips) {
             jsonObj["keys"].append(str);
@@ -192,7 +192,7 @@ namespace logtail {
         Json::StreamWriterBuilder writer;
         std::string output = Json::writeString(writer, jsonObj);
         std::string urlHost = mServiceHost;
-        SendRequestToOperator(urlHost, output, containerInfoType::IpInfo);
+        return SendRequestToOperator(urlHost, output, containerInfoType::IpInfo);
     }
 
     std::shared_ptr<k8sContainerInfo> K8sMetadata::GetInfoByContainerIdFromCache(const std::string& containerId) {

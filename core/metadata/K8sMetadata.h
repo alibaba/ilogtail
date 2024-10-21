@@ -79,14 +79,14 @@ namespace logtail {
             }
             // 公共方法
             //if cache not have,get from server
-            void GetByContainerIdsFromServer(std::vector<std::string> containerIds);
+            bool GetByContainerIdsFromServer(std::vector<std::string> containerIds);
             void GetByLocalHostFromServer();
-            void GetByIpsFromServer(std::vector<std::string> ips);
+            bool GetByIpsFromServer(std::vector<std::string> ips);
             // get info by container id from cache
             std::shared_ptr<k8sContainerInfo> GetInfoByContainerIdFromCache(const std::string& containerId);
             // get info by ip from cache
             std::shared_ptr<k8sContainerInfo> GetInfoByIpFromCache(const std::string& ip);
-            int SendRequestToOperator(const std::string& urlHost, const std::string& output, containerInfoType infoType);
+            bool SendRequestToOperator(const std::string& urlHost, const std::string& output, containerInfoType infoType);
     
     #ifdef APSARA_UNIT_TEST_MAIN
         friend class k8sMetadataUnittest;
