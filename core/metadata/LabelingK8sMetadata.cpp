@@ -93,7 +93,6 @@ bool LabelingK8sMetadata::AddLabels(Event& e, std::vector<std::string>& containe
             e.SetTag(pidKey, containerInfo->appId);
         }
     }
-
     StringView ipView(remoteIpKey);
     StringView remoteIpView = e.HasTag(ipView) ? e.GetTag(ipView) : StringView{};
     if (!remoteIpView.empty()) {
