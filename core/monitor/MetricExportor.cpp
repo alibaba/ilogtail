@@ -49,6 +49,8 @@ MetricExportor::MetricExportor() : mSendInterval(60), mLastSendTime(time(NULL) -
 }
 
 void MetricExportor::PushMetrics(bool forceSend) {
+    if ("" == STRING_FLAG(metrics_report_method)) return;
+
     int32_t curTime = time(NULL);
     if (!forceSend && (curTime - mLastSendTime < mSendInterval)) {
         return;
@@ -195,15 +197,15 @@ void MetricExportor::SerializeGoDirectMetricsListToLogGroupMap(
         std::string configName = "";
         std::string region = METRIC_REGION_DEFAULT;
         {
-            // get the config_name label
+            // get the pipeline_name label
             for (const auto& metric : metrics) {
-                if (metric.first == "label.config_name") {
+                if (metric.first == LABEL_PREFIX + METRIC_LABEL_KEY_PIPELINE_NAME) {
                     configName = metric.second;
                     break;
                 }
             }
             if (!configName.empty()) {
-                // get region info by config_name
+                // get region info by pipeline_name
                 shared_ptr<Pipeline> p = PipelineManager::GetInstance()->FindConfigByName(configName);
                 if (p) {
                     FlusherSLS* pConfig = NULL;

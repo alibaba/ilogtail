@@ -95,6 +95,17 @@ MetricsRecord* MetricsRecord::Collect() {
     return metrics;
 }
 
+bool MetricsRecord::ShouldSkip() {
+    if (shouldSkipFunc) {
+        return shouldSkipFunc(*this);
+    }
+    return false;
+}
+
+void MetricsRecord::SetShouldSkipFunc(std::function<bool(const MetricsRecord&)> func) {
+    shouldSkipFunc = func;
+}
+
 MetricsRecord* MetricsRecord::GetNext() const {
     return mNext;
 }
@@ -133,6 +144,10 @@ DoubleGaugePtr MetricsRecordRef::CreateDoubleGauge(const std::string& name) {
     return mMetrics->CreateDoubleGauge(name);
 }
 
+void MetricsRecordRef::SetShouldSkipFunc(std::function<bool(const MetricsRecord&)> func) {
+    mMetrics->SetShouldSkipFunc(func);
+}
+
 const MetricsRecord* MetricsRecordRef::operator->() const {
     return mMetrics;
 }
@@ -153,8 +168,11 @@ bool MetricsRecordRef::HasLabel(const std::string& key, const std::string& value
 #endif
 
 // ReentrantMetricsRecord相关操作可以无锁，因为mCounters、mGauges只在初始化时会添加内容，后续只允许Get操作
-void ReentrantMetricsRecord::Init(MetricLabels& labels, std::unordered_map<std::string, MetricType>& metricKeys) {
+void ReentrantMetricsRecord::Init(MetricLabels& labels,
+                                  std::unordered_map<std::string, MetricType>& metricKeys,
+                                  std::function<bool(const MetricsRecord&)> skipFunc) {
     WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, std::move(labels));
+    mMetricsRecordRef.SetShouldSkipFunc(skipFunc);
     for (auto metric : metricKeys) {
         switch (metric.second) {
             case MetricType::METRIC_TYPE_COUNTER:
@@ -334,6 +352,11 @@ void ReadMetrics::ReadAsLogGroup(const std::string& regionFieldName,
     ReadLock lock(mReadWriteLock);
     MetricsRecord* tmp = mHead;
     while (tmp) {
+        if (tmp->ShouldSkip()) {
+            tmp = tmp->GetNext();
+            continue;
+        }
+
         Log* logPtr = nullptr;
 
         for (auto item = tmp->GetLabels()->begin(); item != tmp->GetLabels()->end(); ++item) {

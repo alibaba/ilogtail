@@ -229,7 +229,17 @@ ReentrantMetricsRecordRef FileServer::GetOrCreateReentrantMetricsRecordRef(const
                                                                            MetricLabels& labels) {
     PluginMetricManagerPtr filePluginMetricManager = GetPluginMetricManager(name);
     if (filePluginMetricManager != nullptr) {
-        return filePluginMetricManager->GetOrCreateReentrantMetricsRecordRef(labels);
+        return filePluginMetricManager->GetOrCreateReentrantMetricsRecordRef(labels, [](const MetricsRecord& m) -> bool {
+            std::vector<logtail::CounterPtr> mCounters = m.GetCounters();
+            for (auto counter: mCounters) {
+                if (counter->GetName() == METRIC_PLUGIN_OUT_EVENT_GROUPS_TOTAL) {
+                    if (counter->GetValue() == 0) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        });
     }
     return nullptr;
 }

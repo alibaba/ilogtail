@@ -26,7 +26,7 @@ public:
     PluginMetricManager(const MetricLabelsPtr defaultLabels, std::unordered_map<std::string, MetricType> metricKeys)
         : mDefaultLabels(defaultLabels->begin(), defaultLabels->end()), mMetricKeys(metricKeys) {}
 
-    ReentrantMetricsRecordRef GetOrCreateReentrantMetricsRecordRef(MetricLabels labels);
+    ReentrantMetricsRecordRef GetOrCreateReentrantMetricsRecordRef(MetricLabels labels, std::function<bool(const MetricsRecord&)> skipFunc = nullptr);
     void ReleaseReentrantMetricsRecordRef(MetricLabels labels);
 
     void RegisterSizeGauge(IntGaugePtr ptr) { mSizeGauge = ptr; }

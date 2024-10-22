@@ -17,6 +17,7 @@
 #pragma once
 
 #include <atomic>
+#include <functional>
 #include <mutex>
 #include <string>
 #include <unordered_map>
@@ -28,6 +29,9 @@
 
 namespace logtail {
 
+extern const std::string LABEL_PREFIX;
+extern const std::string VALUE_PREFIX;
+
 class MetricsRecord {
 private:
     MetricLabelsPtr mLabels;
@@ -37,6 +41,7 @@ private:
     std::vector<IntGaugePtr> mIntGauges;
     std::vector<DoubleGaugePtr> mDoubleGauges;
     MetricsRecord* mNext = nullptr;
+    std::function<bool(const MetricsRecord&)> shouldSkipFunc;
 
 public:
     MetricsRecord(MetricLabelsPtr labels, DynamicMetricLabelsPtr dynamicLabels = nullptr);
@@ -52,6 +57,8 @@ public:
     IntGaugePtr CreateIntGauge(const std::string& name);
     DoubleGaugePtr CreateDoubleGauge(const std::string& name);
     MetricsRecord* Collect();
+    bool ShouldSkip();
+    void SetShouldSkipFunc(std::function<bool(const MetricsRecord&)> func);
     void SetNext(MetricsRecord* next);
     MetricsRecord* GetNext() const;
 };
@@ -77,6 +84,7 @@ public:
     CounterPtr CreateCounter(const std::string& name);
     IntGaugePtr CreateIntGauge(const std::string& name);
     DoubleGaugePtr CreateDoubleGauge(const std::string& name);
+    void SetShouldSkipFunc(std::function<bool(const MetricsRecord&)> func);
     const MetricsRecord* operator->() const;
     // this is not thread-safe, and should be only used before WriteMetrics::CommitMetricsRecordRef
     void AddLabels(MetricLabels&& labels);
@@ -109,7 +117,9 @@ private:
     std::unordered_map<std::string, DoubleGaugePtr> mDoubleGauges;
 
 public:
-    void Init(MetricLabels& labels, std::unordered_map<std::string, MetricType>& metricKeys);
+    void Init(MetricLabels& labels,
+              std::unordered_map<std::string, MetricType>& metricKeys,
+              std::function<bool(const MetricsRecord&)> skipFunc = nullptr);
     const MetricLabelsPtr& GetLabels() const;
     const DynamicMetricLabelsPtr& GetDynamicLabels() const;
     CounterPtr GetCounter(const std::string& name);
