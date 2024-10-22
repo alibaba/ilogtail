@@ -194,7 +194,9 @@ void PrometheusInputRunner::Stop() {
 
     mIsStarted = false;
     mIsThreadRunning.store(false);
-    mThreadRes.wait_for(chrono::seconds(1));
+    if (mThreadRes.valid()) {
+        mThreadRes.wait_for(chrono::seconds(1));
+    }
 
 #ifndef APSARA_UNIT_TEST_MAIN
     mTimer->Stop();
