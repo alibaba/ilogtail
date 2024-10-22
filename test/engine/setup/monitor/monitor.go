@@ -24,6 +24,7 @@ const (
 const (
 	exitCodeSuccess = iota
 	exitCodeErrorNotProcessing
+	exitCodeErrorGetContainerInfo
 )
 
 var monitor Monitor
@@ -45,6 +46,8 @@ func WaitMonitorUntilProcessingFinished(ctx context.Context) (context.Context, e
 		return ctx, nil
 	case exitCodeErrorNotProcessing:
 		return ctx, fmt.Errorf("monitoring error: CPU usage is too low, not processing")
+	case exitCodeErrorGetContainerInfo:
+		return ctx, fmt.Errorf("monitoring error: failed to get container info, maybe container crashed")
 	default:
 		return ctx, fmt.Errorf("monitoring error: unknown error")
 	}
@@ -107,14 +110,18 @@ func (m *Monitor) monitoring(client *client.Client, containerName string) {
 			fmt.Println("3/4 of CPU usage rate(%):", cpuRawData[3*len(cpuRawData)/4])
 			fmt.Println("Low threshold of CPU usage rate(%):", lowThreshold)
 			if lowThreshold < 0 {
+				m.isMonitoring.Store(false)
 				m.stopCh <- exitCodeErrorNotProcessing
+				m.statistic.ClearStatistic()
 				return
 			}
 		case <-ticker.C:
 			// 获取容器信息
 			containerInfo, err := client.DockerContainer(containerName, request)
 			if err != nil {
-				fmt.Println("Error getting container info:", err)
+				m.isMonitoring.Store(false)
+				m.stopCh <- exitCodeErrorGetContainerInfo
+				m.statistic.ClearStatistic()
 				return
 			}
 			for _, stat := range containerInfo.Stats {
