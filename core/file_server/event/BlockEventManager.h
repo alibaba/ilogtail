@@ -64,10 +64,10 @@ private:
     BlockedEventManager() = default;
     ~BlockedEventManager();
 
-    std::mutex mEventMapLock; // currently not needed
+    std::mutex mEventMapMux; // currently not needed
     std::unordered_map<int64_t, BlockedEvent> mEventMap;
 
-    std::mutex mFeedbackQueueLock;
+    std::mutex mFeedbackQueueMux;
     std::vector<int64_t> mFeedbackQueue;
 
 #ifdef APSARA_UNIT_TEST_MAIN

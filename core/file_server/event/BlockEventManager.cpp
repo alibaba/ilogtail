@@ -69,7 +69,7 @@ BlockedEventManager::~BlockedEventManager() {
 }
 
 void BlockedEventManager::Feedback(int64_t key) {
-    lock_guard<mutex> lock(mFeedbackQueueLock);
+    lock_guard<mutex> lock(mFeedbackQueueMux);
     mFeedbackQueue.emplace_back(key);
 }
 
@@ -99,12 +99,12 @@ void BlockedEventManager::UpdateBlockEvent(
     LOG_DEBUG(sLogger,
               ("Add block event ", pEvent->GetSource())(pEvent->GetObject(),
                                                         pEvent->GetInode())(pEvent->GetConfigName(), hashKey));
-    lock_guard<mutex> lock(mEventMapLock);
+    lock_guard<mutex> lock(mEventMapMux);
     mEventMap[hashKey].Update(logstoreKey, pEvent, curTime);
 }
 
 void BlockedEventManager::GetTimeoutEvent(vector<Event*>& res, int32_t curTime) {
-    lock_guard<mutex> lock(mEventMapLock);
+    lock_guard<mutex> lock(mEventMapMux);
     for (auto iter = mEventMap.begin(); iter != mEventMap.end();) {
         auto& e = iter->second;
         if (e.mEvent != nullptr && e.mInvalidTime + e.mTimeout <= curTime) {
@@ -123,11 +123,11 @@ void BlockedEventManager::GetTimeoutEvent(vector<Event*>& res, int32_t curTime) 
 void BlockedEventManager::GetFeedbackEvent(vector<Event*>& res) {
     vector<int64_t> keys;
     {
-        lock_guard<mutex> lock(mFeedbackQueueLock);
+        lock_guard<mutex> lock(mFeedbackQueueMux);
         keys.swap(mFeedbackQueue);
     }
     {
-        lock_guard<mutex> lock(mEventMapLock);
+        lock_guard<mutex> lock(mEventMapMux);
         for (auto& key : keys) {
             for (auto iter = mEventMap.begin(); iter != mEventMap.end();) {
                 auto& e = iter->second;
