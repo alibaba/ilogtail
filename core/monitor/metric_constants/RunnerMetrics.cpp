@@ -20,6 +20,7 @@ namespace logtail {
 
 // label keys
 const string METRIC_LABEL_KEY_RUNNER_NAME = "runner_name";
+const string METRIC_LABEL_KEY_THREAD_NO = "thread_no";
 
 // label values
 const string METRIC_LABEL_VALUE_RUNNER_NAME_FILE_SERVER = "file_server";
