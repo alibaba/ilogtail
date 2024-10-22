@@ -68,12 +68,12 @@ vector<pair<size_t, PipelineEventGroup>> Router::Route(PipelineEventGroup& g) co
     }
     for (size_t i = 0; i < dest.size(); ++i, --resSz) {
         if (resSz == 1) {
+            mConditions[dest[i]].second.GetResult(g);
+            res.emplace_back(dest[i], std::move(g));
+        } else {
             auto copy = g.Copy();
             mConditions[dest[i]].second.GetResult(copy);
             res.emplace_back(dest[i], std::move(copy));
-        } else {
-            mConditions[dest[i]].second.GetResult(g);
-            res.emplace_back(dest[i], std::move(g));
         }
     }
     return res;
