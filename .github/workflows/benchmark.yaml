@@ -26,15 +26,12 @@ on:
       - 'changes/**'
       - 'licenses/**'
       - 'CHANGELOG.md'
-    # types:
-    #   - closed
-  push:
-    branched:
-      - benchmark
+    types:
+      - closed
 
 jobs:
   CI:
-    # if: github.event.pull_request.merged == true
+    if: github.event.pull_request.merged == true
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
     strategy:
@@ -105,12 +102,12 @@ jobs:
           last_commit_message=$(git log -1 --pretty=%B)
           git -c user.name=github-action-benchmark -c user.email=github@users.noreply.github.com commit --amend -m "$last_commit_message"
       
-      # Push gh-pages branch by yourself
-      - name: Push benchmark result
-        run: git push 'https://Assassin718:${{ secrets.GITHUB_TOKEN }}@github.com/Assassin718/ilogtail.git' gh-pages:gh-pages
+      # TODO: Push gh-pages branch by yourself
+      # - name: Push benchmark result
+      #   run: git push 'https://alibaba:${{ secrets.GITHUB_TOKEN }}@github.com/alibaba/ilogtail.git' gh-pages:gh-pages
 
   result:
-    # if: github.event.pull_request.merged == true
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     timeout-minutes: 60
     needs: [ CI ]
