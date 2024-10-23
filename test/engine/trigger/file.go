@@ -90,16 +90,25 @@ var statusCodes = []string{
 	"200",
 }
 
+const bytesMean = 5500.0
+const bytesStddev = 1500.0
+
 func genNginxLog() string {
-	nginxLogTemplate := `%s - - [%s] "DELETE http://www.districtdot-com.biz/syndicate HTTP/1.1" %s 3715 "http://www.chiefscalable.biz/webservices" "%s"`
+	nginxLogTemplate := `%s - - [%s] "GET http://www.districtdot-com.biz/syndicate HTTP/1.1" %s %d "http://www.chiefscalable.biz/webservices" "%s"`
 	currentTime := time.Now().Format("02/Jan/2006:15:04:05 +0800")
 	ipAddress := ipAddresses[rand.Intn(len(ipAddresses))] // #nosec G404
 	statusIdx := rand.Intn(len(statusCodes) * 10)         // #nosec G404
 	if statusIdx >= len(statusCodes) {
 		statusIdx = len(statusCodes) - 1
 	}
+	bytesSize := int32(rand.NormFloat64()*bytesStddev + bytesMean)
+	if bytesSize < 1000 {
+		bytesSize = 0
+	} else if bytesSize > 10000 {
+		bytesSize = 10000
+	}
 	statusCode := statusCodes[statusIdx]
 	userAgent := userAgents[rand.Intn(len(userAgents))] // #nosec G404
 
-	return fmt.Sprintf(nginxLogTemplate, ipAddress, currentTime, statusCode, userAgent)
+	return fmt.Sprintf(nginxLogTemplate, ipAddress, currentTime, statusCode, bytesSize, userAgent)
 }
