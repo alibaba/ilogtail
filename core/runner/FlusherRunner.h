@@ -47,12 +47,17 @@ public:
 
     int32_t GetSendingBufferCount() { return mHttpSendingCnt; }
 
+    bool LoadModuleConfig(bool isInit);
+
 private:
     FlusherRunner() = default;
     ~FlusherRunner() = default;
 
     void Run();
     void Dispatch(SenderQueueItem* item);
+    void UpdateSendFlowControl();
+
+    std::function<bool()> mCallback;
 
     std::future<void> mThreadRes;
     std::atomic_bool mIsFlush = false;
@@ -64,18 +69,22 @@ private:
     int64_t mSendLastTime = 0;
     int32_t mSendLastByte = 0;
 
+    bool mSendRandomSleep;
+    bool mSendFlowControl;
+
     mutable MetricsRecordRef mMetricsRecordRef;
     CounterPtr mInItemsTotal;
     CounterPtr mInItemDataSizeBytes;
     CounterPtr mInItemRawDataSizeBytes;
     CounterPtr mOutItemsTotal;
-    CounterPtr mTotalDelayMs;
+    TimeCounterPtr mTotalDelayMs;
     IntGaugePtr mWaitingItemsTotal;
     IntGaugePtr mLastRunTime;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class PluginRegistryUnittest;
     friend class FlusherRunnerUnittest;
+    friend class InstanceConfigManagerUnittest;
 #endif
 };
 

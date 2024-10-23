@@ -53,6 +53,7 @@ PrometheusInputRunner::PrometheusInputRunner()
 
     // self monitor
     MetricLabels labels;
+    labels.emplace_back(METRIC_LABEL_KEY_METRIC_CATEGORY, METRIC_LABEL_KEY_METRIC_CATEGORY_RUNNER);
     labels.emplace_back(METRIC_LABEL_KEY_RUNNER_NAME, METRIC_LABEL_VALUE_RUNNER_NAME_PROMETHEUS);
     labels.emplace_back(METRIC_LABEL_KEY_INSTANCE_ID, Application::GetInstance()->GetInstanceId());
     labels.emplace_back(METRIC_LABEL_KEY_POD_NAME, mPodName);
@@ -66,7 +67,7 @@ PrometheusInputRunner::PrometheusInputRunner()
         mMetricsRecordRef, std::move(labels), std::move(dynamicLabels));
 
     mPromRegisterState = mMetricsRecordRef.CreateIntGauge(METRIC_RUNNER_CLIENT_REGISTER_STATE);
-    mPromJobNum = mMetricsRecordRef.CreateIntGauge(METRIC_RUNNER_JOB_NUM);
+    mPromJobNum = mMetricsRecordRef.CreateIntGauge(METRIC_RUNNER_JOBS_TOTAL);
     mPromRegisterRetryTotal = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_CLIENT_REGISTER_RETRY_TOTAL);
 }
 
@@ -141,7 +142,7 @@ void PrometheusInputRunner::Init() {
     // only register when operator exist
     if (!mServiceHost.empty()) {
         mIsThreadRunning.store(true);
-        auto res = std::async(launch::async, [this]() {
+        mThreadRes = std::async(launch::async, [this]() {
             std::lock_guard<mutex> lock(mRegisterMutex);
             int retry = 0;
             while (mIsThreadRunning.load()) {
@@ -194,6 +195,9 @@ void PrometheusInputRunner::Stop() {
 
     mIsStarted = false;
     mIsThreadRunning.store(false);
+    if (mThreadRes.valid()) {
+        mThreadRes.wait_for(chrono::seconds(1));
+    }
 
 #ifndef APSARA_UNIT_TEST_MAIN
     mTimer->Stop();

@@ -27,6 +27,7 @@ namespace logtail {
 
 bool AsynCurlRunner::Init() {
     mClient = curl_multi_init();
+    mIsFlush = false;
     if (mClient == nullptr) {
         LOG_ERROR(sLogger, ("failed to init async curl runner", "failed to init curl client"));
         return false;
@@ -122,7 +123,7 @@ void AsynCurlRunner::DoRun() {
             this_thread::sleep_for(chrono::milliseconds(100));
             continue;
         }
-        HandleCompletedRequests();
+        HandleCompletedRequests(runningHandlers);
 
         unique_ptr<AsynHttpRequest> request;
         if (mQueue.TryPop(request)) {
@@ -172,7 +173,7 @@ void AsynCurlRunner::DoRun() {
     }
 }
 
-void AsynCurlRunner::HandleCompletedRequests() {
+void AsynCurlRunner::HandleCompletedRequests(int& runningHandlers) {
     int msgsLeft = 0;
     CURLMsg* msg = curl_multi_info_read(mClient, &msgsLeft);
     while (msg) {
@@ -205,6 +206,7 @@ void AsynCurlRunner::HandleCompletedRequests() {
                             request->mPrivateData = nullptr;
                         }
                         AddRequestToClient(unique_ptr<AsynHttpRequest>(request));
+                        ++runningHandlers;
                         requestReused = true;
                     } else {
                         request->OnSendDone(request->mResponse);

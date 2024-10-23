@@ -120,8 +120,9 @@ function generateCopyScript() {
       echo 'rm -rf core/protobuf/models && docker cp "$id":'${PATH_IN_DOCKER}'/core/protobuf/models core/protobuf/models' >>$COPY_SCRIPT_FILE
     fi
   fi
-  echo 'echo -e "{\n}" > $BINDIR/loongcollector_config.json' >>$COPY_SCRIPT_FILE
-  echo 'mkdir -p $BINDIR/config/local' >>$COPY_SCRIPT_FILE
+  echo 'mkdir -p $BINDIR/conf/instance_config/local/' >>$COPY_SCRIPT_FILE
+  echo 'echo -e "{\n}" > $BINDIR/conf/instance_config/local/loongcollector_config.json' >>$COPY_SCRIPT_FILE
+  echo 'mkdir -p $BINDIR/conf/pipeline_config/local' >>$COPY_SCRIPT_FILE
   echo 'docker rm -v "$id"' >>$COPY_SCRIPT_FILE
 }
 
