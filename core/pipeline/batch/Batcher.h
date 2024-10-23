@@ -158,7 +158,8 @@ public:
                 }
             }
             if (item.IsEmpty()) {
-                item.Reset(g.GetSizedTags(),
+                item.Reset(g.GetAllMetadata(),
+                           g.GetSizedTags(),
                            g.GetSourceBuffer(),
                            g.GetExactlyOnceCheckpoint(),
                            g.GetMetadata(EventGroupMetaKey::SOURCE_ID));

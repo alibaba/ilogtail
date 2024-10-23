@@ -14,7 +14,6 @@
 
 #include "pipeline/serializer/SLSSerializer.h"
 
-#include "application/Application.h"
 #include "common/Flags.h"
 #include "common/TimeUtil.h"
 #include "common/compression/CompressType.h"
@@ -123,18 +122,23 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, stri
             return false;
         }
     }
+    auto topicIt = group.mMetadata.find(EventGroupMetaKey::TOPIC);
+    if (topicIt != group.mMetadata.end()) {
+        logGroup.set_topic(topicIt->second.to_string());
+    }
+    auto machineUUIDIt = group.mMetadata.find(EventGroupMetaKey::MACHINE_UUID);
+    if (machineUUIDIt != group.mMetadata.end()) {
+        logGroup.set_machineuuid(machineUUIDIt->second.to_string());
+    }
+    auto sourceIt = group.mMetadata.find(EventGroupMetaKey::SOURCE);
+    if (sourceIt != group.mMetadata.end()) {
+        logGroup.set_source(sourceIt->second.to_string());
+    }
+
     for (const auto& tag : group.mTags.mInner) {
-        if (tag.first == LOG_RESERVED_KEY_TOPIC) {
-            logGroup.set_topic(tag.second.to_string());
-        } else if (tag.first == LOG_RESERVED_KEY_SOURCE) {
-            logGroup.set_source(tag.second.to_string());
-        } else if (tag.first == LOG_RESERVED_KEY_MACHINE_UUID) {
-            logGroup.set_machineuuid(tag.second.to_string());
-        } else {
-            auto logTag = logGroup.add_logtags();
-            logTag->set_key(tag.first.to_string());
-            logTag->set_value(tag.second.to_string());
-        }
+        auto logTag = logGroup.add_logtags();
+        logTag->set_key(tag.first.to_string());
+        logTag->set_value(tag.second.to_string());
     }
     // loggroup.category is deprecated, no need to set
     size_t size = logGroup.ByteSizeLong();

@@ -115,6 +115,11 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
         }
     }
 
+    // Tag
+    if (!mFileTag.Init(config, *mContext, sName, mEnableContainerDiscovery)) {
+        return false;
+    }
+
     // MaxCheckpointDirSearchDepth
     if (!GetOptionalUIntParam(config, "MaxCheckpointDirSearchDepth", mMaxCheckpointDirSearchDepth, errorMsg)) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(),
@@ -181,6 +186,7 @@ bool InputFile::Start() {
     FileServer::GetInstance()->AddFileDiscoveryConfig(mContext->GetConfigName(), &mFileDiscovery, mContext);
     FileServer::GetInstance()->AddFileReaderConfig(mContext->GetConfigName(), &mFileReader, mContext);
     FileServer::GetInstance()->AddMultilineConfig(mContext->GetConfigName(), &mMultiline, mContext);
+    FileServer::GetInstance()->AddFileTagConfig(mContext->GetConfigName(), &mFileTag, mContext);
     FileServer::GetInstance()->AddExactlyOnceConcurrency(mContext->GetConfigName(), mExactlyOnceConcurrency);
     return true;
 }
@@ -192,6 +198,7 @@ bool InputFile::Stop(bool isPipelineRemoving) {
     FileServer::GetInstance()->RemoveFileDiscoveryConfig(mContext->GetConfigName());
     FileServer::GetInstance()->RemoveFileReaderConfig(mContext->GetConfigName());
     FileServer::GetInstance()->RemoveMultilineConfig(mContext->GetConfigName());
+    FileServer::GetInstance()->RemoveFileTagConfig(mContext->GetConfigName());
     FileServer::GetInstance()->RemoveExactlyOnceConcurrency(mContext->GetConfigName());
     FileServer::GetInstance()->RemovePluginMetricManager(mContext->GetConfigName());
     return true;
@@ -206,7 +213,6 @@ bool InputFile::CreateInnerProcessors() {
             processor = PluginRegistry::GetInstance()->CreateProcessor(
                 ProcessorSplitLogStringNative::sName, mContext->GetPipeline().GenNextPluginMeta(false));
             detail["SplitChar"] = Json::Value('\0');
-            detail["AppendingLogPositionMeta"] = Json::Value(mFileReader.mAppendingLogPositionMeta);
         } else if (mMultiline.IsMultiline()) {
             processor = PluginRegistry::GetInstance()->CreateProcessor(
                 ProcessorSplitMultilineLogStringNative::sName, mContext->GetPipeline().GenNextPluginMeta(false));
@@ -214,7 +220,6 @@ bool InputFile::CreateInnerProcessors() {
             detail["StartPattern"] = Json::Value(mMultiline.mStartPattern);
             detail["ContinuePattern"] = Json::Value(mMultiline.mContinuePattern);
             detail["EndPattern"] = Json::Value(mMultiline.mEndPattern);
-            detail["AppendingLogPositionMeta"] = Json::Value(mFileReader.mAppendingLogPositionMeta);
             detail["IgnoringUnmatchWarning"] = Json::Value(mMultiline.mIgnoringUnmatchWarning);
             if (mMultiline.mUnmatchedContentTreatment == MultilineOptions::UnmatchedContentTreatment::DISCARD) {
                 detail["UnmatchedContentTreatment"] = Json::Value("discard");
@@ -225,7 +230,6 @@ bool InputFile::CreateInnerProcessors() {
         } else {
             processor = PluginRegistry::GetInstance()->CreateProcessor(
                 ProcessorSplitLogStringNative::sName, mContext->GetPipeline().GenNextPluginMeta(false));
-            detail["AppendingLogPositionMeta"] = Json::Value(mFileReader.mAppendingLogPositionMeta);
         }
         if (!processor->Init(detail, *mContext)) {
             // should not happen

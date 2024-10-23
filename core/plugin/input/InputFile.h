@@ -20,10 +20,11 @@
 
 #include "container_manager/ContainerDiscoveryOptions.h"
 #include "file_server/FileDiscoveryOptions.h"
+#include "file_server/FileTagOptions.h"
 #include "file_server/MultilineOptions.h"
+#include "file_server/reader/FileReaderOptions.h"
 #include "monitor/PluginMetricManager.h"
 #include "pipeline/plugin/interface/Input.h"
-#include "file_server/reader/FileReaderOptions.h"
 
 namespace logtail {
 
@@ -47,6 +48,7 @@ public:
     ContainerDiscoveryOptions mContainerDiscovery;
     FileReaderOptions mFileReader;
     MultilineOptions mMultiline;
+    FileTagOptions mFileTag;
     PluginMetricManagerPtr mPluginMetricManager;
     IntGaugePtr mMonitorFileTotal;
     // others

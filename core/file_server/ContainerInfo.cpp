@@ -21,13 +21,29 @@
 
 namespace logtail {
 
-const std::unordered_set<std::string> containerNameTag = {
+// internal name, used for the communication between C++ and Go
+const std::vector<std::string> containerNameTag = {
     "_image_name_",
     "_container_name_",
     "_pod_name_",
     "_namespace_",
     "_pod_uid_",
     "_container_ip_",
+    "_k8s_image_name_",
+    "_k8s_container_name_",
+    "_k8s_container_ip_",
+};
+
+const std::vector<TagKey> containerNameTagKey = {
+    TagKey::CONTAINER_IMAGE_NAME_TAG_KEY,
+    TagKey::CONTAINER_NAME_TAG_KEY,
+    TagKey::K8S_POD_NAME_TAG_KEY,
+    TagKey::K8S_NAMESPACE_TAG_KEY,
+    TagKey::K8S_POD_UID_TAG_KEY,
+    TagKey::CONTAINER_IP_TAG_KEY,
+    TagKey::K8S_CONTAINER_IMAGE_NAME_TAG_KEY,
+    TagKey::K8S_CONTAINER_NAME_TAG_KEY,
+    TagKey::K8S_CONTAINER_IP_TAG_KEY,
 };
 
 bool ContainerInfo::ParseAllByJSONObj(const Json::Value& paramsAll,
@@ -59,7 +75,6 @@ bool ContainerInfo::ParseAllByJSONObj(const Json::Value& paramsAll,
 }
 
 bool ContainerInfo::ParseByJSONObj(const Json::Value& params, ContainerInfo& containerInfo, std::string& errorMsg) {
-    bool isOldCheckpoint = !params.isMember("MetaDatas");
     containerInfo.mJson = params;
     if (params.isMember("ID") && params["ID"].isString()) {
         if (params["ID"].empty()) {
@@ -98,7 +113,7 @@ bool ContainerInfo::ParseByJSONObj(const Json::Value& params, ContainerInfo& con
                 sls_logs::LogTag tag;
                 tag.set_key(metaDatas[i - 1].asString());
                 tag.set_value(metaDatas[i].asString());
-                containerInfo.mMetadatas.emplace_back(tag);
+                containerInfo.mMetadatas->emplace_back(tag);
             }
         }
     }
@@ -109,14 +124,7 @@ bool ContainerInfo::ParseByJSONObj(const Json::Value& params, ContainerInfo& con
                 sls_logs::LogTag tag;
                 tag.set_key(tags[i - 1].asString());
                 tag.set_value(tags[i].asString());
-                // 不是老版本
-                if (!isOldCheckpoint) {
-                    containerInfo.mTags.emplace_back(tag);
-                } else if (containerNameTag.find(tags[i - 1].asString()) != containerNameTag.end()) {
-                    containerInfo.mMetadatas.emplace_back(tag);
-                } else {
-                    containerInfo.mTags.emplace_back(tag);
-                }
+                containerInfo.mTags->emplace_back(tag);
             }
         }
     }
@@ -127,6 +135,15 @@ bool ContainerInfo::ParseByJSONObj(const Json::Value& params, ContainerInfo& con
                                                                                             containerInfo.mID));
     }
     return true;
+}
+
+TagKey ContainerInfo::GetFileTagKey(const std::string& key) {
+    for (size_t i = 0; i < containerNameTag.size(); ++i) {
+        if (containerNameTag[i] == key) {
+            return containerNameTagKey[i];
+        }
+    }
+    return TagKey::UNKOWN;
 }
 
 } // namespace logtail

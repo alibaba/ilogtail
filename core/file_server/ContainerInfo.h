@@ -19,11 +19,12 @@
 #include <json/json.h>
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-#include "container_manager/ConfigContainerInfoUpdateCmd.h"
+#include "common/TagConstants.h"
 #include "protobuf/sls/sls_logs.pb.h"
 
 namespace logtail {
@@ -44,12 +45,19 @@ struct ContainerInfo {
     std::string mLogPath;
     std::string mUpperDir;
     std::vector<Mount> mMounts; // mounts of this container
-    std::vector<sls_logs::LogTag> mTags; // ContainerNameTag
-    std::vector<sls_logs::LogTag> mMetadatas; // ExternalEnvTag and ExternalK8sLabelTag
+    // Tags is hold by each reader and cost memory, so use shared_ptr to share the same tags.
+    std::shared_ptr<std::vector<sls_logs::LogTag>> mTags; // ContainerNameTag, ExternalEnvTag and ExternalK8sLabelTag.
+    std::shared_ptr<std::vector<sls_logs::LogTag>> mMetadatas;
     Json::Value mJson; // this obj's json, for saving to local file
+
+    ContainerInfo() {
+        mTags = std::make_shared<std::vector<sls_logs::LogTag>>();
+        mMetadatas = std::make_shared<std::vector<sls_logs::LogTag>>();
+    }
 
     static bool ParseByJSONObj(const Json::Value&, ContainerInfo&, std::string&);
     static bool ParseAllByJSONObj(const Json::Value&, std::unordered_map<std::string, ContainerInfo>&, std::string&);
+    static TagKey GetFileTagKey(const std::string& key);
 
     bool operator==(const ContainerInfo& rhs) const {
         if (mID != rhs.mID) {
@@ -74,22 +82,22 @@ struct ContainerInfo {
                 return false;
             }
         }
-        if (mMetadatas.size() != rhs.mMetadatas.size()) {
+        if (mMetadatas->size() != rhs.mMetadatas->size()) {
             return false;
         }
-        for (size_t idx = 0; idx < mMetadatas.size(); ++idx) {
-            const auto& lhsTag = mMetadatas[idx];
-            const auto& rhsTag = rhs.mMetadatas[idx];
+        for (size_t idx = 0; idx < mMetadatas->size(); ++idx) {
+            const auto& lhsTag = (*mMetadatas)[idx];
+            const auto& rhsTag = (*rhs.mMetadatas)[idx];
             if (lhsTag.key() != rhsTag.key() || lhsTag.value() != rhsTag.value()) {
                 return false;
             }
         }
-        if (mTags.size() != rhs.mTags.size()) {
+        if (mTags->size() != rhs.mTags->size()) {
             return false;
         }
-        for (size_t idx = 0; idx < mTags.size(); ++idx) {
-            const auto& lhsTag = mTags[idx];
-            const auto& rhsTag = rhs.mTags[idx];
+        for (size_t idx = 0; idx < mTags->size(); ++idx) {
+            const auto& lhsTag = (*mTags)[idx];
+            const auto& rhsTag = (*rhs.mTags)[idx];
             if (lhsTag.key() != rhsTag.key() || lhsTag.value() != rhsTag.value()) {
                 return false;
             }

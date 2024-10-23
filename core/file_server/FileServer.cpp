@@ -14,6 +14,7 @@
 
 #include "file_server/FileServer.h"
 
+#include "FileTagOptions.h"
 #include "checkpoint/CheckPointManager.h"
 #include "common/Flags.h"
 #include "common/StringTools.h"
@@ -32,8 +33,8 @@ using namespace std;
 namespace logtail {
 
 FileServer::FileServer() {
-    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef,
-                                                         {{METRIC_LABEL_KEY_RUNNER_NAME, METRIC_LABEL_VALUE_RUNNER_NAME_FILE_SERVER}});
+    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
+        mMetricsRecordRef, {{METRIC_LABEL_KEY_RUNNER_NAME, METRIC_LABEL_VALUE_RUNNER_NAME_FILE_SERVER}});
 }
 
 // 启动文件服务，包括加载配置、处理检查点、注册事件等
@@ -177,6 +178,29 @@ void FileServer::RemoveMultilineConfig(const string& name) {
     WriteLock lock(mReadWriteLock);
     mPipelineNameMultilineConfigsMap.erase(name);
 }
+
+// 获取给定名称的Tag配置
+FileTagConfig FileServer::GetFileTagConfig(const string& name) const {
+    ReadLock lock(mReadWriteLock);
+    auto itr = mPipelineNameFileTagConfigsMap.find(name);
+    if (itr != mPipelineNameFileTagConfigsMap.end()) {
+        return itr->second;
+    }
+    return make_pair(nullptr, nullptr);
+}
+
+// 添加Tag配置
+void FileServer::AddFileTagConfig(const std::string& name, const FileTagOptions* opts, const PipelineContext* ctx) {
+    WriteLock lock(mReadWriteLock);
+    mPipelineNameFileTagConfigsMap[name] = make_pair(opts, ctx);
+}
+
+// 移除给定名称的Tag配置
+void FileServer::RemoveFileTagConfig(const string& name) {
+    WriteLock lock(mReadWriteLock);
+    mPipelineNameFileTagConfigsMap.erase(name);
+}
+
 
 // 保存容器信息
 void FileServer::SaveContainerInfo(const string& pipeline, const shared_ptr<vector<ContainerInfo>>& info) {

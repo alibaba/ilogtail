@@ -27,8 +27,8 @@
 #include "common/version.h"
 #include "file_server/ConfigManager.h"
 #include "logger/Logger.h"
-#include "provider/Provider.h"
 #include "pipeline/queue/QueueKeyManager.h"
+#include "provider/Provider.h"
 
 DEFINE_FLAG_INT32(profile_data_send_interval, "interval of send LogFile/DomainSocket profile data, seconds", 600);
 
@@ -147,12 +147,12 @@ bool LogFileProfiler::GetProfileData(LogGroup& logGroup, LogStoreStatistic* stat
     contentPtr->set_key("read_avg_delay");
     contentPtr->set_value(ToString(statistic->mReadCount == 0 ? 0 : statistic->mReadDelaySum / statistic->mReadCount));
 
-    if (!statistic->mTags.empty()) {
-        const std::vector<sls_logs::LogTag>& extraTags = statistic->mTags;
-        for (size_t i = 0; i < extraTags.size(); ++i) {
+    if (statistic->mTags != nullptr && !statistic->mTags->empty()) {
+        auto extraTags = statistic->mTags;
+        for (size_t i = 0; i < extraTags->size(); ++i) {
             contentPtr = logPtr->add_contents();
-            contentPtr->set_key(extraTags[i].key());
-            contentPtr->set_value(extraTags[i].value());
+            contentPtr->set_key((*extraTags)[i].key());
+            contentPtr->set_value((*extraTags)[i].value());
         }
     }
 
@@ -277,7 +277,7 @@ void LogFileProfiler::AddProfilingData(const std::string& configName,
                                        const std::string& category,
                                        const std::string& convertedPath,
                                        const std::string& hostLogPath,
-                                       const std::vector<sls_logs::LogTag>& tags,
+                                       const std::shared_ptr<std::vector<sls_logs::LogTag>>& tags,
                                        uint64_t readBytes,
                                        uint64_t skipBytes,
                                        uint64_t splitLines,
@@ -331,7 +331,7 @@ void LogFileProfiler::AddProfilingData(const std::string& configName,
                                               category,
                                               convertedPath,
                                               hostLogPath,
-                                              empty,
+                                              make_shared<std::vector<sls_logs::LogTag>>(empty),
                                               readBytes,
                                               skipBytes,
                                               splitLines,
@@ -368,7 +368,7 @@ void LogFileProfiler::AddProfilingSkipBytes(const std::string& configName,
                                             const std::string& category,
                                             const std::string& convertedPath,
                                             const std::string& hostLogPath,
-                                            const std::vector<sls_logs::LogTag>& tags,
+                                            const std::shared_ptr<std::vector<sls_logs::LogTag>>& tags,
                                             uint64_t skipBytes) {
     if (!hostLogPath.empty()) {
         // logstore statistics
@@ -385,7 +385,12 @@ void LogFileProfiler::AddProfilingSkipBytes(const std::string& configName,
         LogStoreStatistic* statistic = NULL;
         if (hostLogPath.empty()) {
             std::vector<sls_logs::LogTag> empty;
-            statistic = new LogStoreStatistic(configName, projectName, category, convertedPath, hostLogPath, empty);
+            statistic = new LogStoreStatistic(configName,
+                                              projectName,
+                                              category,
+                                              convertedPath,
+                                              hostLogPath,
+                                              make_shared<std::vector<sls_logs::LogTag>>(empty));
         } else {
             statistic = new LogStoreStatistic(configName, projectName, category, convertedPath, hostLogPath, tags);
         }
@@ -400,7 +405,7 @@ void LogFileProfiler::AddProfilingReadBytes(const std::string& configName,
                                             const std::string& category,
                                             const std::string& convertedPath,
                                             const std::string& hostLogPath,
-                                            const std::vector<sls_logs::LogTag>& tags,
+                                            const std::shared_ptr<std::vector<sls_logs::LogTag>>& tags,
                                             uint64_t dev,
                                             uint64_t inode,
                                             uint64_t fileSize,
@@ -421,7 +426,12 @@ void LogFileProfiler::AddProfilingReadBytes(const std::string& configName,
         LogStoreStatistic* statistic = NULL;
         if (hostLogPath.empty()) {
             std::vector<sls_logs::LogTag> empty;
-            statistic = new LogStoreStatistic(configName, projectName, category, convertedPath, hostLogPath, empty);
+            statistic = new LogStoreStatistic(configName,
+                                              projectName,
+                                              category,
+                                              convertedPath,
+                                              hostLogPath,
+                                              make_shared<std::vector<sls_logs::LogTag>>(empty));
         } else {
             statistic = new LogStoreStatistic(configName, projectName, category, convertedPath, hostLogPath, tags);
         }

@@ -31,16 +31,16 @@
 #include "common/StringTools.h"
 #include "common/TimeUtil.h"
 #include "common/memory/SourceBuffer.h"
-#include "file_server/event/Event.h"
 #include "file_server/FileDiscoveryOptions.h"
 #include "file_server/FileServer.h"
 #include "file_server/MultilineOptions.h"
-#include "protobuf/sls/sls_logs.pb.h"
+#include "file_server/event/Event.h"
+#include "file_server/reader/FileReaderOptions.h"
 #include "logger/Logger.h"
 #include "models/StringView.h"
 #include "pipeline/queue/QueueKey.h"
+#include "protobuf/sls/sls_logs.pb.h"
 #include "rapidjson/allocators.h"
-#include "file_server/reader/FileReaderOptions.h"
 
 namespace logtail {
 
@@ -176,6 +176,7 @@ public:
                                               const FileReaderConfig& readerConfig,
                                               const MultilineConfig& multilineConfig,
                                               const FileDiscoveryConfig& discoveryConfig,
+                                              const FileTagConfig& tagConfig,
                                               uint32_t exactlyonceConcurrency,
                                               bool forceFromBeginning);
 
@@ -185,7 +186,8 @@ public:
                   const std::string& hostLogPathFile,
                   const DevInode& devInode,
                   const FileReaderConfig& readerConfig,
-                  const MultilineConfig& multilineConfig);
+                  const MultilineConfig& multilineConfig,
+                  const FileTagConfig& tagConfig);
 
     bool ReadLog(LogBuffer& logBuffer, const Event* event);
     time_t GetLastUpdateTime() const // actually it's the time whenever ReadLogs is called
@@ -381,10 +383,14 @@ public:
 
     void SetDockerPath(const std::string& dockerBasePath, size_t dockerReplaceSize);
 
-    const std::vector<sls_logs::LogTag>& GetExtraTags() { return mExtraTags; }
+    const std::vector<sls_logs::LogTag>& GetTopicExtraTags() const { return mTopicExtraTags; }
 
-    void AddExtraTags(const std::vector<sls_logs::LogTag>& tags) {
-        mExtraTags.insert(mExtraTags.end(), tags.begin(), tags.end());
+    void SetTopicExtraTags(const std::vector<sls_logs::LogTag>& tags) { mTopicExtraTags = tags; }
+
+    const std::shared_ptr<std::vector<sls_logs::LogTag>>& GetContainerExtraTags() { return mContainerExtraTags; }
+
+    void SetContainerExtraTags(const std::shared_ptr<std::vector<sls_logs::LogTag>> tags) {
+        mContainerExtraTags = tags;
     }
 
     QueueKey GetQueueKey() const { return mReaderConfig.second->GetProcessQueueKey(); }
@@ -515,7 +521,10 @@ protected:
     // mDockerPath is `/home/admin/access.log`
     // we should use mDockerPath to extract topic and set it to __tag__:__path__
     std::string mDockerPath;
-    std::vector<sls_logs::LogTag> mExtraTags;
+
+    // tags
+    std::vector<sls_logs::LogTag> mTopicExtraTags;
+    std::shared_ptr<std::vector<sls_logs::LogTag>> mContainerExtraTags;
     // int32_t mCloseUnusedInterval;
 
     // PreciseTimestampConfig mPreciseTimestampConfig;
@@ -525,6 +534,7 @@ protected:
 
     FileReaderConfig mReaderConfig;
     MultilineConfig mMultilineConfig;
+    FileTagConfig mTagConfig;
     // int64_t mLogGroupKey = 0;
 
     // since reader is destructed after the corresponding pipeline is removed, pipeline context used in destructor
@@ -690,6 +700,7 @@ private:
     friend class LastMatchedDockerJsonFileUnittest;
     friend class LastMatchedContainerdTextWithDockerJsonUnittest;
     friend class ForceReadUnittest;
+    friend class FileTagUnittest;
 
 protected:
     void UpdateReaderManual();

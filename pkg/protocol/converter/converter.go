@@ -26,6 +26,25 @@ import (
 )
 
 const (
+	tagHostIP                = "host.ip"
+	tagLogTopic              = "log.topic"
+	tagLogFilePath           = "log.file.path"
+	tagHostname              = "host.name"
+	tagK8sNodeIP             = "k8s.node.ip"
+	tagK8sNodeName           = "k8s.node.name"
+	tagK8sNamespace          = "k8s.namespace.name"
+	tagK8sPodName            = "k8s.pod.name"
+	tagK8sPodIP              = "k8s.pod.ip"
+	tagK8sPodUID             = "k8s.pod.uid"
+	tagContainerName         = "container.name"
+	tagContainerIP           = "container.ip"
+	tagContainerImageName    = "container.image.name"
+	tagK8sContainerName      = "k8s.container.name"
+	tagK8sContainerIP        = "k8s.container.ip"
+	tagK8sContainerImageName = "k8s.container.image.name"
+)
+
+const (
 	ProtocolCustomSingle        = "custom_single"
 	ProtocolCustomSingleFlatten = "custom_single_flatten"
 	ProtocolOtlpV1              = "otlp_v1"
@@ -47,25 +66,6 @@ const (
 	targetTagPrefix     = "tag."
 
 	targetGroupMetadataPrefix = "metadata."
-)
-
-const (
-	tagHostIP                = "host.ip"
-	tagLogTopic              = "log.topic"
-	tagLogFilePath           = "log.file.path"
-	tagHostname              = "host.name"
-	tagK8sNodeIP             = "k8s.node.ip"
-	tagK8sNodeName           = "k8s.node.name"
-	tagK8sNamespace          = "k8s.namespace.name"
-	tagK8sPodName            = "k8s.pod.name"
-	tagK8sPodIP              = "k8s.pod.ip"
-	tagK8sPodUID             = "k8s.pod.uid"
-	tagContainerName         = "container.name"
-	tagContainerIP           = "container.ip"
-	tagContainerImageName    = "container.image.name"
-	tagK8sContainerName      = "k8s.container.name"
-	tagK8sContainerIP        = "k8s.container.ip"
-	tagK8sContainerImageName = "k8s.container.image.name"
 )
 
 // todo: make multiple pools for different size levels
@@ -126,13 +126,12 @@ type Converter struct {
 	Separator            string
 	IgnoreUnExpectedData bool
 	OnlyContents         bool
-	TagKeyRenameMap      map[string]string
 	ProtocolKeyRenameMap map[string]string
 	GlobalConfig         *config.GlobalConfig
 }
 
-func NewConverterWithSep(protocol, encoding, sep string, ignoreUnExpectedData bool, tagKeyRenameMap, protocolKeyRenameMap map[string]string, globalConfig *config.GlobalConfig) (*Converter, error) {
-	converter, err := NewConverter(protocol, encoding, tagKeyRenameMap, protocolKeyRenameMap, globalConfig)
+func NewConverterWithSep(protocol, encoding, sep string, ignoreUnExpectedData bool, protocolKeyRenameMap map[string]string, globalConfig *config.GlobalConfig) (*Converter, error) {
+	converter, err := NewConverter(protocol, encoding, protocolKeyRenameMap, globalConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -141,7 +140,7 @@ func NewConverterWithSep(protocol, encoding, sep string, ignoreUnExpectedData bo
 	return converter, nil
 }
 
-func NewConverter(protocol, encoding string, tagKeyRenameMap, protocolKeyRenameMap map[string]string, globalConfig *config.GlobalConfig) (*Converter, error) {
+func NewConverter(protocol, encoding string, protocolKeyRenameMap map[string]string, globalConfig *config.GlobalConfig) (*Converter, error) {
 	enc, ok := supportedEncodingMap[protocol]
 	if !ok {
 		return nil, fmt.Errorf("unsupported protocol: %s", protocol)
@@ -152,7 +151,6 @@ func NewConverter(protocol, encoding string, tagKeyRenameMap, protocolKeyRenameM
 	return &Converter{
 		Protocol:             protocol,
 		Encoding:             encoding,
-		TagKeyRenameMap:      tagKeyRenameMap,
 		ProtocolKeyRenameMap: protocolKeyRenameMap,
 		GlobalConfig:         globalConfig,
 	}, nil
@@ -227,12 +225,13 @@ func TrimPrefix(str string) string {
 	}
 }
 
-func convertLogToMap(log *protocol.Log, logTags []*protocol.LogTag, src, topic string, tagKeyRenameMap map[string]string) (map[string]string, map[string]string) {
+func convertLogToMap(log *protocol.Log, logTags []*protocol.LogTag, src, topic string) (map[string]string, map[string]string) {
 	contents, tags := make(map[string]string), make(map[string]string)
+	// compatible with the old version tag
 	for _, logContent := range log.Contents {
 		switch logContent.Key {
 		case "__log_topic__":
-			addTagIfRequired(tags, tagKeyRenameMap, tagLogTopic, logContent.Value)
+			tags[tagLogTopic] = logContent.Value
 		case tagPrefix + "__user_defined_id__":
 			continue
 		default:
@@ -252,7 +251,7 @@ func convertLogToMap(log *protocol.Log, logTags []*protocol.LogTag, src, topic s
 				}
 			}
 			if len(tagName) != 0 {
-				addTagIfRequired(tags, tagKeyRenameMap, tagName, logContent.Value)
+				tags[tagName] = logContent.Value
 			} else {
 				contents[logContent.Key] = logContent.Value
 			}
@@ -270,18 +269,18 @@ func convertLogToMap(log *protocol.Log, logTags []*protocol.LogTag, src, topic s
 		} else if _, ok := tagConversionMap[logTag.Key]; ok {
 			tagName = tagConversionMap[logTag.Key]
 		}
-		addTagIfRequired(tags, tagKeyRenameMap, tagName, logTag.Value)
+		tags[tagName] = logTag.Value
 	}
 
-	addTagIfRequired(tags, tagKeyRenameMap, tagHostIP, src)
+	tags[tagHostIP] = src
 	if topic != "" {
-		addTagIfRequired(tags, tagKeyRenameMap, tagLogTopic, topic)
+		tags[tagLogTopic] = topic
 	}
 
 	return contents, tags
 }
 
-func findTargetValues(targetFields []string, contents, tags, tagKeyRenameMap map[string]string) (map[string]string, error) {
+func findTargetValues(targetFields []string, contents, tags map[string]string) (map[string]string, error) {
 	if len(targetFields) == 0 {
 		return nil, nil
 	}
@@ -296,20 +295,10 @@ func findTargetValues(targetFields []string, contents, tags, tagKeyRenameMap map
 		case strings.HasPrefix(field, targetTagPrefix):
 			if value, ok := tags[field[len(targetTagPrefix):]]; ok {
 				desiredValue[field] = value
-			} else if value, ok := tagKeyRenameMap[field[len(targetTagPrefix):]]; ok {
-				desiredValue[field] = tags[value]
 			}
 		default:
 			return nil, fmt.Errorf("unsupported field: %s", field)
 		}
 	}
 	return desiredValue, nil
-}
-
-func addTagIfRequired(tags, tagKeyRenameMap map[string]string, key, value string) {
-	if newKey, ok := tagKeyRenameMap[key]; ok && len(newKey) != 0 {
-		tags[newKey] = value
-	} else if !ok {
-		tags[key] = value
-	}
 }

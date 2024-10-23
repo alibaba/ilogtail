@@ -39,9 +39,12 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
-    bool JsonLogLineParser(LogEvent& sourceEvent, const StringView& logPath, PipelineEventPtr& e, bool& sourceKeyOverwritten);
+    bool JsonLogLineParser(LogEvent& sourceEvent,
+                           const StringView& logPath,
+                           PipelineEventPtr& e,
+                           bool& sourceKeyOverwritten);
     void AddLog(const StringView& key, const StringView& value, LogEvent& targetEvent, bool overwritten = true);
-    bool ProcessEvent(const StringView& logPath, PipelineEventPtr& e);
+    bool ProcessEvent(const StringView& logPath, PipelineEventPtr& e, const GroupMetadata& metadata);
     static std::string RapidjsonValueToString(const rapidjson::Value& value);
 
     int* mParseFailures = nullptr;

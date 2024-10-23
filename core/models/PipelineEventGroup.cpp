@@ -189,6 +189,7 @@ const string EVENT_GROUP_META_LOG_FILE_PATH_RESOLVED = "log.file.path_resolved";
 const string EVENT_GROUP_META_LOG_FILE_INODE = "log.file.inode";
 const string EVENT_GROUP_META_CONTAINER_TYPE = "container.type";
 const string EVENT_GROUP_META_HAS_PART_LOG = "has.part.log";
+const string EVENT_GROUP_META_LOG_FILE_OFFSET = "log.file.offset";
 
 const string EVENT_GROUP_META_K8S_CLUSTER_ID = "k8s.cluster.id";
 const string EVENT_GROUP_META_K8S_NODE_NAME = "k8s.node.name";
@@ -219,6 +220,8 @@ const string& EventGroupMetaKeyToString(EventGroupMetaKey key) {
             return EVENT_GROUP_META_CONTAINER_TYPE;
         case EventGroupMetaKey::HAS_PART_LOG:
             return EVENT_GROUP_META_HAS_PART_LOG;
+        case EventGroupMetaKey::LOG_FILE_OFFSET_KEY:
+            return EVENT_GROUP_META_LOG_FILE_OFFSET;
         default:
             static string sEmpty = "unknown";
             return sEmpty;

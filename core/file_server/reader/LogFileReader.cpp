@@ -29,6 +29,7 @@
 #include <random>
 
 #include "app_config/AppConfig.h"
+#include "application/Application.h"
 #include "checkpoint/CheckPointManager.h"
 #include "checkpoint/CheckpointManagerV2.h"
 #include "common/Constants.h"
@@ -91,13 +92,15 @@ LogFileReader* LogFileReader::CreateLogFileReader(const string& hostLogPathDir,
                                                   const FileReaderConfig& readerConfig,
                                                   const MultilineConfig& multilineConfig,
                                                   const FileDiscoveryConfig& discoveryConfig,
+                                                  const FileTagConfig& tagConfig,
                                                   uint32_t exactlyonceConcurrency,
                                                   bool forceFromBeginning) {
     LogFileReader* reader = nullptr;
     if (readerConfig.second->RequiringJsonReader()) {
-        reader = new JsonLogFileReader(hostLogPathDir, hostLogPathFile, devInode, readerConfig, multilineConfig);
+        reader = new JsonLogFileReader(
+            hostLogPathDir, hostLogPathFile, devInode, readerConfig, multilineConfig, tagConfig);
     } else {
-        reader = new LogFileReader(hostLogPathDir, hostLogPathFile, devInode, readerConfig, multilineConfig);
+        reader = new LogFileReader(hostLogPathDir, hostLogPathFile, devInode, readerConfig, multilineConfig, tagConfig);
     }
 
     if (reader) {
@@ -116,15 +119,8 @@ LogFileReader* LogFileReader::CreateLogFileReader(const string& hostLogPathDir,
                                           ? discoveryConfig.first->GetWildcardPaths()[0]
                                           : discoveryConfig.first->GetBasePath(),
                                       containerPath->mRealBaseDir.size());
-                reader->AddExtraTags(containerPath->mMetadatas);
-                reader->AddExtraTags(containerPath->mTags);
+                reader->SetContainerExtraTags(containerPath->mTags);
             }
-        }
-        if (readerConfig.first->mAppendingLogPositionMeta) {
-            sls_logs::LogTag inodeTag;
-            inodeTag.set_key(LOG_RESERVED_KEY_INODE);
-            inodeTag.set_value(std::to_string(devInode.inode));
-            reader->AddExtraTags(std::vector<sls_logs::LogTag>{inodeTag});
         }
 
         GlobalConfig::TopicType topicType = readerConfig.second->GetGlobalConfig().mTopicType;
@@ -181,12 +177,14 @@ LogFileReader::LogFileReader(const std::string& hostLogPathDir,
                              const std::string& hostLogPathFile,
                              const DevInode& devInode,
                              const FileReaderConfig& readerConfig,
-                             const MultilineConfig& multilineConfig)
+                             const MultilineConfig& multilineConfig,
+                             const FileTagConfig& tagConfig)
     : mHostLogPathDir(hostLogPathDir),
       mHostLogPathFile(hostLogPathFile),
       mDevInode(devInode),
       mReaderConfig(readerConfig),
-      mMultilineConfig(multilineConfig) {
+      mMultilineConfig(multilineConfig),
+      mTagConfig(tagConfig) {
     mHostLogPath = PathJoin(hostLogPathDir, hostLogPathFile);
     mLastUpdateTime = time(NULL);
     mLastEventTime = mLastUpdateTime;
@@ -682,7 +680,7 @@ void LogFileReader::SetFilePosBackwardToFixedPos(LogFileOperator& op) {
 
 void LogFileReader::checkContainerType(LogFileOperator& op) {
     // 判断container类型
-    char containerBOMBuffer[1] = {0};
+    char containerBOMBuffer[2] = {0};
     size_t readBOMByte = 1;
     int64_t filePos = 0;
     TruncateInfo* truncateInfo = NULL;
@@ -773,7 +771,7 @@ std::string LogFileReader::GetTopicName(const std::string& topicConfig, const st
                     sls_logs::LogTag tag;
                     tag.set_key(keys[0]);
                     tag.set_value(values[0]);
-                    mExtraTags.push_back(tag);
+                    mTopicExtraTags.push_back(tag);
                 }
                 return values[0];
             } else {
@@ -786,7 +784,7 @@ std::string LogFileReader::GetTopicName(const std::string& topicConfig, const st
                     sls_logs::LogTag tag;
                     tag.set_key(keys[i]);
                     tag.set_value(values[i]);
-                    mExtraTags.push_back(tag);
+                    mTopicExtraTags.push_back(tag);
                 }
             }
             return res;
@@ -811,7 +809,7 @@ std::string LogFileReader::GetTopicName(const std::string& topicConfig, const st
                     sls_logs::LogTag tag;
                     tag.set_key(string("__topic_") + ToString(i) + "__");
                     tag.set_value(what[i]);
-                    mExtraTags.push_back(tag);
+                    mTopicExtraTags.push_back(tag);
                 }
             }
         } else {
@@ -2431,7 +2429,7 @@ void ContainerdTextParser::parseLine(LineInfo rawLine, LineInfo& paseLine) {
 }
 
 void LogFileReader::SetEventGroupMetaAndTag(PipelineEventGroup& group) {
-    // we store source-specific info with fixed key in metadata
+    // we store inner info in metadata
     switch (mFileLogFormat) {
         case LogFormat::DOCKER_JSON_FILE:
             group.SetMetadataNoCopy(EventGroupMetaKey::LOG_FORMAT, ProcessorParseContainerLogNative::DOCKER_JSON_FILE);
@@ -2449,19 +2447,59 @@ void LogFileReader::SetEventGroupMetaAndTag(PipelineEventGroup& group) {
         group.SetMetadata(EventGroupMetaKey::LOG_FILE_INODE, ToString(GetDevInode().inode));
     }
     group.SetMetadata(EventGroupMetaKey::SOURCE_ID, GetSourceId());
+    group.SetMetadata(EventGroupMetaKey::SOURCE, LogFileProfiler::mIpAddr);
+    group.SetMetadata(EventGroupMetaKey::TOPIC, GetTopicName());
+    group.SetMetadata(EventGroupMetaKey::MACHINE_UUID, Application::GetInstance()->GetUUID());
+    if (mTagConfig.first != nullptr) {
+        auto offsetKey = mTagConfig.first->GetFileTagKeyName(TagKey::FILE_OFFSET_KEY);
+        if (!offsetKey.empty()) {
+            group.SetMetadata(EventGroupMetaKey::LOG_FILE_OFFSET_KEY, offsetKey);
+        }
+    }
 
-    // for source-specific info without fixed key, we store them in tags directly
+    // we store info which users can see in tags
     // for log, these includes:
     // 1. extra topic
-    // 2. external k8s env/label tag
-    // 3. inode (this is special, currently it is in both metadata and tag, since it is not a default tag; later on, it
-    // should be controlled by tag processor)
-    const std::vector<sls_logs::LogTag>& extraTags = GetExtraTags();
-    for (size_t i = 0; i < extraTags.size(); ++i) {
-        group.SetTag(extraTags[i].key(), extraTags[i].value());
+    auto topicExtraTags = GetTopicExtraTags();
+    for (size_t i = 0; i < topicExtraTags.size(); ++i) {
+        group.SetTag(topicExtraTags[i].key(), topicExtraTags[i].value());
     }
-    StringBuffer b = group.GetSourceBuffer()->CopyString(GetTopicName());
-    group.SetTagNoCopy(LOG_RESERVED_KEY_TOPIC, StringView(b.data, b.size));
+    // 2. container name tag, external k8s env/label tag
+    auto containerExtraTags = GetContainerExtraTags();
+    if (containerExtraTags) {
+        for (size_t i = 0; i < containerExtraTags->size(); ++i) {
+            auto key = ContainerInfo::GetFileTagKey((*containerExtraTags)[i].key());
+            if (key != TagKey::UNKOWN) { // container name tag
+                StringBuffer b = group.GetSourceBuffer()->CopyString((*containerExtraTags)[i].value());
+                if (mTagConfig.first == nullptr) { // no tag config
+                    group.SetTagNoCopy(TagKeyDefaultValue[key], StringView(b.data, b.size));
+                } else {
+                    if (mTagConfig.first != nullptr) {
+                        auto keyName = mTagConfig.first->GetFileTagKeyName(key);
+                        if (!keyName.empty()) {
+                            group.SetTagNoCopy(keyName, StringView(b.data, b.size));
+                        }
+                    }
+                }
+            } else { // external k8s env/label tag
+                group.SetTag((*containerExtraTags)[i].key(), (*containerExtraTags)[i].value());
+            }
+        }
+    }
+    if (mTagConfig.first != nullptr) {
+        // 3. inode
+        auto keyName = mTagConfig.first->GetFileTagKeyName(TagKey::FILE_INODE_TAG_KEY);
+        if (!keyName.empty()) {
+            StringBuffer b = group.GetSourceBuffer()->CopyString(ToString(GetDevInode().inode));
+            group.SetTagNoCopy(keyName, StringView(b.data, b.size));
+        }
+        // 4. path
+        keyName = mTagConfig.first->GetFileTagKeyName(TagKey::FILE_PATH_TAG_KEY);
+        if (!keyName.empty()) {
+            StringBuffer b = group.GetSourceBuffer()->CopyString(GetConvertedPath());
+            group.SetTagNoCopy(keyName, StringView(b.data, b.size));
+        }
+    }
 }
 
 PipelineEventGroup LogFileReader::GenerateEventGroup(LogFileReaderPtr reader, LogBuffer* logBuffer) {

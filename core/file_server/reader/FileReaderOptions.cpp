@@ -182,19 +182,6 @@ bool FileReaderOptions::Init(const Json::Value& config, const PipelineContext& c
                               ctx.GetRegion());
     }
 
-    // AppendingLogPositionMeta
-    if (!GetOptionalBoolParam(config, "AppendingLogPositionMeta", mAppendingLogPositionMeta, errorMsg)) {
-        PARAM_WARNING_DEFAULT(ctx.GetLogger(),
-                              ctx.GetAlarm(),
-                              errorMsg,
-                              mAppendingLogPositionMeta,
-                              pluginType,
-                              ctx.GetConfigName(),
-                              ctx.GetProjectName(),
-                              ctx.GetLogstoreName(),
-                              ctx.GetRegion());
-    }
-
     return true;
 }
 

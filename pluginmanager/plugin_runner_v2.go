@@ -255,6 +255,11 @@ func (p *pluginv2Runner) runProcessorInternal(cc *pipeline.AsyncControl) {
 	defer panicRecover(p.LogstoreConfig.ConfigName)
 	pipeContext := p.ProcessPipeContext
 	pipeChan := p.InputPipeContext.Collector().Observe()
+	processorTag := ProcessorTag{
+		PipelineMetaTagKey:           p.LogstoreConfig.GlobalConfig.PipelineMetaTagKey,
+		EnableAgentEnvMetaTagControl: p.LogstoreConfig.GlobalConfig.EnableAgentEnvMetaTagControl,
+		AgentEnvMetaTagKey:           p.LogstoreConfig.GlobalConfig.AgentEnvMetaTagKey,
+	}
 	for {
 		select {
 		case <-cc.CancelToken():
@@ -262,6 +267,7 @@ func (p *pluginv2Runner) runProcessorInternal(cc *pipeline.AsyncControl) {
 				return
 			}
 		case group := <-pipeChan:
+			processorTag.ProcessV2(group, p.LogstoreConfig.GlobalConfig)
 			p.LogstoreConfig.Statistics.RawLogMetric.Add(int64(len(group.Events)))
 			pipeEvents := []*models.PipelineGroupEvents{group}
 			for _, processor := range p.ProcessorPlugins {
@@ -342,14 +348,11 @@ func (p *pluginv2Runner) runFlusherInternal(cc *pipeline.AsyncControl) {
 			}
 			p.LogstoreConfig.Statistics.FlushLogGroupMetric.Add(int64(len(data)))
 
-			// Add tags for each non-empty LogGroup, includes: default hostname tag,
-			// env tags and global tags in config.
 			for _, item := range data {
 				if len(item.Events) == 0 {
 					continue
 				}
 				p.LogstoreConfig.Statistics.FlushLogMetric.Add(int64(len(item.Events)))
-				item.Group.GetTags().Merge(loadAdditionalTags(p.LogstoreConfig.GlobalConfig))
 			}
 
 			// Flush LogGroups to all flushers.
@@ -459,11 +462,22 @@ func (p *pluginv2Runner) ReceiveLogGroup(in pipeline.LogGroupWithContext) {
 	meta.Add(ctxKeyTopic, topic)
 
 	tags := models.NewTags()
-	for _, tag := range in.LogGroup.GetLogTags() {
-		tags.Add(tag.GetKey(), tag.GetValue())
-	}
-	if len(topic) > 0 {
-		tags.Add(tagKeyLogTopic, topic)
+	if !p.LogstoreConfig.GlobalConfig.UsingOldContentTag {
+		for _, tag := range in.LogGroup.GetLogTags() {
+			tags.Add(tag.GetKey(), tag.GetValue())
+		}
+		if len(topic) > 0 {
+			tags.Add(tagKeyLogTopic, topic)
+		}
+	} else {
+		for _, log := range in.LogGroup.GetLogs() {
+			for _, tag := range in.LogGroup.GetLogTags() {
+				log.Contents = append(log.Contents, &protocol.Log_Content{
+					Key:   tag.GetKey(),
+					Value: tag.GetValue(),
+				})
+			}
+		}
 	}
 
 	group := models.NewGroup(meta, tags)

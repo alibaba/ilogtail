@@ -28,7 +28,7 @@ import (
 
 func TestConvertToSimple(t *testing.T) {
 	Convey("Given a converter with protocol: single, encoding: json, with no tag rename or protocol key rename", t, func() {
-		c, err := NewConverter("custom_single", "json", nil, nil, &config.GlobalConfig{})
+		c, err := NewConverter("custom_single", "json", nil, &config.GlobalConfig{})
 		So(err, ShouldBeNil)
 
 		Convey("When the logGroup is generated from files and from host environment", func() {
@@ -580,18 +580,12 @@ func TestConvertToSimple(t *testing.T) {
 	})
 
 	Convey("Given a converter with protocol: single, encoding: json, with tag rename and protocol key rename", t, func() {
-		keyRenameMap := map[string]string{
-			"k8s.node.ip": "ip",
-			"host.name":   "hostname",
-			"label":       "tag",
-			"env":         "env_tag",
-		}
 		protocolKeyRenameMap := map[string]string{
 			"time":     "@timestamp",
 			"contents": "values",
 			"tags":     "annos",
 		}
-		c, err := NewConverter("custom_single", "json", keyRenameMap, protocolKeyRenameMap, &config.GlobalConfig{})
+		c, err := NewConverter("custom_single", "json", protocolKeyRenameMap, &config.GlobalConfig{})
 		So(err, ShouldBeNil)
 
 		Convey("When the logGroup is generated from files and from k8s daemonset environment", func() {
@@ -689,13 +683,7 @@ func TestConvertToSimple(t *testing.T) {
 	})
 
 	Convey("Given a converter with protocol: single, encoding: json, with null tag rename", t, func() {
-		keyRenameMap := map[string]string{
-			"k8s.node.ip": "",
-			"host.name":   "",
-			"label":       "",
-			"env":         "",
-		}
-		c, err := NewConverter("custom_single", "json", keyRenameMap, nil, &config.GlobalConfig{})
+		c, err := NewConverter("custom_single", "json", nil, &config.GlobalConfig{})
 		So(err, ShouldBeNil)
 
 		Convey("When the logGroup is generated from files and from k8s daemonset environment", func() {
@@ -838,7 +826,7 @@ func TestConvertToSimple(t *testing.T) {
 	})
 
 	Convey("When constructing converter with unsupported encoding", t, func() {
-		_, err := NewConverter("custom_single", "pb", nil, nil, &config.GlobalConfig{})
+		_, err := NewConverter("custom_single", "pb", nil, &config.GlobalConfig{})
 
 		Convey("Then error should be returned", func() {
 			So(err, ShouldNotBeNil)
