@@ -38,6 +38,7 @@ private:
     DynamicMetricLabelsPtr mDynamicLabels;
     std::atomic_bool mDeleted;
     std::vector<CounterPtr> mCounters;
+    std::vector<TimeCounterPtr> mTimeCounters;
     std::vector<IntGaugePtr> mIntGauges;
     std::vector<DoubleGaugePtr> mDoubleGauges;
     MetricsRecord* mNext = nullptr;
@@ -51,9 +52,11 @@ public:
     const MetricLabelsPtr& GetLabels() const;
     const DynamicMetricLabelsPtr& GetDynamicLabels() const;
     const std::vector<CounterPtr>& GetCounters() const;
+    const std::vector<TimeCounterPtr>& GetTimeCounters() const;
     const std::vector<IntGaugePtr>& GetIntGauges() const;
     const std::vector<DoubleGaugePtr>& GetDoubleGauges() const;
     CounterPtr CreateCounter(const std::string& name);
+    TimeCounterPtr CreateTimeCounter(const std::string& name);
     IntGaugePtr CreateIntGauge(const std::string& name);
     DoubleGaugePtr CreateDoubleGauge(const std::string& name);
     MetricsRecord* Collect();
@@ -82,6 +85,7 @@ public:
     const MetricLabelsPtr& GetLabels() const;
     const DynamicMetricLabelsPtr& GetDynamicLabels() const;
     CounterPtr CreateCounter(const std::string& name);
+    TimeCounterPtr CreateTimeCounter(const std::string& name);
     IntGaugePtr CreateIntGauge(const std::string& name);
     DoubleGaugePtr CreateDoubleGauge(const std::string& name);
     void SetShouldSkipFunc(std::function<bool(const MetricsRecord&)> func);
@@ -113,6 +117,7 @@ class ReentrantMetricsRecord {
 private:
     MetricsRecordRef mMetricsRecordRef;
     std::unordered_map<std::string, CounterPtr> mCounters;
+    std::unordered_map<std::string, TimeCounterPtr> mTimeCounters;
     std::unordered_map<std::string, IntGaugePtr> mIntGauges;
     std::unordered_map<std::string, DoubleGaugePtr> mDoubleGauges;
 
@@ -123,6 +128,7 @@ public:
     const MetricLabelsPtr& GetLabels() const;
     const DynamicMetricLabelsPtr& GetDynamicLabels() const;
     CounterPtr GetCounter(const std::string& name);
+    TimeCounterPtr GetTimeCounter(const std::string& name);
     IntGaugePtr GetIntGauge(const std::string& name);
     DoubleGaugePtr GetDoubleGauge(const std::string& name);
 };
