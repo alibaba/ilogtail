@@ -20,19 +20,29 @@
 namespace logtail {
 
 ////////////////////////// LOG ////////////////////////
-    extern const std::string DEAULFT_LOG_TAG_NAMESPACE;
-    extern const std::string DEAULFT_LOG_TAG_POD_NAME;
-    extern const std::string DEAULFT_LOG_TAG_POD_UID;
-    extern const std::string DEAULFT_LOG_TAG_CONTAINER_NAME;
-    extern const std::string DEAULFT_LOG_TAG_CONTAINER_IP;
-    extern const std::string DEAULFT_LOG_TAG_IMAGE_NAME;
+    extern const std::string DEFAULT_LOG_TAG_NAMESPACE;
+    extern const std::string DEFAULT_LOG_TAG_POD_NAME;
+    extern const std::string DEFAULT_LOG_TAG_POD_UID;
+    extern const std::string DEFAULT_LOG_TAG_CONTAINER_NAME;
+    extern const std::string DEFAULT_LOG_TAG_CONTAINER_IP;
+    extern const std::string DEFAULT_LOG_TAG_IMAGE_NAME;
+    extern const std::string DEFAULT_LOG_TAG_FILE_OFFSET;
+    extern const std::string DEFAULT_LOG_TAG_INODE;
+    extern const std::string DEFAULT_LOG_TAG_PATH;
+    extern const std::string DEFAULT_LOG_TAG_HOST_NAME;
+#ifdef __ENTERPRISE__
+    extern const std::string DEFAULT_LOG_TAG_AGENT_TAG;
+#else
+    extern const std::string DEFAULT_LOG_TAG_HOST_IP;
+    extern const std::string DEFAULT_LOG_TAG_HOST_UUID;
+#endif
 
 ////////////////////////// METRIC ////////////////////////
-    extern const std::string DEAULFT_METRIC_TAG_NAMESPACE;
-    extern const std::string DEAULFT_METRIC_TAG_POD_NAME;
-    extern const std::string DEAULFT_METRIC_TAG_POD_UID;
-    extern const std::string DEAULFT_METRIC_TAG_CONTAINER_NAME;
-    extern const std::string DEAULFT_METRIC_TAG_CONTAINER_IP;
-    extern const std::string DEAULFT_METRIC_TAG_IMAGE_NAME;
+    extern const std::string DEFAULT_METRIC_TAG_NAMESPACE;
+    extern const std::string DEFAULT_METRIC_TAG_POD_NAME;
+    extern const std::string DEFAULT_METRIC_TAG_POD_UID;
+    extern const std::string DEFAULT_METRIC_TAG_CONTAINER_NAME;
+    extern const std::string DEFAULT_METRIC_TAG_CONTAINER_IP;
+    extern const std::string DEFAULT_METRIC_TAG_IMAGE_NAME;
 
 } // namespace logtail
