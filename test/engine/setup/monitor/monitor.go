@@ -98,16 +98,15 @@ func (m *Monitor) monitoring(client *client.Client, containerName string) {
 		select {
 		case <-timerCal.C:
 			// 计算CPU使用率的下阈值
-			cpuRawData := make([]float64, len(m.statistic.GetCPURawData())-5)
-			copy(cpuRawData, m.statistic.GetCPURawData()[5:])
+			cpuRawData := make([]float64, len(m.statistic.GetCPURawData()))
+			copy(cpuRawData, m.statistic.GetCPURawData())
 			sort.Float64s(cpuRawData)
+			cpuRawData = cpuRawData[len(cpuRawData)/4:]
 			Q1 := cpuRawData[len(cpuRawData)/4]
 			Q3 := cpuRawData[3*len(cpuRawData)/4]
 			IQR := Q3 - Q1
 			lowThreshold = Q1 - 1.5*IQR
 			fmt.Println("median of CPU usage rate(%):", cpuRawData[len(cpuRawData)/2])
-			fmt.Println("1/4 of CPU usage rate(%):", cpuRawData[len(cpuRawData)/4])
-			fmt.Println("3/4 of CPU usage rate(%):", cpuRawData[3*len(cpuRawData)/4])
 			fmt.Println("Low threshold of CPU usage rate(%):", lowThreshold)
 			if lowThreshold < 0 {
 				m.isMonitoring.Store(false)
