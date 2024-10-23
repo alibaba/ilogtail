@@ -28,7 +28,7 @@ import (
 )
 
 type timerRunner struct {
-	runOnStart    bool
+	execOnStart   bool
 	interval      time.Duration
 	context       pipeline.Context
 	latencyMetric pipeline.LatencyMetric
@@ -39,7 +39,7 @@ func (p *timerRunner) Run(task func(state interface{}) error, cc *pipeline.Async
 	logger.Info(p.context.GetRuntimeContext(), "task run", "start", "interval", p.interval, "state", fmt.Sprintf("%T", p.state))
 	defer panicRecover(fmt.Sprint(p.state))
 
-	if p.runOnStart {
+	if p.execOnStart {
 		p.execTask(task)
 	}
 
