@@ -28,6 +28,7 @@ import (
 )
 
 type timerRunner struct {
+	runOnStart    bool
 	interval      time.Duration
 	context       pipeline.Context
 	latencyMetric pipeline.LatencyMetric
@@ -37,22 +38,31 @@ type timerRunner struct {
 func (p *timerRunner) Run(task func(state interface{}) error, cc *pipeline.AsyncControl) {
 	logger.Info(p.context.GetRuntimeContext(), "task run", "start", "interval", p.interval, "state", fmt.Sprintf("%T", p.state))
 	defer panicRecover(fmt.Sprint(p.state))
+
+	if p.runOnStart {
+		p.execTask(task)
+	}
+
 	for {
 		exitFlag := util.RandomSleep(p.interval, 0.1, cc.CancelToken())
-		var begin time.Time
-		if p.latencyMetric != nil {
-			begin = time.Now()
-		}
-		if err := task(p.state); err != nil {
-			logger.Error(p.context.GetRuntimeContext(), "PLUGIN_RUN_ALARM", "task run", "error", err, "plugin", "state", fmt.Sprintf("%T", p.state))
-		}
-		if p.latencyMetric != nil {
-			p.latencyMetric.Observe(float64(time.Since(begin)))
-		}
+		p.execTask(task)
 		if exitFlag {
 			logger.Info(p.context.GetRuntimeContext(), "task run", "exit", "state", fmt.Sprintf("%T", p.state))
 			return
 		}
+	}
+}
+
+func (p *timerRunner) execTask(task func(state interface{}) error) {
+	var begin time.Time
+	if p.latencyMetric != nil {
+		begin = time.Now()
+	}
+	if err := task(p.state); err != nil {
+		logger.Error(p.context.GetRuntimeContext(), "PLUGIN_RUN_ALARM", "task run", "error", err, "plugin", "state", fmt.Sprintf("%T", p.state))
+	}
+	if p.latencyMetric != nil {
+		p.latencyMetric.Observe(float64(time.Since(begin)))
 	}
 }
 
