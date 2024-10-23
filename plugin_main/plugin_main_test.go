@@ -128,7 +128,7 @@ func TestHangConfigWhenStop(t *testing.T) {
 	require.Empty(t, pluginmanager.DisabledLogtailConfig)
 
 	// Load again, succeed.
-	require.Equal(t, 0, int(LoadPipeline("project", "logstore", configName, 0, badConfigStr)).Code)
+	require.Equal(t, 0, int(LoadPipeline("project", "logstore", configName, 0, badConfigStr).Code))
 	config = pluginmanager.ToStartPipelineConfigWithoutInput
 	require.NotNil(t, config)
 	require.Equal(t, configName, config.ConfigName)
