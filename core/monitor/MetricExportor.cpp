@@ -38,7 +38,7 @@ namespace logtail {
 const string METRIC_REGION_FIELD_NAME = "region";
 const string METRIC_REGION_DEFAULT = "default";
 const string METRIC_SLS_LOGSTORE_NAME = "shennong_log_profile";
-const string METRIC_TOPIC_TYPE = "loong_collector_metric";
+const string METRIC_TOPIC_TYPE = "loongcollector_metric";
 
 const std::string METRIC_EXPORT_TYPE_GO = "direct";
 const std::string METRIC_EXPORT_TYPE_CPP = "cpp_provided";

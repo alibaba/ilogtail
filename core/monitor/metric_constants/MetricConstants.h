@@ -229,7 +229,7 @@ extern const std::string METRIC_COMPONENT_QUEUE_FETCH_REJECTED_BY_RATE_LIMITER_T
 
 // label keys
 extern const std::string METRIC_LABEL_KEY_RUNNER_NAME;
-extern const string METRIC_LABEL_KEY_THREAD_NO;
+extern const std::string METRIC_LABEL_KEY_THREAD_NO;
 
 // label values
 extern const std::string METRIC_LABEL_VALUE_RUNNER_NAME_FILE_SERVER;

@@ -94,7 +94,6 @@ void ProcessorRunner::Run(uint32_t threadNo) {
     // thread local metrics should be initialized in each thread
     WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
         sMetricsRecordRef,
-       
         {{METRIC_LABEL_KEY_RUNNER_NAME, METRIC_LABEL_VALUE_RUNNER_NAME_PROCESSOR},
          {METRIC_LABEL_KEY_METRIC_CATEGORY, METRIC_LABEL_KEY_METRIC_CATEGORY_RUNNER},
          {METRIC_LABEL_KEY_THREAD_NO, ToString(threadNo)}});

@@ -21,6 +21,27 @@
 
 namespace logtail {
 
+class ReentrantMetricsRecord {
+private:
+    MetricsRecordRef mMetricsRecordRef;
+    std::unordered_map<std::string, CounterPtr> mCounters;
+    std::unordered_map<std::string, TimeCounterPtr> mTimeCounters;
+    std::unordered_map<std::string, IntGaugePtr> mIntGauges;
+    std::unordered_map<std::string, DoubleGaugePtr> mDoubleGauges;
+
+public:
+    void Init(MetricLabels& labels,
+              std::unordered_map<std::string, MetricType>& metricKeys,
+              std::function<bool(const MetricsRecord&)> skipFunc = nullptr);
+    const MetricLabelsPtr& GetLabels() const;
+    const DynamicMetricLabelsPtr& GetDynamicLabels() const;
+    CounterPtr GetCounter(const std::string& name);
+    TimeCounterPtr GetTimeCounter(const std::string& name);
+    IntGaugePtr GetIntGauge(const std::string& name);
+    DoubleGaugePtr GetDoubleGauge(const std::string& name);
+};
+using ReentrantMetricsRecordRef = std::shared_ptr<ReentrantMetricsRecord>;
+
 class PluginMetricManager {
 public:
     PluginMetricManager(const MetricLabelsPtr defaultLabels, std::unordered_map<std::string, MetricType> metricKeys)
