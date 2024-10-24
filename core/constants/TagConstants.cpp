@@ -36,8 +36,8 @@ namespace logtail {
     const std::string DEFAULT_LOG_TAG_CONTAINER_IP = DEFAULT_TAG_CONTAINER_IP;
     const std::string DEFAULT_LOG_TAG_IMAGE_NAME = DEFAULT_TAG_IMAGE_NAME;
     const std::string DEFAULT_LOG_TAG_FILE_OFFSET = "file_offset";
-    const std::string DEFAULT_LOG_TAG_INODE = "inode";
-    const std::string DEFAULT_LOG_TAG_PATH = "path";
+    const std::string DEFAULT_LOG_TAG_INODE = "file_inode";
+    const std::string DEFAULT_LOG_TAG_PATH = "file_path";
 
     // 差异部分
     const std::string DEFAULT_LOG_TAG_HOST_IP = DEFAULT_TAG_HOST_IP;
