@@ -64,9 +64,11 @@ private:
     BlockedEventManager() = default;
     ~BlockedEventManager();
 
-    std::mutex mEventMapMux; // currently not needed
+    // only used by LogInput thread, so currently no need
+    std::mutex mEventMapMux;
     std::unordered_map<int64_t, BlockedEvent> mEventMap;
 
+    // race condition from Processor Runner threads and LogInput thread
     std::mutex mFeedbackQueueMux;
     std::vector<int64_t> mFeedbackQueue;
 
