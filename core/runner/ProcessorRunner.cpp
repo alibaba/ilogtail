@@ -39,7 +39,7 @@ using namespace std;
 DEFINE_FLAG_BOOL(enable_chinese_tag_path, "Enable Chinese __tag__.__path__", true);
 #endif
 DEFINE_FLAG_INT32(default_flush_merged_buffer_interval, "default flush merged buffer, seconds", 1);
-DEFINE_FLAG_INT32(default_processor_runner_exit_wait_time_secs, "", 60);
+DEFINE_FLAG_INT32(processor_runner_exit_timeout_secs, "", 60);
 
 namespace logtail {
 
@@ -64,7 +64,7 @@ void ProcessorRunner::Stop() {
     ProcessQueueManager::GetInstance()->Trigger();
     for (uint32_t threadNo = 0; threadNo < mThreadCount; ++threadNo) {
         future_status s
-            = mThreadRes[threadNo].wait_for(chrono::seconds(INT32_FLAG(default_processor_runner_exit_wait_time_secs)));
+            = mThreadRes[threadNo].wait_for(chrono::seconds(INT32_FLAG(processor_runner_exit_timeout_secs)));
         if (s == future_status::ready) {
             LOG_INFO(sLogger, ("processor runner", "stopped successfully")("threadNo", threadNo));
         } else {

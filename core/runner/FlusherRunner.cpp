@@ -36,7 +36,7 @@ using namespace std;
 DEFINE_FLAG_INT32(check_send_client_timeout_interval, "", 600);
 DEFINE_FLAG_BOOL(enable_flow_control, "if enable flow control", true);
 DEFINE_FLAG_BOOL(enable_send_tps_smoothing, "avoid web server load burst", true);
-DEFINE_FLAG_INT32(default_flusher_runner_exit_wait_time_secs, "", 60);
+DEFINE_FLAG_INT32(flusher_runner_exit_timeout_secs, "", 60);
 
 static const int SEND_BLOCK_COST_TIME_ALARM_INTERVAL_SECOND = 3;
 
@@ -104,7 +104,7 @@ void FlusherRunner::UpdateSendFlowControl() {
 void FlusherRunner::Stop() {
     mIsFlush = true;
     SenderQueueManager::GetInstance()->Trigger();
-    future_status s = mThreadRes.wait_for(chrono::seconds(INT32_FLAG(default_flusher_runner_exit_wait_time_secs)));
+    future_status s = mThreadRes.wait_for(chrono::seconds(INT32_FLAG(flusher_runner_exit_timeout_secs)));
     if (s == future_status::ready) {
         LOG_INFO(sLogger, ("flusher runner", "stopped successfully"));
     } else {
