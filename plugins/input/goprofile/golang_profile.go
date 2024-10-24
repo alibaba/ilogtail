@@ -71,3 +71,7 @@ func init() {
 	}
 
 }
+
+func (g *GoProfile) GetMode() pipeline.InputModeType {
+	return pipeline.PULL
+}

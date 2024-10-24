@@ -98,3 +98,7 @@ func init() {
 		return &Input{}
 	}
 }
+
+func (r *Input) GetMode() pipeline.InputModeType {
+	return pipeline.PUSH
+}

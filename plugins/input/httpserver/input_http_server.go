@@ -349,3 +349,7 @@ func init() {
 		}
 	}
 }
+
+func (s *ServiceHTTP) GetMode() pipeline.InputModeType {
+	return pipeline.PUSH
+}

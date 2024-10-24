@@ -130,3 +130,7 @@ func init() {
 		}
 	}
 }
+
+func (m *Mssql) GetMode() pipeline.InputModeType {
+	return pipeline.PUSH
+}

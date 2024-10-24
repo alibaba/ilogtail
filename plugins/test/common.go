@@ -54,7 +54,7 @@ func LoadDefaultConfig() *pluginmanager.LogstoreConfig {
 
 // project, logstore, config, jsonStr
 func LoadAndStartMockConfig(project, logstore, configName, jsonStr string) *pluginmanager.LogstoreConfig {
-	err := pluginmanager.LoadLogstoreConfig(project, logstore, configName, 666, jsonStr)
+	_, err := pluginmanager.LoadLogstoreConfig(project, logstore, configName, 666, jsonStr)
 	if err != nil {
 		panic(err)
 	}
