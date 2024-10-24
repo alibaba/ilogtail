@@ -169,7 +169,7 @@ LogFileReader* LogFileReader::CreateLogFileReader(const string& hostLogPathDir,
             reader->SetSymbolicLinkFlag(buf.IsLink());
         }
 #endif
-        reader->SetMetrics();
+        // reader->SetMetrics();
 
         reader->InitReader(
             readerConfig.first->mTailingAllMatchedFiles, LogFileReader::BACKWARD_TO_FIXED_POS, exactlyonceConcurrency);
@@ -2256,7 +2256,7 @@ LogFileReader::~LogFileReader() {
                  "file signature", mLastFileSignatureHash)("file signature size", mLastFileSignatureSize)(
                  "file size", mLastFileSize)("last file position", mLastFilePos));
     CloseFilePtr();
-    FileServer::GetInstance()->ReleaseReentrantMetricsRecordRef(GetConfigName(), mMetricLabels);
+    // FileServer::GetInstance()->ReleaseReentrantMetricsRecordRef(GetConfigName(), mMetricLabels);
 
     // Mark GC so that corresponding resources can be released.
     // For config update, reader will be recreated, which will retrieve these
