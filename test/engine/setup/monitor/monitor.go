@@ -101,7 +101,6 @@ func (m *Monitor) monitoring(client *client.Client, containerName string) {
 			cpuRawData := make([]float64, len(m.statistic.GetCPURawData()))
 			copy(cpuRawData, m.statistic.GetCPURawData())
 			sort.Float64s(cpuRawData)
-			cpuRawData = cpuRawData[len(cpuRawData)/4:]
 			Q1 := cpuRawData[len(cpuRawData)/4]
 			Q3 := cpuRawData[3*len(cpuRawData)/4]
 			IQR := Q3 - Q1
