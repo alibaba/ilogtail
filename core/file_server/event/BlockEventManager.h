@@ -64,8 +64,7 @@ private:
     BlockedEventManager() = default;
     ~BlockedEventManager();
 
-    // only used by LogInput thread, so currently no need
-    std::mutex mEventMapMux;
+    // only used by LogInput thread
     std::unordered_map<int64_t, BlockedEvent> mEventMap;
 
     // race condition from Processor Runner threads and LogInput thread
@@ -74,6 +73,7 @@ private:
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ForceReadUnittest;
+    friend class BlockedEventManagerUnittest;
 #endif
 };
 
