@@ -128,35 +128,37 @@ macro(link_protobuf target_name)
     endif ()
 endmacro()
 logtail_define(protobuf_BIN "Absolute path to protoc" "${DEPS_BINARY_ROOT}/protoc")
-function(generate_protobuf proto_file_path proto_files output_path)
-    file(MAKE_DIRECTORY ${output_path})
-    execute_process(
-        COMMAND ${PROTOBUF_BIN} --proto_path=${proto_file_path} --cpp_out=${output_path} ${proto_files}
-    )
+
+function(compile_proto PROTO_PATH OUTPUT_PATH PROTO_FILES)
+    file(MAKE_DIRECTORY ${OUTPUT_PATH})
+    execute_process(COMMAND ${protobuf_BIN} 
+        --proto_path=${PROTO_PATH}
+        --cpp_out=${OUTPUT_PATH}
+        ${PROTO_FILES})
 endfunction()
 
-generate_protobuf(
+compile_proto(
     "${CMAKE_CURRENT_SOURCE_DIR}/protobuf/sls"
-    "${PROTO_FILE_PATH}/sls_logs.proto ${PROTO_FILE_PATH}/logtail_buffer_meta.proto ${PROTO_FILE_PATH}/metric.proto ${PROTO_FILE_PATH}/checkpoint.proto"
     "${CMAKE_CURRENT_SOURCE_DIR}/protobuf/sls"
+    "sls_logs.proto;logtail_buffer_meta.proto;metric.proto;checkpoint.proto"
 )
 
-generate_protobuf(
+compile_proto(
     "${CMAKE_CURRENT_SOURCE_DIR}/../protobuf_public/models"
-    "log_event.proto metric_event.proto span_event.proto pipeline_event_group.proto"
     "${CMAKE_CURRENT_SOURCE_DIR}/protobuf/models"
+    "log_event.proto;metric_event.proto;span_event.proto;pipeline_event_group.proto"
 )
 
-generate_protobuf(
+compile_proto(
     "${CMAKE_CURRENT_SOURCE_DIR}/../config_server/protocol/v1"
-    "agent.proto"
     "${CMAKE_CURRENT_SOURCE_DIR}/protobuf/config_server/v1"
+    "agent.proto"
 )
 
-generate_protobuf(
+compile_proto(
     "${CMAKE_CURRENT_SOURCE_DIR}/../config_server/protocol/v2"
-    "agentV2.proto"
     "${CMAKE_CURRENT_SOURCE_DIR}/protobuf/config_server/v2"
+    "agentV2.proto"
 )
 # re2
 macro(link_re2 target_name)
