@@ -21,7 +21,7 @@ import (
 
 // GlobalConfig represents global configurations of plugin system.
 type GlobalConfig struct {
-	InputExecOnStart         bool
+	MetricInputExecOnStart   bool
 	InputIntervalMs          int
 	AggregatIntervalMs       int
 	FlushIntervalMs          int

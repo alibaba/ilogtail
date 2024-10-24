@@ -156,7 +156,7 @@ func (p *pluginv2Runner) addMetricInput(pluginMeta *pipeline.PluginMeta, input p
 	}
 	p.MetricPlugins = append(p.MetricPlugins, &wrapper)
 	p.TimerRunner = append(p.TimerRunner, &timerRunner{
-		execOnStart:   p.LogstoreConfig.GlobalConfig.InputExecOnStart,
+		execOnStart:   p.LogstoreConfig.GlobalConfig.MetricInputExecOnStart,
 		state:         input,
 		interval:      wrapper.Interval,
 		context:       p.LogstoreConfig.Context,
