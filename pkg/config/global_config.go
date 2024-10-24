@@ -21,13 +21,13 @@ import (
 
 // GlobalConfig represents global configurations of plugin system.
 type GlobalConfig struct {
-	InputMaxFirstCollectDelayMs     int // 10 by default, If InputMaxFirstCollectDelayMs is greater than interval, it will use interval instead.
-	InputIntervalMs          int
-	AggregatIntervalMs       int
-	FlushIntervalMs          int
-	DefaultLogQueueSize      int
-	DefaultLogGroupQueueSize int
-	Tags                     map[string]string
+	InputMaxFirstCollectDelayMs int // 10s by default, If InputMaxFirstCollectDelayMs is greater than interval, it will use interval instead.
+	InputIntervalMs             int
+	AggregatIntervalMs          int
+	FlushIntervalMs             int
+	DefaultLogQueueSize         int
+	DefaultLogGroupQueueSize    int
+	Tags                        map[string]string
 	// Directory to store loongcollector data, such as checkpoint, etc.
 	LoongcollectorConfDir string
 	// Directory to store loongcollector log.
@@ -59,7 +59,7 @@ var UserAgent = fmt.Sprintf("ilogtail/%v (%v)", BaseVersion, runtime.GOOS) // se
 
 func newGlobalConfig() (cfg GlobalConfig) {
 	cfg = GlobalConfig{
-		InputMaxFirstCollectDelayMs:        10000, // 10s
+		InputMaxFirstCollectDelayMs: 10000, // 10s
 		InputIntervalMs:             1000,  // 1s
 		AggregatIntervalMs:          3000,
 		FlushIntervalMs:             3000,
