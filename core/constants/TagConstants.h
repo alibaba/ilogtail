@@ -20,6 +20,7 @@
 namespace logtail {
 
 ////////////////////////// LOG ////////////////////////
+    extern const std::string DEFAULT_LOG_TAG_HOST_NAME;
     extern const std::string DEFAULT_LOG_TAG_NAMESPACE;
     extern const std::string DEFAULT_LOG_TAG_POD_NAME;
     extern const std::string DEFAULT_LOG_TAG_POD_UID;
@@ -27,14 +28,12 @@ namespace logtail {
     extern const std::string DEFAULT_LOG_TAG_CONTAINER_IP;
     extern const std::string DEFAULT_LOG_TAG_IMAGE_NAME;
     extern const std::string DEFAULT_LOG_TAG_FILE_OFFSET;
-    extern const std::string DEFAULT_LOG_TAG_INODE;
-    extern const std::string DEFAULT_LOG_TAG_PATH;
-    extern const std::string DEFAULT_LOG_TAG_HOST_NAME;
-#ifdef __ENTERPRISE__
-    extern const std::string DEFAULT_LOG_TAG_AGENT_TAG;
-#else
+    extern const std::string DEFAULT_LOG_TAG_FILE_INODE;
+    extern const std::string DEFAULT_LOG_TAG_FILE_PATH;
+#ifndef __ENTERPRISE__
     extern const std::string DEFAULT_LOG_TAG_HOST_IP;
-    extern const std::string DEFAULT_LOG_TAG_HOST_UUID;
+#else
+    extern const std::string DEFAULT_LOG_TAG_USER_DEFINED_ID;
 #endif
 
 ////////////////////////// METRIC ////////////////////////

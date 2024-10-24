@@ -28,30 +28,30 @@ namespace logtail {
 
 ////////////////////////// LOG ////////////////////////
 #ifndef __ENTERPRISE__
-    const std::string DEFAULT_LOG_TAG_NAMESPACE = DEFAULT_TAG_NAMESPACE;
     const std::string DEFAULT_LOG_TAG_HOST_NAME = DEFAULT_TAG_HOST_NAME;
+    const std::string DEFAULT_LOG_TAG_NAMESPACE = DEFAULT_TAG_NAMESPACE;
     const std::string DEFAULT_LOG_TAG_POD_NAME = DEFAULT_TAG_POD_NAME;
     const std::string DEFAULT_LOG_TAG_POD_UID = DEFAULT_TAG_POD_UID;
     const std::string DEFAULT_LOG_TAG_CONTAINER_NAME = DEFAULT_TAG_CONTAINER_NAME;
     const std::string DEFAULT_LOG_TAG_CONTAINER_IP = DEFAULT_TAG_CONTAINER_IP;
     const std::string DEFAULT_LOG_TAG_IMAGE_NAME = DEFAULT_TAG_IMAGE_NAME;
     const std::string DEFAULT_LOG_TAG_FILE_OFFSET = "file_offset";
-    const std::string DEFAULT_LOG_TAG_INODE = "file_inode";
-    const std::string DEFAULT_LOG_TAG_PATH = "file_path";
+    const std::string DEFAULT_LOG_TAG_FILE_INODE = "file_inode";
+    const std::string DEFAULT_LOG_TAG_FILE_PATH = "file_path";
 
     // 差异部分
     const std::string DEFAULT_LOG_TAG_HOST_IP = DEFAULT_TAG_HOST_IP;
 #else
-    const std::string DEFAULT_LOG_TAG_NAMESPACE = "_namespace_";
     const std::string DEFAULT_LOG_TAG_HOST_NAME = "__hostname__";
+    const std::string DEFAULT_LOG_TAG_NAMESPACE = "_namespace_";
     const std::string DEFAULT_LOG_TAG_POD_NAME = "_pod_name_";
     const std::string DEFAULT_LOG_TAG_POD_UID = "_pod_uid_";
     const std::string DEFAULT_LOG_TAG_CONTAINER_NAME = "_container_name_";
     const std::string DEFAULT_LOG_TAG_CONTAINER_IP = "_container_ip_";
     const std::string DEFAULT_LOG_TAG_IMAGE_NAME = "_image_name_";
     const std::string DEFAULT_LOG_TAG_FILE_OFFSET = "__file_offset__";
-    const std::string DEFAULT_LOG_TAG_INODE = "__inode__";
-    const std::string DEFAULT_LOG_TAG_PATH = "__path__";
+    const std::string DEFAULT_LOG_TAG_FILE_INODE = "__inode__";
+    const std::string DEFAULT_LOG_TAG_FILE_PATH = "__path__";
     
     // 差异部分
     const std::string DEFAULT_LOG_TAG_USER_DEFINED_ID = "__user_defined_id__";
