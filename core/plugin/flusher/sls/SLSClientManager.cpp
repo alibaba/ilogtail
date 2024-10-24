@@ -46,7 +46,9 @@ using namespace std;
 namespace logtail {
 
 bool SLSClientManager::RegionEndpointsInfo::AddDefaultEndpoint(const std::string& endpoint) {
-    mDefaultEndpoint = endpoint;
+    if (mDefaultEndpoint.empty()) {
+        mDefaultEndpoint = endpoint;
+    }
     return AddEndpoint(endpoint, true, false);
 }
 
