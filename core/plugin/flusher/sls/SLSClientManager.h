@@ -30,6 +30,7 @@ namespace logtail {
 
 class SLSClientManager {
 public:
+    enum class EndpointType { LOCAL, REMOTE };
     enum class EndpointSwitchPolicy { DESIGNATED_FIRST, DESIGNATED_LOCKED };
 
     SLSClientManager(const SLSClientManager&) = delete;
@@ -54,8 +55,8 @@ public:
 
     void AddEndpointEntry(const std::string& region,
                           const std::string& endpoint,
-                          bool isDefault = false,
-                          bool isProxy = false);
+                          bool isProxy,
+                          const EndpointType& endpointType);
     void UpdateEndpointStatus(const std::string& region,
                               const std::string& endpoint,
                               bool status,
@@ -86,8 +87,9 @@ private:
     struct RegionEndpointsInfo {
         std::unordered_map<std::string, EndpointInfo> mEndpointInfoMap;
         std::string mDefaultEndpoint;
+        EndpointType mDefaultEndpointType;
 
-        bool AddDefaultEndpoint(const std::string& endpoint);
+        bool AddDefaultEndpoint(const std::string& endpoint, const EndpointType& endpointType, bool& isDefault);
         bool AddEndpoint(const std::string& endpoint, bool status, bool proxy = false);
         void UpdateEndpointInfo(const std::string& endpoint,
                                 bool status,

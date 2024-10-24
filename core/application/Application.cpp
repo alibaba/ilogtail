@@ -86,7 +86,6 @@ Application::Application() : mStartTime(time(nullptr)) {
 }
 
 void Application::Init() {
-
     // change working dir to ./${ILOGTAIL_VERSION}/
     string processExecutionDir = GetProcessExecutionDir();
     AppConfig::GetInstance()->SetProcessExecutionDir(processExecutionDir);
