@@ -1,68 +1,66 @@
-// Copyright 2022 iLogtail Authors
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package router
 
 import (
+	"config-server/handler"
 	"github.com/gin-gonic/gin"
-
-	"config-server/interface/agent"
-	"config-server/interface/user"
-	"config-server/setting"
 )
 
-func InitRouter() {
-	router := gin.Default()
+func initUserRouter(router *gin.Engine) {
+	userRouter := router.Group("/User")
+	{
+		userRouter.POST("/CreateAgentGroup", handler.CreateAgentGroup)
+		userRouter.POST("/UpdateAgentGroup", handler.UpdateAgentGroup)
+		userRouter.POST("/DeleteAgentGroup", handler.DeleteAgentGroup)
+		userRouter.POST("/GetAgentGroup", handler.GetAgentGroup)
+		userRouter.POST("/ListAgentGroups", handler.ListAgentGroups)
+		userRouter.POST("/ListAgents", handler.ListAgentsInGroup)
+		userRouter.POST("/GetAppliedPipelineConfigsForAgentGroup", handler.GetAppliedPipelineConfigsForAgentGroup)
+		userRouter.POST("/GetAppliedInstanceConfigsForAgentGroup", handler.GetAppliedInstanceConfigsForAgentGroup)
 
-	InitUserRouter(router)
-	InitAgentRouter(router)
+		userRouter.POST("/CreatePipelineConfig", handler.CreatePipelineConfig)
+		userRouter.POST("/UpdatePipelineConfig", handler.UpdatePipelineConfig)
+		userRouter.POST("/DeletePipelineConfig", handler.DeletePipelineConfig)
+		userRouter.POST("/GetPipelineConfig", handler.GetPipelineConfig)
+		userRouter.POST("/ListPipelineConfigs", handler.ListPipelineConfigs)
+		userRouter.POST("/ApplyPipelineConfigToAgentGroup", handler.ApplyPipelineConfigToAgentGroup)
+		userRouter.POST("/RemovePipelineConfigFromAgentGroup", handler.RemovePipelineConfigFromAgentGroup)
+		userRouter.POST("/GetAppliedAgentGroupsWithPipelineConfig", handler.GetAppliedAgentGroupsWithPipelineConfig)
 
-	err := router.Run(setting.GetSetting().IP + ":" + setting.GetSetting().Port)
-	if err != nil {
-		panic(err)
+		userRouter.POST("/CreateInstanceConfig", handler.CreateInstanceConfig)
+		userRouter.POST("/UpdateInstanceConfig", handler.UpdateInstanceConfig)
+		userRouter.POST("/DeleteInstanceConfig", handler.DeleteInstanceConfig)
+		userRouter.POST("/GetInstanceConfig", handler.GetInstanceConfig)
+		userRouter.POST("/ListInstanceConfigs", handler.ListInstanceConfigs)
+		userRouter.POST("/ApplyInstanceConfigToAgentGroup", handler.ApplyInstanceConfigToAgentGroup)
+		userRouter.POST("/RemoveInstanceConfigFromAgentGroup", handler.RemoveInstanceConfigFromAgentGroup)
+		userRouter.POST("/GetAppliedAgentGroupsWithInstanceConfig", handler.GetAppliedAgentGroupsWithInstanceConfig)
+	}
+
+}
+
+func initAgentRouter(router *gin.Engine) {
+	agentRouter := router.Group("/Agent")
+	{
+		agentRouter.POST("/Heartbeat", handler.HeartBeat)
+		agentRouter.POST("/FetchPipelineConfig", handler.FetchPipelineConfig)
+		agentRouter.POST("/FetchInstanceConfig", handler.FetchInstanceConfig)
+	}
+	handler.CheckAgentExist()
+}
+
+func initTest(router *gin.Engine) {
+	testRouter := router.Group("/Test")
+	{
+		testRouter.GET("", func(c *gin.Context) {
+			c.JSON(200, gin.H{
+				"config-server": "connect success",
+			})
+		})
 	}
 }
 
-func InitUserRouter(router *gin.Engine) {
-	userGroup := router.Group("/User")
-	{
-		userGroup.POST("/CreateAgentGroup", user.CreateAgentGroup)
-		userGroup.PUT("/UpdateAgentGroup", user.UpdateAgentGroup)
-		userGroup.DELETE("/DeleteAgentGroup", user.DeleteAgentGroup)
-		userGroup.POST("/GetAgentGroup", user.GetAgentGroup)
-		userGroup.POST("/ListAgentGroups", user.ListAgentGroups)
-
-		userGroup.POST("/CreateConfig", user.CreateConfig)
-		userGroup.PUT("/UpdateConfig", user.UpdateConfig)
-		userGroup.DELETE("/DeleteConfig", user.DeleteConfig)
-		userGroup.POST("/GetConfig", user.GetConfig)
-		userGroup.POST("/ListConfigs", user.ListConfigs)
-
-		userGroup.PUT("/ApplyConfigToAgentGroup", user.ApplyConfigToAgentGroup)
-		userGroup.DELETE("/RemoveConfigFromAgentGroup", user.RemoveConfigFromAgentGroup)
-		userGroup.POST("/GetAppliedConfigsForAgentGroup", user.GetAppliedConfigsForAgentGroup)
-		userGroup.POST("/GetAppliedAgentGroups", user.GetAppliedAgentGroups)
-		userGroup.POST("/ListAgents", user.ListAgents)
-	}
-}
-
-func InitAgentRouter(router *gin.Engine) {
-	agentGroup := router.Group("/Agent")
-	{
-		agentGroup.POST("/HeartBeat", agent.HeartBeat)
-
-		agentGroup.POST("/FetchPipelineConfig", agent.FetchPipelineConfig)
-		agentGroup.POST("/FetchAgentConfig", agent.FetchAgentConfig)
-	}
+func InitAllRouter(router *gin.Engine) {
+	initAgentRouter(router)
+	initUserRouter(router)
+	initTest(router)
 }
