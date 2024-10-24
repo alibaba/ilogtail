@@ -85,7 +85,9 @@ jobs:
         env:
           BUILD_LOGTAIL_UT: OFF
           WITHOUTGDB: ON
-        run: make benchmark
+        run: |
+          make benchmark
+          git stash
 
       - name: Store benchmark result iLogtail
         uses: benchmark-action/github-action-benchmark@v1
