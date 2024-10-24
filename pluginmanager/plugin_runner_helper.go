@@ -46,6 +46,7 @@ func (p *timerRunner) Run(task func(state interface{}) error, cc *pipeline.Async
 			logger.Infof(p.context.GetRuntimeContext(), "initial collect delay is larger than than interval, use interval %v instead", p.interval)
 			p.initialMaxDelay = p.interval
 		}
+		/* #nosec G404 */
 		exitFlag = util.RandomSleep(time.Duration(rand.Int63n(int64(p.initialMaxDelay))), 0, cc.CancelToken())
 	}
 
