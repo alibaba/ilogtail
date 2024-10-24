@@ -104,7 +104,7 @@ func (m *Monitor) monitoring(client *client.Client, containerName string) {
 			lowThreshold = cpuRawData[len(cpuRawData)/2] * 0.3
 			fmt.Println("median of CPU usage rate(%):", cpuRawData[len(cpuRawData)/2])
 			fmt.Println("Low threshold of CPU usage rate(%):", lowThreshold)
-			if lowThreshold < 0 {
+			if lowThreshold < 1 {
 				m.isMonitoring.Store(false)
 				m.stopCh <- exitCodeErrorNotProcessing
 				m.statistic.ClearStatistic()
