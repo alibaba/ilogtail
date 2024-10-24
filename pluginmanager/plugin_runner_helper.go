@@ -16,6 +16,7 @@ package pluginmanager
 
 import (
 	"fmt"
+	"math/rand"
 	"strings"
 	"time"
 
@@ -28,28 +29,33 @@ import (
 )
 
 type timerRunner struct {
-	execOnStart   bool
-	interval      time.Duration
-	context       pipeline.Context
-	latencyMetric pipeline.LatencyMetric
-	state         interface{}
+	initialMaxDelay time.Duration
+	interval        time.Duration
+	context         pipeline.Context
+	latencyMetric   pipeline.LatencyMetric
+	state           interface{}
 }
 
 func (p *timerRunner) Run(task func(state interface{}) error, cc *pipeline.AsyncControl) {
 	logger.Info(p.context.GetRuntimeContext(), "task run", "start", "interval", p.interval, "state", fmt.Sprintf("%T", p.state))
 	defer panicRecover(fmt.Sprint(p.state))
 
-	if p.execOnStart {
-		p.execTask(task)
+	exitFlag := false
+	if p.initialMaxDelay > 0 {
+		if p.initialMaxDelay > p.interval {
+			logger.Infof(p.context.GetRuntimeContext(), "initial collect delay is larger than than interval, use interval %v instead", p.interval)
+			p.initialMaxDelay = p.interval
+		}
+		exitFlag = util.RandomSleep(time.Duration(rand.Int63n(int64(p.initialMaxDelay))), 0, cc.CancelToken())
 	}
 
 	for {
-		exitFlag := util.RandomSleep(p.interval, 0.1, cc.CancelToken())
-		p.execTask(task)
+		p.execTask(task) // execute task at least once.
 		if exitFlag {
 			logger.Info(p.context.GetRuntimeContext(), "task run", "exit", "state", fmt.Sprintf("%T", p.state))
 			return
 		}
+		exitFlag = util.RandomSleep(p.interval, 0, cc.CancelToken())
 	}
 }
 

@@ -21,7 +21,7 @@ import (
 
 // GlobalConfig represents global configurations of plugin system.
 type GlobalConfig struct {
-	MetricInputExecOnStart   bool
+	InputMaxFirstCollectDelayMs     int // 10 by default, If InputMaxFirstCollectDelayMs is greater than interval, it will use interval instead.
 	InputIntervalMs          int
 	AggregatIntervalMs       int
 	FlushIntervalMs          int
@@ -59,7 +59,8 @@ var UserAgent = fmt.Sprintf("ilogtail/%v (%v)", BaseVersion, runtime.GOOS) // se
 
 func newGlobalConfig() (cfg GlobalConfig) {
 	cfg = GlobalConfig{
-		InputIntervalMs:             1000,
+		InputMaxFirstCollectDelayMs:        10000, // 10s
+		InputIntervalMs:             1000,  // 1s
 		AggregatIntervalMs:          3000,
 		FlushIntervalMs:             3000,
 		DefaultLogQueueSize:         1000,

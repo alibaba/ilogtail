@@ -209,11 +209,11 @@ func (p *pluginv1Runner) runMetricInput(async *pipeline.AsyncControl) {
 	for _, metric := range p.MetricPlugins {
 		m := metric
 		runner := &timerRunner{
-			execOnStart:   p.LogstoreConfig.GlobalConfig.MetricInputExecOnStart,
-			state:         m.Input,
-			interval:      m.Interval,
-			context:       m.Config.Context,
-			latencyMetric: m.Config.Statistics.CollecLatencytMetric,
+			initialMaxDelay: time.Duration(p.LogstoreConfig.GlobalConfig.InputMaxFirstCollectDelayMs) * time.Millisecond,
+			state:           m.Input,
+			interval:        m.Interval,
+			context:         m.Config.Context,
+			latencyMetric:   m.Config.Statistics.CollecLatencytMetric,
 		}
 		async.Run(func(ac *pipeline.AsyncControl) {
 			runner.Run(func(state interface{}) error {
