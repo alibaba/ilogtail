@@ -96,7 +96,7 @@ void ProcessorRunner::Run(uint32_t threadNo) {
         sMetricsRecordRef,
         {{METRIC_LABEL_KEY_RUNNER_NAME, METRIC_LABEL_VALUE_RUNNER_NAME_PROCESSOR},
          {METRIC_LABEL_KEY_METRIC_CATEGORY, METRIC_LABEL_KEY_METRIC_CATEGORY_RUNNER},
-         {"thread_no", ToString(threadNo)}});
+         {METRIC_LABEL_KEY_THREAD_NO, ToString(threadNo)}});
     sInGroupsCnt = sMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_EVENT_GROUPS_TOTAL);
     sInEventsCnt = sMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_EVENTS_TOTAL);
     sInGroupDataSizeBytes = sMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_SIZE_BYTES);
