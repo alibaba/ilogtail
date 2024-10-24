@@ -46,10 +46,10 @@ using namespace std;
 namespace logtail {
 
 bool SLSClientManager::RegionEndpointsInfo::AddDefaultEndpoint(const std::string& endpoint,
-                                                               const EndpointType& endpointType,
+                                                               const EndpointSourceType& endpointType,
                                                                bool& isDefault) {
     if (mDefaultEndpoint.empty()
-        || (endpointType == EndpointType::LOCAL && mDefaultEndpointType == EndpointType::REMOTE)) {
+        || (endpointType == EndpointSourceType::LOCAL && mDefaultEndpointType == EndpointSourceType::REMOTE)) {
         mDefaultEndpoint = endpoint;
         mDefaultEndpointType = endpointType;
         isDefault = true;
@@ -309,7 +309,7 @@ void SLSClientManager::CleanTimeoutClient() {
 void SLSClientManager::AddEndpointEntry(const string& region,
                                         const string& endpoint,
                                         bool isProxy,
-                                        const EndpointType& endpointType) {
+                                        const EndpointSourceType& endpointType) {
     lock_guard<mutex> lock(mRegionEndpointEntryMapLock);
     RegionEndpointsInfo& info = mRegionEndpointEntryMap[region];
     if (!isProxy) {

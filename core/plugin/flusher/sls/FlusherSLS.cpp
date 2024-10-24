@@ -374,7 +374,7 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
             mEndpoint = TrimString(mEndpoint);
             if (!mEndpoint.empty()) {
                 SLSClientManager::GetInstance()->AddEndpointEntry(
-                    mRegion, StandardizeEndpoint(mEndpoint, mEndpoint), false, SLSClientManager::EndpointType::LOCAL);
+                    mRegion, StandardizeEndpoint(mEndpoint, mEndpoint), false, SLSClientManager::EndpointSourceType::LOCAL);
             }
         }
 #ifdef __ENTERPRISE__
