@@ -136,6 +136,16 @@ set(PROTO_PUBLIC_OUTPUT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/protobuf/models")
 set(PROTO_FILES log_event.proto metric_event.proto span_event.proto pipeline_event_group.proto)
 execute_process(COMMAND ${protobuf_BIN} --proto_path=${PROTO_PUBLIC_FILE_PATH} --cpp_out=${PROTO_PUBLIC_OUTPUT_PATH} ${PROTO_FILES})
 
+set(PROTO_CONFIG_SERVER_V1_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../config_server/protocol/v1")
+set(PROTO_CONFIG_SERVER_V1_OUTPUT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/protobuf/config_server/v1")
+set(PROTO_CONFIG_SERVER_V1_FILES agent.proto)
+execute_process(COMMAND ${protobuf_BIN} --proto_path=${PROTO_CONFIG_SERVER_V1_PATH} --cpp_out=${PROTO_CONFIG_SERVER_V1_OUTPUT_PATH} ${PROTO_CONFIG_SERVER_V1_FILES})
+
+set(PROTO_CONFIG_SERVER_V2_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../config_server/protocol/v2")
+set(PROTO_CONFIG_SERVER_V2_OUTPUT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/protobuf/config_server/v2")
+set(PROTO_CONFIG_SERVER_V2_FILES agentV2.proto)
+execute_process(COMMAND ${protobuf_BIN} --proto_path=${PROTO_CONFIG_SERVER_V2_PATH} --cpp_out=${PROTO_CONFIG_SERVER_V2_OUTPUT_PATH} ${PROTO_CONFIG_SERVER_V2_FILES})
+
 # re2
 macro(link_re2 target_name)
     if (re2_${LINK_OPTION_SUFFIX})

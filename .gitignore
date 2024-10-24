@@ -55,6 +55,7 @@ _deps
 # Custom
 /build/
 core/build/
+core/protobuf/config_server/*/*.pb.*
 core/protobuf/*/*.pb.*
 core/common/Version.cpp
 !/Makefile
