@@ -138,6 +138,7 @@ bool PipelineConfig::Parse() {
 
     // inputs, processors and flushers module must be parsed first and parsed by order, since aggregators and
     // extensions module parsing will rely on their results.
+    bool hasObserverInput = false;
     bool hasFileInput = false;
     key = "inputs";
     itr = mDetail->find(key.c_str(), key.c_str() + key.size());
@@ -236,12 +237,15 @@ bool PipelineConfig::Parse() {
         }
         mInputs.push_back(&plugin);
         // TODO: remove these special restrictions
-        if (pluginType == "input_file" || pluginType == "input_container_stdio") {
+        if (pluginType == "input_observer_network") {
+            hasObserverInput = true;
+        } else if (pluginType == "input_file" || pluginType == "input_container_stdio") {
             hasFileInput = true;
         }
     }
     // TODO: remove these special restrictions
-    if (hasFileInput && (*mDetail)["inputs"].size() > 1) {
+    bool hasSpecialInput = hasObserverInput || hasFileInput;
+    if (hasSpecialInput && (*mDetail)["inputs"].size() > 1) {
         PARAM_ERROR_RETURN(sLogger,
                            alarm,
                            "more than 1 input_file or input_container_stdio plugin is given",
@@ -327,7 +331,7 @@ bool PipelineConfig::Parse() {
                 if (isCurrentPluginNative) {
                     if (PluginRegistry::GetInstance()->IsValidGoPlugin(pluginType)) {
                         // TODO: remove these special restrictions
-                        if (!hasFileInput) {
+                        if (!hasObserverInput && !hasFileInput) {
                             PARAM_ERROR_RETURN(sLogger,
                                                alarm,
                                                "extended processor plugins coexist with native input plugins other "
@@ -361,6 +365,17 @@ bool PipelineConfig::Parse() {
                                                mRegion);
                         }
                     } else {
+                        // TODO: remove these special restrictions
+                        if (hasObserverInput) {
+                            PARAM_ERROR_RETURN(sLogger,
+                                               alarm,
+                                               "native processor plugins coexist with input_observer_network",
+                                               noModule,
+                                               mName,
+                                               mProject,
+                                               mLogstore,
+                                               mRegion);
+                        }
                         mHasNativeProcessor = true;
                     }
                 } else {
@@ -455,7 +470,7 @@ bool PipelineConfig::Parse() {
         const string pluginType = it->asString();
         if (PluginRegistry::GetInstance()->IsValidGoPlugin(pluginType)) {
             // TODO: remove these special restrictions
-            if (mHasNativeInput && !hasFileInput) {
+            if (mHasNativeInput && !hasFileInput && !hasObserverInput) {
                 PARAM_ERROR_RETURN(sLogger,
                                    alarm,
                                    "extended flusher plugins coexist with native input plugins other than "
