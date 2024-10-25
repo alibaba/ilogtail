@@ -125,6 +125,8 @@ func (m *Monitor) monitoring(client *client.Client, containerName string) {
 			cpuRawData := m.statistic.GetCPURawData()
 			if cpuRawData[len(cpuRawData)-1] < lowThreshold {
 				outlierCnt++
+			} else {
+				outlierCnt = 0
 			}
 			if outlierCnt > 5 {
 				bytes, _ := m.statistic.MarshalStatisticJSON()
