@@ -19,11 +19,11 @@
 #include "common/FileSystemUtil.h"
 #include "common/version.h"
 #include "config/ConfigDiff.h"
+#include "config/InstanceConfigManager.h"
 #include "config/common_provider/CommonConfigProvider.h"
 #include "config/watcher/ConfigWatcher.h"
 #include "config/watcher/InstanceConfigWatcher.h"
 #include "gmock/gmock.h"
-#include "instance_config/InstanceConfigManager.h"
 #include "pipeline/PipelineManager.h"
 #include "unittest/Unittest.h"
 

@@ -31,6 +31,7 @@
 #include "common/UUIDUtil.h"
 #include "common/version.h"
 #include "config/ConfigDiff.h"
+#include "config/InstanceConfigManager.h"
 #include "config/watcher/ConfigWatcher.h"
 #include "config/watcher/InstanceConfigWatcher.h"
 #include "file_server/ConfigManager.h"
@@ -38,7 +39,6 @@
 #include "file_server/FileServer.h"
 #include "file_server/event_handler/LogInput.h"
 #include "go_pipeline/LogtailPlugin.h"
-#include "instance_config/InstanceConfigManager.h"
 #include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/MetricExportor.h"
@@ -192,7 +192,7 @@ void Application::Init() {
 }
 
 void Application::Start() { // GCOVR_EXCL_START
-    LogFileProfiler::mStartTime =  GetTimeStamp(time(NULL), "%Y-%m-%d %H:%M:%S");
+    LogFileProfiler::mStartTime = GetTimeStamp(time(NULL), "%Y-%m-%d %H:%M:%S");
     LogtailMonitor::GetInstance()->UpdateConstMetric("start_time", LogFileProfiler::mStartTime);
 
 #if defined(__ENTERPRISE__) && defined(_MSC_VER)
