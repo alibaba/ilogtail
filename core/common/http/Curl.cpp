@@ -167,8 +167,8 @@ bool SendHttpRequest(std::unique_ptr<HttpRequest>&& request, HttpResponse& respo
             break;
         } else if (request->mTryCnt < request->mMaxTryCnt) {
             LOG_WARNING(sLogger,
-                        ("failed to send request", "retry immediately")("retryCnt", request->mTryCnt)(
-                            "errMsg", curl_easy_strerror(res))("request address", request.get()));
+                        ("failed to send http request", "retry immediately")("request address", request.get())(
+                            "try cnt", request->mTryCnt)("errMsg", curl_easy_strerror(res)));
             ++request->mTryCnt;
         } else {
             break;
