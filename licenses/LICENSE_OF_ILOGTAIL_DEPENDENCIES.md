@@ -101,6 +101,8 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [github.com/golang/groupcache](https://pkg.go.dev/github.com/golang/groupcache?tab=licenses)
 - [sigs.k8s.io/controller-runtime](https://pkg.go.dev/sigs.k8s.io/controller-runtime?tab=licenses)
 - [github.com/iLogtail/VictoriaMetrics fork from github.com/VictoriaMetrics/VictoriaMetrics](http://github.com/iLogtail/VictoriaMetrics) based on Apache-2.0
+- [cloud.google.com/go/compute/metadata](https://pkg.go.dev/cloud.google.com/go/compute/metadata?tab=licenses)
+- [github.com/VictoriaMetrics/metricsql](https://pkg.go.dev/github.com/VictoriaMetrics/metricsql?tab=licenses)
 
 ## BSD licenses
 
@@ -229,6 +231,13 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [github.com/stretchr/testify](https://pkg.go.dev/github.com/stretchr/testify?tab=licenses)
 - [go.uber.org/goleak](https://pkg.go.dev/go.uber.org/goleak?tab=licenses)
 - [github.com/influxdata/telegraf](https://pkg.go.dev/github.com/influxdata/telegraf?tab=licenses)
+- [github.com/valyala/fastjson](https://pkg.go.dev/github.com/valyala/fastjson?tab=licenses)
+- [github.com/valyala/fastrand](https://pkg.go.dev/github.com/valyala/fastrand?tab=licenses)
+- [github.com/valyala/fasttemplate](https://pkg.go.dev/github.com/valyala/fasttemplate?tab=licenses)
+- [github.com/valyala/gozstd](https://pkg.go.dev/github.com/valyala/gozstd?tab=licenses)
+- [github.com/valyala/histogram](https://pkg.go.dev/github.com/valyala/histogram?tab=licenses)
+- [github.com/valyala/quicktemplate](https://pkg.go.dev/github.com/valyala/quicktemplate?tab=licenses)
+- [github.com/VictoriaMetrics/fasthttp](https://pkg.go.dev/github.com/VictoriaMetrics/fasthttp?tab=licenses)
 
 ## ISC licenses
 
@@ -254,3 +263,4 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [github.com/iLogtail/pyroscope-lib fork from github.com/pyroscope-io/pyroscope](http://github.com/iLogtail/pyroscope-lib) based on Apache-2.0
 - [github.com/iLogtail/gonvml fork from github.com/mindprince/gonvml](https://github.com/iLogtail/gonvml) based on Apache-2.0
 - [github.com/iLogtail/handy fork from github.com/streadway/handy](http://github.com/iLogtail/handy) based on BSD-2-Clause
+- [github.com/iLogtail/metrics fork from github.com/VictoriaMetrics/metrics](http://github.com/iLogtail/metrics) based on MIT
