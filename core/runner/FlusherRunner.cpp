@@ -144,8 +144,7 @@ void FlusherRunner::PushToHttpSink(SenderQueueItem* item, bool withLimit) {
     }
 
     auto req = static_cast<HttpFlusher*>(item->mFlusher)->BuildRequest(item);
-    item->mLastSendTime = time(nullptr);
-    req->mEnqueTime = item->mLastSendTime;
+    req->mEnqueTime = item->mLastSendTime = chrono::system_clock::now();
     HttpSink::GetInstance()->AddRequest(std::move(req));
     ++mHttpSendingCnt;
     LOG_DEBUG(sLogger,

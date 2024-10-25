@@ -78,11 +78,13 @@ void HttpSink::Run() {
         unique_ptr<HttpSinkRequest> request;
         if (mQueue.WaitAndPop(request, 500)) {
             mInItemsTotal->Add(1);
-            LOG_DEBUG(
-                sLogger,
-                ("got item from flusher runner, item address", request->mItem)(
-                    "config-flusher-dst", QueueKeyManager::GetInstance()->GetName(request->mItem->mQueueKey))(
-                    "wait time", ToString(time(nullptr) - request->mEnqueTime))("try cnt", ToString(request->mTryCnt)));
+            LOG_DEBUG(sLogger,
+                      ("got item from flusher runner, item address", request->mItem)(
+                          "config-flusher-dst", QueueKeyManager::GetInstance()->GetName(request->mItem->mQueueKey))(
+                          "wait time",
+                          ToString(chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now()
+                                                                               - request->mEnqueTime)
+                                       .count()))("try cnt", ToString(request->mTryCnt)));
             if (!AddRequestToClient(std::move(request))) {
                 continue;
             }
@@ -168,11 +170,13 @@ void HttpSink::DoRun() {
         unique_ptr<HttpSinkRequest> request;
         if (mQueue.TryPop(request)) {
             mInItemsTotal->Add(1);
-            LOG_DEBUG(
-                sLogger,
-                ("got item from flusher runner, item address", request->mItem)(
-                    "config-flusher-dst", QueueKeyManager::GetInstance()->GetName(request->mItem->mQueueKey))(
-                    "wait time", ToString(time(nullptr) - request->mEnqueTime))("try cnt", ToString(request->mTryCnt)));
+            LOG_DEBUG(sLogger,
+                      ("got item from flusher runner, item address", request->mItem)(
+                          "config-flusher-dst", QueueKeyManager::GetInstance()->GetName(request->mItem->mQueueKey))(
+                          "wait time",
+                          ToString(chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now()
+                                                                               - request->mEnqueTime)
+                                       .count()))("try cnt", ToString(request->mTryCnt)));
             if (AddRequestToClient(std::move(request))) {
                 ++runningHandlers;
                 mSendingItemsTotal->Add(1);
@@ -241,7 +245,7 @@ void HttpSink::HandleCompletedRequests(int& runningHandlers) {
                     mSendingItemsTotal->Sub(1);
                     LOG_DEBUG(
                         sLogger,
-                        ("send http request completed, item address", request->mItem)(
+                        ("send http request succeeded, item address", request->mItem)(
                             "config-flusher-dst", QueueKeyManager::GetInstance()->GetName(request->mItem->mQueueKey))(
                             "response time", ToString(responseTime) + "ms")("try cnt", ToString(request->mTryCnt))(
                             "sending cnt", ToString(FlusherRunner::GetInstance()->GetSendingBufferCount())));
@@ -249,18 +253,19 @@ void HttpSink::HandleCompletedRequests(int& runningHandlers) {
                 }
                 default:
                     // considered as network error
-                    if (++request->mTryCnt <= request->mMaxTryCnt) {
+                    if (request->mTryCnt <= request->mMaxTryCnt) {
                         LOG_WARNING(
                             sLogger,
-                            ("failed to send request", "retry immediately")("item address", request->mItem)(
+                            ("failed to send http request", "retry immediately")("item address", request->mItem)(
                                 "config-flusher-dst",
                                 QueueKeyManager::GetInstance()->GetName(request->mItem->mFlusher->GetQueueKey()))(
-                                "try cnt", request->mTryCnt - 1)("errMsg", curl_easy_strerror(msg->data.result)));
+                                "try cnt", request->mTryCnt)("errMsg", curl_easy_strerror(msg->data.result)));
                         // free first，becase mPrivateData will be reset in AddRequestToClient
                         if (request->mPrivateData) {
                             curl_slist_free_all((curl_slist*)request->mPrivateData);
                             request->mPrivateData = nullptr;
                         }
+                        ++request->mTryCnt;
                         AddRequestToClient(unique_ptr<HttpSinkRequest>(request));
                         ++runningHandlers;
                         requestReused = true;
@@ -268,13 +273,13 @@ void HttpSink::HandleCompletedRequests(int& runningHandlers) {
                         static_cast<HttpFlusher*>(request->mItem->mFlusher)
                             ->OnSendDone(request->mResponse, request->mItem);
                         FlusherRunner::GetInstance()->DecreaseHttpSendingCnt();
-                        LOG_DEBUG(sLogger,
-                                  ("send http request completed, item address",
-                                   request->mItem)("config-flusher-dst",
-                                                   QueueKeyManager::GetInstance()->GetName(request->mItem->mQueueKey))(
-                                      "response time", ToString(responseTime) + "ms")("try cnt",
-                                                                                      ToString(request->mTryCnt - 1))(
-                                      "sending cnt", ToString(FlusherRunner::GetInstance()->GetSendingBufferCount())));
+                        LOG_DEBUG(
+                            sLogger,
+                            ("failed to send http request", "abort")("item address", request->mItem)(
+                                "config-flusher-dst",
+                                QueueKeyManager::GetInstance()->GetName(request->mItem->mQueueKey))(
+                                "response time", ToString(responseTime) + "ms")("try cnt", ToString(request->mTryCnt))(
+                                "sending cnt", ToString(FlusherRunner::GetInstance()->GetSendingBufferCount())));
                     }
                     mOutFailedItemsTotal->Add(1);
                     mFailedItemTotalResponseTimeMs->Add(responseTime);
