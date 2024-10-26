@@ -22,7 +22,6 @@
 #include <string>
 #include <vector>
 
-#include "models/EventPool.h"
 #include "models/PipelineEventGroup.h"
 #include "monitor/LogtailMetric.h"
 #include "pipeline/queue/QueueKey.h"
