@@ -37,6 +37,7 @@ using namespace std;
 DEFINE_FLAG_BOOL(enable_chinese_tag_path, "Enable Chinese __tag__.__path__", true);
 #endif
 DEFINE_FLAG_INT32(default_flush_merged_buffer_interval, "default flush merged buffer, seconds", 1);
+DEFINE_FLAG_INT32(processor_runner_exit_timeout_secs, "", 60);
 
 namespace logtail {
 
@@ -61,7 +62,8 @@ void ProcessorRunner::Stop() {
     mIsFlush = true;
     ProcessQueueManager::GetInstance()->Trigger();
     for (uint32_t threadNo = 0; threadNo < mThreadCount; ++threadNo) {
-        future_status s = mThreadRes[threadNo].wait_for(chrono::seconds(1));
+        future_status s
+            = mThreadRes[threadNo].wait_for(chrono::seconds(INT32_FLAG(processor_runner_exit_timeout_secs)));
         if (s == future_status::ready) {
             LOG_INFO(sLogger, ("processor runner", "stopped successfully")("threadNo", threadNo));
         } else {
@@ -93,7 +95,9 @@ void ProcessorRunner::Run(uint32_t threadNo) {
     // thread local metrics should be initialized in each thread
     WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
         sMetricsRecordRef,
-        {{METRIC_LABEL_KEY_RUNNER_NAME, METRIC_LABEL_VALUE_RUNNER_NAME_PROCESSOR}, {"thread_no", ToString(threadNo)}});
+        {{METRIC_LABEL_KEY_RUNNER_NAME, METRIC_LABEL_VALUE_RUNNER_NAME_PROCESSOR},
+         {METRIC_LABEL_KEY_METRIC_CATEGORY, METRIC_LABEL_KEY_METRIC_CATEGORY_RUNNER},
+         {"thread_no", ToString(threadNo)}});
     sInGroupsCnt = sMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_EVENT_GROUPS_TOTAL);
     sInEventsCnt = sMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_EVENTS_TOTAL);
     sInGroupDataSizeBytes = sMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_SIZE_BYTES);
@@ -133,16 +137,7 @@ void ProcessorRunner::Run(uint32_t threadNo) {
             continue;
         }
 
-        // record profile, must be placed here since readbytes info exists only before processing
-        auto& processProfile = pipeline->GetContext().GetProcessProfile();
-        ProcessProfile profile = processProfile;
-        bool isLog = false;
-        if (!item->mEventGroup.GetEvents().empty() && item->mEventGroup.GetEvents()[0].Is<LogEvent>()) {
-            isLog = true;
-            profile.readBytes = item->mEventGroup.GetEvents()[0].Cast<LogEvent>().GetPosition().second
-                + 1; // may not be accurate if input is not utf8
-        }
-        processProfile.Reset();
+            bool isLog = !item->mEventGroup.GetEvents().empty() && item->mEventGroup.GetEvents()[0].Is<LogEvent>();
 
         int32_t startTime = (int32_t)time(NULL);
         vector<PipelineEventGroup> eventGroupList;
@@ -161,67 +156,38 @@ void ProcessorRunner::Run(uint32_t threadNo) {
                                                         pipeline->GetContext().GetRegion());
         }
 
-        if (pipeline->IsFlushingThroughGoPipeline()) {
-            if (isLog) {
-                for (auto& group : eventGroupList) {
-                    string res, errorMsg;
-                    if (!Serialize(group,
-                                   pipeline->GetContext().GetGlobalConfig().mEnableTimestampNanosecond,
-                                   pipeline->GetContext().GetLogstoreName(),
-                                   res,
-                                   errorMsg)) {
-                        LOG_WARNING(pipeline->GetContext().GetLogger(),
-                                    ("failed to serialize event group",
-                                     errorMsg)("action", "discard data")("config", configName));
-                        pipeline->GetContext().GetAlarm().SendAlarm(SERIALIZE_FAIL_ALARM,
-                                                                    "failed to serialize event group: " + errorMsg
-                                                                        + "\taction: discard data\tconfig: "
-                                                                        + configName,
-                                                                    pipeline->GetContext().GetProjectName(),
-                                                                    pipeline->GetContext().GetLogstoreName(),
-                                                                    pipeline->GetContext().GetRegion());
-                        continue;
+            if (pipeline->IsFlushingThroughGoPipeline()) {
+                if (isLog) {
+                    for (auto& group : eventGroupList) {
+                        string res, errorMsg;
+                        if (!Serialize(group,
+                                       pipeline->GetContext().GetGlobalConfig().mEnableTimestampNanosecond,
+                                       pipeline->GetContext().GetLogstoreName(),
+                                       res,
+                                       errorMsg)) {
+                            LOG_WARNING(pipeline->GetContext().GetLogger(),
+                                        ("failed to serialize event group",
+                                         errorMsg)("action", "discard data")("config", configName));
+                            pipeline->GetContext().GetAlarm().SendAlarm(SERIALIZE_FAIL_ALARM,
+                                                                        "failed to serialize event group: " + errorMsg
+                                                                            + "\taction: discard data\tconfig: "
+                                                                            + configName,
+                                                                        pipeline->GetContext().GetProjectName(),
+                                                                        pipeline->GetContext().GetLogstoreName(),
+                                                                        pipeline->GetContext().GetRegion());
+                            continue;
+                        }
+                        LogtailPlugin::GetInstance()->ProcessLogGroup(
+                            pipeline->GetContext().GetConfigName(),
+                            res,
+                            group.GetMetadata(EventGroupMetaKey::SOURCE_ID).to_string());
                     }
-                    LogtailPlugin::GetInstance()->ProcessLogGroup(
-                        pipeline->GetContext().GetConfigName(),
-                        res,
-                        group.GetMetadata(EventGroupMetaKey::SOURCE_ID).to_string());
                 }
+            } else {
+                pipeline->Send(std::move(eventGroupList));
             }
-        } else {
-            if (isLog) {
-                string convertedPath = eventGroupList[0].GetMetadata(EventGroupMetaKey::LOG_FILE_PATH).to_string();
-                string hostLogPath
-                    = eventGroupList[0].GetMetadata(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED).to_string();
-#if defined(_MSC_VER)
-                if (BOOL_FLAG(enable_chinese_tag_path)) {
-                    convertedPath = EncodingConverter::GetInstance()->FromACPToUTF8(convertedPath);
-                    hostLogPath = EncodingConverter::GetInstance()->FromACPToUTF8(hostLogPath);
-                }
-#endif
-                LogFileProfiler::GetInstance()->AddProfilingData(
-                    pipeline->Name(),
-                    pipeline->GetContext().GetRegion(),
-                    pipeline->GetContext().GetProjectName(),
-                    pipeline->GetContext().GetLogstoreName(),
-                    convertedPath,
-                    hostLogPath,
-                    vector<sls_logs::LogTag>(), // warning: this cannot be recovered!
-                    profile.readBytes,
-                    profile.skipBytes,
-                    profile.splitLines,
-                    profile.parseFailures,
-                    profile.regexMatchFailures,
-                    profile.parseTimeFailures,
-                    profile.historyFailures,
-                    0,
-                    ""); // TODO: I don't think errorLine is useful
-            }
-            pipeline->Send(std::move(eventGroupList));
+            pipeline->SubInProcessCnt();
         }
-        pipeline->SubInProcessCnt();
-
-        sEventPool.CheckGC();
     }
 }
 

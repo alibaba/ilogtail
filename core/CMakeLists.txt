@@ -113,12 +113,11 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/plugin/flusher/links.cmake)
 
 # Subdirectories (modules). except for common, input, processor, flusher, observer, helper, spl, and provider.
 set(SUB_DIRECTORIES_LIST
-        application app_config checkpoint container_manager logger go_pipeline monitor monitor/metric_constants profile_sender models
+        application app_config checkpoint container_manager metadata logger go_pipeline monitor monitor/metric_constants profile_sender models
         config config/watcher
-        instance_config
         pipeline pipeline/batch pipeline/limiter pipeline/plugin pipeline/plugin/creator pipeline/plugin/instance pipeline/plugin/interface pipeline/queue pipeline/route pipeline/serializer
         runner runner/sink/http
-        protobuf/sls
+        protobuf/sls protobuf/models
         file_server file_server/event file_server/event_handler file_server/event_listener file_server/reader file_server/polling
         prometheus prometheus/labels prometheus/schedulers prometheus/async
         ebpf ebpf/observer ebpf/security ebpf/handler
@@ -141,7 +140,6 @@ endif()
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories("/opt/logtail_spl/include")
 if (LINUX)
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/observer)
     if (WITHSPL)
         include_directories(${CMAKE_CURRENT_SOURCE_DIR}/spl)
     endif()
@@ -177,9 +175,6 @@ elseif(UNIX)
     file(GLOB REMOVE_EVENT_LISTENER_SOURCES file_server/event_listener/*_Windows.cpp file_server/event_listener/*_Windows.h)
     list(REMOVE_ITEM FRAMEWORK_SOURCE_FILES ${REMOVE_EVENT_LISTENER_SOURCES})
     if (LINUX)
-        # observer
-        file(GLOB_RECURSE APPEND_OBSERVER_SOURCES observer/*)
-        list(APPEND FRAMEWORK_SOURCE_FILES ${APPEND_OBSERVER_SOURCES})
         if (WITHSPL)
             set(SRC_FILES ${PLUGIN_SOURCE_FILES_SPL})
         endif()

@@ -157,6 +157,7 @@ DEFINE_FLAG_STRING(metrics_report_method,
 
 DEFINE_FLAG_STRING(loong_collector_operator_service, "loong collector operator service", "");
 DEFINE_FLAG_INT32(loong_collector_operator_service_port, "loong collector operator service port", 8888);
+DEFINE_FLAG_INT32(loong_collector_k8s_meta_service_port, "loong collector operator service port", 9000);
 DEFINE_FLAG_STRING(_pod_name_, "agent pod name", "");
 
 DEFINE_FLAG_STRING(app_info_file, "", "app_info.json");
@@ -499,6 +500,14 @@ string GetFileTagsDir() {
     }
 }
 
+string GetPipelineConfigDir() {
+    if (BOOL_FLAG(logtail_mode)) {
+        return "config";
+    } else {
+        return "pipeline_config";
+    }
+}
+
 AppConfig::AppConfig() {
     LOG_INFO(sLogger, ("AppConfig AppConfig", "success"));
     SetIlogtailConfigJson("");
@@ -609,7 +618,7 @@ void AppConfig::LoadAppConfig(const std::string& ilogtailConfigFile) {
     if (BOOL_FLAG(logtail_mode)) {
         loadAppConfigLogtailMode(ilogtailConfigFile);
     } else {
-        std::string confDir  = GetAgentConfDir();
+        std::string confDir = GetAgentConfDir();
         SetLoongcollectorConfDir(AbsolutePath(confDir, mProcessExecutionDir));
     }
     // 加载本地instanceconfig
@@ -627,7 +636,6 @@ void AppConfig::LoadAppConfig(const std::string& ilogtailConfigFile) {
 }
 
 void AppConfig::loadAppConfigLogtailMode(const std::string& ilogtailConfigFile) {
-
     Json::Value confJson(Json::objectValue);
     std::string newConfDir;
 
@@ -1354,8 +1362,11 @@ void AppConfig::InitEnvMapping(const std::string& envStr, std::map<std::string, 
     }
 }
 void AppConfig::SetConfigFlag(const std::string& flagName, const std::string& value) {
-    static set<string> sIgnoreFlagSet
-        = {"loongcollector_conf_dir", "loongcollector_log_dir", "loongcollector_data_dir", "loongcollector_run_dir", "logtail_mode"};
+    static set<string> sIgnoreFlagSet = {"loongcollector_conf_dir",
+                                         "loongcollector_log_dir",
+                                         "loongcollector_data_dir",
+                                         "loongcollector_run_dir",
+                                         "logtail_mode"};
     if (sIgnoreFlagSet.find(flagName) != sIgnoreFlagSet.end()) {
         return;
     }
@@ -1402,7 +1413,7 @@ void AppConfig::ParseEnvToFlags() {
         }
     }
 #endif
-    for (const auto & iter : envMapping) {
+    for (const auto& iter : envMapping) {
         const std::string& key = iter.first;
         const std::string& value = iter.second;
         SetConfigFlag(key, value);
@@ -1479,8 +1490,8 @@ void AppConfig::ReadFlagsFromMap(const std::unordered_map<std::string, std::stri
  *    - 记录无法转换的值
  */
 void AppConfig::RecurseParseJsonToFlags(const Json::Value& confJson, std::string prefix) {
-    const static unordered_set<string> sIgnoreKeySet = {"data_server_list"};
-    const static unordered_set<string> sForceKeySet = {"config_server_address_list"};
+    const static unordered_set<string> sIgnoreKeySet = {"data_server_list", "legacy_data_server_list"};
+    const static unordered_set<string> sForceKeySet = {"config_server_address_list", "config_server_list"};
     for (auto name : confJson.getMemberNames()) {
         auto jsonvalue = confJson[name];
         string fullName;
@@ -1704,7 +1715,10 @@ void AppConfig::UpdateFileTags() {
     return;
 }
 
-void AppConfig::MergeJson(Json::Value& mainConfJson, const Json::Value& subConfJson, std::unordered_map<std::string, std::string>& keyToConfigName, const std::string& configName) {
+void AppConfig::MergeJson(Json::Value& mainConfJson,
+                          const Json::Value& subConfJson,
+                          std::unordered_map<std::string, std::string>& keyToConfigName,
+                          const std::string& configName) {
     for (const auto& subkey : subConfJson.getMemberNames()) {
         mainConfJson[subkey] = subConfJson[subkey];
         keyToConfigName[subkey] = configName;
@@ -1718,9 +1732,15 @@ void AppConfig::LoadInstanceConfig(const std::map<std::string, std::shared_ptr<I
     mRemoteInstanceConfigKeyToConfigName.clear();
     for (const auto& config : instanceConfig) {
         if (EndWith(config.second->mDirName, AppConfig::sLocalConfigDir)) {
-            MergeJson(localInstanceConfig, config.second->GetConfig(), mLocalInstanceConfigKeyToConfigName, config.second->mDirName+"/"+config.second->mConfigName);
+            MergeJson(localInstanceConfig,
+                      config.second->GetConfig(),
+                      mLocalInstanceConfigKeyToConfigName,
+                      config.second->mDirName + "/" + config.second->mConfigName);
         } else {
-            MergeJson(remoteInstanceConfig, config.second->GetConfig(), mRemoteInstanceConfigKeyToConfigName, config.second->mDirName+"/"+config.second->mConfigName);
+            MergeJson(remoteInstanceConfig,
+                      config.second->GetConfig(),
+                      mRemoteInstanceConfigKeyToConfigName,
+                      config.second->mDirName + "/" + config.second->mConfigName);
         }
     }
     if (localInstanceConfig != mLocalInstanceConfig || mRemoteInstanceConfig != remoteInstanceConfig) {
@@ -1759,7 +1779,7 @@ void AppConfig::RegisterCallback(const std::string& key, std::function<bool()>* 
     mCallbacks[key] = callback;
 }
 
-template<typename T>
+template <typename T>
 T AppConfig::MergeConfig(const T& defaultValue,
                          const T& currentValue,
                          const std::string& name,

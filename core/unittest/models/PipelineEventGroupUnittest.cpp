@@ -28,6 +28,7 @@ public:
     void TestCreateEvent();
     void TestAddEvent();
     void TestSwapEvents();
+    void TestReserveEvents();
     void TestCopy();
     void TestDestructor();
     void TestSetMetadata();
@@ -170,6 +171,11 @@ void PipelineEventGroupUnittest::TestDestructor() {
     APSARA_TEST_EQUAL(0, span->GetTimestamp());
 }
 
+void PipelineEventGroupUnittest::TestReserveEvents() {
+    mEventGroup->ReserveEvents(10);
+    APSARA_TEST_EQUAL(10U, mEventGroup->GetEvents().capacity());
+}
+
 void PipelineEventGroupUnittest::TestCopy() {
     mEventGroup->AddLogEvent();
     auto res = mEventGroup->Copy();
@@ -259,6 +265,7 @@ void PipelineEventGroupUnittest::TestFromJsonToJson() {
 UNIT_TEST_CASE(PipelineEventGroupUnittest, TestCreateEvent)
 UNIT_TEST_CASE(PipelineEventGroupUnittest, TestAddEvent)
 UNIT_TEST_CASE(PipelineEventGroupUnittest, TestSwapEvents)
+UNIT_TEST_CASE(PipelineEventGroupUnittest, TestReserveEvents)
 UNIT_TEST_CASE(PipelineEventGroupUnittest, TestCopy)
 UNIT_TEST_CASE(PipelineEventGroupUnittest, TestDestructor)
 UNIT_TEST_CASE(PipelineEventGroupUnittest, TestSetMetadata)

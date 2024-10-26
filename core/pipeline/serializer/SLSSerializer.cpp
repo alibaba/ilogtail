@@ -48,8 +48,7 @@ bool Serializer<vector<CompressedLogGroup>>::DoSerialize(vector<CompressedLogGro
 
     auto before = std::chrono::system_clock::now();
     auto res = Serialize(std::move(p), output, errorMsg);
-    mTotalProcessMs->Add(
-        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - before).count());
+    mTotalProcessMs->Add(std::chrono::system_clock::now() - before);
 
     if (res) {
         mOutItemsTotal->Add(1);
@@ -143,7 +142,7 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, stri
             + "\tsize limit: " + ToString(INT32_FLAG(max_send_log_group_size));
         return false;
     }
-    res = logGroup.SerializeAsString();
+    logGroup.SerializeToString(&res);
     return true;
 }
 
