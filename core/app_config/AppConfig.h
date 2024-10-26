@@ -23,7 +23,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-#include <function>
+#include <functional>
 
 #include "InstanceConfig.h"
 #include "protobuf/sls/sls_logs.pb.h"
