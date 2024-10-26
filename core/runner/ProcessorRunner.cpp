@@ -46,7 +46,6 @@ thread_local CounterPtr ProcessorRunner::sInGroupsCnt;
 thread_local CounterPtr ProcessorRunner::sInEventsCnt;
 thread_local CounterPtr ProcessorRunner::sInGroupDataSizeBytes;
 thread_local IntGaugePtr ProcessorRunner::sLastRunTime;
-thread_local EventPool ProcessorRunner::sEventPool(false);
 
 ProcessorRunner::ProcessorRunner()
     : mThreadCount(AppConfig::GetInstance()->GetProcessThreadCount()), mThreadRes(mThreadCount) {
@@ -137,7 +136,7 @@ void ProcessorRunner::Run(uint32_t threadNo) {
             continue;
         }
 
-            bool isLog = !item->mEventGroup.GetEvents().empty() && item->mEventGroup.GetEvents()[0].Is<LogEvent>();
+        bool isLog = !item->mEventGroup.GetEvents().empty() && item->mEventGroup.GetEvents()[0].Is<LogEvent>();
 
         int32_t startTime = (int32_t)time(NULL);
         vector<PipelineEventGroup> eventGroupList;
@@ -156,38 +155,37 @@ void ProcessorRunner::Run(uint32_t threadNo) {
                                                         pipeline->GetContext().GetRegion());
         }
 
-            if (pipeline->IsFlushingThroughGoPipeline()) {
-                if (isLog) {
-                    for (auto& group : eventGroupList) {
-                        string res, errorMsg;
-                        if (!Serialize(group,
-                                       pipeline->GetContext().GetGlobalConfig().mEnableTimestampNanosecond,
-                                       pipeline->GetContext().GetLogstoreName(),
-                                       res,
-                                       errorMsg)) {
-                            LOG_WARNING(pipeline->GetContext().GetLogger(),
-                                        ("failed to serialize event group",
-                                         errorMsg)("action", "discard data")("config", configName));
-                            pipeline->GetContext().GetAlarm().SendAlarm(SERIALIZE_FAIL_ALARM,
-                                                                        "failed to serialize event group: " + errorMsg
-                                                                            + "\taction: discard data\tconfig: "
-                                                                            + configName,
-                                                                        pipeline->GetContext().GetProjectName(),
-                                                                        pipeline->GetContext().GetLogstoreName(),
-                                                                        pipeline->GetContext().GetRegion());
-                            continue;
-                        }
-                        LogtailPlugin::GetInstance()->ProcessLogGroup(
-                            pipeline->GetContext().GetConfigName(),
-                            res,
-                            group.GetMetadata(EventGroupMetaKey::SOURCE_ID).to_string());
+        if (pipeline->IsFlushingThroughGoPipeline()) {
+            if (isLog) {
+                for (auto& group : eventGroupList) {
+                    string res, errorMsg;
+                    if (!Serialize(group,
+                                   pipeline->GetContext().GetGlobalConfig().mEnableTimestampNanosecond,
+                                   pipeline->GetContext().GetLogstoreName(),
+                                   res,
+                                   errorMsg)) {
+                        LOG_WARNING(pipeline->GetContext().GetLogger(),
+                                    ("failed to serialize event group",
+                                     errorMsg)("action", "discard data")("config", configName));
+                        pipeline->GetContext().GetAlarm().SendAlarm(SERIALIZE_FAIL_ALARM,
+                                                                    "failed to serialize event group: " + errorMsg
+                                                                        + "\taction: discard data\tconfig: "
+                                                                        + configName,
+                                                                    pipeline->GetContext().GetProjectName(),
+                                                                    pipeline->GetContext().GetLogstoreName(),
+                                                                    pipeline->GetContext().GetRegion());
+                        continue;
                     }
+                    LogtailPlugin::GetInstance()->ProcessLogGroup(
+                        pipeline->GetContext().GetConfigName(),
+                        res,
+                        group.GetMetadata(EventGroupMetaKey::SOURCE_ID).to_string());
                 }
-            } else {
-                pipeline->Send(std::move(eventGroupList));
             }
-            pipeline->SubInProcessCnt();
+        } else {
+            pipeline->Send(std::move(eventGroupList));
         }
+        pipeline->SubInProcessCnt();
     }
 }
 

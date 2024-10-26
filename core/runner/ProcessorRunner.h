@@ -19,12 +19,12 @@
 #include <atomic>
 #include <cstdint>
 #include <future>
+#include <string>
 #include <vector>
 
-#include "common/Lock.h"
-#include "models/PipelineEventGroup.h"
 #include "models/EventPool.h"
-#include "monitor/Monitor.h"
+#include "models/PipelineEventGroup.h"
+#include "monitor/LogtailMetric.h"
 #include "pipeline/queue/QueueKey.h"
 
 namespace logtail {
@@ -38,8 +38,6 @@ public:
         static ProcessorRunner instance;
         return &instance;
     }
-
-    static EventPool& GetEventPool() { return sEventPool; }
 
     void Init();
     void Stop();
@@ -61,8 +59,6 @@ private:
     uint32_t mThreadCount = 1;
     std::vector<std::future<void>> mThreadRes;
     std::atomic_bool mIsFlush = false;
-
-    thread_local static EventPool sEventPool;
 
     thread_local static MetricsRecordRef sMetricsRecordRef;
     thread_local static CounterPtr sInGroupsCnt;
