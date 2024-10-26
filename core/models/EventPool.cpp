@@ -183,4 +183,6 @@ void EventPool::Clear() {
 }
 #endif
 
+thread_local EventPool gThreadedEventPool(false);
+
 } // namespace logtail

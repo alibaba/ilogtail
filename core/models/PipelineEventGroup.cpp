@@ -16,12 +16,16 @@
 
 #include "models/PipelineEventGroup.h"
 
+#ifdef APSARA_UNIT_TEST_MAIN
 #include <sstream>
+#endif
 
 #include "common/HashUtil.h"
 #include "logger/Logger.h"
+#include "models/EventPool.h"
+#ifdef APSARA_UNIT_TEST_MAIN
 #include "plugin/processor/inner/ProcessorParseContainerLogNative.h"
-#include "runner/ProcessorRunner.h"
+#endif
 
 using namespace std;
 
@@ -40,7 +44,7 @@ void DestroyEvents(vector<PipelineEventPtr>&& events) {
         if (item.first) {
             item.first->Release(std::move(item.second));
         } else {
-            ProcessorRunner::GetEventPool().Release(std::move(item.second));
+            gThreadedEventPool.Release(std::move(item.second));
         }
     }
 }
@@ -105,7 +109,7 @@ unique_ptr<LogEvent> PipelineEventGroup::CreateLogEvent(bool fromPool, EventPool
         if (pool) {
             e = pool->AcquireLogEvent(this);
         } else {
-            e = ProcessorRunner::GetEventPool().AcquireLogEvent(this);
+            e = gThreadedEventPool.AcquireLogEvent(this);
         }
     } else {
         e = new LogEvent(this);
@@ -119,7 +123,7 @@ unique_ptr<MetricEvent> PipelineEventGroup::CreateMetricEvent(bool fromPool, Eve
         if (pool) {
             e = pool->AcquireMetricEvent(this);
         } else {
-            e = ProcessorRunner::GetEventPool().AcquireMetricEvent(this);
+            e = gThreadedEventPool.AcquireMetricEvent(this);
         }
     } else {
         e = new MetricEvent(this);
@@ -133,7 +137,7 @@ unique_ptr<SpanEvent> PipelineEventGroup::CreateSpanEvent(bool fromPool, EventPo
         if (pool) {
             e = pool->AcquireSpanEvent(this);
         } else {
-            e = ProcessorRunner::GetEventPool().AcquireSpanEvent(this);
+            e = gThreadedEventPool.AcquireSpanEvent(this);
         }
     } else {
         e = new SpanEvent(this);
@@ -147,7 +151,7 @@ LogEvent* PipelineEventGroup::AddLogEvent(bool fromPool, EventPool* pool) {
         if (pool) {
             e = pool->AcquireLogEvent(this);
         } else {
-            e = ProcessorRunner::GetEventPool().AcquireLogEvent(this);
+            e = gThreadedEventPool.AcquireLogEvent(this);
         }
     } else {
         e = new LogEvent(this);
@@ -162,7 +166,7 @@ MetricEvent* PipelineEventGroup::AddMetricEvent(bool fromPool, EventPool* pool) 
         if (pool) {
             e = pool->AcquireMetricEvent(this);
         } else {
-            e = ProcessorRunner::GetEventPool().AcquireMetricEvent(this);
+            e = gThreadedEventPool.AcquireMetricEvent(this);
         }
     } else {
         e = new MetricEvent(this);
@@ -177,7 +181,7 @@ SpanEvent* PipelineEventGroup::AddSpanEvent(bool fromPool, EventPool* pool) {
         if (pool) {
             e = pool->AcquireSpanEvent(this);
         } else {
-            e = ProcessorRunner::GetEventPool().AcquireSpanEvent(this);
+            e = gThreadedEventPool.AcquireSpanEvent(this);
         }
     } else {
         e = new SpanEvent(this);

@@ -14,7 +14,7 @@
 
 #include "pipeline/batch/BatchedEvents.h"
 
-#include "runner/ProcessorRunner.h"
+#include "models/EventPool.h"
 
 using namespace std;
 
@@ -33,7 +33,7 @@ void DestroyEvents(vector<PipelineEventPtr>&& events) {
         if (item.first) {
             item.first->Release(std::move(item.second));
         } else {
-            ProcessorRunner::GetEventPool().Release(std::move(item.second));
+            gThreadedEventPool.Release(std::move(item.second));
         }
     }
 }

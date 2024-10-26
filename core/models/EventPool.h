@@ -17,6 +17,7 @@
 #pragma once
 
 #include <cstdint>
+#include <limits>
 #include <mutex>
 #include <optional>
 #include <vector>
@@ -98,5 +99,7 @@ private:
     friend class BatchedEventsUnittest;
 #endif
 };
+
+extern thread_local EventPool gThreadedEventPool;
 
 } // namespace logtail

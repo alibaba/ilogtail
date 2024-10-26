@@ -43,7 +43,7 @@ protected:
     void TearDown() override {
         mEventGroup.reset();
         mPool.Clear();
-        ProcessorRunner::GetEventPool().Clear();
+        gThreadedEventPool.Clear();
     }
 
 private:
@@ -125,24 +125,24 @@ void PipelineEventGroupUnittest::TestDestructor() {
         log = g.AddLogEvent(true);
         log->SetTimestamp(1234567890);
     }
-    APSARA_TEST_EQUAL(1U, ProcessorRunner::GetEventPool().mLogEventPool.size());
-    APSARA_TEST_EQUAL(log, ProcessorRunner::GetEventPool().mLogEventPool.back());
+    APSARA_TEST_EQUAL(1U, gThreadedEventPool.mLogEventPool.size());
+    APSARA_TEST_EQUAL(log, gThreadedEventPool.mLogEventPool.back());
     APSARA_TEST_EQUAL(0, log->GetTimestamp());
     {
         PipelineEventGroup g(make_shared<SourceBuffer>());
         metric = g.AddMetricEvent(true);
         metric->SetTimestamp(1234567890);
     }
-    APSARA_TEST_EQUAL(1U, ProcessorRunner::GetEventPool().mMetricEventPool.size());
-    APSARA_TEST_EQUAL(metric, ProcessorRunner::GetEventPool().mMetricEventPool.back());
+    APSARA_TEST_EQUAL(1U, gThreadedEventPool.mMetricEventPool.size());
+    APSARA_TEST_EQUAL(metric, gThreadedEventPool.mMetricEventPool.back());
     APSARA_TEST_EQUAL(0, metric->GetTimestamp());
     {
         PipelineEventGroup g(make_shared<SourceBuffer>());
         span = g.AddSpanEvent(true);
         span->SetTimestamp(1234567890);
     }
-    APSARA_TEST_EQUAL(1U, ProcessorRunner::GetEventPool().mSpanEventPool.size());
-    APSARA_TEST_EQUAL(span, ProcessorRunner::GetEventPool().mSpanEventPool.back());
+    APSARA_TEST_EQUAL(1U, gThreadedEventPool.mSpanEventPool.size());
+    APSARA_TEST_EQUAL(span, gThreadedEventPool.mSpanEventPool.back());
     APSARA_TEST_EQUAL(0, span->GetTimestamp());
     {
         PipelineEventGroup g(make_shared<SourceBuffer>());
