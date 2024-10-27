@@ -11,6 +11,7 @@ type AgentAttributes struct {
 	Version  []byte
 	Ip       []byte
 	Hostname []byte
+	Hostid   []byte
 	Extras   map[string][]byte
 }
 
@@ -19,6 +20,7 @@ func (a *AgentAttributes) Parse2Proto() *proto.AgentAttributes {
 	protoAgentAttributes.Version = a.Version
 	protoAgentAttributes.Ip = a.Ip
 	protoAgentAttributes.Hostname = a.Hostname
+	protoAgentAttributes.Hostid = a.Hostid
 	protoAgentAttributes.Extras = a.Extras
 	return protoAgentAttributes
 }
@@ -28,6 +30,7 @@ func ParseProtoAgentAttributes2AgentAttributes(attributes *proto.AgentAttributes
 	agentAttributes.Version = attributes.Version
 	agentAttributes.Ip = attributes.Ip
 	agentAttributes.Hostname = attributes.Hostname
+	agentAttributes.Hostid = attributes.Hostid
 	agentAttributes.Extras = attributes.Extras
 	return agentAttributes
 }
