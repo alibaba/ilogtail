@@ -78,6 +78,7 @@
     <el-table-column property="version"  label="版本" width="100" />
     <el-table-column property="ip"  label="ip" width="100" />
     <el-table-column property="hostname"  label="hostname" width="150" />
+    <el-table-column property="hostid"  label="hostid" width="150" />
     <el-table-column property="extras"  label="额外信息" width="600" />
     <el-table-column property="capabilities" label="能力" :formatter="(row, column, cellValue) =>
     {return this.calculateAgentCapabilities(cellValue).join('\n')}" width="200"/>
@@ -244,6 +245,7 @@ export default {
                 "version":agent.attributes.version,
                 "ip":agent.attributes.ip,
                 "hostname":agent.attributes.hostname,
+                "hostid":agent.attributes.hostid,
                 "extras":agent.attributes.extrasMap,
                 "pipelineConfigsList":agent.pipelineConfigsList,
                 "instanceConfigsList":agent.instanceConfigsList

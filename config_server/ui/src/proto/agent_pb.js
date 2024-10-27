@@ -897,6 +897,7 @@ proto.AgentAttributes.toObject = function(includeInstance, msg) {
     version: msg.getVersion_asB64(),
     ip: msg.getIp_asB64(),
     hostname: msg.getHostname_asB64(),
+    hostid: msg.getHostid_asB64(),
     extrasMap: (f = msg.getExtrasMap()) ? f.toObject(includeInstance, undefined) : []
   };
 
@@ -945,6 +946,10 @@ proto.AgentAttributes.deserializeBinaryFromReader = function(msg, reader) {
     case 3:
       var value = /** @type {!Uint8Array} */ (reader.readBytes());
       msg.setHostname(value);
+      break;
+    case 4:
+      var value = /** @type {!Uint8Array} */ (reader.readBytes());
+      msg.setHostid(value);
       break;
     case 100:
       var value = msg.getExtrasMap();
@@ -999,6 +1004,13 @@ proto.AgentAttributes.serializeBinaryToWriter = function(message, writer) {
   if (f.length > 0) {
     writer.writeBytes(
       3,
+      f
+    );
+  }
+  f = message.getHostid_asU8();
+  if (f.length > 0) {
+    writer.writeBytes(
+      4,
       f
     );
   }
@@ -1132,6 +1144,48 @@ proto.AgentAttributes.prototype.getHostname_asU8 = function() {
  */
 proto.AgentAttributes.prototype.setHostname = function(value) {
   return jspb.Message.setProto3BytesField(this, 3, value);
+};
+
+
+/**
+ * optional bytes hostid = 4;
+ * @return {!(string|Uint8Array)}
+ */
+proto.AgentAttributes.prototype.getHostid = function() {
+  return /** @type {!(string|Uint8Array)} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
+};
+
+
+/**
+ * optional bytes hostid = 4;
+ * This is a type-conversion wrapper around `getHostid()`
+ * @return {string}
+ */
+proto.AgentAttributes.prototype.getHostid_asB64 = function() {
+  return /** @type {string} */ (jspb.Message.bytesAsB64(
+      this.getHostid()));
+};
+
+
+/**
+ * optional bytes hostid = 4;
+ * Note that Uint8Array is not supported on all browsers.
+ * @see http://caniuse.com/Uint8Array
+ * This is a type-conversion wrapper around `getHostid()`
+ * @return {!Uint8Array}
+ */
+proto.AgentAttributes.prototype.getHostid_asU8 = function() {
+  return /** @type {!Uint8Array} */ (jspb.Message.bytesAsU8(
+      this.getHostid()));
+};
+
+
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.AgentAttributes} returns this
+ */
+proto.AgentAttributes.prototype.setHostid = function(value) {
+  return jspb.Message.setProto3BytesField(this, 4, value);
 };
 
 
