@@ -33,7 +33,7 @@ func GetAllAgents(containPipelineConfigs bool, containInstanceConfigs bool) []en
 func RemoveAgentById(instanceId string) error {
 	tx := s.Db.Where("instance_id=?", instanceId).Delete(&entity.Agent{})
 	if tx.RowsAffected != 1 {
-		return common.ServerErrorWithMsg("Agent failed to delete record %s", instanceId)
+		return common.ServerErrorWithMsg(common.AgentNotExist, "Agent failed to delete record %s", instanceId)
 	}
 	return nil
 }

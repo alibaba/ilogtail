@@ -20,7 +20,7 @@ func ProtobufHandler[T any, R any](handler ProtobufFunc[T, R]) gin.HandlerFunc {
 		defer func() {
 			responseCommon := common.GenerateCommonResponse(err)
 			reflect.ValueOf(response).Elem().FieldByName("CommonResponse").Set(reflect.ValueOf(responseCommon))
-			common.SuccessProtobufRes(c, response)
+			common.ProtobufRes(c, err, response)
 		}()
 		err = c.ShouldBindBodyWith(request, binding.ProtoBuf)
 

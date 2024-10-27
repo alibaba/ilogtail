@@ -71,7 +71,7 @@ func getConnection(dsn string) (*GormConfig, gorm.Dialector, error) {
 	if dialect, ok := gormDialectMap[config.Type]; ok {
 		gormDialect := dialect(dsn)
 		if gormDialect == nil {
-			return nil, nil, common.ServerErrorWithMsg("connect %s:%s dbName:%s failed",
+			return nil, nil, common.ServerError("connect %s:%s dbName:%s failed",
 				config.Host, config.Port, config.DbName)
 		}
 		return config, dialect(dsn), nil

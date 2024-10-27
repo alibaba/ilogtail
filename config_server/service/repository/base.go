@@ -20,7 +20,7 @@ func generateClauseColumn(names ...string) []clause.Column {
 
 func createOrUpdateEntities[T any](conflictColumnNames []string, assignmentColumns []string, entities ...T) error {
 	if conflictColumnNames == nil {
-		return common.ServerErrorWithMsg("conflictColumnNames could not be null")
+		panic("conflictColumnNames could not be null")
 	}
 	if entities == nil || len(entities) == 0 {
 		return nil

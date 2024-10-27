@@ -9,7 +9,7 @@ func GetInstanceConfigByNames(names ...string) ([]*entity.InstanceConfig, error)
 	instanceConfigs := make([]*entity.InstanceConfig, 0)
 	row := s.Db.Where("name in (?)", names).Find(&instanceConfigs).RowsAffected
 	if row != int64(len(names)) {
-		return nil, common.ServerErrorWithMsg("instanceNames=%s can not be found", names)
+		return nil, common.ServerErrorWithMsg(common.ConfigNotExist, "instanceNames=%s can not be found", names)
 	}
 	return instanceConfigs, nil
 }
@@ -22,7 +22,7 @@ func GetInstanceConfigsByAgent(agent *entity.Agent) error {
 func CreateInstanceConfig(config *entity.InstanceConfig) error {
 	row := s.Db.Create(config).RowsAffected
 	if row != 1 {
-		return common.ServerErrorWithMsg("create InstanceConfig(%s) error", config.Name)
+		return common.ServerErrorWithMsg(common.ConfigAlreadyExist, "create InstanceConfig(%s) error", config.Name)
 	}
 	return nil
 }
@@ -35,7 +35,7 @@ func UpdateInstanceConfig(config *entity.InstanceConfig) error {
 func DeleteInstanceConfig(configName string) error {
 	row := s.Db.Where("name=?", configName).Delete(&entity.InstanceConfig{}).RowsAffected
 	if row != 1 {
-		return common.ServerErrorWithMsg("delete InstanceConfig(name=%s) error", configName)
+		return common.ServerErrorWithMsg(common.ConfigNotExist, "delete InstanceConfig(name=%s) error", configName)
 	}
 	return nil
 }
@@ -44,7 +44,7 @@ func GetInstanceConfig(configName string) (*entity.InstanceConfig, error) {
 	config := &entity.InstanceConfig{}
 	row := s.Db.Where("name=?", configName).Find(config).RowsAffected
 	if row != 1 {
-		return nil, common.ServerErrorWithMsg("get instanceConfig(name=%s) error", configName)
+		return nil, common.ServerErrorWithMsg(common.ConfigNotExist, "get instanceConfig(name=%s) error", configName)
 	}
 	return config, nil
 }

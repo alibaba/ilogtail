@@ -15,12 +15,12 @@ func GenerateCommonResponse(err error) *proto.CommonResponse {
 	}
 	if errors.As(err, &apiError) {
 		return &proto.CommonResponse{
-			Status:       int32(apiError.Code),
-			ErrorMessage: []byte(apiError.Message),
+			Status:       int32(apiError.Status.Code),
+			ErrorMessage: []byte(apiError.Status.Message),
 		}
 	}
 	return &proto.CommonResponse{
-		Status:       int32(Failed.Code),
+		Status:       int32(ServerBusy.Code),
 		ErrorMessage: []byte(err.Error()),
 	}
 }
