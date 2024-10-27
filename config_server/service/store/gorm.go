@@ -49,12 +49,12 @@ func (s *GormStore) Connect2Db() error {
 		return err
 	}
 	dbName := s.Config.DbName
-	log.Printf("create database %s ...", dbName)
+	log.Printf("create or connect database %s ...", dbName)
 	err = s.Db.Exec(fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s", dbName)).Error
 	if err != nil {
 		return err
 	}
-	log.Printf("create database %s success ...", dbName)
+	log.Printf("create or connect database %s success ...", dbName)
 	log.Printf("check %s ...", dbName)
 	err = s.Db.Exec(fmt.Sprintf("USE %s", s.Config.DbName)).Error
 	if err != nil {

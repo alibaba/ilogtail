@@ -22,6 +22,30 @@ func CheckAgentExist(timeLimit int64) {
 	})
 }
 
+func createDefaultGroupWhenStart() {
+	group := &entity.AgentGroup{
+		Name:  entity.AgentGroupDefaultValue,
+		Value: entity.AgentGroupDefaultValue,
+	}
+	var err error
+	_, err = repository.GetAgentGroupDetail(entity.AgentGroupDefaultValue, false, false)
+	if err == nil {
+		// Default agent group exists
+		return
+	}
+	err = repository.CreateAgentGroup(group)
+	if err != nil {
+		panic("init default group failed...")
+	}
+}
+
+func init() {
+	createDefaultGroupWhenStart()
+}
+
+// 业务逻辑链 service/agent => {manager/state/*、manager/agent、manager/pipeline_config、manager/instance_config}
+//=>{repository/agent、repository/pipeline_config、repository/instance_config}
+
 func HeartBeat(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse) error {
 	instanceId := req.InstanceId
 	if instanceId == nil {
@@ -64,6 +88,7 @@ func HeartBeat(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse) error 
 }
 
 // 心跳检测中的tag只是为了获取某个组的配置，而不是让某个agent加入到某个组
+//业务逻辑链 service/agent=>{manager/pipeline_config}=>{repository/agent、repository/pipeline_config}
 
 func FetchPipelineConfigDetail(req *proto.FetchConfigRequest, res *proto.FetchConfigResponse) error {
 	instanceId := req.InstanceId
@@ -93,6 +118,8 @@ func FetchPipelineConfigDetail(req *proto.FetchConfigRequest, res *proto.FetchCo
 	})
 	return nil
 }
+
+//业务逻辑链 service/agent=>{manager/instance_config}=>{repository/agent、repository/instance_config}
 
 func FetchInstanceConfigDetail(req *proto.FetchConfigRequest, res *proto.FetchConfigResponse) error {
 	instanceId := req.InstanceId
