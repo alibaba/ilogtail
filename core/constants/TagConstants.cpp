@@ -27,7 +27,7 @@ namespace logtail {
     const std::string DEFAULT_TAG_IMAGE_NAME = "image_name";
 
 ////////////////////////// LOG ////////////////////////
-#ifndef __ENTERPRISE__
+#ifndef __ENTERPRISE__ // 开源版
     const std::string DEFAULT_LOG_TAG_HOST_NAME = DEFAULT_TAG_HOST_NAME;
     const std::string DEFAULT_LOG_TAG_NAMESPACE = DEFAULT_TAG_NAMESPACE;
     const std::string DEFAULT_LOG_TAG_POD_NAME = DEFAULT_TAG_POD_NAME;
@@ -39,7 +39,6 @@ namespace logtail {
     const std::string DEFAULT_LOG_TAG_FILE_INODE = "file_inode";
     const std::string DEFAULT_LOG_TAG_FILE_PATH = "file_path";
 
-    // 差异部分
     const std::string DEFAULT_LOG_TAG_HOST_IP = DEFAULT_TAG_HOST_IP;
 #else
     const std::string DEFAULT_LOG_TAG_HOST_NAME = "__hostname__";
@@ -53,7 +52,6 @@ namespace logtail {
     const std::string DEFAULT_LOG_TAG_FILE_INODE = "__inode__";
     const std::string DEFAULT_LOG_TAG_FILE_PATH = "__path__";
     
-    // 差异部分
     const std::string DEFAULT_LOG_TAG_USER_DEFINED_ID = "__user_defined_id__";
 #endif
 
