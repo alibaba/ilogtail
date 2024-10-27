@@ -15,15 +15,15 @@ package trigger
 
 import (
 	"context"
-	"html/template"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/alibaba/ilogtail/test/config"
 	"github.com/alibaba/ilogtail/test/engine/setup"
 )
 
-const triggerRegexTemplate = "cd {{.WorkDir}} && TOTAL_LOG={{.TotalLog}} INTERVAL={{.Interval}} FILENAME={{.Filename}} GENERATED_LOG_DIR={{.GeneratedLogDir}} {{.Command}}"
+const triggerTemplate = "cd {{.WorkDir}} && TOTAL_LOG={{.TotalLog}} INTERVAL={{.Interval}} FILENAME={{.Filename}} GENERATED_LOG_DIR={{.GeneratedLogDir}} {{.Custom}} {{.Command}}"
 
 func RegexSingle(ctx context.Context, totalLog int, path string, interval int) (context.Context, error) {
 	return generate(ctx, totalLog, path, interval, "TestGenerateRegexLogSingle")
@@ -33,37 +33,105 @@ func RegexSingleGBK(ctx context.Context, totalLog int, path string, interval int
 	return generate(ctx, totalLog, path, interval, "TestGenerateRegexLogSingleGBK")
 }
 
+func RegexMultiline(ctx context.Context, totalLog int, path string, interval int) (context.Context, error) {
+	return generate(ctx, totalLog, path, interval, "TestGenerateRegexLogMultiline")
+}
+
+func JsonSingle(ctx context.Context, totalLog int, path string, interval int) (context.Context, error) {
+	return generate(ctx, totalLog, path, interval, "TestGenerateJsonSingle")
+}
+
+func JsonMultiline(ctx context.Context, totalLog int, path string, interval int) (context.Context, error) {
+	return generate(ctx, totalLog, path, interval, "TestGenerateJsonMultiline")
+}
+
 func Apsara(ctx context.Context, totalLog int, path string, interval int) (context.Context, error) {
 	return generate(ctx, totalLog, path, interval, "TestGenerateApsara")
 }
 
-func DelimiterSingle(ctx context.Context, totalLog int, path string, interval int) (context.Context, error) {
-	return generate(ctx, totalLog, path, interval, "TestGenerateDelimiterSingle")
+func DelimiterSingle(ctx context.Context, totalLog int, path string, interval int, delimiter, quote string) (context.Context, error) {
+	return generate(ctx, totalLog, path, interval, "TestGenerateDelimiterSingle", "Delimiter", delimiter, "Quote", quote)
 }
 
-func generate(ctx context.Context, totalLog int, path string, interval int, commandName string) (context.Context, error) {
+func DelimiterMultiline(ctx context.Context, totalLog int, path string, interval int, delimiter, quote string) (context.Context, error) {
+	return generate(ctx, totalLog, path, interval, "TestGenerateDelimiterMultiline", "Delimiter", delimiter, "Quote", quote)
+}
+
+func Stdout(ctx context.Context, totalLog int, interval int) (context.Context, error) {
+	time.Sleep(3 * time.Second)
+	command := getRunTriggerCommand("TestGenerateStdout")
+	var triggerCommand strings.Builder
+	template := template.Must(template.New("trigger").Parse(triggerTemplate))
+	if err := template.Execute(&triggerCommand, map[string]interface{}{
+		"WorkDir":  "",
+		"TotalLog": totalLog,
+		"Interval": interval,
+		"TestMode": "stdout",
+		"Filename": "",
+		"Custom":   "",
+		"Command":  command,
+	}); err != nil {
+		return ctx, err
+	}
+	if _, err := setup.Env.ExecOnSource(ctx, triggerCommand.String()); err != nil {
+		return ctx, err
+	}
+	return ctx, nil
+}
+
+func Stderr(ctx context.Context, totalLog int, interval int) (context.Context, error) {
+	time.Sleep(3 * time.Second)
+	command := getRunTriggerCommand("TestGenerateStdout")
+	var triggerCommand strings.Builder
+	template := template.Must(template.New("trigger").Parse(triggerTemplate))
+	if err := template.Execute(&triggerCommand, map[string]interface{}{
+		"WorkDir":  "",
+		"TotalLog": totalLog,
+		"Interval": interval,
+		"TestMode": "stderr",
+		"Filename": "",
+		"Custom":   "",
+		"Command":  command,
+	}); err != nil {
+		return ctx, err
+	}
+	if _, err := setup.Env.ExecOnSource(ctx, triggerCommand.String()); err != nil {
+		return ctx, err
+	}
+	return ctx, nil
+}
+
+func generate(ctx context.Context, totalLog int, path string, interval int, commandName string, customKV ...string) (context.Context, error) {
 	time.Sleep(3 * time.Second)
 	command := getRunTriggerCommand(commandName)
-	var triggerRegexCommand strings.Builder
-	template := template.Must(template.New("trigger").Parse(triggerRegexTemplate))
+	var triggerCommand strings.Builder
+	template := template.Must(template.New("trigger").Parse(triggerTemplate))
 	splittedPath := strings.Split(path, "/")
 	dir := strings.Join(splittedPath[:len(splittedPath)-1], "/")
 	filename := splittedPath[len(splittedPath)-1]
-	if err := template.Execute(&triggerRegexCommand, map[string]interface{}{
+	customString := strings.Builder{}
+	for i := 0; i < len(customKV); i++ {
+		customString.WriteString(customKV[i])
+		customString.WriteString("=")
+		customString.WriteString(customKV[i+1])
+		customString.WriteString(" ")
+		i++
+	}
+	if err := template.Execute(&triggerCommand, map[string]interface{}{
 		"WorkDir":         config.TestConfig.WorkDir,
 		"TotalLog":        totalLog,
 		"Interval":        interval,
 		"GeneratedLogDir": dir,
 		"Filename":        filename,
+		"Custom":          customString.String(),
 		"Command":         command,
 	}); err != nil {
 		return ctx, err
 	}
-	startTime := time.Now().Unix()
-	if err := setup.Env.ExecOnSource(ctx, triggerRegexCommand.String()); err != nil {
+	if _, err := setup.Env.ExecOnSource(ctx, triggerCommand.String()); err != nil {
 		return ctx, err
 	}
-	return context.WithValue(ctx, config.StartTimeContextKey, int32(startTime)), nil
+	return ctx, nil
 }
 
 func BeginTrigger(ctx context.Context) (context.Context, error) {
