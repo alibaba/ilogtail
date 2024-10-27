@@ -15,10 +15,10 @@
 #include <cstdlib>
 
 #include "common/JsonUtil.h"
+#include "models/EventPool.h"
 #include "models/PipelineEventGroup.h"
 #include "runner/ProcessorRunner.h"
 #include "unittest/Unittest.h"
-#include "models/EventPool.h"
 
 using namespace std;
 
