@@ -18,6 +18,7 @@
 #include "batch/TimeoutFlushManager.h"
 #include "common/Flags.h"
 #include "go_pipeline/LogtailPlugin.h"
+#include "models/EventPool.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/LogtailAlarm.h"
 #include "monitor/metric_constants/MetricConstants.h"
@@ -125,7 +126,7 @@ void ProcessorRunner::Run(uint32_t threadNo) {
         sInGroupsCnt->Add(1);
         sInGroupDataSizeBytes->Add(item->mEventGroup.DataSize());
 
-        shared_ptr<Pipeline> pipeline = item->mPipeline;
+        shared_ptr<Pipeline>& pipeline = item->mPipeline;
         if (!pipeline) {
             pipeline = PipelineManager::GetInstance()->FindConfigByName(configName);
         }
@@ -138,22 +139,9 @@ void ProcessorRunner::Run(uint32_t threadNo) {
 
         bool isLog = !item->mEventGroup.GetEvents().empty() && item->mEventGroup.GetEvents()[0].Is<LogEvent>();
 
-        int32_t startTime = (int32_t)time(NULL);
         vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(item->mEventGroup));
         pipeline->Process(eventGroupList, item->mInputIndex);
-        int32_t elapsedTime = (int32_t)time(NULL) - startTime;
-        if (elapsedTime > 1) {
-            LOG_WARNING(
-                pipeline->GetContext().GetLogger(),
-                ("event processing took too long, elapsed time", ToString(elapsedTime) + "s")("config", configName));
-            pipeline->GetContext().GetAlarm().SendAlarm(PROCESS_TOO_SLOW_ALARM,
-                                                        string("event processing took too long, elapsed time: ")
-                                                            + ToString(elapsedTime) + "s\tconfig: " + configName,
-                                                        pipeline->GetContext().GetProjectName(),
-                                                        pipeline->GetContext().GetLogstoreName(),
-                                                        pipeline->GetContext().GetRegion());
-        }
 
         if (pipeline->IsFlushingThroughGoPipeline()) {
             if (isLog) {
@@ -186,6 +174,8 @@ void ProcessorRunner::Run(uint32_t threadNo) {
             pipeline->Send(std::move(eventGroupList));
         }
         pipeline->SubInProcessCnt();
+
+        gThreadedEventPool.CheckGC();
     }
 }
 
