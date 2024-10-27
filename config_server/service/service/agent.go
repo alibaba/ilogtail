@@ -22,6 +22,27 @@ func CheckAgentExist(timeLimit int64) {
 	})
 }
 
+func createDefaultGroupWhenStart() {
+	group := &entity.AgentGroup{
+		Name:  entity.AgentGroupDefaultValue,
+		Value: entity.AgentGroupDefaultValue,
+	}
+	var err error
+	_, err = repository.GetAgentGroupDetail(entity.AgentGroupDefaultValue, false, false)
+	if err == nil {
+		// Default agent group exists
+		return
+	}
+	err = repository.CreateAgentGroup(group)
+	if err != nil {
+		panic("init default group failed...")
+	}
+}
+
+func init() {
+	createDefaultGroupWhenStart()
+}
+
 // 业务逻辑链 service/agent => {manager/state/*、manager/agent、manager/pipeline_config、manager/instance_config}
 //=>{repository/agent、repository/pipeline_config、repository/instance_config}
 
