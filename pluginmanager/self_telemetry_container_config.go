@@ -48,6 +48,10 @@ func (r *InputContainer) Collect(collector pipeline.Collector) error {
 	return nil
 }
 
+func (r *InputContainer) GetMode() pipeline.InputModeType {
+	return pipeline.PUSH
+}
+
 func init() {
 	pipeline.MetricInputs["metric_container"] = func() pipeline.MetricInput {
 		return &InputContainer{}

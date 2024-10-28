@@ -59,6 +59,11 @@ struct containerMeta{
 	char** envsVal;
 };
 
+struct loadGoPipelineResp {
+    int Code;
+    int InputMode;
+};
+
 typedef struct {
     char* key;
     char* value;
@@ -89,6 +94,7 @@ static PluginMetric** makePluginMetricArray(int size) {
 static void setArrayPluginMetric(PluginMetric **a, PluginMetric *s, int n) {
     a[n] = s;
 }
+
 */
 import "C" //nolint:typecheck
 
@@ -132,8 +138,11 @@ func LoadGlobalConfig(jsonStr string) int {
 }
 
 //export LoadPipeline
-func LoadPipeline(project string, logstore string, configName string, logstoreKey int64, jsonStr string) int {
+func LoadPipeline(project string, logstore string, configName string, logstoreKey int64, jsonStr string) *C.struct_loadGoPipelineResp {
 	logger.Debug(context.Background(), "load config", configName, logstoreKey, "\n"+jsonStr)
+	returnStruct := (*C.struct_loadGoPipelineResp)(C.malloc(C.size_t(unsafe.Sizeof(C.struct_loadGoPipelineResp{}))))
+	returnStruct.Code = C.int(1)
+	returnStruct.InputMode = C.int(0)
 	defer func() {
 		if err := recover(); err != nil {
 			trace := make([]byte, 2048)
@@ -142,16 +151,18 @@ func LoadPipeline(project string, logstore string, configName string, logstoreKe
 		}
 	}()
 
-	err := pluginmanager.LoadLogstoreConfig(util.StringDeepCopy(project),
+	resp, err := pluginmanager.LoadLogstoreConfig(util.StringDeepCopy(project),
 		util.StringDeepCopy(logstore), util.StringDeepCopy(configName),
 		// Make deep copy if you want to save it in Go in the future.
 		logstoreKey, jsonStr)
 	if err != nil {
 		logger.Error(context.Background(), "CONFIG_LOAD_ALARM", "load config error, project",
 			project, "logstore", logstore, "config", configName, "error", err)
-		return 1
+		return returnStruct
 	}
-	return 0
+	returnStruct.Code = C.int(resp.Code)
+	returnStruct.InputMode = C.int(resp.InputMode)
+	return returnStruct
 }
 
 //export UnloadPipeline

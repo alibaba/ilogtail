@@ -201,3 +201,7 @@ func init() {
 		}
 	}
 }
+
+func (in *InputNodeMeta) GetMode() pipeline.InputModeType {
+	return pipeline.PUSH
+}

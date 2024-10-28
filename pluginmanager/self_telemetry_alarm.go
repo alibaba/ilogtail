@@ -56,6 +56,10 @@ func (r *InputAlarm) Collect(collector pipeline.Collector) error {
 	return nil
 }
 
+func (r *InputAlarm) GetMode() pipeline.InputModeType {
+	return pipeline.PUSH
+}
+
 func init() {
 	pipeline.MetricInputs["metric_alarm"] = func() pipeline.MetricInput {
 		return &InputAlarm{}

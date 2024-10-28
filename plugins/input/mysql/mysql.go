@@ -463,3 +463,7 @@ func init() {
 		}
 	}
 }
+
+func (m *Mysql) GetMode() pipeline.InputModeType {
+	return pipeline.PULL
+}

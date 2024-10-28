@@ -637,25 +637,32 @@ func initPluginRunner(lc *LogstoreConfig) (PluginRunner, error) {
 	}
 }
 
-func LoadLogstoreConfig(project string, logstore string, configName string, logstoreKey int64, jsonStr string) error {
+type LoadGoPipelineResp struct {
+	Code      int
+	InputMode int
+}
+
+func LoadLogstoreConfig(project string, logstore string, configName string, logstoreKey int64, jsonStr string) (LoadGoPipelineResp, error) {
 	if len(jsonStr) == 0 {
 		logger.Info(context.Background(), "delete config", configName, "logstore", logstore)
 		LogtailConfigLock.Lock()
 		delete(LogtailConfig, configName)
 		LogtailConfigLock.Unlock()
-		return nil
+		return LoadGoPipelineResp{1, int(pipeline.UNKNOWN)}, nil
 	}
 	logger.Info(context.Background(), "load config", configName, "logstore", logstore)
 	logstoreC, err := createLogstoreConfig(project, logstore, configName, logstoreKey, jsonStr)
 	if err != nil {
-		return err
+		return LoadGoPipelineResp{1, int(pipeline.UNKNOWN)}, err
 	}
+
 	if logstoreC.PluginRunner.IsWithInputPlugin() {
 		ToStartPipelineConfigWithInput = logstoreC
 	} else {
 		ToStartPipelineConfigWithoutInput = logstoreC
 	}
-	return nil
+	inputMode, err := logstoreC.PluginRunner.GetInputMode()
+	return LoadGoPipelineResp{0, int(inputMode)}, err
 }
 
 func UnloadPartiallyLoadedConfig(configName string) error {

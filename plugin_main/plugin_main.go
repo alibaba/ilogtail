@@ -165,7 +165,8 @@ func main() {
 		p := fmt.Sprintf("PluginProject_%d", i)
 		l := fmt.Sprintf("PluginLogstore_%d", i)
 		c := fmt.Sprintf("1.0#PluginProject_%d##Config%d", i, i)
-		if LoadPipeline(p, l, c, 123, cfg) != 0 {
+		r := LoadPipeline(p, l, c, 123, cfg)
+		if r.Code != 0 {
 			logger.Warningf(context.Background(), "START_PLUGIN_ALARM", "%s_%s_%s start fail, config is %s", p, l, c, cfg)
 			return
 		}

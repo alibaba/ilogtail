@@ -31,6 +31,7 @@
 #include "pipeline/plugin/instance/InputInstance.h"
 #include "pipeline/plugin/instance/ProcessorInstance.h"
 #include "pipeline/route/Router.h"
+#include "go_pipeline/LogtailPlugin.h"
 #include "plugin/input/InputContainerStdio.h"
 #include "plugin/input/InputFile.h"
 
@@ -62,7 +63,7 @@ public:
     PipelineContext& GetContext() const { return mContext; }
     const Json::Value& GetConfig() const { return *mConfig; }
     const std::vector<std::unique_ptr<FlusherInstance>>& GetFlushers() const { return mFlushers; }
-    bool IsFlushingThroughGoPipeline() const { return !mGoPipelineWithoutInput.isNull(); }
+    bool IsFlushingThroughGoPipeline() const;
     const std::unordered_map<std::string, std::unordered_map<std::string, uint32_t>>& GetPluginStatistics() const {
         return mPluginCntMap;
     }
@@ -80,14 +81,14 @@ public:
     std::string GetConfigNameOfGoPipelineWithoutInput() const { return mName + "/2"; }
 
 private:
-    bool LoadGoPipelines() const;
+    LoadGoPipelineResp LoadGoPipelines() const;
     void MergeGoPipeline(const Json::Value& src, Json::Value& dst);
     void AddPluginToGoPipeline(const std::string& type,
                                const Json::Value& plugin,
                                const std::string& module,
                                Json::Value& dst);
     void CopyNativeGlobalParamToGoPipeline(Json::Value& root);
-    bool ShouldAddPluginToGoPipelineWithInput() const { return mInputs.empty() && mProcessorLine.empty(); }
+    bool ShouldAddPluginToGoPipelineWithInput() const;
     void WaitAllItemsInProcessFinished();
 
     std::string mName;

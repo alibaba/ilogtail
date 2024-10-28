@@ -73,7 +73,7 @@ void ProcessorTagNativeUnittest::TestProcess() {
     { // plugin branch
         Pipeline pipeline;
         mContext.SetPipeline(pipeline);
-        mContext.GetPipeline().mGoPipelineWithoutInput = Json::Value("test");
+        mContext.GetPipeline().mPluginCntMap["go_processors"]["test"] = 1;
         ProcessorTagNative processor;
         processor.SetContext(mContext);
         APSARA_TEST_TRUE_FATAL(processor.Init(config));

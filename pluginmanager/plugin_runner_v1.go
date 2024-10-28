@@ -15,6 +15,7 @@
 package pluginmanager
 
 import (
+	"errors"
 	"time"
 
 	"github.com/alibaba/ilogtail/pkg/flags"
@@ -149,6 +150,10 @@ func (p *pluginv1Runner) addMetricInput(pluginMeta *pipeline.PluginMeta, input p
 
 	wrapper.LogsChan = p.LogsChan
 	wrapper.LatencyMetric = p.LogstoreConfig.Statistics.CollecLatencytMetric
+	if p.LogstoreConfig.GlobalConfig.GoInputToNativeProcessor {
+		wrapper.MaxCachedSize = p.LogstoreConfig.GlobalConfig.PushNativeMaxCachedSize
+		wrapper.PushNativeTimeout = time.Duration(p.LogstoreConfig.GlobalConfig.PushNativeTimeoutMs) * time.Millisecond
+	}
 	p.MetricPlugins = append(p.MetricPlugins, &wrapper)
 	return wrapper.Init(pluginMeta, inputInterval)
 }
@@ -158,6 +163,10 @@ func (p *pluginv1Runner) addServiceInput(pluginMeta *pipeline.PluginMeta, input 
 	wrapper.Config = p.LogstoreConfig
 	wrapper.Input = input
 	wrapper.LogsChan = p.LogsChan
+	if p.LogstoreConfig.GlobalConfig.GoInputToNativeProcessor {
+		wrapper.MaxCachedSize = p.LogstoreConfig.GlobalConfig.PushNativeMaxCachedSize
+		wrapper.PushNativeTimeout = time.Duration(p.LogstoreConfig.GlobalConfig.PushNativeTimeoutMs) * time.Millisecond
+	}
 	p.ServicePlugins = append(p.ServicePlugins, &wrapper)
 	return wrapper.Init(pluginMeta)
 }
@@ -201,6 +210,9 @@ func (p *pluginv1Runner) runInput() {
 	p.runMetricInput(p.InputControl)
 	for _, service := range p.ServicePlugins {
 		s := service
+		if p.LogstoreConfig.GlobalConfig.GoInputToNativeProcessor {
+			s.RunPushNativeProcessQueueInternal()
+		}
 		p.InputControl.Run(s.Run)
 	}
 }
@@ -208,6 +220,9 @@ func (p *pluginv1Runner) runInput() {
 func (p *pluginv1Runner) runMetricInput(async *pipeline.AsyncControl) {
 	for _, metric := range p.MetricPlugins {
 		m := metric
+		if p.LogstoreConfig.GlobalConfig.GoInputToNativeProcessor {
+			m.RunPushNativeProcessQueueInternal()
+		}
 		runner := &timerRunner{
 			initialMaxDelay: time.Duration(p.LogstoreConfig.GlobalConfig.InputMaxFirstCollectDelayMs) * time.Millisecond,
 			state:           m.Input,
@@ -242,6 +257,7 @@ func (p *pluginv1Runner) runProcessor() {
 func (p *pluginv1Runner) runProcessorInternal(cc *pipeline.AsyncControl) {
 	defer panicRecover(p.LogstoreConfig.ConfigName)
 	var logCtx *pipeline.LogWithContext
+
 	for {
 		select {
 		case <-cc.CancelToken():
@@ -384,7 +400,15 @@ func (p *pluginv1Runner) Stop(exit bool) error {
 		flusher.Flusher.SetUrgent(exit)
 	}
 	for _, service := range p.ServicePlugins {
+		if p.LogstoreConfig.GlobalConfig.GoInputToNativeProcessor {
+			service.StopPushNativeProcessQueueInternal()
+		}
 		_ = service.Stop()
+	}
+	for _, metric := range p.MetricPlugins {
+		if p.LogstoreConfig.GlobalConfig.GoInputToNativeProcessor {
+			metric.StopPushNativeProcessQueueInternal()
+		}
 	}
 	p.InputControl.WaitCancel()
 	logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "metric plugins stop", "done", "service plugins stop", "done")
@@ -470,4 +494,27 @@ func (p *pluginv1Runner) Merge(r PluginRunner) {
 	if other, ok := r.(*pluginv1Runner); ok {
 		p.FlushOutStore.Merge(other.FlushOutStore)
 	}
+}
+
+func (p *pluginv1Runner) GetInputMode() (pipeline.InputModeType, error) {
+	inputMode := pipeline.UNKNOWN
+	if len(p.MetricPlugins) > 0 {
+		inputMode = p.MetricPlugins[0].Input.GetMode()
+	}
+	if len(p.ServicePlugins) > 0 {
+		inputMode = p.ServicePlugins[0].Input.GetMode()
+	}
+	for _, metric := range p.MetricPlugins {
+		if metric.Input.GetMode() != inputMode {
+			logger.Error(p.LogstoreConfig.Context.GetRuntimeContext(), "PLUGIN_ALARM", "input plugins inputMode not equal")
+			return inputMode, errors.New("input plugins inputMode not equal")
+		}
+	}
+	for _, service := range p.ServicePlugins {
+		if service.Input.GetMode() != inputMode {
+			logger.Error(p.LogstoreConfig.Context.GetRuntimeContext(), "PLUGIN_ALARM", "input plugins inputMode not equal")
+			return inputMode, errors.New("input plugins inputMode not equal")
+		}
+	}
+	return inputMode, nil
 }
