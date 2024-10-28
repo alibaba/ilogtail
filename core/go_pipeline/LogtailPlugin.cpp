@@ -316,7 +316,7 @@ int LogtailPlugin::IsValidToProcess(const char* configName, int configNameSize) 
 }
 
 int LogtailPlugin::PushQueue(const char* configName, int configNameSize, const char* pbBuffer, int pbSize) {
-    static logtail::models::PipelineEventGroup eventGroupSrc;
+    logtail::models::PipelineEventGroup eventGroupSrc;
     string configNameStr(configName, configNameSize);
     auto pipeline = PipelineManager::GetInstance()->FindConfigByName(configNameStr);
     if (!pipeline) {
