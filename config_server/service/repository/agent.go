@@ -8,13 +8,18 @@ import (
 
 var s = store.S
 
-func GetAgentByiId(instanceId string) *entity.Agent {
-	var agentInfo = new(entity.Agent)
-	row := s.Db.Where("instance_id=?", instanceId).Find(agentInfo).RowsAffected
-	if row == 1 {
-		return agentInfo
+func GetAgentByID(instanceId string, fields ...string) (*entity.Agent, error) {
+	var agentInfo = &entity.Agent{}
+	var row int64
+	if fields == nil || len(fields) == 0 {
+		row = s.Db.Where("instance_id=?", instanceId).Find(agentInfo).RowsAffected
+	} else {
+		row = s.Db.Select(fields).Where("instance_id=?", instanceId).Find(agentInfo).RowsAffected
 	}
-	return nil
+	if row != 1 {
+		return agentInfo, common.ServerErrorWithMsg(common.AgentNotExist, "instanceId=%s not exists", instanceId)
+	}
+	return agentInfo, nil
 }
 
 func GetAllAgents(containPipelineConfigs bool, containInstanceConfigs bool) []entity.Agent {

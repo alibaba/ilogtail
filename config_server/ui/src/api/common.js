@@ -90,6 +90,7 @@ export async function constructProtobufRequest(url,req,resType) {
         if (data.requestId !== requestStr) {
             ElMessage.error("no the same request")
         }
+        console.log(data)
         serializeResult = data
     })
     return serializeResult

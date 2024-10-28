@@ -7,12 +7,11 @@ import (
 	"time"
 )
 
-func JudgeSequenceNumRationality(instanceId []byte, sequenceNum uint64) bool {
+func JudgeSequenceNumRationality(instanceId string, sequenceNum uint64) bool {
 	//最开始的心跳检测sequenceNum=0,所以sequenceNum=0是合法的
-	var strInstanceId = string(instanceId)
-	agent := repository.GetAgentByiId(strInstanceId)
+	agent, err := repository.GetAgentByID(instanceId)
 	//找不到数据的时候，同样说明是最开始的状态，应返回true
-	if agent == nil {
+	if err != nil {
 		return true
 	}
 	if sequenceNum != agent.SequenceNum+1 {

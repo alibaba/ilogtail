@@ -125,3 +125,16 @@ func GetAppliedInstanceConfigsForAgentGroup(req *proto.GetAppliedConfigsForAgent
 	res.ConfigNames = configNames
 	return nil
 }
+
+func GetInstanceConfigStatusList(req *proto.GetConfigStatusListRequest, res *proto.GetConfigStatusListResponse) error {
+	instanceId := req.InstanceId
+	if instanceId == nil {
+		return common.ValidateErrorWithMsg("required fields instanceId could not be null")
+	}
+	agent, err := repository.GetAgentByID(string(instanceId), "instance_id", "instance_config_statuses")
+	if err != nil {
+		return common.SystemError(err)
+	}
+	res.ConfigStatus = agent.InstanceConfigStatuses.Parse2ProtoConfigStatus()
+	return nil
+}

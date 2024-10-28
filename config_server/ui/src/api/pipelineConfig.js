@@ -7,9 +7,6 @@ export async function listPipelineConfigs() {
     let url = URL_PREFIX + "ListPipelineConfigs"
     let req = new userProto.ListConfigsRequest()
     let res = await constructProtobufRequest(url, req, userProto.ListConfigsResponse)
-    // res.configDetailsList.forEach(res => {
-    //     res.detail =  base64ToStr(res.detail)
-    // })
     return res
 }
 

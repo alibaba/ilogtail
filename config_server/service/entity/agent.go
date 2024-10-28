@@ -83,8 +83,8 @@ func (a Agent) Parse2Proto() *proto.Agent {
 	protoAgent.Attributes = a.Attributes.Parse2Proto()
 	protoAgent.RunningStatus = a.RunningStatus
 	protoAgent.StartupTime = a.StartupTime
-	protoAgent.PipelineConfigs = a.PipelineConfigStatuses.Parse2ProtoConfigStatus()
-	protoAgent.InstanceConfigs = a.InstanceConfigStatuses.Parse2ProtoConfigStatus()
+	//protoAgent.PipelineConfigs = a.PipelineConfigStatuses.Parse2ProtoConfigStatus()
+	//protoAgent.InstanceConfigs = a.InstanceConfigStatuses.Parse2ProtoConfigStatus()
 	return protoAgent
 }
 

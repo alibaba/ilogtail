@@ -10,16 +10,8 @@ message Agent{
   AgentAttributes attributes = 4;             // Agent's basic attributes
   string running_status = 5;                  // Human readable running status
   int64 startup_time = 6;                     // Required, Agent's startup time
-  repeated ConfigInfo pipeline_configs = 7;  // Information about the current PIPELINE_CONFIG held by the Agent
-  repeated ConfigInfo instance_configs = 8;  // Information about the current AGENT_CONFIG held by the Agent
-  repeated CommandInfo custom_commands = 9;  // Information about command history
 }
 
-message AgentConfigStatus{
-  string name=1;
-  ConfigStatus status = 2; // Config's status
-  string message = 3;      // Optional error message
-}
 
 // API: /User/CreateAgentGroup
 
@@ -137,13 +129,13 @@ message GetConfigResponse {
 // API: /User/GetInstanceConfigStatusList
 message GetConfigStatusListRequest{
   bytes request_id = 1;
-  bytes instance_id=2;
+  bytes instance_id = 2;
 }
 
 message GetConfigStatusListResponse{
   bytes request_id = 1;
-  CommonResponse common_response=2;
-  repeated AgentConfigStatus agent_config_status=3;
+  CommonResponse common_response = 2;
+  repeated ConfigInfo config_status = 3;
 }
 
 // API: /User/ListPipelineConfigs
@@ -154,7 +146,7 @@ message ListConfigsRequest {
 
 message ListConfigsResponse {
   bytes request_id = 1;
-  CommonResponse common_response=2;
+  CommonResponse common_response = 2;
 
   repeated ConfigDetail config_details = 3;
 }
@@ -169,7 +161,7 @@ message ApplyConfigToAgentGroupRequest {
 
 message ApplyConfigToAgentGroupResponse {
   bytes request_id = 1;
-  CommonResponse common_response=2;
+  CommonResponse common_response = 2;
 }
 
 // API: /User/RemovePipelineConfigFromAgentGroup/
@@ -182,7 +174,7 @@ message RemoveConfigFromAgentGroupRequest {
 
 message RemoveConfigFromAgentGroupResponse {
   bytes request_id = 1;
-  CommonResponse common_response=2;
+  CommonResponse common_response = 2;
 }
 
 
@@ -195,7 +187,7 @@ message GetAppliedConfigsForAgentGroupRequest {
 
 message GetAppliedConfigsForAgentGroupResponse {
   bytes request_id = 1;
-  CommonResponse common_response=2;
+  CommonResponse common_response = 2;
 
   repeated string config_names = 4;
 }
@@ -209,7 +201,7 @@ message GetAppliedAgentGroupsRequest {
 
 message GetAppliedAgentGroupsResponse {
   bytes request_id = 1;
-  CommonResponse common_response=2;
+  CommonResponse common_response = 2;
 
   repeated string agent_group_names = 3;
 }
@@ -223,7 +215,7 @@ message ListAgentsRequest {
 
 message ListAgentsResponse {
   bytes request_id = 1;
-  CommonResponse common_response=2;
+  CommonResponse common_response = 2;
 
   repeated Agent agents = 3;
 }
