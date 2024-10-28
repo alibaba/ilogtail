@@ -9,7 +9,7 @@ func GetPipelineConfigByNames(names ...string) ([]*entity.PipelineConfig, error)
 	pipelineConfigs := make([]*entity.PipelineConfig, 0)
 	row := s.Db.Where("name in (?)", names).Find(&pipelineConfigs).RowsAffected
 	if row != int64(len(names)) {
-		return nil, common.ServerErrorWithMsg("pipelineNames=%s can not be found", names)
+		return nil, common.ServerErrorWithMsg(common.ConfigNotExist, "pipelineNames=%s can not be found", names)
 	}
 	return pipelineConfigs, nil
 }
@@ -22,7 +22,7 @@ func GetPipelineConfigsByAgent(agent *entity.Agent) error {
 func CreatePipelineConfig(config *entity.PipelineConfig) error {
 	row := s.Db.Create(config).RowsAffected
 	if row != 1 {
-		return common.ServerErrorWithMsg("create pipelineConfig(%s) error", config.Name)
+		return common.ServerErrorWithMsg(common.ConfigAlreadyExist, "create pipelineConfig(%s) error", config.Name)
 	}
 	return nil
 }
@@ -35,7 +35,7 @@ func UpdatePipelineConfig(config *entity.PipelineConfig) error {
 func DeletePipelineConfig(configName string) error {
 	row := s.Db.Where("name=?", configName).Delete(&entity.PipelineConfig{}).RowsAffected
 	if row != 1 {
-		return common.ServerErrorWithMsg("delete pipelineConfig(name=%s) error", configName)
+		return common.ServerErrorWithMsg(common.ConfigNotExist, "delete pipelineConfig(name=%s) error", configName)
 	}
 	return nil
 }
@@ -44,7 +44,7 @@ func GetPipelineConfig(configName string) (*entity.PipelineConfig, error) {
 	config := &entity.PipelineConfig{}
 	row := s.Db.Where("name=?", configName).Find(config).RowsAffected
 	if row != 1 {
-		return nil, common.ServerErrorWithMsg("delete pipelineConfig(name=%s) error", configName)
+		return nil, common.ServerErrorWithMsg(common.ConfigNotExist, "delete pipelineConfig(name=%s) error", configName)
 	}
 	return config, nil
 }

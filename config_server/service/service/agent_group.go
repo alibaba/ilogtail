@@ -3,7 +3,6 @@ package service
 import (
 	"config-server/common"
 	"config-server/entity"
-
 	proto "config-server/protov2"
 	"config-server/repository"
 	"config-server/utils"
@@ -39,7 +38,7 @@ func DeleteAgentGroup(req *proto.DeleteAgentGroupRequest, res *proto.DeleteAgent
 		return common.ValidateErrorWithMsg("required field groupName could not be null")
 	}
 	if req.GroupName == entity.AgentGroupDefaultValue {
-		return common.ServerErrorWithMsg("%s can not be deleted", entity.AgentGroupDefaultValue)
+		return common.ServerErrorWithMsg(common.AgentGroupNotExist, "%s can not be deleted", entity.AgentGroupDefaultValue)
 	}
 	err := repository.DeleteAgentGroup(agentGroupName)
 	return common.SystemError(err)

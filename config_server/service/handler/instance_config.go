@@ -13,4 +13,5 @@ var (
 	ApplyInstanceConfigToAgentGroup         = ProtobufHandler(service.ApplyInstanceConfigToAgentGroup)
 	RemoveInstanceConfigFromAgentGroup      = ProtobufHandler(service.RemoveInstanceConfigFromAgentGroup)
 	GetAppliedAgentGroupsWithInstanceConfig = ProtobufHandler(service.GetAppliedAgentGroupsForInstanceConfigName)
+	GetInstanceConfigStatusList             = ProtobufHandler(service.GetInstanceConfigStatusList)
 )

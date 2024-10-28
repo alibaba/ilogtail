@@ -129,3 +129,16 @@ func GetAppliedPipelineConfigsForAgentGroup(req *proto.GetAppliedConfigsForAgent
 	res.ConfigNames = configNames
 	return nil
 }
+
+func GetPipelineConfigStatusList(req *proto.GetConfigStatusListRequest, res *proto.GetConfigStatusListResponse) error {
+	instanceId := req.InstanceId
+	if instanceId == nil {
+		return common.ValidateErrorWithMsg("required fields instanceId could not be null")
+	}
+	agent, err := repository.GetAgentByID(string(instanceId), "instance_id", "pipeline_config_statuses")
+	if err != nil {
+		return common.SystemError(err)
+	}
+	res.ConfigStatus = agent.PipelineConfigStatuses.Parse2ProtoConfigStatus()
+	return nil
+}

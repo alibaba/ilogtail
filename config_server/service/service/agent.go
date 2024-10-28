@@ -54,8 +54,8 @@ func HeartBeat(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse) error 
 
 	var err error
 	sequenceNum := req.SequenceNum
-
-	rationality := manager.JudgeSequenceNumRationality(instanceId, sequenceNum)
+	var strInstanceId = string(instanceId)
+	rationality := manager.JudgeSequenceNumRationality(strInstanceId, sequenceNum)
 
 	//假设数据库保存的sequenceNum=3,agent给的是10，
 	//如果在判断rationality=false立即return,数据库中保存的一直是3，agent一直重传全部状态
@@ -83,7 +83,6 @@ func HeartBeat(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse) error 
 	if err != nil {
 		return common.SystemError(err)
 	}
-
 	return nil
 }
 

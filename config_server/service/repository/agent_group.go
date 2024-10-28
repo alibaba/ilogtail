@@ -8,7 +8,7 @@ import (
 func CreateAgentGroup(group *entity.AgentGroup) error {
 	row := s.Db.Create(group).RowsAffected
 	if row != 1 {
-		return common.ServerErrorWithMsg("create agentGroup(%s) error", group.Name)
+		return common.ServerErrorWithMsg(common.AgentGroupAlreadyExist, "create agentGroup(%s) error", group.Name)
 	}
 	return nil
 }
@@ -21,7 +21,7 @@ func UpdateAgentGroup(group *entity.AgentGroup) error {
 func DeleteAgentGroup(name string) error {
 	row := s.Db.Where("name=?", name).Delete(&entity.AgentGroup{}).RowsAffected
 	if row != 1 {
-		return common.ServerErrorWithMsg("delete agentGroup(name=%s) error", name)
+		return common.ServerErrorWithMsg(common.AgentGroupNotExist, "delete agentGroup(name=%s) error", name)
 	}
 	return nil
 }
@@ -37,7 +37,7 @@ func GetAgentGroupDetail(name string, containPipelineConfigs bool, containInstan
 	}
 	row := tx.Find(agentGroup).RowsAffected
 	if row != 1 {
-		return nil, common.ServerErrorWithMsg("get agentGroup(name=%s) error", name)
+		return nil, common.ServerErrorWithMsg(common.AgentGroupNotExist, "get agentGroup(name=%s) error", name)
 	}
 	return agentGroup, nil
 }
@@ -68,7 +68,7 @@ func GetAppliedAgentGroupForPipelineConfigName(configName string) ([]string, err
 	pipelineConfig := &entity.PipelineConfig{}
 	row := s.Db.Preload("AgentGroups").Where("name=?", configName).Find(&pipelineConfig).RowsAffected
 	if row != 1 {
-		return nil, common.ServerErrorWithMsg("can not find name=%s pipelineConfig")
+		return nil, common.ServerErrorWithMsg(common.AgentGroupNotExist, "can not find name=%s pipelineConfig")
 	}
 	groupNames := make([]string, 0)
 	for _, group := range pipelineConfig.AgentGroups {
@@ -80,7 +80,7 @@ func GetAppliedAgentGroupForInstanceConfigName(configName string) ([]string, err
 	instanceConfig := &entity.InstanceConfig{}
 	row := s.Db.Preload("AgentGroups").Where("name=?", configName).Find(&instanceConfig).RowsAffected
 	if row != 1 {
-		return nil, common.ServerErrorWithMsg("can not find name=%s pipelineConfig")
+		return nil, common.ServerErrorWithMsg(common.ConfigNotExist, "can not find name=%s pipelineConfig")
 	}
 	groupNames := make([]string, 0)
 	for _, group := range instanceConfig.AgentGroups {

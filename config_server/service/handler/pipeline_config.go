@@ -13,4 +13,5 @@ var (
 	ApplyPipelineConfigToAgentGroup         = ProtobufHandler(service.ApplyPipelineConfigToAgentGroup)
 	RemovePipelineConfigFromAgentGroup      = ProtobufHandler(service.RemovePipelineConfigFromAgentGroup)
 	GetAppliedAgentGroupsWithPipelineConfig = ProtobufHandler(service.GetAppliedAgentGroupsForPipelineConfigName)
+	GetPipelineConfigStatusList             = ProtobufHandler(service.GetPipelineConfigStatusList)
 )
