@@ -23,7 +23,7 @@ services:
       context: ${CONFIG_SERVER}
       dockerfile: Dockerfile
     # 如果之前构建过镜像，再次docker compose则不会重新构建
-    image: config-server:nzh
+    image: config-server:openSource
     ports:
       - "9090:9090"
     environment:
@@ -40,13 +40,25 @@ services:
     build:
       context: ${CONFIG_SERVER_UI}
       dockerfile: Dockerfile
-    image: config-server-ui:nzh
+    image: config-server-ui:openSource
     ports:
       - "8080:8080"
     environment:
       TZ: Asia/Shanghai
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    networks:
+      - server
+  agent:
+    build:
+      context: ${AGENT}
+      dockerfile: Dockerfile-Agent
+    image: ilogtail:openSource
+    environment:
+      CONFIG_SERVER_ADDRESSES: '["config-server:9090"]'
+      TZ: Asia/Shanghai
+    deploy:
+      replicas: 3
     networks:
       - server
 #替换成你自己的网络
