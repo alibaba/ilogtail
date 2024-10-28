@@ -33,7 +33,7 @@ import (
 )
 
 const clickHouseName = "clickhouse"
-const clickhouseQuerySQL = "select _timestamp,_log from `%s`.`loongcollector_%s_buffer` where _timestamp > %v order by _timestamp"
+const clickhouseQuerySQL = "select _timestamp,_log from `%s`.`ilogtail_%s_buffer` where _timestamp > %v order by _timestamp"
 
 type ClickHouseSubscriber struct {
 	Address     string `mapstructure:"address" comment:"the clickhouse address"`
