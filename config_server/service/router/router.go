@@ -61,8 +61,10 @@ func initTest(router *gin.Engine) {
 	}
 }
 
-func InitAllRouter(router *gin.Engine) {
+func InitAllRouter(router *gin.Engine, env string) {
 	initAgentRouter(router)
 	initUserRouter(router)
-	initTest(router)
+	if env != "prod" {
+		initTest(router)
+	}
 }
