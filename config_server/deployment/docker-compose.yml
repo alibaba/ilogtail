@@ -49,7 +49,6 @@ services:
       - "host.docker.internal:host-gateway"
     networks:
       - server
-
 #替换成你自己的网络
 networks:
   server:
