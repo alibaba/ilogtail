@@ -66,7 +66,6 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, stri
         if (e.Is<LogEvent>()) {
             const auto& logEvent = e.Cast<LogEvent>();
             auto log = logGroup.add_logs();
-            logGroup.mutable_logs()->AddCleared();
             for (const auto& kv : logEvent) {
                 auto contPtr = log->add_contents();
                 contPtr->set_key(kv.first.to_string());
