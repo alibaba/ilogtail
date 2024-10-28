@@ -141,7 +141,7 @@ import {
   listAgentGroups,
   listAgentsForAgentGroup, updateAgentGroup
 } from "@/api/agentGroup";
-import { messageShow} from "@/api/common"
+import {messageShow, strToBytes} from "@/api/common"
 import {
   applyPipelineConfigToAgentGroup,
   getPipelineConfig,
@@ -153,6 +153,7 @@ import {
   listInstanceConfigs,
   removeInstanceConfigFromAgentGroup
 } from "@/api/instanceConfig";
+import {getPipelineConfigStatusList,getInstanceConfigStatusList} from "@/api/agent";
 
 
 export default {
@@ -237,18 +238,16 @@ export default {
             value: item.value,
             agentList: (await listAgentsForAgentGroup(item.name)).agentsList.map(agent=>{
               return {
-                "instanceId":agent.instanceId,
-                "agentType":agent.agentType,
-                "capabilities":agent.capabilities,
-                "runningStatus":agent.runningStatus,
-                "startupTime":agent.startupTime,
-                "version":agent.attributes.version,
-                "ip":agent.attributes.ip,
-                "hostname":agent.attributes.hostname,
-                "hostid":agent.attributes.hostid,
-                "extras":agent.attributes.extrasMap,
-                "pipelineConfigsList":agent.pipelineConfigsList,
-                "instanceConfigsList":agent.instanceConfigsList
+                "instanceId": agent.instanceId,
+                "agentType": agent.agentType,
+                "capabilities": agent.capabilities,
+                "runningStatus": agent.runningStatus,
+                "startupTime": agent.startupTime,
+                "version": agent.attributes.version,
+                "ip": agent.attributes.ip,
+                "hostname": agent.attributes.hostname,
+                "hostid": agent.attributes.hostid,
+                "extras": agent.attributes.extrasMap
               }
             }),
             appliedPipelineConfigList: (await getAppliedPipelineConfigsForAgentGroup(item.name)).configNamesList.map(res => {
@@ -291,20 +290,21 @@ export default {
       this.selectedRow = this.findSelectedRow(row.name)
       const agentCount = this.selectedRow.agentList.length
       this.showAgentInfoDialog = agentCount !== 0
-      if (this.showAgentInfoDialog){
-        for(let agent of this.selectedRow.agentList){
-          agent.agentConfigStatusList=[]
-          for(let pipelineConfigStatus of agent.pipelineConfigsList){
-            pipelineConfigStatus.type="pipelineConfig"
-            pipelineConfigStatus.status=this.configInfoMap[pipelineConfigStatus.status]
+      if (this.showAgentInfoDialog) {
+        for (let agent of this.selectedRow.agentList) {
+          let pipelineConfigStatusList = (await getPipelineConfigStatusList(strToBytes(agent.instanceId))).configStatusList
+          let instanceConfigStatusList = (await getInstanceConfigStatusList(strToBytes(agent.instanceId))).configStatusList
+          agent.agentConfigStatusList = []
+          for (let pipelineConfigStatus of pipelineConfigStatusList) {
+            pipelineConfigStatus.type = "pipelineConfig"
+            pipelineConfigStatus.status = this.configInfoMap[pipelineConfigStatus.status]
           }
-          for(let instanceConfigStatus of agent.instanceConfigsList){
-            instanceConfigStatus.type="instanceConfig"
-            instanceConfigStatus.status=this.configInfoMap[instanceConfigStatus.status]
+          for (let instanceConfigStatus of instanceConfigStatusList) {
+            instanceConfigStatus.type = "instanceConfig"
+            instanceConfigStatus.status = this.configInfoMap[instanceConfigStatus.status]
           }
-          agent.agentConfigStatusList=agent.agentConfigStatusList.concat(agent.pipelineConfigsList)
-          agent.agentConfigStatusList=agent.agentConfigStatusList.concat(agent.instanceConfigsList)
-
+          agent.agentConfigStatusList = agent.agentConfigStatusList.concat(pipelineConfigStatusList)
+          agent.agentConfigStatusList = agent.agentConfigStatusList.concat(instanceConfigStatusList)
         }
       }
     },
