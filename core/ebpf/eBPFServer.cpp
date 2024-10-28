@@ -352,7 +352,7 @@ std::string eBPFServer::GetAllProjects() {
     for (int i = 0; i < int(nami::PluginType::MAX); i ++) {
         if (mPluginProject[i] != "") {
             res += mPluginProject[i];
-            res += "";
+            res += " ";
         }
     }
     return res;
