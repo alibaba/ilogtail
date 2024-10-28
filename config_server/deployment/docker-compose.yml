@@ -23,7 +23,7 @@ services:
       context: ${CONFIG_SERVER}
       dockerfile: Dockerfile
     # 如果之前构建过镜像，再次docker compose则不会重新构建
-    image: config-server:nzh
+    image: config-server:openSource
     ports:
       - "9090:9090"
     environment:
@@ -40,7 +40,7 @@ services:
     build:
       context: ${CONFIG_SERVER_UI}
       dockerfile: Dockerfile
-    image: config-server-ui:nzh
+    image: config-server-ui:openSource
     ports:
       - "8080:8080"
     environment:
