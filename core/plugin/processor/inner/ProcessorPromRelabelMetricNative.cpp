@@ -48,13 +48,8 @@ bool ProcessorPromRelabelMetricNative::Init(const Json::Value& config) {
 void ProcessorPromRelabelMetricNative::Process(PipelineEventGroup& metricGroup) {
     // if mMetricRelabelConfigs is empty and honor_labels is true, skip it
     auto targetTags = metricGroup.GetTags();
-    // delete tag __<label_name>
-    vector<StringView> toDelete;
-    for (const auto& [k, v] : targetTags) {
-        if (k.starts_with("__")) {
-            toDelete.push_back(k);
-        }
-    }
+    auto toDelete = GetToDeleteTargetLabels(targetTags);
+
     if (!mScrapeConfigPtr->mMetricRelabelConfigs.Empty() || !targetTags.empty()) {
         EventsContainer& events = metricGroup.MutableEvents();
         size_t wIdx = 0;
@@ -70,10 +65,8 @@ void ProcessorPromRelabelMetricNative::Process(PipelineEventGroup& metricGroup) 
     }
 
     // delete mTags when key starts with __
-    for (const auto& [k, v] : targetTags) {
-        if (k.starts_with("__")) {
-            metricGroup.DelTag(k);
-        }
+    for (const auto& k : toDelete) {
+        metricGroup.DelTag(k);
     }
 
     AddAutoMetrics(metricGroup);
@@ -130,6 +123,17 @@ bool ProcessorPromRelabelMetricNative::ProcessEvent(PipelineEventPtr& e,
     sourceEvent.SetTagNoCopy(prometheus::NAME, sourceEvent.GetName());
 
     return true;
+}
+
+vector<StringView> ProcessorPromRelabelMetricNative::GetToDeleteTargetLabels(const GroupTags& targetTags) const {
+    // delete tag which starts with __
+    vector<StringView> toDelete;
+    for (const auto& [k, v] : targetTags) {
+        if (k.starts_with("__")) {
+            toDelete.push_back(k);
+        }
+    }
+    return toDelete;
 }
 
 void ProcessorPromRelabelMetricNative::AddAutoMetrics(PipelineEventGroup& metricGroup) {

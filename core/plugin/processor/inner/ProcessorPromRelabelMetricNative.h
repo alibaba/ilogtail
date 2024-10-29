@@ -37,6 +37,7 @@ protected:
 
 private:
     bool ProcessEvent(PipelineEventPtr& e, const GroupTags& targetTags, const std::vector<StringView>& toDelete);
+    std::vector<StringView> GetToDeleteTargetLabels(const GroupTags& targetTags) const;
 
     void AddAutoMetrics(PipelineEventGroup& metricGroup);
     void AddMetric(PipelineEventGroup& metricGroup,
