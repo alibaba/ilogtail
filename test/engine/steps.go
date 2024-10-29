@@ -48,10 +48,8 @@ func ScenarioInitializer(ctx *godog.ScenarioContext) {
 	ctx.When(`^generate \{(\d+)\} apsara logs to file \{(.*)\}, with interval \{(\d+)\}ms$`, trigger.Apsara)
 	ctx.When(`^generate \{(\d+)\} delimiter logs to file \{(.*)\}, with interval \{(\d+)\}ms, with delimiter \{(.*)\} and quote \{(.*)\}$`, trigger.DelimiterSingle)
 	ctx.When(`^generate \{(\d+)\} multiline delimiter logs to file \{(.*)\}, with interval \{(\d+)\}ms, with delimiter \{(.*)\} and quote \{(.*)\}$`, trigger.DelimiterMultiline)
-	ctx.When(`^generate \{(\d+)\} json logs to file \{(.*)\}, with interval \{(\d+)\}ms$`, trigger.JsonSingle)
-	ctx.When(`^generate \{(\d+)\} multiline json logs to file \{(.*)\}, with interval \{(\d+)\}ms$`, trigger.JsonMultiline)
-	ctx.When(`^generate \{(\d+)\} logs to stdout, with interval \{(\d+)\}ms$`, trigger.Stdout)
-	ctx.When(`^generate \{(\d+)\} logs to stderr, with interval \{(\d+)\}ms$`, trigger.Stderr)
+	ctx.When(`^generate \{(\d+)\} json logs to file \{(.*)\}, with interval \{(\d+)\}ms$`, trigger.JSONSingle)
+	ctx.When(`^generate \{(\d+)\} multiline json logs to file \{(.*)\}, with interval \{(\d+)\}ms$`, trigger.JSONMultiline)
 	ctx.When(`^execute \{(\d+)\} commands to generate file security events on files \{(.*)\}$`, trigger.TrigerFileSecurityEvents)
 	// ------------------------------------------
 

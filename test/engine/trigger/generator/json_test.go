@@ -22,8 +22,8 @@ import (
 	"time"
 )
 
-// TestGenerateJsonSingle will be executed in the environment being collected.
-func TestGenerateJsonSingle(t *testing.T) {
+// TestGenerateJSONSingle will be executed in the environment being collected.
+func TestGenerateJSONSingle(t *testing.T) {
 	config, err := getGenerateFileLogConfigFromEnv()
 	if err != nil {
 		t.Fatalf("get generate file log config from env failed: %v", err)
@@ -56,7 +56,7 @@ func TestGenerateJsonSingle(t *testing.T) {
 		} else {
 			currentTime = strconv.FormatInt(time.Now().UnixNano()/1000, 10)
 		}
-		err = testLogConentTmpl[logIndex].Execute(file, map[string]interface{}{
+		testLogConentTmpl[logIndex].Execute(file, map[string]interface{}{
 			"Mark":   getRandomMark(),
 			"FileNo": fileNo,
 			"LogNo":  logNo + i,
@@ -71,7 +71,7 @@ func TestGenerateJsonSingle(t *testing.T) {
 	}
 }
 
-func TestGenerateJsonMultiline(t *testing.T) {
+func TestGenerateJSONMultiline(t *testing.T) {
 	config, err := getGenerateFileLogConfigFromEnv()
 	if err != nil {
 		t.Fatalf("get generate file log config from env failed: %v", err)
@@ -103,7 +103,7 @@ func TestGenerateJsonMultiline(t *testing.T) {
 	fileNo := rand.Intn(10000)
 	for i := 0; i < config.TotalLog; i++ {
 		currentTime := time.Now().Format("2006-01-02T15:04:05.999999999")
-		err = testLogConentTmpl[logIndex].Execute(file, map[string]interface{}{
+		testLogConentTmpl[logIndex].Execute(file, map[string]interface{}{
 			"Mark":   getRandomMark(),
 			"FileNo": fileNo,
 			"LogNo":  logNo + i,

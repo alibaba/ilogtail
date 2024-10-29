@@ -37,12 +37,12 @@ func RegexMultiline(ctx context.Context, totalLog int, path string, interval int
 	return generate(ctx, totalLog, path, interval, "TestGenerateRegexLogMultiline")
 }
 
-func JsonSingle(ctx context.Context, totalLog int, path string, interval int) (context.Context, error) {
-	return generate(ctx, totalLog, path, interval, "TestGenerateJsonSingle")
+func JSONSingle(ctx context.Context, totalLog int, path string, interval int) (context.Context, error) {
+	return generate(ctx, totalLog, path, interval, "TestGenerateJSONSingle")
 }
 
-func JsonMultiline(ctx context.Context, totalLog int, path string, interval int) (context.Context, error) {
-	return generate(ctx, totalLog, path, interval, "TestGenerateJsonMultiline")
+func JSONMultiline(ctx context.Context, totalLog int, path string, interval int) (context.Context, error) {
+	return generate(ctx, totalLog, path, interval, "TestGenerateJSONMultiline")
 }
 
 func Apsara(ctx context.Context, totalLog int, path string, interval int) (context.Context, error) {
@@ -55,50 +55,6 @@ func DelimiterSingle(ctx context.Context, totalLog int, path string, interval in
 
 func DelimiterMultiline(ctx context.Context, totalLog int, path string, interval int, delimiter, quote string) (context.Context, error) {
 	return generate(ctx, totalLog, path, interval, "TestGenerateDelimiterMultiline", "Delimiter", delimiter, "Quote", quote)
-}
-
-func Stdout(ctx context.Context, totalLog int, interval int) (context.Context, error) {
-	time.Sleep(3 * time.Second)
-	command := getRunTriggerCommand("TestGenerateStdout")
-	var triggerCommand strings.Builder
-	template := template.Must(template.New("trigger").Parse(triggerTemplate))
-	if err := template.Execute(&triggerCommand, map[string]interface{}{
-		"WorkDir":  "",
-		"TotalLog": totalLog,
-		"Interval": interval,
-		"TestMode": "stdout",
-		"Filename": "",
-		"Custom":   "",
-		"Command":  command,
-	}); err != nil {
-		return ctx, err
-	}
-	if _, err := setup.Env.ExecOnSource(ctx, triggerCommand.String()); err != nil {
-		return ctx, err
-	}
-	return ctx, nil
-}
-
-func Stderr(ctx context.Context, totalLog int, interval int) (context.Context, error) {
-	time.Sleep(3 * time.Second)
-	command := getRunTriggerCommand("TestGenerateStdout")
-	var triggerCommand strings.Builder
-	template := template.Must(template.New("trigger").Parse(triggerTemplate))
-	if err := template.Execute(&triggerCommand, map[string]interface{}{
-		"WorkDir":  "",
-		"TotalLog": totalLog,
-		"Interval": interval,
-		"TestMode": "stderr",
-		"Filename": "",
-		"Custom":   "",
-		"Command":  command,
-	}); err != nil {
-		return ctx, err
-	}
-	if _, err := setup.Env.ExecOnSource(ctx, triggerCommand.String()); err != nil {
-		return ctx, err
-	}
-	return ctx, nil
 }
 
 func generate(ctx context.Context, totalLog int, path string, interval int, commandName string, customKV ...string) (context.Context, error) {

@@ -19,6 +19,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"math/big"
+	"sort"
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
@@ -80,12 +81,15 @@ func (k *K8sEnv) ExecOnLogtail(command string) (string, error) {
 		}
 	}
 	results := make([]string, 0)
+	sort.Slice(pods.Items, func(i, j int) bool {
+		return pods.Items[i].Name < pods.Items[j].Name
+	})
 	for _, pod := range pods.Items {
-		if result, err := k.execInPod(k.config, pod.Namespace, pod.Name, pod.Spec.Containers[0].Name, []string{"bash", "-c", command}); err != nil {
+		result, err := k.execInPod(k.config, pod.Namespace, pod.Name, pod.Spec.Containers[0].Name, []string{"bash", "-c", command})
+		if err != nil {
 			return "", err
-		} else {
-			results = append(results, result)
 		}
+		results = append(results, result)
 	}
 	return strings.Join(results, "\n"), nil
 }
@@ -152,7 +156,10 @@ func (k *K8sEnv) init() {
 	k.daemonsetController = controller.NewDaemonSetController(k.k8sClient)
 
 	dynamicClient, err := dynamic.NewForConfig(c)
-	k.dynamicController = controller.NewDynamicController(dynamicClient)
+	if err != nil {
+		panic(err)
+	}
+	k.dynamicController = controller.NewDynamicController(dynamicClient, k.k8sClient.Discovery())
 }
 
 func (k *K8sEnv) execInPod(config *rest.Config, namespace, podName, containerName string, command []string) (string, error) {

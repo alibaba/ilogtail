@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/avast/retry-go/v4"
@@ -25,9 +26,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/serializer/yaml"
+	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/restmapper"
 
 	"github.com/alibaba/ilogtail/test/config"
 )
@@ -50,7 +52,8 @@ type DaemonSetController struct {
 }
 
 type DynamicController struct {
-	dynamicClient dynamic.Interface
+	discoveryClient discovery.DiscoveryInterface
+	dynamicClient   dynamic.Interface
 }
 
 func NewDeploymentController(k8sClient *kubernetes.Clientset) *DeploymentController {
@@ -215,8 +218,8 @@ func (c *DaemonSetController) GetDaemonSetPods(dsName, dsNamespace string) (*cor
 	return pods, nil
 }
 
-func NewDynamicController(dynamicClient dynamic.Interface) *DynamicController {
-	return &DynamicController{dynamicClient: dynamicClient}
+func NewDynamicController(dynamicClient dynamic.Interface, discoveryClient discovery.DiscoveryInterface) *DynamicController {
+	return &DynamicController{dynamicClient: dynamicClient, discoveryClient: discoveryClient}
 }
 
 func (c *DynamicController) Apply(filePath string) error {
@@ -267,7 +270,8 @@ func (c *DynamicController) Delete(filePath string) error {
 
 func (c *DynamicController) parseObjFromYaml(filePath string) (*meta.RESTMapping, *unstructured.Unstructured, error) {
 	// Read the YAML file
-	yamlFile, err := os.ReadFile(filePath)
+	basePath := "test_cases"
+	yamlFile, err := os.ReadFile(filepath.Join(basePath, filePath))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -280,8 +284,11 @@ func (c *DynamicController) parseObjFromYaml(filePath string) (*meta.RESTMapping
 		return nil, nil, err
 	}
 
-	// Retrieve the REST mapping for the GVK
-	restMapper := meta.NewDefaultRESTMapper(scheme.Scheme.PreferredVersionAllGroups())
+	apiGroupResources, err := restmapper.GetAPIGroupResources(c.discoveryClient)
+	if err != nil {
+		return nil, nil, err
+	}
+	restMapper := restmapper.NewDiscoveryRESTMapper(apiGroupResources)
 	mapping, err := restMapper.RESTMapping(gvk.GroupKind(), gvk.Version)
 	if err != nil {
 		return nil, nil, err

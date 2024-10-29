@@ -14,8 +14,9 @@
 package generator
 
 import (
+	"crypto/rand"
 	"fmt"
-	"math/rand"
+	"math/big"
 	"os"
 	"strconv"
 	"text/template"
@@ -66,12 +67,14 @@ func string2Template(strings []string) []*template.Template {
 }
 
 func getRandomLogLevel() string {
-	return Levels[rand.Intn(len(Levels))]
+	randInt, _ := rand.Int(rand.Reader, big.NewInt(int64(len(Levels))))
+	return Levels[randInt.Int64()]
 }
 
 func getRandomMark() string {
 	marks := []string{"-", "F"}
-	return marks[rand.Intn(2)]
+	randInt, _ := rand.Int(rand.Reader, big.NewInt(int64(len(marks))))
+	return marks[randInt.Int64()]
 }
 
 func getEnvOrDefault(env, fallback string) string {
