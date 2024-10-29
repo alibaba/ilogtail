@@ -121,9 +121,7 @@ bool RelabelConfig::Process(Labels& l, vector<string>& toDelete) const {
         values.push_back(l.Get(item));
     }
     string val = boost::algorithm::join(values, mSeparator);
-    if (StartWith(mTargetLabel, "__")) {
-        toDelete.push_back(mTargetLabel);
-    }
+    CollectLabelsToDelete(mTargetLabel, toDelete);
     switch (mAction) {
         case Action::DROP: {
             if (boost::regex_match(val, mRegex)) {
@@ -162,9 +160,7 @@ bool RelabelConfig::Process(Labels& l, vector<string>& toDelete) const {
                 break;
             }
             l.Set(target, string(res));
-            if (StartWith(target, "__")) {
-                toDelete.push_back(target);
-            }
+            CollectLabelsToDelete(target, toDelete);
             break;
         }
         case Action::LOWERCASE: {
@@ -193,9 +189,7 @@ bool RelabelConfig::Process(Labels& l, vector<string>& toDelete) const {
                     string res
                         = boost::regex_replace(key, mRegex, mReplacement, boost::match_default | boost::format_all);
                     l.Set(res, value);
-                    if (StartWith(res, "__")) {
-                        toDelete.push_back(res);
-                    }
+                    CollectLabelsToDelete(res, toDelete);
                 }
             });
             break;
@@ -230,6 +224,12 @@ bool RelabelConfig::Process(Labels& l, vector<string>& toDelete) const {
             break;
     }
     return true;
+}
+
+void RelabelConfig::CollectLabelsToDelete(const string& labelName, vector<string>& toDelete) const {
+    if (StartWith(labelName, "__")) {
+        toDelete.push_back(labelName);
+    }
 }
 
 bool RelabelConfigList::Init(const Json::Value& relabelConfigs) {

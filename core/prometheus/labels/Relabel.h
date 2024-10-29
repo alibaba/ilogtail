@@ -66,6 +66,7 @@ public:
     Action mAction;
 
 private:
+    void CollectLabelsToDelete(const std::string& labelName, std::vector<std::string>& toDelete) const;
 };
 
 class RelabelConfigList {
