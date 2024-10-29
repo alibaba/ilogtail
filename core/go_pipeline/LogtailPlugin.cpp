@@ -307,7 +307,7 @@ int LogtailPlugin::IsValidToProcess(const char* configName, int configNameSize) 
     auto pipeline = PipelineManager::GetInstance()->FindConfigByName(configNameStr);
     if (!pipeline) {
         LOG_ERROR(sLogger,
-                    ("pipeline not found during IsValidToProcess, perhaps due to config deletion",
+                    ("pipeline not found during IsValidToProcess",
                     "return invalid")("config", configName));
         return -1;
     }
@@ -423,7 +423,7 @@ bool LogtailPlugin::LoadPluginBase() {
             return mPluginValid;
         }
         // 加载单个配置
-        mLoadPipelineFun = (LoadConfigFun)loader.LoadMethod("LoadPipeline", error);
+        mLoadPipelineFun = (LoadPipelineFun)loader.LoadMethod("LoadPipeline", error);
         if (!error.empty()) {
             LOG_ERROR(sLogger, ("load LoadPipelineFun error, Message", error));
             return mPluginValid;
@@ -549,10 +549,10 @@ void LogtailPlugin::ProcessLogGroup(const std::string& configName,
     }
     std::string realConfigName = configName + "/2";
     auto pipeline = PipelineManager::GetInstance()->FindConfigByName(configName);
-    auto go_inputs_iter = pipeline->GetPluginStatistics().find("go_inputs");
-    if (go_inputs_iter != pipeline->GetPluginStatistics().end()) {
-        for (auto& go_input : go_inputs_iter->second) {
-            if (go_input.second > 0) {
+    auto iter = pipeline->GetPluginStatistics().find("go_inputs");
+    if (iter != pipeline->GetPluginStatistics().end()) {
+        for (auto& goInput : iter->second) {
+            if (goInput.second > 0) {
                 realConfigName[realConfigName.size() - 1] = '1';
                 break;
             }

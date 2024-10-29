@@ -16,6 +16,7 @@ package pluginmanager
 
 import (
 	"reflect"
+	"sync"
 
 	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/logtail"
@@ -34,6 +35,7 @@ type MetricWrapperV1 struct {
 	PushNativeTimeout  time.Duration
 	LogsCachedChan     chan *pipeline.LogEventWithContext
 	ShutdownCachedChan chan struct{}
+	wg                 sync.WaitGroup
 
 	eventCached []*protocol.LogEvent
 	tagCached   []map[string]string
@@ -140,20 +142,22 @@ func (wrapper *MetricWrapperV1) RunPushNativeProcessQueueInternal() {
 	wrapper.tagCached = make([]map[string]string, 0, wrapper.MaxCachedSize+10)
 	wrapper.ctxCached = make([]map[string]interface{}, 0, wrapper.MaxCachedSize+10)
 	wrapper.timer = time.NewTimer(wrapper.PushNativeTimeout)
+	wrapper.wg.Add(1)
 	go wrapper.runPushNativeProcessQueueInternal()
 }
 
 func (wrapper *MetricWrapperV1) StopPushNativeProcessQueueInternal() {
-	wrapper.ShutdownCachedChan <- struct{}{}
+	close(wrapper.ShutdownCachedChan)
+	wrapper.wg.Wait()
 }
 
 func (wrapper *MetricWrapperV1) runPushNativeProcessQueueInternal() {
 	var event *pipeline.LogEventWithContext
 	isValidToPushNativeProcessQueue := true
 
+	defer wrapper.wg.Done()
 	defer wrapper.timer.Stop()
 	defer close(wrapper.LogsCachedChan)
-	defer close(wrapper.ShutdownCachedChan)
 
 	for {
 		if isValidToPushNativeProcessQueue {
@@ -184,7 +188,6 @@ func (wrapper *MetricWrapperV1) runPushNativeProcessQueueInternal() {
 						return
 					}
 					wrapper.pushNativeProcessQueue(1)
-					time.Sleep(time.Duration(10) * time.Millisecond)
 				}
 			}
 		} else {
@@ -204,7 +207,6 @@ func (wrapper *MetricWrapperV1) runPushNativeProcessQueueInternal() {
 						return
 					}
 					wrapper.pushNativeProcessQueue(1)
-					time.Sleep(time.Duration(10) * time.Millisecond)
 				}
 			}
 		}

@@ -142,7 +142,7 @@ struct LoadGoPipelineResp {
 
 // Methods export by plugin.
 typedef GoInt (*LoadGlobalConfigFun)(GoString);
-typedef struct LoadGoPipelineResp* (*LoadConfigFun)(GoString p, GoString l, GoString c, GoInt64 k, GoString p2);
+typedef struct LoadGoPipelineResp* (*LoadPipelineFun)(GoString p, GoString l, GoString c, GoInt64 k, GoString p2);
 typedef GoInt (*UnloadPipelineFun)(GoString c);
 typedef void (*StopAllPipelinesFun)(GoInt);
 typedef void (*StopFun)(GoString, GoInt);
@@ -285,7 +285,7 @@ private:
     void* mPluginAdapterPtr;
 
     LoadGlobalConfigFun mLoadGlobalConfigFun;
-    LoadConfigFun mLoadPipelineFun;
+    LoadPipelineFun mLoadPipelineFun;
     UnloadPipelineFun mUnloadPipelineFun;
     StopAllPipelinesFun mStopAllPipelinesFun;
     StopFun mStopFun;

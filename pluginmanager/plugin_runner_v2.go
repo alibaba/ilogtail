@@ -36,15 +36,15 @@ var (
 
 type pluginv2Runner struct {
 	// pipeline v2 fields
-	InputPipeContext       pipeline.PipelineContext
-	ProcessPipeContext     pipeline.PipelineContext
-	AggregatePipeContext   pipeline.PipelineContext
-	FlushPipeContext       pipeline.PipelineContext
-	NativeInputPipeContext pipeline.PipelineContext
-	InputControl           *pipeline.AsyncControl
-	ProcessControl         *pipeline.AsyncControl
-	AggregateControl       *pipeline.AsyncControl
-	FlushControl           *pipeline.AsyncControl
+	InputPipeContext           pipeline.PipelineContext
+	ProcessPipeContext         pipeline.PipelineContext
+	AggregatePipeContext       pipeline.PipelineContext
+	FlushPipeContext           pipeline.PipelineContext
+	NativeProcessorPipeContext pipeline.PipelineContext
+	InputControl               *pipeline.AsyncControl
+	ProcessControl             *pipeline.AsyncControl
+	AggregateControl           *pipeline.AsyncControl
+	FlushControl               *pipeline.AsyncControl
 
 	MetricPlugins     []*MetricWrapperV2
 	ServicePlugins    []*ServiceWrapperV2
@@ -73,7 +73,7 @@ func (p *pluginv2Runner) Init(inputQueueSize int, flushQueueSize int) error {
 	p.ProcessPipeContext = helper.NewGroupedPipelineConext()
 	p.AggregatePipeContext = helper.NewObservePipelineConext(flushQueueSize)
 	p.FlushPipeContext = helper.NewNoopPipelineConext()
-	p.NativeInputPipeContext = nil
+	p.NativeProcessorPipeContext = nil
 	p.FlushOutStore.Write(p.AggregatePipeContext.Collector().Observe())
 	return nil
 }
@@ -165,8 +165,8 @@ func (p *pluginv2Runner) addMetricInput(pluginMeta *pipeline.PluginMeta, input p
 		context:         p.LogstoreConfig.Context,
 		latencyMetric:   p.LogstoreConfig.Statistics.CollecLatencytMetric,
 	})
-	if p.LogstoreConfig.GlobalConfig.GoInputToNativeProcessor && p.NativeInputPipeContext == nil {
-		p.NativeInputPipeContext = helper.NewNativeProcessPipelineContext(p.LogstoreConfig.ConfigName, input.GetMode())
+	if p.LogstoreConfig.GlobalConfig.GoInputToNativeProcessor && p.NativeProcessorPipeContext.Collector() == nil {
+		p.NativeProcessorPipeContext = helper.NewNativeProcessPipelineContext(p.LogstoreConfig.ConfigName, input.GetMode())
 	}
 	return err
 }
@@ -177,8 +177,8 @@ func (p *pluginv2Runner) addServiceInput(pluginMeta *pipeline.PluginMeta, input 
 	wrapper.Input = input
 	p.ServicePlugins = append(p.ServicePlugins, &wrapper)
 	err := wrapper.Init(pluginMeta)
-	if p.LogstoreConfig.GlobalConfig.GoInputToNativeProcessor && p.NativeInputPipeContext == nil {
-		p.NativeInputPipeContext = helper.NewNativeProcessPipelineContext(p.LogstoreConfig.ConfigName, input.GetMode())
+	if p.LogstoreConfig.GlobalConfig.GoInputToNativeProcessor && p.NativeProcessorPipeContext == nil {
+		p.NativeProcessorPipeContext = helper.NewNativeProcessPipelineContext(p.LogstoreConfig.ConfigName, input.GetMode())
 	}
 	return err
 }
@@ -235,7 +235,7 @@ func (p *pluginv2Runner) runInput() {
 			defer panicRecover(service.Input.Description())
 			ctx := p.InputPipeContext
 			if p.LogstoreConfig.GlobalConfig.GoInputToNativeProcessor {
-				ctx = p.NativeInputPipeContext
+				ctx = p.NativeProcessorPipeContext
 			}
 			if err := service.StartService(ctx); err != nil {
 				logger.Error(p.LogstoreConfig.Context.GetRuntimeContext(), "PLUGIN_ALARM", "start service error, err", err)
@@ -252,7 +252,7 @@ func (p *pluginv2Runner) runMetricInput(control *pipeline.AsyncControl) {
 			timer := t
 			ctx := p.InputPipeContext
 			if p.LogstoreConfig.GlobalConfig.GoInputToNativeProcessor {
-				ctx = p.NativeInputPipeContext
+				ctx = p.NativeProcessorPipeContext
 			}
 			control.Run(func(cc *pipeline.AsyncControl) {
 				timer.Run(func(state interface{}) error {

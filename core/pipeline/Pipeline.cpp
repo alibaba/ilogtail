@@ -271,8 +271,15 @@ bool Pipeline::Init(PipelineConfig&& config) {
 
 #ifndef APSARA_UNIT_TEST_MAIN
     LoadGoPipelineResp resp = LoadGoPipelines();
-    if (resp.Code != 0) {
-        return false;
+    if (resp.Code != 0 || (mInputs.empty() && resp.InputMode == LoadGoPipelineResp::InputModeType::UNKNOWN)) {
+        PARAM_ERROR_RETURN(mContext.GetLogger(),
+                        mContext.GetAlarm(),
+                        "load go pipeline failed, please check the plugin log",
+                        noModule,
+                        mName,
+                        mContext.GetProjectName(),
+                        mContext.GetLogstoreName(),
+                        mContext.GetRegion());
     }
 #endif
 
@@ -286,16 +293,6 @@ bool Pipeline::Init(PipelineConfig&& config) {
         bool isInputSupportAck = true;
 #ifndef APSARA_UNIT_TEST_MAIN
         if (mInputs.empty()) {
-            if (resp.InputMode == LoadGoPipelineResp::InputModeType::UNKNOWN) {
-                PARAM_ERROR_RETURN(mContext.GetLogger(),
-                                mContext.GetAlarm(),
-                                "go input mode is unknown",
-                                noModule,
-                                mName,
-                                mContext.GetProjectName(),
-                                mContext.GetLogstoreName(),
-                                mContext.GetRegion());
-            }
             isInputSupportAck = resp.InputMode == LoadGoPipelineResp::InputModeType::PUSH;
         }
 #endif
@@ -569,9 +566,6 @@ bool Pipeline::IsFlushingThroughGoPipeline() const {
 }
 
 LoadGoPipelineResp Pipeline::LoadGoPipelines() const {
-    // TODO：将下面的代码替换成批量原子Load。
-    // note:
-    // 目前按照从后往前顺序加载，即便without成功with失败导致without残留在插件系统中，也不会有太大的问题，但最好改成原子的。
     LoadGoPipelineResp resp;
     if (!mGoPipelineWithoutInput.isNull()) {
         string content = mGoPipelineWithoutInput.toStyledString();
