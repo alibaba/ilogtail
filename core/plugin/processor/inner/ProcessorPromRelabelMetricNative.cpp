@@ -48,11 +48,18 @@ bool ProcessorPromRelabelMetricNative::Init(const Json::Value& config) {
 void ProcessorPromRelabelMetricNative::Process(PipelineEventGroup& metricGroup) {
     // if mMetricRelabelConfigs is empty and honor_labels is true, skip it
     auto targetTags = metricGroup.GetTags();
+    // delete tag __<label_name>
+    vector<StringView> toDelete;
+    for (const auto& [k, v] : targetTags) {
+        if (k.starts_with("__")) {
+            toDelete.push_back(k);
+        }
+    }
     if (!mScrapeConfigPtr->mMetricRelabelConfigs.Empty() || !targetTags.empty()) {
         EventsContainer& events = metricGroup.MutableEvents();
         size_t wIdx = 0;
         for (size_t rIdx = 0; rIdx < events.size(); ++rIdx) {
-            if (ProcessEvent(events[rIdx], targetTags)) {
+            if (ProcessEvent(events[rIdx], targetTags, toDelete)) {
                 if (wIdx != rIdx) {
                     events[wIdx] = std::move(events[rIdx]);
                 }
@@ -81,13 +88,14 @@ bool ProcessorPromRelabelMetricNative::IsSupportedEvent(const PipelineEventPtr& 
     return e.Is<MetricEvent>();
 }
 
-bool ProcessorPromRelabelMetricNative::ProcessEvent(PipelineEventPtr& e, const GroupTags& targetTags) {
+bool ProcessorPromRelabelMetricNative::ProcessEvent(PipelineEventPtr& e,
+                                                    const GroupTags& targetTags,
+                                                    const vector<StringView>& toDelete) {
     if (!IsSupportedEvent(e)) {
         return false;
     }
     auto& sourceEvent = e.Cast<MetricEvent>();
-    // delete tag __<label_name>
-    vector<string> toDelete;
+
     for (const auto& [k, v] : targetTags) {
         if (sourceEvent.HasTag(k)) {
             if (!mScrapeConfigPtr->mHonorLabels) {
@@ -99,24 +107,23 @@ bool ProcessorPromRelabelMetricNative::ProcessEvent(PipelineEventPtr& e, const G
                 sourceEvent.SetTagNoCopy(k, v);
             }
         } else {
-            if (k.starts_with("__")) {
-                toDelete.push_back(k.to_string());
-            }
             sourceEvent.SetTagNoCopy(k, v);
         }
     }
 
+    vector<string> toDeleteInRelabel;
     if (!mScrapeConfigPtr->mMetricRelabelConfigs.Empty()
-        && !mScrapeConfigPtr->mMetricRelabelConfigs.Process(sourceEvent, toDelete)) {
+        && !mScrapeConfigPtr->mMetricRelabelConfigs.Process(sourceEvent, toDeleteInRelabel)) {
         return false;
     }
     // set metricEvent name
     sourceEvent.SetNameNoCopy(sourceEvent.GetTag(prometheus::NAME));
 
     for (const auto& k : toDelete) {
-        if (sourceEvent.HasTag(k)) {
-            sourceEvent.DelTag(k);
-        }
+        sourceEvent.DelTag(k);
+    }
+    for (const auto& k : toDeleteInRelabel) {
+        sourceEvent.DelTag(k);
     }
 
     // set metricEvent name
