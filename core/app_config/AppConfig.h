@@ -23,9 +23,9 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <functional>
 
 #include "InstanceConfig.h"
-#include "common/Lock.h"
 #include "protobuf/sls/sls_logs.pb.h"
 
 namespace logtail {
@@ -55,7 +55,8 @@ std::string GetProfileSnapshotDumpFileName();
 std::string GetObserverEbpfHostPath();
 std::string GetSendBufferFileNamePrefix();
 std::string GetLegacyUserLocalConfigFilePath();
-std::string GetExactlyOnceCheckpoint(); 
+std::string GetExactlyOnceCheckpoint();
+std::string GetPipelineConfigDir();
 
 template <class T>
 class DoubleBuffer {
@@ -93,7 +94,7 @@ private:
 
     Json::Value mFileTagsJson;
 
-    mutable SpinLock mAppConfigLock;
+    mutable std::mutex mAppConfigLock;
 
     // loongcollector_config.json content for rebuild
     std::string mIlogtailConfigJson;
@@ -224,7 +225,10 @@ private:
      */
     void CheckAndAdjustParameters();
     void MergeJson(Json::Value& mainConfJson, const Json::Value& subConfJson);
-    void MergeJson(Json::Value& mainConfJson, const Json::Value& subConfJson, std::unordered_map<std::string, std::string>& keyToConfigName, const std::string& configName);
+    void MergeJson(Json::Value& mainConfJson,
+                   const Json::Value& subConfJson,
+                   std::unordered_map<std::string, std::string>& keyToConfigName,
+                   const std::string& configName);
     /**
      * @brief Load *.json from config.d dir
      *
@@ -263,7 +267,7 @@ private:
     void LoadOtherConf(const Json::Value& confJson);
     // void LoadGlobalFuseConf(const Json::Value& confJson);
     void SetIlogtailConfigJson(const std::string& configJson) {
-        ScopedSpinLock lock(mAppConfigLock);
+        std::lock_guard<std::mutex> lock(mAppConfigLock);
         mIlogtailConfigJson = configJson;
     }
     // LoadEnvTags loads env tags from environment.
@@ -391,7 +395,7 @@ public:
     // bool GetOpenStreamLog() const { return mOpenStreamLog; }
 
     std::string GetIlogtailConfigJson() {
-        ScopedSpinLock lock(mAppConfigLock);
+        std::lock_guard<std::mutex> lock(mAppConfigLock);
         return mIlogtailConfigJson;
     }
 

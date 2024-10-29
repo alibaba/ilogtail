@@ -27,6 +27,7 @@ namespace logtail {
 
 bool AsynCurlRunner::Init() {
     mClient = curl_multi_init();
+    mIsFlush = false;
     if (mClient == nullptr) {
         LOG_ERROR(sLogger, ("failed to init async curl runner", "failed to init curl client"));
         return false;
@@ -122,7 +123,7 @@ void AsynCurlRunner::DoRun() {
             this_thread::sleep_for(chrono::milliseconds(100));
             continue;
         }
-        HandleCompletedRequests();
+        HandleCompletedRequests(runningHandlers);
 
         unique_ptr<AsynHttpRequest> request;
         if (mQueue.TryPop(request)) {
@@ -172,7 +173,7 @@ void AsynCurlRunner::DoRun() {
     }
 }
 
-void AsynCurlRunner::HandleCompletedRequests() {
+void AsynCurlRunner::HandleCompletedRequests(int& runningHandlers) {
     int msgsLeft = 0;
     CURLMsg* msg = curl_multi_info_read(mClient, &msgsLeft);
     while (msg) {
@@ -181,33 +182,42 @@ void AsynCurlRunner::HandleCompletedRequests() {
             CURL* handler = msg->easy_handle;
             AsynHttpRequest* request = nullptr;
             curl_easy_getinfo(handler, CURLINFO_PRIVATE, &request);
-            LOG_DEBUG(sLogger,
-                      ("send http request completed, request address",
-                       request)("response time",ToString(chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now()- request->mLastSendTime).count()) + "ms")
-                      ("try cnt", ToString(request->mTryCnt)));
+            auto responseTime
+                = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - request->mLastSendTime)
+                      .count();
             switch (msg->data.result) {
                 case CURLE_OK: {
                     long statusCode = 0;
                     curl_easy_getinfo(handler, CURLINFO_RESPONSE_CODE, &statusCode);
-                    request->mResponse.mStatusCode = (int32_t)statusCode;
+                    request->mResponse.SetStatusCode(statusCode);
                     request->OnSendDone(request->mResponse);
+                    LOG_DEBUG(sLogger,
+                              ("send http request succeeded, request address",
+                               request)("response time", ToString(responseTime) + "ms")("try cnt",
+                                                                                        ToString(request->mTryCnt)));
                     break;
                 }
                 default:
                     // considered as network error
-                    if (request->mTryCnt <= request->mMaxTryCnt) {
+                    if (request->mTryCnt < request->mMaxTryCnt) {
                         LOG_WARNING(sLogger,
-                                    ("failed to send request", "retry immediately")("retryCnt", request->mTryCnt++)(
-                                        "errMsg", curl_easy_strerror(msg->data.result)));
+                                    ("failed to send http request", "retry immediately")("request address", request)(
+                                        "try cnt", request->mTryCnt)("errMsg", curl_easy_strerror(msg->data.result)));
                         // free first，becase mPrivateData will be reset in AddRequestToClient
                         if (request->mPrivateData) {
                             curl_slist_free_all((curl_slist*)request->mPrivateData);
                             request->mPrivateData = nullptr;
                         }
+                        ++request->mTryCnt;
                         AddRequestToClient(unique_ptr<AsynHttpRequest>(request));
+                        ++runningHandlers;
                         requestReused = true;
                     } else {
                         request->OnSendDone(request->mResponse);
+                        LOG_DEBUG(
+                            sLogger,
+                            ("failed to send http request", "abort")("request address", request)(
+                                "response time", ToString(responseTime) + "ms")("try cnt", ToString(request->mTryCnt)));
                     }
                     break;
             }

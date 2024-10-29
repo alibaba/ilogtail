@@ -103,6 +103,7 @@ public:
             {METRIC_LABEL_KEY_PROJECT, ctx.GetProjectName()},
             {METRIC_LABEL_KEY_PIPELINE_NAME, ctx.GetConfigName()},
             {METRIC_LABEL_KEY_COMPONENT_NAME, METRIC_LABEL_VALUE_COMPONENT_NAME_BATCHER},
+            {METRIC_LABEL_KEY_METRIC_CATEGORY, METRIC_LABEL_KEY_METRIC_CATEGORY_COMPONENT},
             {METRIC_LABEL_KEY_FLUSHER_PLUGIN_ID, flusher->GetPluginID()}};
         if (enableGroupBatch) {
             labels.emplace_back(METRIC_LABEL_KEY_GROUP_BATCH_ENABLED, "true");
@@ -118,12 +119,14 @@ public:
         mBufferedGroupsTotal = mMetricsRecordRef.CreateIntGauge(METRIC_COMPONENT_BATCHER_BUFFERED_GROUPS_TOTAL);
         mBufferedEventsTotal = mMetricsRecordRef.CreateIntGauge(METRIC_COMPONENT_BATCHER_BUFFERED_EVENTS_TOTAL);
         mBufferedDataSizeByte = mMetricsRecordRef.CreateIntGauge(METRIC_COMPONENT_BATCHER_BUFFERED_SIZE_BYTES);
+        mTotalAddTimeMs = mMetricsRecordRef.CreateTimeCounter(METRIC_COMPONENT_BATCHER_TOTAL_ADD_TIME_MS);
 
         return true;
     }
 
     // when group level batch is disabled, there should be only 1 element in BatchedEventsList
     void Add(PipelineEventGroup&& g, std::vector<BatchedEventsList>& res) {
+        auto before = std::chrono::system_clock::now();
         std::lock_guard<std::mutex> lock(mMux);
         size_t key = g.GetTagsHash();
         EventBatchItem<T>& item = mEventQueueMap[key];
@@ -178,6 +181,7 @@ public:
                 item.Flush(res);
             }
         }
+        mTotalAddTimeMs->Add(std::chrono::system_clock::now() - before);
     }
 
     // key != 0: event level queue
@@ -298,6 +302,7 @@ private:
     IntGaugePtr mBufferedGroupsTotal;
     IntGaugePtr mBufferedEventsTotal;
     IntGaugePtr mBufferedDataSizeByte;
+    TimeCounterPtr mTotalAddTimeMs;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class BatcherUnittest;

@@ -18,25 +18,14 @@
 #include <map>
 #include <string>
 
-#include "common/DNSCache.h"
 #include "app_config/AppConfig.h"
-#include "logger/Logger.h"
+#include "common/DNSCache.h"
 #include "common/http/HttpResponse.h"
+#include "logger/Logger.h"
 
 using namespace std;
 
 namespace logtail {
-
-static size_t data_write_callback(char* buffer, size_t size, size_t nmemb, string* write_buf) {
-    unsigned long sizes = size * nmemb;
-
-    if (buffer == NULL) {
-        return 0;
-    }
-
-    write_buf->append(buffer, sizes);
-    return sizes;
-}
 
 static size_t header_write_callback(char* buffer,
                                     size_t size,
@@ -123,9 +112,9 @@ CURL* CreateCurlHandler(const std::string& method,
         curl_easy_setopt(curl, CURLOPT_INTERFACE, intf.c_str());
     }
 
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &(response.mBody));
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, data_write_callback);
-    curl_easy_setopt(curl, CURLOPT_HEADERDATA, &(response.mHeader));
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, response.mBody.get());
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, response.mWriteCallback);
+    curl_easy_setopt(curl, CURLOPT_HEADERDATA, &(response.GetHeader()));
     curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, header_write_callback);
 
     curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
@@ -139,35 +128,41 @@ CURL* CreateCurlHandler(const std::string& method,
 bool SendHttpRequest(std::unique_ptr<HttpRequest>&& request, HttpResponse& response) {
     curl_slist* headers = NULL;
     CURL* curl = CreateCurlHandler(request->mMethod,
-                                request->mHTTPSFlag,
-                                request->mHost,
-                                request->mPort,
-                                request->mUrl,
-                                request->mQueryString,
-                                request->mHeader,
-                                request->mBody,
-                                response,
-                                headers,
-                                request->mTimeout,
-                                AppConfig::GetInstance()->IsHostIPReplacePolicyEnabled(),
-                                AppConfig::GetInstance()->GetBindInterface());
+                                   request->mHTTPSFlag,
+                                   request->mHost,
+                                   request->mPort,
+                                   request->mUrl,
+                                   request->mQueryString,
+                                   request->mHeader,
+                                   request->mBody,
+                                   response,
+                                   headers,
+                                   request->mTimeout,
+                                   AppConfig::GetInstance()->IsHostIPReplacePolicyEnabled(),
+                                   AppConfig::GetInstance()->GetBindInterface());
     if (curl == NULL) {
-        LOG_ERROR(sLogger, ("failed to init curl handler", "failed to init curl client")("request address", request.get()));
+        LOG_ERROR(sLogger,
+                  ("failed to init curl handler", "failed to init curl client")("request address", request.get()));
         return false;
     }
     bool success = false;
-    while (request->mTryCnt <= request->mMaxTryCnt) {
+    while (true) {
         CURLcode res = curl_easy_perform(curl);
         if (res == CURLE_OK) {
             long http_code = 0;
             curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
-            response.mStatusCode = (int32_t)http_code;
+            response.SetStatusCode(http_code);
             success = true;
             break;
+        } else if (request->mTryCnt < request->mMaxTryCnt) {
+            LOG_WARNING(sLogger,
+                        ("failed to send http request", "retry immediately")("request address", request.get())(
+                            "try cnt", request->mTryCnt)("errMsg", curl_easy_strerror(res)));
+            ++request->mTryCnt;
         } else {
-            LOG_WARNING(sLogger,("failed to send request", "retry immediately")("retryCnt", request->mTryCnt++)("errMsg", curl_easy_strerror(res))("request address", request.get()));
+            break;
         }
-    } 
+    }
     if (headers != NULL) {
         curl_slist_free_all(headers);
     }

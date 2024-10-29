@@ -49,7 +49,7 @@ private:
     void Run();
     bool AddRequestToClient(std::unique_ptr<HttpSinkRequest>&& request);
     void DoRun();
-    void HandleCompletedRequests();
+    void HandleCompletedRequests(int& runningHandlers);
 
     CURLM* mClient = nullptr;
 
@@ -60,8 +60,8 @@ private:
     CounterPtr mInItemsTotal;
     CounterPtr mOutSuccessfulItemsTotal;
     CounterPtr mOutFailedItemsTotal;
-    CounterPtr mSuccessfulItemTotalResponseTimeMs;
-    CounterPtr mFailedItemTotalResponseTimeMs;
+    TimeCounterPtr mSuccessfulItemTotalResponseTimeMs;
+    TimeCounterPtr mFailedItemTotalResponseTimeMs;
     IntGaugePtr mSendingItemsTotal;
     IntGaugePtr mSendConcurrency;
     IntGaugePtr mLastRunTime;
