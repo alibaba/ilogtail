@@ -271,7 +271,7 @@ func (c *DynamicController) Delete(filePath string) error {
 func (c *DynamicController) parseObjFromYaml(filePath string) (*meta.RESTMapping, *unstructured.Unstructured, error) {
 	// Read the YAML file
 	basePath := "test_cases"
-	yamlFile, err := os.ReadFile(filepath.Join(basePath, filePath))
+	yamlFile, err := os.ReadFile(filepath.Join(basePath, filePath)) // #nosec G304
 	if err != nil {
 		return nil, nil, err
 	}
