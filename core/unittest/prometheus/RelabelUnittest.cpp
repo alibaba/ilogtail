@@ -485,7 +485,7 @@ void RelabelConfigUnittest::TestMultiRelabel() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr2, configJson, errorMsg));
     configList = RelabelConfigList();
     APSARA_TEST_TRUE(configList.Init(configJson));
-    // result = labels;
+    result = labels;
     APSARA_TEST_TRUE(configList.Process(result, toDelete));
 }
 
