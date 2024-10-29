@@ -95,7 +95,7 @@ func MetricCheck(ctx context.Context, expect int, duration int64, checker func([
 			if expect == 0 {
 				return fmt.Errorf("metric count is 0")
 			}
-			if err := checker(groups); err != nil {
+			if err = checker(groups); err != nil {
 				return err
 			}
 			return nil
