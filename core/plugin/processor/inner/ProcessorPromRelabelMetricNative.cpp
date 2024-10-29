@@ -86,48 +86,41 @@ bool ProcessorPromRelabelMetricNative::ProcessEvent(PipelineEventPtr& e, const G
         return false;
     }
     auto& sourceEvent = e.Cast<MetricEvent>();
-    if (!mScrapeConfigPtr->mHonorLabels) {
-        // metric event labels is secondary
-        // if confiliction, then rename it exported_<label_name>
-        for (const auto& [k, v] : targetTags) {
-            if (sourceEvent.HasTag(k)) {
+    // delete tag __<label_name>
+    vector<string> toDelete;
+    for (const auto& [k, v] : targetTags) {
+        if (sourceEvent.HasTag(k)) {
+            if (!mScrapeConfigPtr->mHonorLabels) {
+                // metric event labels is secondary
+                // if confiliction, then rename it exported_<label_name>
                 auto key = prometheus::EXPORTED_PREFIX + k.to_string();
-                sourceEvent.SetTag(key, sourceEvent.GetTag(k).to_string());
-                sourceEvent.SetTag(k, v);
-            } else {
-                sourceEvent.SetTag(k, v);
+                auto b = sourceEvent.GetSourceBuffer()->CopyString(key);
+                sourceEvent.SetTagNoCopy(StringView(b.data, b.size), sourceEvent.GetTag(k));
+                sourceEvent.SetTagNoCopy(k, v);
             }
-        }
-    } else {
-        // if mHonorLabels is true, then keep sourceEvent labels
-        for (const auto& [k, v] : targetTags) {
-            if (!sourceEvent.HasTag(k)) {
-                sourceEvent.SetTag(k, v);
+        } else {
+            if (k.starts_with("__")) {
+                toDelete.push_back(k.to_string());
             }
+            sourceEvent.SetTagNoCopy(k, v);
         }
     }
 
     if (!mScrapeConfigPtr->mMetricRelabelConfigs.Empty()
-        && !mScrapeConfigPtr->mMetricRelabelConfigs.Process(sourceEvent)) {
+        && !mScrapeConfigPtr->mMetricRelabelConfigs.Process(sourceEvent, toDelete)) {
         return false;
     }
     // set metricEvent name
     sourceEvent.SetNameNoCopy(sourceEvent.GetTag(prometheus::NAME));
 
-
-    // delete tag __<label_name>
-    vector<StringView> toDelete;
-    for (auto it = sourceEvent.TagsBegin(); it != sourceEvent.TagsEnd(); ++it) {
-        if (it->first.starts_with("__")) {
-            toDelete.push_back(it->first);
-        }
-    }
     for (const auto& k : toDelete) {
-        sourceEvent.DelTag(k);
+        if (sourceEvent.HasTag(k)) {
+            sourceEvent.DelTag(k);
+        }
     }
 
     // set metricEvent name
-    sourceEvent.SetTag(prometheus::NAME, sourceEvent.GetName());
+    sourceEvent.SetTagNoCopy(prometheus::NAME, sourceEvent.GetName());
 
     return true;
 }
