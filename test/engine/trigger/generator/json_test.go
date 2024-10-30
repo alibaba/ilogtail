@@ -29,7 +29,7 @@ func TestGenerateJSONSingle(t *testing.T) {
 		t.Fatalf("get generate file log config from env failed: %v", err)
 		return
 	}
-	testLogConentTmpl := string2Template([]string{
+	testLogContentTmpl := string2Template([]string{
 		`{"mark":"{{.Mark}}","file":"file{{.FileNo}}","logNo":{{.LogNo}},"time":"{{.Time}}","ip":"0.0.0.0","method":"POST","userAgent":"mozilla firefox","size":263}
 `,
 		`{"mark":"{{.Mark}}","file":"file{{.FileNo}}","logNo":{{.LogNo}},"time":"{{.Time}}","ip":"0.0.0.0","method":"GET","userAgent":"go-sdk","size":569}
@@ -56,7 +56,7 @@ func TestGenerateJSONSingle(t *testing.T) {
 		} else {
 			currentTime = strconv.FormatInt(time.Now().UnixNano()/1000, 10)
 		}
-		testLogConentTmpl[logIndex].Execute(file, map[string]interface{}{
+		testLogContentTmpl[logIndex].Execute(file, map[string]interface{}{
 			"Mark":   getRandomMark(),
 			"FileNo": fileNo,
 			"LogNo":  logNo + i,
@@ -65,7 +65,7 @@ func TestGenerateJSONSingle(t *testing.T) {
 
 		time.Sleep(time.Duration(config.Interval * int(time.Millisecond)))
 		logIndex++
-		if logIndex >= len(testLogConentTmpl) {
+		if logIndex >= len(testLogContentTmpl) {
 			logIndex = 0
 		}
 	}
@@ -77,7 +77,7 @@ func TestGenerateJSONMultiline(t *testing.T) {
 		t.Fatalf("get generate file log config from env failed: %v", err)
 		return
 	}
-	testLogConentTmpl := string2Template([]string{
+	testLogContentTmpl := string2Template([]string{
 		`{"mark":"{{.Mark}}","file":"file{{.FileNo}}","logNo":{{.LogNo}},"time":"{{.Time}}","ip":"0.0.0.0","method":"POST","userAgent":"mozilla firefox",
 "size":263}
 `,
@@ -103,7 +103,7 @@ func TestGenerateJSONMultiline(t *testing.T) {
 	fileNo := rand.Intn(10000)
 	for i := 0; i < config.TotalLog; i++ {
 		currentTime := time.Now().Format("2006-01-02T15:04:05.999999999")
-		testLogConentTmpl[logIndex].Execute(file, map[string]interface{}{
+		testLogContentTmpl[logIndex].Execute(file, map[string]interface{}{
 			"Mark":   getRandomMark(),
 			"FileNo": fileNo,
 			"LogNo":  logNo + i,
@@ -112,7 +112,7 @@ func TestGenerateJSONMultiline(t *testing.T) {
 
 		time.Sleep(time.Duration(config.Interval * int(time.Millisecond)))
 		logIndex++
-		if logIndex >= len(testLogConentTmpl) {
+		if logIndex >= len(testLogContentTmpl) {
 			logIndex = 0
 		}
 	}
