@@ -53,13 +53,13 @@ input_network_security
 */
 func TrigerNetworksSecurityEvents(ctx context.Context, commandCnt int, url string) (context.Context, error) {
 	time.Sleep(5 * time.Second)
-	if err := curlUrl(ctx, commandCnt, url); err != nil {
+	if err := curlURL(ctx, commandCnt, url); err != nil {
 		return ctx, err
 	}
 	return ctx, nil
 }
 
-func curlUrl(ctx context.Context, commandCnt int, url string) error {
+func curlURL(ctx context.Context, commandCnt int, url string) error {
 	curlCommand := "curl --connect-timeout 1 " + url + ";"
 	for i := 0; i < commandCnt; i++ {
 		if err := setup.Env.ExecOnSource(ctx, curlCommand); err != nil {
