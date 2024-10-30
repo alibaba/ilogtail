@@ -2,8 +2,6 @@
 
 本项目针对https://github.com/alibaba/ilogtail/tree/main/config_server/protocol/v2 中提到的Agent行为进行了V2版本的适配，基本实现了能力报告、心跳压缩、配置状态上报等功能；并适配用户端实现了Config-server的前端页面Config-server-ui，项目见[ui](../ui/README.md)。
 ## 快速开始
-### 基本配置
-下载ilogtail源码，进入`config_server/service`目录
 #### 数据库配置
 
 由于要求ConfigServer存储Agent的基本信息、PipelineConfig、InstanceConfig等配置信息，所以首先需要对数据库进行配置。打开`cmd/config/prod`文件夹，编辑`databaseConfig.json`（若不存在，请先创建），填入以下信息，其中`type`为数据库的基本类型 （基于gorm我们适配了`mysql`、`sqlite`、`postgres`、`sqlserver`四种数据库）；其余均为数据库配置信息；`autoMigrate`字段默认为`true`，若先前建好业务相关的表，则设置为`false`。配置完成后，请自行创建可与ConfigServer连通的数据库实例，并创建名字为`dbName`的数据库(若按照docker compose方式启动，无需任何操作，参考[deployment](../deployment/README.md))。

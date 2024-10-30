@@ -1,6 +1,6 @@
 syntax = "proto3";
 option go_package = "/protov2;";
-import "agent.proto";
+import "agentV2.proto";
 
 
 message Agent{
