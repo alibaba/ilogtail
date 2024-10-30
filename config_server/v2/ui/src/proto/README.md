@@ -17,7 +17,7 @@ protoc --version
 # libprotoc 3.5.0
 ```
 
-进入到`protocol/v2`文件夹
+进入到`protocol/v2`[文件夹](../../../protocol/v2)
 
 ```
 cd protocol/v2

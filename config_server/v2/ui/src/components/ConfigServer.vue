@@ -16,6 +16,8 @@
 import AgentGroup from "@/components/agentGroup/AgentGroup.vue";
 import PipelineConfig from "@/components/config/PipelineConfig.vue";
 import InstanceConfig from "@/components/config/InstanceConfig.vue";
+import {ElMessage} from "element-plus";
+import {message} from "protocol-buffers/compile";
 
 
 export default {
@@ -35,9 +37,14 @@ export default {
       } else if (this.activeName === 'pipelineConfig') {
         await this.$refs.pipelineConfigComponent.initAllTable()
       } else if (this.activeName === 'instanceConfig') {
+        ElMessage({
+          message: "功能暂未开放，敬请期待",
+          type: "warning"
+        },)
         await this.$refs.instanceConfigComponent.initAllTable();
       }
     },
+
   }
 }
 </script>

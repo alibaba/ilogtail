@@ -15,7 +15,6 @@ func initUserRouter(router *gin.Engine) {
 		userRouter.POST("/ListAgentGroups", handler.ListAgentGroups)
 		userRouter.POST("/ListAgents", handler.ListAgentsInGroup)
 		userRouter.POST("/GetAppliedPipelineConfigsForAgentGroup", handler.GetAppliedPipelineConfigsForAgentGroup)
-		userRouter.POST("/GetAppliedInstanceConfigsForAgentGroup", handler.GetAppliedInstanceConfigsForAgentGroup)
 
 		userRouter.POST("/CreatePipelineConfig", handler.CreatePipelineConfig)
 		userRouter.POST("/UpdatePipelineConfig", handler.UpdatePipelineConfig)
@@ -26,16 +25,6 @@ func initUserRouter(router *gin.Engine) {
 		userRouter.POST("/RemovePipelineConfigFromAgentGroup", handler.RemovePipelineConfigFromAgentGroup)
 		userRouter.POST("/GetAppliedAgentGroupsWithPipelineConfig", handler.GetAppliedAgentGroupsWithPipelineConfig)
 		userRouter.POST("/GetPipelineConfigStatusList", handler.GetPipelineConfigStatusList)
-
-		userRouter.POST("/CreateInstanceConfig", handler.CreateInstanceConfig)
-		userRouter.POST("/UpdateInstanceConfig", handler.UpdateInstanceConfig)
-		userRouter.POST("/DeleteInstanceConfig", handler.DeleteInstanceConfig)
-		userRouter.POST("/GetInstanceConfig", handler.GetInstanceConfig)
-		userRouter.POST("/ListInstanceConfigs", handler.ListInstanceConfigs)
-		userRouter.POST("/ApplyInstanceConfigToAgentGroup", handler.ApplyInstanceConfigToAgentGroup)
-		userRouter.POST("/RemoveInstanceConfigFromAgentGroup", handler.RemoveInstanceConfigFromAgentGroup)
-		userRouter.POST("/GetAppliedAgentGroupsWithInstanceConfig", handler.GetAppliedAgentGroupsWithInstanceConfig)
-		userRouter.POST("/GetInstanceConfigStatusList", handler.GetInstanceConfigStatusList)
 	}
 
 }
@@ -45,7 +34,6 @@ func initAgentRouter(router *gin.Engine) {
 	{
 		agentRouter.POST("/Heartbeat", handler.HeartBeat)
 		agentRouter.POST("/FetchPipelineConfig", handler.FetchPipelineConfig)
-		agentRouter.POST("/FetchInstanceConfig", handler.FetchInstanceConfig)
 	}
 	handler.CheckAgentExist()
 }

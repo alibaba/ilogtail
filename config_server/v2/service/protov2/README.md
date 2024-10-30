@@ -27,7 +27,7 @@ protoc --version
 go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 ```
 
-进入`protocol/v2`文件夹
+进入`protocol/v2`[文件夹](../../../protocol/v2)
 
 ```shell
 protoc --go_out=. agent.proto

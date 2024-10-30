@@ -38,6 +38,6 @@ func GetServerConfiguration() error {
 func init() {
 	err := GetServerConfiguration()
 	if err != nil {
-		return
+		panic(err)
 	}
 }
