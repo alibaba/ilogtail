@@ -45,8 +45,15 @@ using namespace std;
 
 namespace logtail {
 
-bool SLSClientManager::RegionEndpointsInfo::AddDefaultEndpoint(const std::string& endpoint) {
-    mDefaultEndpoint = endpoint;
+bool SLSClientManager::RegionEndpointsInfo::AddDefaultEndpoint(const std::string& endpoint,
+                                                               const EndpointSourceType& endpointType,
+                                                               bool& isDefault) {
+    if (mDefaultEndpoint.empty()
+        || (endpointType == EndpointSourceType::LOCAL && mDefaultEndpointType == EndpointSourceType::REMOTE)) {
+        mDefaultEndpoint = endpoint;
+        mDefaultEndpointType = endpointType;
+        isDefault = true;
+    }
     return AddEndpoint(endpoint, true, false);
 }
 
@@ -145,17 +152,17 @@ void SLSClientManager::Stop() {
     if (mDataServerSwitchPolicy == EndpointSwitchPolicy::DESIGNATED_FIRST) {
         future_status s = mProbeNetworkThreadRes.wait_for(chrono::seconds(1));
         if (s == future_status::ready) {
-            LOG_INFO(sLogger, ("test endpoint thread", "stopped successfully"));
+            LOG_INFO(sLogger, ("sls endpoint probe", "stopped successfully"));
         } else {
-            LOG_WARNING(sLogger, ("test endpoint thread", "forced to stopped"));
+            LOG_WARNING(sLogger, ("sls endpoint probe", "forced to stopped"));
         }
     }
     if (BOOL_FLAG(send_prefer_real_ip)) {
         future_status s = mUpdateRealIpThreadRes.wait_for(chrono::seconds(1));
         if (s == future_status::ready) {
-            LOG_INFO(sLogger, ("update real ip thread", "stopped successfully"));
+            LOG_INFO(sLogger, ("sls real ip update", "stopped successfully"));
         } else {
-            LOG_WARNING(sLogger, ("update real ip thread", "forced to stopped"));
+            LOG_WARNING(sLogger, ("sls real ip update", "forced to stopped"));
         }
     }
 }
@@ -299,14 +306,19 @@ void SLSClientManager::CleanTimeoutClient() {
     }
 }
 
-void SLSClientManager::AddEndpointEntry(const string& region, const string& endpoint, bool isDefault, bool isProxy) {
+void SLSClientManager::AddEndpointEntry(const string& region,
+                                        const string& endpoint,
+                                        bool isProxy,
+                                        const EndpointSourceType& endpointType) {
     lock_guard<mutex> lock(mRegionEndpointEntryMapLock);
     RegionEndpointsInfo& info = mRegionEndpointEntryMap[region];
-    if (isDefault) {
-        if (info.AddDefaultEndpoint(endpoint)) {
+    if (!isProxy) {
+        bool isDefault = false;
+        if (info.AddDefaultEndpoint(endpoint, endpointType, isDefault)) {
             LOG_INFO(sLogger,
-                     ("add default data server endpoint, region",
-                      region)("endpoint", endpoint)("isProxy", "false")("#endpoint", info.mEndpointInfoMap.size()));
+                     ("add data server endpoint, region", region)("endpoint", endpoint)(
+                         "isDefault", isDefault ? "yes" : "no")("isProxy", "false")("#endpoint",
+                                                                                    info.mEndpointInfoMap.size()));
         }
     } else {
         if (info.AddEndpoint(endpoint, true, isProxy)) {
@@ -373,6 +385,7 @@ bool SLSClientManager::HasNetworkAvailable() {
 }
 
 void SLSClientManager::ProbeNetworkThread() {
+    LOG_INFO(sLogger, ("sls endpoint probe", "started"));
     // pair<int32_t, string> represents the weight of each endpoint
     map<string, vector<pair<int32_t, string>>> unavaliableEndpoints;
     set<string> unavaliableRegions;
@@ -527,6 +540,7 @@ void SLSClientManager::UpdateSendClientRealIp(sdk::Client* client, const string&
 }
 
 void SLSClientManager::UpdateRealIpThread() {
+    LOG_INFO(sLogger, ("sls real ip update", "started"));
     int32_t lastUpdateRealIpTime = 0;
     vector<string> regionEndpointArray;
     vector<string> regionArray;

@@ -67,7 +67,7 @@ public:
         return mPluginCntMap;
     }
 
-    // only for input_observer_network for compatability
+    // only for input_file
     const std::vector<std::unique_ptr<InputInstance>>& GetInputs() const { return mInputs; }
 
     std::string GetNowPluginID();
@@ -108,7 +108,11 @@ private:
     CounterPtr mProcessorsInEventsTotal;
     CounterPtr mProcessorsInGroupsTotal;
     CounterPtr mProcessorsInSizeBytes;
-    CounterPtr mProcessorsTotalProcessTimeMs;
+    TimeCounterPtr mProcessorsTotalProcessTimeMs;
+    CounterPtr mFlushersInGroupsTotal;
+    CounterPtr mFlushersInEventsTotal;
+    CounterPtr mFlushersInSizeBytes;
+    TimeCounterPtr mFlushersTotalPackageTimeMs;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class PipelineMock;

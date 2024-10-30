@@ -31,7 +31,9 @@
 #include "common/UUIDUtil.h"
 #include "common/version.h"
 #include "config/ConfigDiff.h"
+#include "config/InstanceConfigManager.h"
 #include "config/watcher/ConfigWatcher.h"
+#include "config/watcher/InstanceConfigWatcher.h"
 #include "file_server/ConfigManager.h"
 #include "file_server/EventDispatcher.h"
 #include "file_server/FileServer.h"
@@ -41,7 +43,6 @@
 #include "monitor/LogFileProfiler.h"
 #include "monitor/MetricExportor.h"
 #include "monitor/Monitor.h"
-#include "pipeline/InstanceConfigManager.h"
 #include "pipeline/PipelineManager.h"
 #include "pipeline/plugin/PluginRegistry.h"
 #include "pipeline/queue/ExactlyOnceQueueManager.h"
@@ -85,16 +86,6 @@ Application::Application() : mStartTime(time(nullptr)) {
 }
 
 void Application::Init() {
-    // get last crash info
-    string backTraceStr = GetCrashBackTrace();
-    if (!backTraceStr.empty()) {
-        LOG_ERROR(sLogger, ("last logtail crash stack", backTraceStr));
-        LogtailAlarm::GetInstance()->SendAlarm(LOGTAIL_CRASH_STACK_ALARM, backTraceStr);
-    }
-    if (BOOL_FLAG(ilogtail_disable_core)) {
-        InitCrashBackTrace();
-    }
-
     // change working dir to ./${ILOGTAIL_VERSION}/
     string processExecutionDir = GetProcessExecutionDir();
     AppConfig::GetInstance()->SetProcessExecutionDir(processExecutionDir);
@@ -122,7 +113,21 @@ void Application::Init() {
 
     // Initialize basic information: IP, hostname, etc.
     LogFileProfiler::GetInstance();
-
+#ifdef __ENTERPRISE__
+    EnterpriseConfigProvider::GetInstance()->LoadRegionConfig();
+    if (GlobalConf::Instance()->mStartWorkerStatus == "Crash") {
+        LogtailAlarm::GetInstance()->SendAlarm(LOGTAIL_CRASH_ALARM, "Logtail Restart");
+    }
+    // get last crash info
+    string backTraceStr = GetCrashBackTrace();
+    if (!backTraceStr.empty()) {
+        LOG_ERROR(sLogger, ("last logtail crash stack", backTraceStr));
+        LogtailAlarm::GetInstance()->SendAlarm(LOGTAIL_CRASH_STACK_ALARM, backTraceStr);
+    }
+    if (BOOL_FLAG(ilogtail_disable_core)) {
+        InitCrashBackTrace();
+    }
+#endif
     // override process related params if designated by user explicitly
     const string& interface = AppConfig::GetInstance()->GetBindInterface();
     const string& configIP = AppConfig::GetInstance()->GetConfigIP();
@@ -191,7 +196,8 @@ void Application::Init() {
 }
 
 void Application::Start() { // GCOVR_EXCL_START
-    LogtailMonitor::GetInstance()->UpdateConstMetric("start_time", GetTimeStamp(time(NULL), "%Y-%m-%d %H:%M:%S"));
+    LogFileProfiler::mStartTime = GetTimeStamp(time(NULL), "%Y-%m-%d %H:%M:%S");
+    LogtailMonitor::GetInstance()->UpdateConstMetric("start_time", LogFileProfiler::mStartTime);
 
 #if defined(__ENTERPRISE__) && defined(_MSC_VER)
     InitWindowsSignalObject();
@@ -204,7 +210,7 @@ void Application::Start() { // GCOVR_EXCL_START
     {
         // add local config dir
         filesystem::path localConfigPath
-            = filesystem::path(AppConfig::GetInstance()->GetLoongcollectorConfDir()) / "pipeline_config" / "local";
+            = filesystem::path(AppConfig::GetInstance()->GetLoongcollectorConfDir()) / GetPipelineConfigDir() / "local";
         error_code ec;
         filesystem::create_directories(localConfigPath, ec);
         if (ec) {
@@ -212,20 +218,7 @@ void Application::Start() { // GCOVR_EXCL_START
                         ("failed to create dir for local pipeline_config",
                          "manual creation may be required")("error code", ec.value())("error msg", ec.message()));
         }
-        ConfigWatcher::GetInstance()->AddPipelineSource(localConfigPath.string());
-    }
-    {
-        // add local config dir
-        filesystem::path localConfigPath
-            = filesystem::path(AppConfig::GetInstance()->GetLoongcollectorConfDir()) / "instance_config" / "local";
-        error_code ec;
-        filesystem::create_directories(localConfigPath, ec);
-        if (ec) {
-            LOG_WARNING(sLogger,
-                        ("failed to create dir for local instance_config",
-                         "manual creation may be required")("error code", ec.value())("error msg", ec.message()));
-        }
-        ConfigWatcher::GetInstance()->AddInstanceSource(localConfigPath.string());
+        ConfigWatcher::GetInstance()->AddSource(localConfigPath.string());
     }
 
 #ifdef __ENTERPRISE__
@@ -282,11 +275,11 @@ void Application::Start() { // GCOVR_EXCL_START
             lastCheckTagsTime = curTime;
         }
         if (curTime - lastConfigCheckTime >= INT32_FLAG(config_scan_interval)) {
-            PipelineConfigDiff pipelineConfigDiff = ConfigWatcher::GetInstance()->CheckPipelineConfigDiff();
+            PipelineConfigDiff pipelineConfigDiff = ConfigWatcher::GetInstance()->CheckConfigDiff();
             if (!pipelineConfigDiff.IsEmpty()) {
                 PipelineManager::GetInstance()->UpdatePipelines(pipelineConfigDiff);
             }
-            InstanceConfigDiff instanceConfigDiff = ConfigWatcher::GetInstance()->CheckInstanceConfigDiff();
+            InstanceConfigDiff instanceConfigDiff = InstanceConfigWatcher::GetInstance()->CheckConfigDiff();
             if (!instanceConfigDiff.IsEmpty()) {
                 InstanceConfigManager::GetInstance()->UpdateInstanceConfigs(instanceConfigDiff);
             }

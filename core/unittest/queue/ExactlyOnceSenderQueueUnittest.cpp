@@ -131,7 +131,7 @@ void ExactlyOnceSenderQueueUnittest::TestGetAvailableItems() {
         mQueue->GetAvailableItems(items, -1);
         APSARA_TEST_EQUAL(2U, items.size());
         for (auto& item : items) {
-            item->mStatus.Set(SendingStatus::IDLE);
+            item->mStatus = SendingStatus::IDLE;
         }
     }
     {
@@ -143,9 +143,9 @@ void ExactlyOnceSenderQueueUnittest::TestGetAvailableItems() {
         mQueue->GetAvailableItems(items, 80);
         APSARA_TEST_EQUAL(1U, items.size());
         APSARA_TEST_EQUAL(sDataSize, mQueue->mRateLimiter->mLastSecondTotalBytes);
-        APSARA_TEST_EQUAL(1, mQueue->mConcurrencyLimiters[0].first->GetInSendingCount());
+        APSARA_TEST_EQUAL(1U, mQueue->mConcurrencyLimiters[0].first->GetInSendingCount());
         for (auto& item : items) {
-            item->mStatus.Set(SendingStatus::IDLE);
+            item->mStatus = SendingStatus::IDLE;
         }
         mQueue->mRateLimiter->mLastSecondTotalBytes = 0;
     }
@@ -158,7 +158,7 @@ void ExactlyOnceSenderQueueUnittest::TestGetAvailableItems() {
         mQueue->GetAvailableItems(items, 80);
         APSARA_TEST_EQUAL(1U, items.size());
         APSARA_TEST_EQUAL(sDataSize, mQueue->mRateLimiter->mLastSecondTotalBytes);
-        APSARA_TEST_EQUAL(1, mQueue->mConcurrencyLimiters[0].first->GetInSendingCount());
+        APSARA_TEST_EQUAL(1U, mQueue->mConcurrencyLimiters[0].first->GetInSendingCount());
         mQueue->mRateLimiter->mLastSecondTotalBytes = 0;
     }
     {
@@ -170,7 +170,7 @@ void ExactlyOnceSenderQueueUnittest::TestGetAvailableItems() {
         mQueue->GetAvailableItems(items, 80);
         APSARA_TEST_EQUAL(1U, items.size());
         APSARA_TEST_EQUAL(sDataSize, mQueue->mRateLimiter->mLastSecondTotalBytes);
-        APSARA_TEST_EQUAL(1, mQueue->mConcurrencyLimiters[0].first->GetInSendingCount());
+        APSARA_TEST_EQUAL(1U, mQueue->mConcurrencyLimiters[0].first->GetInSendingCount());
     }
 }
 

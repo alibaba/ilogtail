@@ -18,6 +18,7 @@
 #include "ebpf/include/SysAkApi.h"
 #include "common/MachineInfoUtil.h"
 #include "common/LogtailCommonFlags.h"
+#include "app_config/AppConfig.h"
 
 #include <string>
 #include <filesystem>
@@ -62,8 +63,15 @@ SourceManager::~SourceManager() {
 void SourceManager::Init() {
   mHostIp = GetHostIp();
   mHostName = GetHostName();
-  mHostPathPrefix = STRING_FLAG(default_container_host_path);
-  // load ebpf lib
+
+  // read host path prefix
+  if (AppConfig::GetInstance()->IsPurageContainerMode()) {
+    mHostPathPrefix = STRING_FLAG(default_container_host_path);
+    LOG_DEBUG(sLogger, ("running in container mode, would set host path prefix to ", mHostPathPrefix));
+  } else {
+    LOG_DEBUG(sLogger, ("running in host mode", "would not set host path prefix ..."));
+  }
+  
   mBinaryPath = GetProcessExecutionDir();
   mFullLibName = "lib" + m_lib_name_ + ".so";
   for (auto& x : mRunning) {
@@ -159,19 +167,15 @@ bool SourceManager::CheckPluginRunning(nami::PluginType plugin_type) {
   return mRunning[int(plugin_type)];
 }
 
-bool SourceManager::StartPlugin(nami::PluginType plugin_type, 
-                std::variant<nami::NetworkObserveConfig, nami::ProcessConfig, nami::NetworkSecurityConfig, nami::FileSecurityConfig> config) {
+bool SourceManager::StartPlugin(nami::PluginType plugin_type, std::unique_ptr<nami::eBPFConfig> conf) {
   if (CheckPluginRunning(plugin_type)) {
     // plugin update ... 
-    return UpdatePlugin(plugin_type, std::move(config));
+    return UpdatePlugin(plugin_type, std::move(conf));
   }
 
   // plugin not started ... 
   LOG_INFO(sLogger, ("begin to start plugin, type", int(plugin_type)));
-  auto conf = std::make_unique<nami::eBPFConfig>();
-  conf->plugin_type_ = plugin_type;
   conf->type = UpdataType::SECURE_UPDATE_TYPE_ENABLE_PROBE;
-  conf->config_ = config;
   FillCommonConf(conf);
 #ifdef APSARA_UNIT_TEST_MAIN
     mConfig = std::move(conf);
@@ -189,17 +193,13 @@ bool SourceManager::StartPlugin(nami::PluginType plugin_type,
   return !res;
 }
 
-bool SourceManager::UpdatePlugin(nami::PluginType plugin_type, 
-                std::variant<nami::NetworkObserveConfig, nami::ProcessConfig, nami::NetworkSecurityConfig, nami::FileSecurityConfig> config) {
+bool SourceManager::UpdatePlugin(nami::PluginType plugin_type, std::unique_ptr<nami::eBPFConfig> conf) {
   if (!CheckPluginRunning(plugin_type)) {
     LOG_ERROR(sLogger, ("plugin not started, type",  int(plugin_type)));
     return false;
   }
 
-  auto conf = std::make_unique<nami::eBPFConfig>();
-  conf->plugin_type_ = plugin_type;
   conf->type = UpdataType::SECURE_UPDATE_TYPE_CONFIG_CHAGE;
-  conf->config_ = config;
   FillCommonConf(conf);
 #ifdef APSARA_UNIT_TEST_MAIN
   mConfig = std::move(conf);

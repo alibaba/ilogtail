@@ -93,7 +93,7 @@ bool ProcessorPromRelabelMetricNative::ProcessEvent(PipelineEventPtr& e, const G
             if (sourceEvent.HasTag(k)) {
                 auto key = prometheus::EXPORTED_PREFIX + k.to_string();
                 sourceEvent.SetTag(key, sourceEvent.GetTag(k).to_string());
-                sourceEvent.DelTag(k);
+                sourceEvent.SetTag(k, v);
             } else {
                 sourceEvent.SetTag(k, v);
             }
@@ -197,7 +197,7 @@ void ProcessorPromRelabelMetricNative::AddMetric(PipelineEventGroup& metricGroup
                                                  time_t timestamp,
                                                  uint32_t nanoSec,
                                                  const GroupTags& targetTags) {
-    auto* metricEvent = metricGroup.AddMetricEvent();
+    auto* metricEvent = metricGroup.AddMetricEvent(true);
     metricEvent->SetName(name);
     metricEvent->SetValue<UntypedSingleValue>(value);
     metricEvent->SetTimestamp(timestamp, nanoSec);

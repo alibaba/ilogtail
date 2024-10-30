@@ -49,7 +49,7 @@ private:
     void Run();
     bool AddRequestToClient(std::unique_ptr<HttpSinkRequest>&& request);
     void DoRun();
-    void HandleCompletedRequests();
+    void HandleCompletedRequests(int& runningHandlers);
 
     CURLM* mClient = nullptr;
 
@@ -60,7 +60,8 @@ private:
     CounterPtr mInItemsTotal;
     CounterPtr mOutSuccessfulItemsTotal;
     CounterPtr mOutFailedItemsTotal;
-    // CounterPtr mTotalDelayMs; // TODO: should record distribution instead of average
+    TimeCounterPtr mSuccessfulItemTotalResponseTimeMs;
+    TimeCounterPtr mFailedItemTotalResponseTimeMs;
     IntGaugePtr mSendingItemsTotal;
     IntGaugePtr mSendConcurrency;
     IntGaugePtr mLastRunTime;
