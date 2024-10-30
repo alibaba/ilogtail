@@ -14,9 +14,10 @@ func CreateInstanceConfig(req *proto.CreateConfigRequest, res *proto.CreateConfi
 		return common.ValidateErrorWithMsg("required field configName could not be null")
 	}
 
-	if configDetail.Version == 0 {
-		return common.ValidateErrorWithMsg("required field version could not be null")
+	if configDetail.Version <= 0 {
+		return common.ValidateErrorWithMsg("required field version could not less than 0")
 	}
+
 	instanceConfig := entity.ParseProtoInstanceConfig2InstanceConfig(configDetail)
 	err := repository.CreateInstanceConfig(instanceConfig)
 	return common.SystemError(err)

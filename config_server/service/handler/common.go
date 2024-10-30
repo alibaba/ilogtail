@@ -9,9 +9,9 @@ import (
 	"strings"
 )
 
-type ProtobufFunc[T any, R any] func(request *T, response *R) error
+type ProtobufFunc[T, R any] func(request *T, response *R) error
 
-func ProtobufHandler[T any, R any](handler ProtobufFunc[T, R]) gin.HandlerFunc {
+func ProtobufHandler[T, R any](handler ProtobufFunc[T, R]) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var err error
 		request := new(T)
