@@ -57,6 +57,9 @@ func ScenarioInitializer(ctx *godog.ScenarioContext) {
 	// ------------------------------------------
 	// log
 	ctx.Then(`^there is \{(\d+)\} logs$`, verify.LogCount)
+	ctx.Then(`^there is more than \{(\d+)\} metrics in \{(\d+)\} seconds and the value is greater than \{(\d+)\} and less than \{(\d+)\}$`, verify.MetricCountAndValueCompare)
+	ctx.Then(`^there is more than \{(\d+)\} metrics in \{(\d+)\} seconds and the value is \{(\d+)\}$`, verify.MetricCountAndValueEqual)
+	ctx.Then(`^there is more than \{(\d+)\} metrics in \{(\d+)\} seconds$`, verify.MetricCount)
 	ctx.Then(`^there is less than \{(\d+)\} logs$`, verify.LogCountLess)
 	ctx.Then(`^there is at least \{(\d+)\} logs$`, verify.LogCountAtLeast)
 	ctx.Then(`^there is at least \{(\d+)\} logs with filter key \{(.*)\} value \{(.*)\}$`, verify.LogCountAtLeastWithFilter)

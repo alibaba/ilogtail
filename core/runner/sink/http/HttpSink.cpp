@@ -47,9 +47,9 @@ bool HttpSink::Init() {
     mOutSuccessfulItemsTotal = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_SINK_OUT_SUCCESSFUL_ITEMS_TOTAL);
     mOutFailedItemsTotal = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_SINK_OUT_FAILED_ITEMS_TOTAL);
     mSuccessfulItemTotalResponseTimeMs
-        = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_SINK_SUCCESSFUL_ITEM_TOTAL_RESPONSE_TIME_MS);
+        = mMetricsRecordRef.CreateTimeCounter(METRIC_RUNNER_SINK_SUCCESSFUL_ITEM_TOTAL_RESPONSE_TIME_MS);
     mFailedItemTotalResponseTimeMs
-        = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_SINK_FAILED_ITEM_TOTAL_RESPONSE_TIME_MS);
+        = mMetricsRecordRef.CreateTimeCounter(METRIC_RUNNER_SINK_FAILED_ITEM_TOTAL_RESPONSE_TIME_MS);
     mSendingItemsTotal = mMetricsRecordRef.CreateIntGauge(METRIC_RUNNER_SINK_SENDING_ITEMS_TOTAL);
     mSendConcurrency = mMetricsRecordRef.CreateIntGauge(METRIC_RUNNER_SINK_SEND_CONCURRENCY);
 
@@ -230,14 +230,13 @@ void HttpSink::HandleCompletedRequests(int& runningHandlers) {
             CURL* handler = msg->easy_handle;
             HttpSinkRequest* request = nullptr;
             curl_easy_getinfo(handler, CURLINFO_PRIVATE, &request);
-            auto responseTime
-                = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - request->mLastSendTime)
-                      .count();
+            auto responseTime = chrono::system_clock::now() - request->mLastSendTime;
+            auto responseTimeMs = chrono::duration_cast<chrono::milliseconds>(responseTime).count();
             switch (msg->data.result) {
                 case CURLE_OK: {
                     long statusCode = 0;
                     curl_easy_getinfo(handler, CURLINFO_RESPONSE_CODE, &statusCode);
-                    request->mResponse.mStatusCode = (int32_t)statusCode;
+                    request->mResponse.SetStatusCode(statusCode);
                     static_cast<HttpFlusher*>(request->mItem->mFlusher)->OnSendDone(request->mResponse, request->mItem);
                     FlusherRunner::GetInstance()->DecreaseHttpSendingCnt();
                     mOutSuccessfulItemsTotal->Add(1);
@@ -247,7 +246,7 @@ void HttpSink::HandleCompletedRequests(int& runningHandlers) {
                         sLogger,
                         ("send http request succeeded, item address", request->mItem)(
                             "config-flusher-dst", QueueKeyManager::GetInstance()->GetName(request->mItem->mQueueKey))(
-                            "response time", ToString(responseTime) + "ms")("try cnt", ToString(request->mTryCnt))(
+                            "response time", ToString(responseTimeMs) + "ms")("try cnt", ToString(request->mTryCnt))(
                             "sending cnt", ToString(FlusherRunner::GetInstance()->GetSendingBufferCount())));
                     break;
                 }
@@ -278,7 +277,7 @@ void HttpSink::HandleCompletedRequests(int& runningHandlers) {
                             ("failed to send http request", "abort")("item address", request->mItem)(
                                 "config-flusher-dst",
                                 QueueKeyManager::GetInstance()->GetName(request->mItem->mQueueKey))(
-                                "response time", ToString(responseTime) + "ms")("try cnt", ToString(request->mTryCnt))(
+                                "response time", ToString(responseTimeMs) + "ms")("try cnt", ToString(request->mTryCnt))(
                                 "sending cnt", ToString(FlusherRunner::GetInstance()->GetSendingBufferCount())));
                     }
                     mOutFailedItemsTotal->Add(1);
