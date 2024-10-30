@@ -1,5 +1,5 @@
 <template>
-  <el-button type="primary" style="float:left" @click="addInstanceConfig">新增</el-button>
+<!--  <el-button type="primary" style="float:left" @click="addInstanceConfig">新增</el-button>-->
   <el-dialog v-model="showCreateForm" >
     <el-form  :model="createInstanceConfig" ref="ruleFormRef" :rules="createInstanceConfigRules">
       <el-form-item label="名称" prop="name">

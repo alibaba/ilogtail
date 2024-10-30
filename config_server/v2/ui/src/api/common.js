@@ -6,10 +6,6 @@ export function strToBytes(str){
 }
 
 export function base64ToStr(base64) {
-    // if (isBase64(base64) && !(notBase64.includes(base64))) {
-    //     return Base64.decode(base64)
-    // }
-    // return base64
     return decodeURIComponent(escape(atob(base64)));
 }
 
@@ -81,16 +77,15 @@ export async function constructProtobufRequest(url,req,resType) {
         let data = resType.deserializeBinary(new Uint8Array(res.data)).toObject()
         decodeBase64(data)
         if (data.requestId !== requestStr) {
-            ElMessage.error("no the same request")
+            // console.log("no the same request")
         }
         serializeResult = data
     }).catch((error) => {
         let data = resType.deserializeBinary(new Uint8Array(error.response.data)).toObject()
         decodeBase64(data)
         if (data.requestId !== requestStr) {
-            ElMessage.error("no the same request")
+            // console.log("no the same request")
         }
-        console.log(data)
         serializeResult = data
     })
     return serializeResult

@@ -16,8 +16,6 @@
     "core-js": "^3.8.3",
     "element-plus": "^2.8.2",
     "google-protobuf": "^3.21.4",
-    "is-base64": "^1.1.0",
-    "js-base64": "^3.7.7",
     "js-yaml": "^4.1.0",
     "protobufjs": "^7.4.0",
     "protocol-buffers": "^5.0.0",

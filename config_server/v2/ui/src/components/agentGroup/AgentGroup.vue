@@ -154,6 +154,7 @@ import {
   removeInstanceConfigFromAgentGroup
 } from "@/api/instanceConfig";
 import {getPipelineConfigStatusList,getInstanceConfigStatusList} from "@/api/agent";
+import {ElMessage} from "element-plus";
 
 
 export default {
@@ -383,9 +384,14 @@ export default {
 
   // ______________________________
   async clickInstanceConfigCount(row) {
-    this.selectedRow = this.findSelectedRow(row.name)
-    this.showInstanceConfig = true
-    await this.getInstanceConfigInfo(this.selectedRow)
+    ElMessage({
+      message:"功能暂未开放，敬请期待",
+      type:"warning"
+    },
+  )
+    // this.selectedRow = this.findSelectedRow(row.name)
+    // this.showInstanceConfig = true
+    // await this.getInstanceConfigInfo(this.selectedRow)
   },
 
   async getInstanceConfigInfo(row) {
