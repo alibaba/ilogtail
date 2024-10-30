@@ -6,7 +6,7 @@
 
 ### 基本配置
 
-下载ilogtail源码，进入`config_server/service`目录
+下载ilogtail源码，进入`config_server/v2/service`目录
 
 #### 数据库配置
 

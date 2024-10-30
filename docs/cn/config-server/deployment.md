@@ -4,7 +4,7 @@
 
 ## 快速开始
 
-下载ilogtail源码，进入`config_server/deployment`目录，运行`deployment-compose.yml`，启动三个容器（`mysql`、`config-server`、`config-server-ui`）
+下载ilogtail源码，进入`config_server/v2/deployment`目录，运行`deployment-compose.yml`，启动三个容器（`mysql`、`config-server`、`config-server-ui`）
 
 ```shell
 docker compose -f docker-compose.yml up -d
