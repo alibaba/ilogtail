@@ -35,6 +35,16 @@
 
 namespace logtail {
 
+size_t MetricWriteCallback(char* buffer, size_t size, size_t nmemb, void* data);
+
+struct MetricResponseBody {
+    PipelineEventGroup mEventGroup;
+    std::string mCache;
+    size_t mRawSize = 0;
+
+    MetricResponseBody() : mEventGroup(std::make_shared<SourceBuffer>()) {};
+};
+
 class ScrapeScheduler : public BaseScheduler {
 public:
     ScrapeScheduler(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
@@ -60,8 +70,6 @@ private:
     void PushEventGroup(PipelineEventGroup&&);
     void SetAutoMetricMeta(PipelineEventGroup& eGroup);
     void SetTargetLabels(PipelineEventGroup& eGroup);
-
-    PipelineEventGroup BuildPipelineEventGroup(const std::string& content);
 
     std::unique_ptr<TimerEvent> BuildScrapeTimerEvent(std::chrono::steady_clock::time_point execTime);
 
