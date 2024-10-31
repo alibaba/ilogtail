@@ -14,6 +14,7 @@
 
 #include "pipeline/serializer/SLSSerializer.h"
 #include "plugin/flusher/sls/FlusherSLS.h"
+#include "plugin/flusher/sls/FlusherSLS.h"
 #include "unittest/Unittest.h"
 
 DECLARE_FLAG_INT32(max_send_log_group_size);
@@ -108,6 +109,13 @@ void SLSSerializerUnittest::TestSerializeEventGroup() {
             APSARA_TEST_TRUE(serializer.DoSerialize(CreateBatchedMetricEvents(false, 0, false, true), res, errorMsg));
             sls_logs::LogGroup logGroup;
             APSARA_TEST_TRUE(logGroup.ParseFromString(res));
+        // metric
+        {
+            // only 1 tag
+            string res, errorMsg;
+            APSARA_TEST_TRUE(serializer.DoSerialize(CreateBatchedMetricEvents(false, 0, false, true), res, errorMsg));
+            sls_logs::LogGroup logGroup;
+            APSARA_TEST_TRUE(logGroup.ParseFromString(res));
 
             APSARA_TEST_EQUAL(1, logGroup.logs_size());
             APSARA_TEST_EQUAL(1234567890U, logGroup.logs(0).time());
@@ -160,7 +168,84 @@ void SLSSerializerUnittest::TestSerializeEventGroup() {
             APSARA_TEST_TRUE(serializer.DoSerialize(CreateBatchedMetricEvents(true, 1, false, false), res, errorMsg));
             sls_logs::LogGroup logGroup;
             APSARA_TEST_TRUE(logGroup.ParseFromString(res));
+            APSARA_TEST_EQUAL(1, logGroup.logs_size());
+            APSARA_TEST_EQUAL(1234567890U, logGroup.logs(0).time());
+            APSARA_TEST_FALSE(logGroup.logs(0).has_time_ns());
+            APSARA_TEST_EQUAL(logGroup.logs(0).contents_size(), 4);
+            APSARA_TEST_EQUAL(logGroup.logs(0).contents(0).key(), "__labels__");
+            APSARA_TEST_EQUAL(logGroup.logs(0).contents(0).value(), "key1#$#value1");
+            APSARA_TEST_EQUAL(logGroup.logs(0).contents(1).key(), "__time_nano__");
+            APSARA_TEST_EQUAL(logGroup.logs(0).contents(1).value(), "1234567890");
+            APSARA_TEST_EQUAL(logGroup.logs(0).contents(2).key(), "__value__");
+            APSARA_TEST_EQUAL(logGroup.logs(0).contents(2).value(), "0.100000");
+            APSARA_TEST_EQUAL(logGroup.logs(0).contents(3).key(), "__name__");
+            APSARA_TEST_EQUAL(logGroup.logs(0).contents(3).value(), "test_gauge");
+            APSARA_TEST_EQUAL(1, logGroup.logtags_size());
+            APSARA_TEST_STREQ("__pack_id__", logGroup.logtags(0).key().c_str());
+            APSARA_TEST_STREQ("pack_id", logGroup.logtags(0).value().c_str());
+            APSARA_TEST_STREQ("machine_uuid", logGroup.machineuuid().c_str());
+            APSARA_TEST_STREQ("source", logGroup.source().c_str());
+            APSARA_TEST_STREQ("topic", logGroup.topic().c_str());
+        }
+        {
+            // nano second disabled
+            string res, errorMsg;
+            APSARA_TEST_TRUE(serializer.DoSerialize(CreateBatchedMetricEvents(false, 0, false, false), res, errorMsg));
+            sls_logs::LogGroup logGroup;
+            APSARA_TEST_TRUE(logGroup.ParseFromString(res));
 
+            APSARA_TEST_EQUAL(1, logGroup.logs_size());
+            APSARA_TEST_EQUAL(1234567890U, logGroup.logs(0).time());
+            APSARA_TEST_FALSE(logGroup.logs(0).has_time_ns());
+            APSARA_TEST_EQUAL(logGroup.logs(0).contents_size(), 4);
+            APSARA_TEST_EQUAL(logGroup.logs(0).contents(0).key(), "__labels__");
+            APSARA_TEST_EQUAL(logGroup.logs(0).contents(0).value(), "key1#$#value1|key2#$#value2");
+            APSARA_TEST_EQUAL(logGroup.logs(0).contents(1).key(), "__time_nano__");
+            APSARA_TEST_EQUAL(logGroup.logs(0).contents(1).value(), "1234567890");
+            APSARA_TEST_EQUAL(logGroup.logs(0).contents(2).key(), "__value__");
+            APSARA_TEST_EQUAL(logGroup.logs(0).contents(2).value(), "0.100000");
+            APSARA_TEST_EQUAL(logGroup.logs(0).contents(3).key(), "__name__");
+            APSARA_TEST_EQUAL(logGroup.logs(0).contents(3).value(), "test_gauge");
+            APSARA_TEST_EQUAL(1, logGroup.logtags_size());
+            APSARA_TEST_STREQ("__pack_id__", logGroup.logtags(0).key().c_str());
+            APSARA_TEST_STREQ("pack_id", logGroup.logtags(0).value().c_str());
+            APSARA_TEST_STREQ("machine_uuid", logGroup.machineuuid().c_str());
+            APSARA_TEST_STREQ("source", logGroup.source().c_str());
+            APSARA_TEST_STREQ("topic", logGroup.topic().c_str());
+        }
+        {
+            // nano second enabled, less than 9 digits
+            string res, errorMsg;
+            APSARA_TEST_TRUE(serializer.DoSerialize(CreateBatchedMetricEvents(true, 1, false, false), res, errorMsg));
+            sls_logs::LogGroup logGroup;
+            APSARA_TEST_TRUE(logGroup.ParseFromString(res));
+
+            APSARA_TEST_EQUAL(1, logGroup.logs_size());
+            APSARA_TEST_EQUAL(1234567890U, logGroup.logs(0).time());
+            APSARA_TEST_FALSE(logGroup.logs(0).has_time_ns());
+            APSARA_TEST_EQUAL(logGroup.logs(0).contents_size(), 4);
+            APSARA_TEST_EQUAL(logGroup.logs(0).contents(0).key(), "__labels__");
+            APSARA_TEST_EQUAL(logGroup.logs(0).contents(0).value(), "key1#$#value1|key2#$#value2");
+            APSARA_TEST_EQUAL(logGroup.logs(0).contents(1).key(), "__time_nano__");
+            APSARA_TEST_EQUAL(logGroup.logs(0).contents(1).value(), "1234567890000000001");
+            APSARA_TEST_EQUAL(logGroup.logs(0).contents(2).key(), "__value__");
+            APSARA_TEST_EQUAL(logGroup.logs(0).contents(2).value(), "0.100000");
+            APSARA_TEST_EQUAL(logGroup.logs(0).contents(3).key(), "__name__");
+            APSARA_TEST_EQUAL(logGroup.logs(0).contents(3).value(), "test_gauge");
+            APSARA_TEST_EQUAL(1, logGroup.logtags_size());
+            APSARA_TEST_STREQ("__pack_id__", logGroup.logtags(0).key().c_str());
+            APSARA_TEST_STREQ("pack_id", logGroup.logtags(0).value().c_str());
+            APSARA_TEST_STREQ("machine_uuid", logGroup.machineuuid().c_str());
+            APSARA_TEST_STREQ("source", logGroup.source().c_str());
+            APSARA_TEST_STREQ("topic", logGroup.topic().c_str());
+        }
+        {
+            // nano second enabled, exactly 9 digits
+            string res, errorMsg;
+            APSARA_TEST_TRUE(
+                serializer.DoSerialize(CreateBatchedMetricEvents(true, 999999999, false, false), res, errorMsg));
+            sls_logs::LogGroup logGroup;
+            APSARA_TEST_TRUE(logGroup.ParseFromString(res));
             APSARA_TEST_EQUAL(1, logGroup.logs_size());
             APSARA_TEST_EQUAL(1234567890U, logGroup.logs(0).time());
             APSARA_TEST_FALSE(logGroup.logs(0).has_time_ns());
@@ -302,6 +387,7 @@ void SLSSerializerUnittest::TestSerializeEventGroupList() {
 
 
 BatchedEvents SLSSerializerUnittest::CreateBatchedLogEvents(bool enableNanosecond, bool emptyContent) {
+BatchedEvents SLSSerializerUnittest::CreateBatchedLogEvents(bool enableNanosecond, bool emptyContent) {
     PipelineEventGroup group(make_shared<SourceBuffer>());
     group.SetTag(LOG_RESERVED_KEY_TOPIC, "topic");
     group.SetTag(LOG_RESERVED_KEY_SOURCE, "source");
@@ -311,6 +397,9 @@ BatchedEvents SLSSerializerUnittest::CreateBatchedLogEvents(bool enableNanosecon
     group.SetMetadataNoCopy(EventGroupMetaKey::SOURCE_ID, StringView(b.data, b.size));
     group.SetExactlyOnceCheckpoint(RangeCheckpointPtr(new RangeCheckpoint));
     LogEvent* e = group.AddLogEvent();
+    if (!emptyContent) {
+        e->SetContent(string("key"), string("value"));
+    }
     if (!emptyContent) {
         e->SetContent(string("key"), string("value"));
     }
@@ -332,6 +421,10 @@ BatchedEvents SLSSerializerUnittest::CreateBatchedMetricEvents(bool enableNanose
                                                                uint32_t nanoTimestamp,
                                                                bool emptyValue,
                                                                bool onlyOneTag) {
+BatchedEvents SLSSerializerUnittest::CreateBatchedMetricEvents(bool enableNanosecond,
+                                                               uint32_t nanoTimestamp,
+                                                               bool emptyValue,
+                                                               bool onlyOneTag) {
     PipelineEventGroup group(make_shared<SourceBuffer>());
     group.SetTag(LOG_RESERVED_KEY_TOPIC, "topic");
     group.SetTag(LOG_RESERVED_KEY_SOURCE, "source");
@@ -343,6 +436,9 @@ BatchedEvents SLSSerializerUnittest::CreateBatchedMetricEvents(bool enableNanose
     group.SetExactlyOnceCheckpoint(RangeCheckpointPtr(new RangeCheckpoint));
     MetricEvent* e = group.AddMetricEvent();
     e->SetTag(string("key1"), string("value1"));
+    if (!onlyOneTag) {
+        e->SetTag(string("key2"), string("value2"));
+    }
     if (!onlyOneTag) {
         e->SetTag(string("key2"), string("value2"));
     }

@@ -25,6 +25,7 @@
 #include "pipeline/PipelineContext.h"
 #include "pipeline/plugin/PluginRegistry.h"
 #include "plugin/input/InputFile.h"
+#include "plugin/input/InputFile.h"
 #include "plugin/processor/inner/ProcessorSplitLogStringNative.h"
 #include "plugin/processor/inner/ProcessorSplitMultilineLogStringNative.h"
 #include "plugin/processor/inner/ProcessorTagNative.h"
@@ -259,6 +260,7 @@ void InputFileUnittest::TestCreateInnerProcessors() {
         APSARA_TEST_EQUAL('\n', plugin->mSplitChar);
         APSARA_TEST_TRUE(plugin->mAppendingLogPositionMeta);
         APSARA_TEST_FALSE(plugin->mEnableRawContent);
+        APSARA_TEST_FALSE(plugin->mEnableRawContent);
         APSARA_TEST_EQUAL(ProcessorTagNative::sName, input->mInnerProcessors[1]->Name());
     }
     {
@@ -295,6 +297,7 @@ void InputFileUnittest::TestCreateInnerProcessors() {
                           plugin->mMultiline.mUnmatchedContentTreatment);
         APSARA_TEST_TRUE(plugin->mAppendingLogPositionMeta);
         APSARA_TEST_FALSE(plugin->mEnableRawContent);
+        APSARA_TEST_FALSE(plugin->mEnableRawContent);
         APSARA_TEST_EQUAL(ProcessorTagNative::sName, input->mInnerProcessors[1]->Name());
     }
     {
@@ -319,6 +322,7 @@ void InputFileUnittest::TestCreateInnerProcessors() {
         APSARA_TEST_EQUAL(DEFAULT_CONTENT_KEY, plugin->mSourceKey);
         APSARA_TEST_EQUAL('\0', plugin->mSplitChar);
         APSARA_TEST_TRUE(plugin->mAppendingLogPositionMeta);
+        APSARA_TEST_FALSE(plugin->mEnableRawContent);
         APSARA_TEST_FALSE(plugin->mEnableRawContent);
         APSARA_TEST_EQUAL(ProcessorTagNative::sName, input->mInnerProcessors[1]->Name());
         ctx.SetIsFirstProcessorJsonFlag(false);
@@ -348,6 +352,7 @@ void InputFileUnittest::TestCreateInnerProcessors() {
         APSARA_TEST_EQUAL(DEFAULT_CONTENT_KEY, plugin->mSourceKey);
         APSARA_TEST_EQUAL('\0', plugin->mSplitChar);
         APSARA_TEST_TRUE(plugin->mAppendingLogPositionMeta);
+        APSARA_TEST_FALSE(plugin->mEnableRawContent);
         APSARA_TEST_FALSE(plugin->mEnableRawContent);
         APSARA_TEST_EQUAL(ProcessorTagNative::sName, input->mInnerProcessors[1]->Name());
         ctx.SetIsFirstProcessorJsonFlag(false);

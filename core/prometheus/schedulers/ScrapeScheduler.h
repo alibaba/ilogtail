@@ -18,17 +18,15 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "BaseScheduler.h"
 #include "common/http/HttpResponse.h"
-#include "common/timer/Timer.h"
 #include "models/PipelineEventGroup.h"
 #include "monitor/MetricTypes.h"
 #include "pipeline/queue/QueueKey.h"
-#include "prometheus/Constants.h"
 #include "prometheus/PromSelfMonitor.h"
 #include "prometheus/Utils.h"
-#include "prometheus/labels/TextParser.h"
 #include "prometheus/schedulers/ScrapeConfig.h"
 
 #ifdef APSARA_UNIT_TEST_MAIN
@@ -43,13 +41,15 @@ struct PromMetricResponseBody {
     PipelineEventGroup mEventGroup;
     std::string mCache;
     size_t mRawSize = 0;
+    std::shared_ptr<EventPool> mEventPool;
 
-    PromMetricResponseBody() : mEventGroup(std::make_shared<SourceBuffer>()) {};
+    explicit PromMetricResponseBody(std::shared_ptr<EventPool> eventPool)
+        : mEventGroup(std::make_shared<SourceBuffer>()), mEventPool(std::move(eventPool)) {};
     void AddEvent(char* line, size_t len) {
         if (IsValidMetric(StringView(line, len))) {
-            auto* e = mEventGroup.AddLogEvent();
+            auto* e = mEventGroup.AddLogEvent(true, mEventPool.get());
             auto sb = mEventGroup.GetSourceBuffer()->CopyString(line, len);
-            e->SetContentNoCopy(prometheus::PROMETHEUS, StringView(sb.data, sb.size));
+            e->SetContentNoCopy(sb);
         }
     }
     void FlushCache() {
@@ -70,7 +70,6 @@ public:
     ~ScrapeScheduler() override = default;
 
     void OnMetricResult(HttpResponse&, uint64_t timestampMilliSec);
-    void SetTimer(std::shared_ptr<Timer> timer);
 
     std::string GetId() const;
 
@@ -94,11 +93,8 @@ private:
     std::string mInstance;
     Labels mTargetLabels;
 
-    std::unique_ptr<TextParser> mParser;
-
     QueueKey mQueueKey;
     size_t mInputIndex;
-    std::shared_ptr<Timer> mTimer;
 
     // auto metrics
     uint64_t mScrapeTimestampMilliSec = 0;

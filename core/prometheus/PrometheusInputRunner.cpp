@@ -50,6 +50,7 @@ PrometheusInputRunner::PrometheusInputRunner()
       mUnRegisterMs(0) {
     mClient = std::make_unique<sdk::CurlClient>();
     mTimer = std::make_shared<Timer>();
+    mEventPool = std::make_shared<EventPool>(true);
 
     // self monitor
     MetricLabels labels;
@@ -83,7 +84,7 @@ void PrometheusInputRunner::UpdateScrapeInput(std::shared_ptr<TargetSubscriberSc
     targetSubscriber->InitSelfMonitor(defaultLabels);
 
     targetSubscriber->mUnRegisterMs = mUnRegisterMs.load();
-    targetSubscriber->SetTimer(mTimer);
+    targetSubscriber->SetComponent(mTimer, mEventPool);
     auto randSleepMilliSec = GetRandSleepMilliSec(
         targetSubscriber->GetId(), prometheus::RefeshIntervalSeconds, GetCurrentTimeInMilliSeconds());
     auto firstExecTime = std::chrono::steady_clock::now() + std::chrono::milliseconds(randSleepMilliSec);
@@ -293,5 +294,11 @@ string PrometheusInputRunner::GetAllProjects() {
         }
     }
     return result;
+}
+
+void PrometheusInputRunner::CheckGC() {
+    if (mEventPool != nullptr) {
+        mEventPool->CheckGC();
+    }
 }
 }; // namespace logtail

@@ -19,7 +19,7 @@
 #include "plugin/flusher/sls/FlusherSLS.h"
 #include "protobuf/sls/LogGroupSerializer.h"
 
-DECLARE_FLAG_INT32(max_send_log_group_size);
+DEFINE_FLAG_INT32(max_send_log_group_size, "bytes", 10 * 1024 * 1024);
 
 using namespace std;
 
@@ -192,14 +192,19 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, stri
     for (const auto& tag : group.mTags.mInner) {
         if (tag.first == LOG_RESERVED_KEY_TOPIC) {
             serializer.AddTopic(tag.second);
+            serializer.AddTopic(tag.second);
         } else if (tag.first == LOG_RESERVED_KEY_SOURCE) {
+            serializer.AddSource(tag.second);
             serializer.AddSource(tag.second);
         } else if (tag.first == LOG_RESERVED_KEY_MACHINE_UUID) {
             serializer.AddMachineUUID(tag.second);
+            serializer.AddMachineUUID(tag.second);
         } else {
+            serializer.AddLogTag(tag.first, tag.second);
             serializer.AddLogTag(tag.first, tag.second);
         }
     }
+    res = std::move(serializer.GetResult());
     res = std::move(serializer.GetResult());
     return true;
 }
