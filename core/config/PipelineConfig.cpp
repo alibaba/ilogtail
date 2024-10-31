@@ -303,15 +303,30 @@ bool PipelineConfig::Parse() {
             const string pluginType = it->asString();
             if (mHasGoInput) {
                 if (PluginRegistry::GetInstance()->IsValidNativeProcessorPlugin(pluginType)) {
-                    PARAM_ERROR_RETURN(sLogger,
-                                       alarm,
-                                       "native processor plugins coexist with extended input plugins",
-                                       noModule,
-                                       mName,
-                                       mProject,
-                                       mLogstore,
-                                       mRegion);
+                    if (!isCurrentPluginNative) {
+                        PARAM_ERROR_RETURN(sLogger,
+                                           alarm,
+                                           "native processor plugin comes after extended processor plugin",
+                                           pluginType,
+                                           mName,
+                                           mProject,
+                                           mLogstore,
+                                           mRegion);
+                    } else if (pluginType == "processor_spl") {
+                        if (i != 0 || itr->size() != 1) {
+                            PARAM_ERROR_RETURN(sLogger,
+                                               alarm,
+                                               "native processor plugins coexist with spl processor",
+                                               noModule,
+                                               mName,
+                                               mProject,
+                                               mLogstore,
+                                               mRegion);
+                        }
+                    }
+                    mHasNativeProcessor = true;
                 } else if (PluginRegistry::GetInstance()->IsValidGoPlugin(pluginType)) {
+                    isCurrentPluginNative = false;
                     mHasGoProcessor = true;
                 } else {
                     PARAM_ERROR_RETURN(sLogger,

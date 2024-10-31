@@ -462,3 +462,7 @@ func init() {
 		return newSyslog()
 	}
 }
+
+func (s *Syslog) GetMode() pipeline.InputModeType {
+	return pipeline.PUSH
+}

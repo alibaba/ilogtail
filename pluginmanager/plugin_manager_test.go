@@ -168,7 +168,7 @@ func LoadAndStartMockConfig(args ...string) error {
 		configStr = args[3]
 	}
 
-	err := LoadLogstoreConfig(project, logstore, configName, 666, configStr)
+	_, err := LoadLogstoreConfig(project, logstore, configName, 666, configStr)
 	if err != nil {
 		return err
 	}

@@ -408,3 +408,7 @@ func init() {
 		return &Server{}
 	}
 }
+
+func (s *Server) GetMode() pipeline.InputModeType {
+	return pipeline.PUSH
+}

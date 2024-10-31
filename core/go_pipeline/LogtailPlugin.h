@@ -130,9 +130,19 @@ struct K8sContainerMeta {
     }
 };
 
+struct LoadGoPipelineResp {
+    int Code;   // 0: success, 1: fail
+    enum InputModeType {
+        UNKNOWN,
+        PUSH,
+        PULL,
+    };
+    InputModeType InputMode;
+};
+
 // Methods export by plugin.
 typedef GoInt (*LoadGlobalConfigFun)(GoString);
-typedef GoInt (*LoadPipelineFun)(GoString p, GoString l, GoString c, GoInt64 k, GoString p2);
+typedef struct LoadGoPipelineResp* (*LoadPipelineFun)(GoString p, GoString l, GoString c, GoInt64 k, GoString p2);
 typedef GoInt (*UnloadPipelineFun)(GoString c);
 typedef void (*StopAllPipelinesFun)(GoInt);
 typedef void (*StopFun)(GoString, GoInt);
@@ -168,13 +178,21 @@ typedef int (*SendPbV2Fun)(const char* configName,
 typedef int (*PluginCtlCmdFun)(
     const char* configName, int configNameSize, int optId, const char* params, int paramsLen);
 
-typedef void (*RegisterLogtailCallBack)(IsValidToSendFun checkFun, SendPbFun sendFun, PluginCtlCmdFun cmdFun);
+typedef int (*IsValidToProcessFun)(const char *configName, int configNameSize);
+typedef int (*PushQueueFun)(const char *configName, int configNameSize, const char *pbBuffer, int pbSize);
+
+typedef void (*RegisterLogtailCallBack)(IsValidToSendFun checkFun, SendPbFun sendFun, PluginCtlCmdFun cmdFun, IsValidToProcessFun checkProcessFun, PushQueueFun pushFun);
 typedef void (*RegisterLogtailCallBackV2)(IsValidToSendFun checkFun,
                                           SendPbFun sendFun,
                                           SendPbV2Fun sendV2Fun,
-                                          PluginCtlCmdFun cmdFun);
+                                          PluginCtlCmdFun cmdFun, 
+                                          IsValidToProcessFun checkProcessFun, 
+                                          PushQueueFun pushFun);
 
 typedef int (*PluginAdapterVersion)();
+
+typedef void (*RegisterLogtailProcessCallBack)();
+
 }
 
 // Create by david zhang. 2017/09/02 22:22:12
@@ -207,7 +225,8 @@ public:
     }
 
     bool LoadPluginBase();
-    bool LoadPipeline(const std::string& pipelineName,
+    // void LoadConfig();
+    LoadGoPipelineResp LoadPipeline(const std::string& pipelineName,
                       const std::string& pipeline,
                       const std::string& project = "",
                       const std::string& logstore = "",
@@ -256,6 +275,10 @@ public:
     K8sContainerMeta GetContainerMeta(const std::string& containerID);
 
     void GetGoMetrics(std::vector<std::map<std::string, std::string>>& metircsList, const std::string& metricType);
+
+    static int IsValidToProcess(const char* configName, int configNameSize);
+
+    static int PushQueue(const char* configName, int configNameSize, const char* pbBuffer, int pbSize);
 
 private:
     void* mPluginBasePtr;

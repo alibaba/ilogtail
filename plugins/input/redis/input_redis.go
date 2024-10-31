@@ -273,3 +273,7 @@ func init() {
 		return &InputRedis{}
 	}
 }
+
+func (r *InputRedis) GetMode() pipeline.InputModeType {
+	return pipeline.PULL
+}
