@@ -39,7 +39,7 @@ func TrigerProcessSecurityEvents(ctx context.Context, commandCnt int) (context.C
 func execveCommands(ctx context.Context, commandCnt int) error {
 	execveCommand := "ps -ef | grep loongcollector-e2e-test"
 	for i := 0; i < commandCnt; i++ {
-		if err := setup.Env.ExecOnSource(ctx, execveCommand); err != nil {
+		if _, err := setup.Env.ExecOnSource(ctx, execveCommand); err != nil {
 			return err
 		}
 	}
@@ -62,7 +62,7 @@ func TrigerNetworksSecurityEvents(ctx context.Context, commandCnt int, url strin
 func curlURL(ctx context.Context, commandCnt int, url string) error {
 	curlCommand := "curl --connect-timeout 1 " + url + ";"
 	for i := 0; i < commandCnt; i++ {
-		if err := setup.Env.ExecOnSource(ctx, curlCommand); err != nil {
+		if _, err := setup.Env.ExecOnSource(ctx, curlCommand); err != nil {
 			return err
 		}
 	}
