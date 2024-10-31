@@ -30,15 +30,19 @@
 #include "pipeline/batch/Batcher.h"
 #include "pipeline/limiter/ConcurrencyLimiter.h"
 #include "pipeline/plugin/interface/HttpFlusher.h"
+#ifdef __ENTERPRISE__
+#include "pipeline/serializer/EnterpriseSLSSerializer.h"
+#else
 #include "pipeline/serializer/SLSSerializer.h"
+#endif
 #include "protobuf/sls/sls_logs.pb.h"
 
 namespace logtail {
 
 class FlusherSLS : public HttpFlusher {
 public:
-
-    static std::shared_ptr<ConcurrencyLimiter> GetLogstoreConcurrencyLimiter(const std::string& project, const std::string& logstore);
+    static std::shared_ptr<ConcurrencyLimiter> GetLogstoreConcurrencyLimiter(const std::string& project,
+                                                                             const std::string& logstore);
     static std::shared_ptr<ConcurrencyLimiter> GetProjectConcurrencyLimiter(const std::string& project);
     static std::shared_ptr<ConcurrencyLimiter> GetRegionConcurrencyLimiter(const std::string& region);
     static void ClearInvalidConcurrencyLimiters();
