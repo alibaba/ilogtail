@@ -1,0 +1,14 @@
+{
+  "address": "0.0.0.0:9090",
+  "capabilities": {
+    "rememberAttribute": true,
+    "rememberPipelineConfigStatus": true,
+    "rememberInstanceConfigStatus": true,
+    "rememberCustomCommandStatus": false
+  },
+  "responseFlags": {
+    "fetchPipelineConfigDetail": true,
+    "fetchInstanceConfigDetail": false
+  },
+  "timeLimit": 60
+}
