@@ -50,6 +50,8 @@ func ScenarioInitializer(ctx *godog.ScenarioContext) {
 	ctx.When(`^generate \{(\d+)\} multiline delimiter logs to file \{(.*)\}, with interval \{(\d+)\}ms, with delimiter \{(.*)\} and quote \{(.*)\}$`, trigger.DelimiterMultiline)
 	ctx.When(`^generate \{(\d+)\} json logs to file \{(.*)\}, with interval \{(\d+)\}ms$`, trigger.JSONSingle)
 	ctx.When(`^generate \{(\d+)\} multiline json logs to file \{(.*)\}, with interval \{(\d+)\}ms$`, trigger.JSONMultiline)
+	ctx.When(`^execute \{(\d+)\} commands to generate process security events`, trigger.TrigerProcessSecurityEvents)
+	ctx.When(`^execute \{(\d+)\} commands to generate network security events on url \{(.*)\}$`, trigger.TrigerNetworksSecurityEvents)
 	ctx.When(`^execute \{(\d+)\} commands to generate file security events on files \{(.*)\}$`, trigger.TrigerFileSecurityEvents)
 	// ------------------------------------------
 
