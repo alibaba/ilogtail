@@ -486,7 +486,11 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
         mCompressor = CompressorFactory::GetInstance()->Create(config, *mContext, sName, mPluginID, CompressType::LZ4);
     }
 
+#ifdef __ENTERPRISE__
+    mGroupSerializer = make_unique<EnterpriseSLSEventGroupSerializer>(this);
+#else
     mGroupSerializer = make_unique<SLSEventGroupSerializer>(this);
+#endif
     mGroupListSerializer = make_unique<SLSEventGroupListSerializer>(this);
 
     // MaxSendRate
