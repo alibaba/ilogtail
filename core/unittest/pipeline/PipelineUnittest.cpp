@@ -2762,8 +2762,8 @@ void PipelineUnittest::TestSend() const {
         {
             // all valid
             vector<PipelineEventGroup> group;
-            group.back().AddLogEvent();
             group.emplace_back(make_shared<SourceBuffer>());
+            group.back().AddLogEvent();
             APSARA_TEST_TRUE(pipeline.Send(std::move(group)));
         }
         {
