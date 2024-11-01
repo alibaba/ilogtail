@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pipeline/serializer/EnterpriseSLSSerializer.h"
+#include "pipeline/serializer/SLSSerializer.h"
 
 #include "common/Flags.h"
 #include "common/compression/CompressType.h"
