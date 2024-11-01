@@ -20,12 +20,12 @@ using namespace std;
 
 namespace logtail {
 
-class LogGroupLiteUnittest : public ::testing::Test {
+class LogGroupSerializerUnittest : public ::testing::Test {
 public:
     void TestSerialize();
 };
 
-void LogGroupLiteUnittest::TestSerialize() {
+void LogGroupSerializerUnittest::TestSerialize() {
     size_t groupSZ = 0;
     vector<size_t> logSZ(2);
     {
@@ -46,8 +46,8 @@ void LogGroupLiteUnittest::TestSerialize() {
     groupSZ += GetLogTagSize(strlen("key_5"), strlen("value_5"));
     groupSZ += GetLogTagSize(strlen("key_6"), strlen("value_6"));
 
-    LogGroupLite logGroup;
-    logGroup.PrepareToSerialize(groupSZ);
+    LogGroupSerializer logGroup;
+    logGroup.Prepare(groupSZ);
     logGroup.StartToAddLog(logSZ[0]);
     logGroup.AddLogTime(1234567890);
     logGroup.AddLogContent("key_1", "value_1");
@@ -64,7 +64,7 @@ void LogGroupLiteUnittest::TestSerialize() {
     logGroup.AddLogTag("key_6", "value_6");
     APSARA_TEST_EQUAL(groupSZ, logGroup.GetResult().size());
 
-    sls_logs::LogGroup logGroupPb;    
+    sls_logs::LogGroup logGroupPb;
     APSARA_TEST_TRUE(logGroupPb.ParseFromString(logGroup.GetResult()));
     APSARA_TEST_EQUAL(2L, logGroupPb.logs_size());
     APSARA_TEST_EQUAL(1234567890U, logGroupPb.logs(0).time());
@@ -96,7 +96,7 @@ void LogGroupLiteUnittest::TestSerialize() {
     APSARA_TEST_EQUAL("value_6", logGroupPb.logtags(1).value());
 }
 
-UNIT_TEST_CASE(LogGroupLiteUnittest, TestSerialize)
+UNIT_TEST_CASE(LogGroupSerializerUnittest, TestSerialize)
 
 } // namespace logtail
 
