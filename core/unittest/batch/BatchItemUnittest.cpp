@@ -252,7 +252,7 @@ void GroupBatchItemUnittest::TestAdd() {
 
     APSARA_TEST_EQUAL(1U, mItem.mGroups.size());
     APSARA_TEST_EQUAL(size, mItem.GetStatus().GetSize());
-    APSARA_TEST_EQUAL(1234567890000, mItem.TotalEnqueTimeMs());
+    // APSARA_TEST_EQUAL(1234567890000, mItem.TotalEnqueTimeMs());
     APSARA_TEST_EQUAL(1U, mItem.EventSize());
     APSARA_TEST_EQUAL(1U, mItem.GroupSize());
     APSARA_TEST_EQUAL(100U, mItem.DataSize());

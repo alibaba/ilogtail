@@ -79,8 +79,8 @@ void BatcherUnittest::TestParamInit() {
         string configStr, errorMsg;
         configStr = R"(
             {
-                "MaxSizeBytes": "1000",
-                "MaxCnt": "10",
+                "MinSizeBytes": "1000",
+                "MinCnt": "10",
                 "TimeoutSecs": "5"
             }
         )";
@@ -100,8 +100,8 @@ void BatcherUnittest::TestInitWithoutGroupBatch() {
     string configStr, errorMsg;
     configStr = R"(
         {
-            "MaxSizeBytes": 1000,
-            "MaxCnt": 10,
+            "MinSizeBytes": 1000,
+            "MinCnt": 10,
             "TimeoutSecs": 5
         }
     )";
@@ -121,8 +121,8 @@ void BatcherUnittest::TestInitWithGroupBatch() {
     string configStr, errorMsg;
     configStr = R"(
             {
-                "MaxSizeBytes": 1000,
-                "MaxCnt": 10,
+                "MinSizeBytes": 1000,
+                "MinCnt": 10,
                 "TimeoutSecs": 5
             }
         )";
