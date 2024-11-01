@@ -15,12 +15,8 @@
 cmake_minimum_required(VERSION 3.22)
 project(log_pb_unittest)
 
-if (ENABLE_ENTERPRISE)
-    add_executable(log_group_serializer_unittest LogGroupSerializerUnittest.cpp)
-    target_link_libraries(log_group_serializer_unittest ${UT_BASE_TARGET})
-endif ()
+add_executable(log_group_serializer_unittest LogGroupSerializerUnittest.cpp)
+target_link_libraries(log_group_serializer_unittest ${UT_BASE_TARGET})
 
 include(GoogleTest)
-if (ENABLE_ENTERPRISE)
-    gtest_discover_tests(log_group_serializer_unittest)
-endif ()
+gtest_discover_tests(log_group_serializer_unittest)

@@ -157,7 +157,6 @@ endforeach (DIR_NAME)
 if (ENABLE_ENTERPRISE)
     # remove several files in shennong/sdk
     list(REMOVE_ITEM FRAMEWORK_SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/shennong/sdk/sample.cpp)
-    list(REMOVE_ITEM FRAMEWORK_SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/pipeline/serializer/SLSSerializer.cpp)
 endif()
 
 # remove several files in go_pipeline

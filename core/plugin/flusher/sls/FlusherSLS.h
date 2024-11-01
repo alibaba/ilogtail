@@ -30,11 +30,7 @@
 #include "pipeline/batch/Batcher.h"
 #include "pipeline/limiter/ConcurrencyLimiter.h"
 #include "pipeline/plugin/interface/HttpFlusher.h"
-#ifdef __ENTERPRISE__
-#include "pipeline/serializer/EnterpriseSLSSerializer.h"
-#else
 #include "pipeline/serializer/SLSSerializer.h"
-#endif
 #include "protobuf/sls/sls_logs.pb.h"
 
 namespace logtail {
