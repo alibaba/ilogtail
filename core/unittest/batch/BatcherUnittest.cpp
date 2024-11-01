@@ -334,21 +334,25 @@ void BatcherUnittest::TestAddWithGroupBatch() {
 
     // flush by size
     res.clear();
-    batch.mEventFlushStrategy.SetMinSizeBytes(10);
+    batch.mEventFlushStrategy.SetMinSizeBytes(159);
     batch.mEventFlushStrategy.SetTimeoutSecs(3);
     PipelineEventGroup group6 = CreateEventGroup(1);
     SourceBuffer* buffer6 = group6.GetSourceBuffer().get();
     batch.Add(std::move(group6), res);
+    PipelineEventGroup group7 = CreateEventGroup(2);
+    SourceBuffer* buffer7 = group7.GetSourceBuffer().get();
+    batch.Add(std::move(group7), res);
     APSARA_TEST_EQUAL(1U, batch.mEventQueueMap.size());
-    APSARA_TEST_EQUAL(0U, batch.mEventQueueMap[key].mBatch.mEvents.size());
+    APSARA_TEST_EQUAL(1U, batch.mEventQueueMap[key].mBatch.mEvents.size());
     APSARA_TEST_EQUAL(1U, res.size());
     APSARA_TEST_EQUAL(1U, res[0].size());
-    APSARA_TEST_EQUAL(2U, res[0][0].mEvents.size());
+    APSARA_TEST_EQUAL(3U, res[0][0].mEvents.size());
     APSARA_TEST_EQUAL(1U, res[0][0].mTags.mInner.size());
     APSARA_TEST_STREQ("val", res[0][0].mTags.mInner["key"].data());
-    APSARA_TEST_EQUAL(2U, res[0][0].mSourceBuffers.size());
+    APSARA_TEST_EQUAL(3U, res[0][0].mSourceBuffers.size());
     APSARA_TEST_EQUAL(buffer5, res[0][0].mSourceBuffers[0].get());
     APSARA_TEST_EQUAL(buffer6, res[0][0].mSourceBuffers[1].get());
+    APSARA_TEST_EQUAL(buffer7, res[0][0].mSourceBuffers[2].get());
     APSARA_TEST_EQUAL(eoo5, res[0][0].mExactlyOnceCheckpoint.get());
     APSARA_TEST_STREQ("pack_id", res[0][0].mPackIdPrefix.data());
     APSARA_TEST_GT(TimeoutFlushManager::GetInstance()->mTimeoutRecords["test_config"].at(make_pair(0, key)).mUpdateTime,
@@ -375,8 +379,11 @@ void BatcherUnittest::TestAddWithOversizedGroup() {
     APSARA_TEST_EQUAL(1U, batch.mEventQueueMap.size());
     APSARA_TEST_EQUAL(0U, batch.mEventQueueMap[key].mBatch.mEvents.size());
     APSARA_TEST_EQUAL(3U, res.size());
+    APSARA_TEST_EQUAL(1U, res[0].size());
     APSARA_TEST_EQUAL(2U, res[0][0].mEvents.size());
+    APSARA_TEST_EQUAL(1U, res[1].size());
     APSARA_TEST_EQUAL(13U, res[1][0].mEvents.size());
+    APSARA_TEST_EQUAL(1U, res[2].size());
     APSARA_TEST_EQUAL(7U, res[2][0].mEvents.size());
 }
 
