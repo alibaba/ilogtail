@@ -49,6 +49,7 @@ bool BoundedProcessQueue::Push(unique_ptr<ProcessQueueItem>&& item) {
 }
 
 bool BoundedProcessQueue::Pop(unique_ptr<ProcessQueueItem>& item) {
+    mFetchAttemptsCnt->Add(1);
     if (!IsValidToPop()) {
         return false;
     }

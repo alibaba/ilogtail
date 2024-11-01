@@ -56,6 +56,7 @@ bool CircularProcessQueue::Push(unique_ptr<ProcessQueueItem>&& item) {
 }
 
 bool CircularProcessQueue::Pop(unique_ptr<ProcessQueueItem>& item) {
+    mFetchAttemptsCnt->Add(1);
     if (!IsValidToPop()) {
         return false;
     }
