@@ -20,8 +20,7 @@
 #include "common/compression/CompressType.h"
 #include "plugin/flusher/sls/FlusherSLS.h"
 
-
-DEFINE_FLAG_INT32(max_send_log_group_size, "bytes", 10 * 1024 * 1024);
+DECLARE_FLAG_INT32(max_send_log_group_size);
 
 const std::string METRIC_RESERVED_KEY_NAME = "__name__";
 const std::string METRIC_RESERVED_KEY_LABELS = "__labels__";
