@@ -105,12 +105,17 @@ void DoGC(vector<T*>& pool, vector<T*>& poolBak, size_t& minUnusedCnt, mutex* mu
             delete pool.back();
             pool.pop_back();
         }
+        size_t bakSZ = 0;
         if (mux) {
             lock_guard<mutex> lock(*mux);
+            bakSZ = poolBak.size();
             for (auto& item : poolBak) {
                 delete item;
             }
             poolBak.clear();
+        }
+        if (sz != 0 || bakSZ != 0) {
+            LOG_INFO(sLogger, ("event pool gc", "done")("gc event cnt", sz + bakSZ)("pool size", pool.size()));
         }
     } else {
         LOG_ERROR(sLogger,
