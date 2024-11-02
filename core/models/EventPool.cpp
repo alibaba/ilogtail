@@ -60,7 +60,7 @@ MetricEvent* EventPool::AcquireMetricEvent(PipelineEventGroup* ptr) {
 
 SpanEvent* EventPool::AcquireSpanEvent(PipelineEventGroup* ptr) {
     if (mEnableLock) {
-        TransferPoolIfEmpty(mMetricEventPool, mMetricEventPoolBak);
+        TransferPoolIfEmpty(mSpanEventPool, mSpanEventPoolBak);
         lock_guard<mutex> lock(mPoolMux);
         return AcquireEventNoLock(ptr, mSpanEventPool, mMinUnusedSpanEventsCnt);
     }
