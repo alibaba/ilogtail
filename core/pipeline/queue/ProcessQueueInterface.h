@@ -52,7 +52,8 @@ public:
 protected:
     bool IsValidToPop() const;
 
-    CounterPtr mFetchAttemptsCnt;
+    CounterPtr mFetchTimesCnt;
+    CounterPtr mValidFetchTimesCnt;
 
 private:
     bool IsDownStreamQueuesValidToPush() const;
