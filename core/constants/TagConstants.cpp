@@ -66,7 +66,7 @@ namespace logtail {
     const std::string DEFAULT_TRACE_TAG_PEER_WORKLOAD_KIND = "peerWorkloadKind";
     const std::string DEFAULT_TRACE_TAG_PEER_NAMESPACE = "peerNamespace";
     const std::string DEFAULT_TRACE_TAG_APPID = "appId";
-    const std::string DEFAULT_TRACE_TAG_IMAGES = DEFAULT_TAG_IMAGE_NAME;
+    const std::string DEFAULT_TRACE_TAG_IMAGES = "images";
     const std::string DEFAULT_TRACE_TAG_LABELS = "labels";
     const std::string DEFAULT_TRACE_TAG_WORKLOAD_KIND = "workloadKind";
     const std::string DEFAULT_TRACE_TAG_WORKLOAD_NAME = "workloadName";
