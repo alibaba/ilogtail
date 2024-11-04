@@ -69,7 +69,7 @@ bool ProcessorSPL::Init(const Json::Value& config) {
 
     Error error;
     mSPLPipelinePtr = std::make_shared<LoongCollectorSplPipeline>();
-    error = mSPLPipelinePtr->InitLogtailSPL(mSpl,
+    error = mSPLPipelinePtr->InitLoongCollectorSPL(mSpl,
                                             INT32_FLAG(logtail_spl_pipeline_quota),
                                             INT32_FLAG(logtail_spl_query_max_size),
                                             mTimeoutMills,

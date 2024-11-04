@@ -18,7 +18,9 @@ macro(processor_link target_name link_withspl enterprise)
     link_re2(${target_name})
     if (LINUX AND ${link_withspl})
         link_spl(${target_name} ${enterprise})
-        target_link_libraries(${target_name} logtail_spl)
+        if (${enterprise})
+            target_link_libraries(${target_name} loongcollector_spl)
+        endif ()
     endif ()
     link_ssl(${target_name}) # must after link_spl
     link_crypto(${target_name}) # must after link_spl

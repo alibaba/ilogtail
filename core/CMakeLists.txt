@@ -183,8 +183,7 @@ set(SRC_FILES ${SRC_FILES} ${FRAMEWORK_SOURCE_FILES} ${PLUGIN_SOURCE_FILES_CORE}
 
 # Generate SPL library.
 if (LINUX)
-    if (WITHSPL AND ON)
-    # if (WITHSPL AND ENABLE_ENTERPRISE)
+    if (WITHSPL AND ENABLE_ENTERPRISE)
         add_subdirectory(spl)
     endif()
 endif()
@@ -229,8 +228,7 @@ add_subdirectory(common)
 # Link libraries.
 if(BUILD_LOGTAIL OR BUILD_LOGTAIL_SHARED_LIBRARY)
     input_link(${LOGTAIL_TARGET})
-    processor_link(${LOGTAIL_TARGET} ${WITHSPL} ON)
-    # processor_link(${LOGTAIL_TARGET} ${WITHSPL} ${ENABLE_ENTERPRISE})
+    processor_link(${LOGTAIL_TARGET} ${WITHSPL} ${ENABLE_ENTERPRISE})
     flusher_link(${LOGTAIL_TARGET})
     all_link(${LOGTAIL_TARGET})
     common_link(${LOGTAIL_TARGET})
