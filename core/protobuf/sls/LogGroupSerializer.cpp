@@ -103,6 +103,7 @@ void LogGroupSerializer::Prepare(size_t size) {
 }
 
 void LogGroupSerializer::StartToAddLog(size_t size) {
+    // field = 1, wire_type = 2
     mRes.push_back(0x0A);
     uint32_pack(size, mRes);
 }
@@ -113,53 +114,64 @@ void LogGroupSerializer::AddLogTime(uint32_t logTime) {
     if (logTime < minLogTime) {
         logTime = minLogTime;
     }
+    // field = 1, wire_type = 0
     mRes.push_back(0x08);
     uint32_pack(logTime, mRes);
 }
 
 void LogGroupSerializer::AddLogContent(StringView key, StringView value) {
     // Contents
+    // field = 2, wire_type = 2
     mRes.push_back(0x12);
     uint32_pack(GetStringSize(key.size()) + GetStringSize(value.size()), mRes);
     // Key
+    // field = 1, wire_type = 2
     mRes.push_back(0x0A);
     uint32_pack(key.size(), mRes);
     mRes.append(key.data(), key.size());
     // Value
+    // field = 2, wire_type = 2
     mRes.push_back(0x12);
     uint32_pack(value.size(), mRes);
     mRes.append(value.data(), value.size());
 }
 
 void LogGroupSerializer::AddLogTimeNs(uint32_t logTimeNs) {
+    // field = 4, wire_type = 5
     mRes.push_back(0x25);
     fixed32_pack(logTimeNs, mRes);
 }
 
 void LogGroupSerializer::AddTopic(StringView topic) {
+    // field = 3, wire_type = 2
     mRes.push_back(0x1A);
     AddString(topic);
 }
 
 void LogGroupSerializer::AddSource(StringView source) {
+    // field = 4, wire_type = 2
     mRes.push_back(0x22);
     AddString(source);
 }
 
 void LogGroupSerializer::AddMachineUUID(StringView machineUUID) {
+    // field = 5, wire_type = 2
     mRes.push_back(0x2A);
     AddString(machineUUID);
 }
 
 void LogGroupSerializer::AddLogTag(StringView key, StringView value) {
     // LogTags
+    // field = 6, wire_type = 2
     mRes.push_back(0x32);
     uint32_pack(GetStringSize(key.size()) + GetStringSize(value.size()), mRes);
     // Key
+    // field = 1, wire_type = 2
     mRes.push_back(0x0A);
     uint32_pack(key.size(), mRes);
     mRes.append(key.data(), key.size());
     // Value
+    // field = 2, wire_type = 2
     mRes.push_back(0x12);
     uint32_pack(value.size(), mRes);
     mRes.append(value.data(), value.size());
@@ -226,6 +238,7 @@ size_t GetLogSize(size_t contentSZ, bool hasNs, size_t& logSZ) {
     res += 1 + 5;
     // Time_ns
     if (hasNs) {
+        // fixed32 size is always 4
         res += 1 + 4;
     }
     logSZ = res;

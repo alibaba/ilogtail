@@ -58,6 +58,7 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, stri
 
     PipelineEvent::Type eventType = group.mEvents[0]->GetType();
     if (eventType == PipelineEvent::Type::NONE) {
+        // should not happen
         errorMsg = "unsupported event type in event group";
         return false;
     }
@@ -72,6 +73,9 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, stri
         case PipelineEvent::Type::LOG:
             for (size_t i = 0; i < group.mEvents.size(); ++i) {
                 const auto& e = group.mEvents[i].Cast<LogEvent>();
+                if (e.Empty()) {
+                    continue;
+                }
                 size_t contentSZ = 0;
                 for (const auto& kv : e) {
                     contentSZ += GetLogContentSize(kv.first.size(), kv.second.size());
@@ -85,6 +89,7 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, stri
                 if (e.Is<UntypedSingleValue>()) {
                     metricEventContentCache[i].first = to_string(e.GetValue<UntypedSingleValue>()->mValue);
                 } else {
+                    // should not happen
                     LOG_ERROR(sLogger,
                               ("unexpected error",
                                "invalid metric event type")("config", mFlusher->GetContext().GetConfigName()));
@@ -107,6 +112,11 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, stri
         default:
             break;
     }
+    if (logGroupSZ == 0) {
+        errorMsg = "all empty log";
+        return false;
+    }
+
     // loggroup.category is deprecated, no need to set
     for (const auto& tag : group.mTags.mInner) {
         if (tag.first == LOG_RESERVED_KEY_TOPIC || tag.first == LOG_RESERVED_KEY_SOURCE

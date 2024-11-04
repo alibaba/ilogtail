@@ -32,6 +32,7 @@ extern const std::string METRIC_RESERVED_KEY_TIME_NANO;
 extern const std::string METRIC_LABELS_SEPARATOR;
 extern const std::string METRIC_LABELS_KEY_VALUE_SEPARATOR;
 
+// see for detail: https://protobuf.dev/programming-guides/encoding/
 class LogGroupSerializer {
 public:
     void Prepare(size_t size);
