@@ -33,7 +33,7 @@ size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
 }
 
 bool K8sMetadata::FromInfoJson(const Json::Value& json, k8sContainerInfo& info) {
-    if (!json.isMember(DEFAULT_TRACE_TAG_IMAGES) || !json.isMember(DEFAULT_TRACE_TAG_LABELS) || !json.isMember(DEFAULT_TAG_NAMESPACE)
+    if (!json.isMember(DEFAULT_TRACE_TAG_IMAGES) || !json.isMember(DEFAULT_TRACE_TAG_LABELS) || !json.isMember(DEFAULT_TRACE_TAG_NAMESPACE)
         || !json.isMember(DEFAULT_TRACE_TAG_WORKLOAD_KIND) || !json.isMember(DEFAULT_TRACE_TAG_WORKLOAD_NAME)) {
         return false;
     }
@@ -53,7 +53,7 @@ bool K8sMetadata::FromInfoJson(const Json::Value& json, k8sContainerInfo& info) 
         }
     }
 
-    info.k8sNamespace = json[DEFAULT_TAG_NAMESPACE].asString();
+    info.k8sNamespace = json[DEFAULT_TRACE_TAG_NAMESPACE].asString();
     if (json.isMember(DEFAULT_TRACE_TAG_SERVICENAME)) {
         info.serviceName = json[DEFAULT_TRACE_TAG_SERVICENAME].asString();
     }
