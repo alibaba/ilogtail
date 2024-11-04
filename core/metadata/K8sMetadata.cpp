@@ -33,32 +33,32 @@ size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
 }
 
 bool K8sMetadata::FromInfoJson(const Json::Value& json, k8sContainerInfo& info) {
-    if (!json.isMember(imageKey) || !json.isMember(labelsKey) || !json.isMember(namespaceKey)
-        || !json.isMember(workloadKindKey) || !json.isMember(workloadNameKey)) {
+    if (!json.isMember(DEFAULT_TRACE_TAG_IMAGES) || !json.isMember(DEFAULT_TRACE_TAG_LABELS) || !json.isMember(DEFAULT_TAG_NAMESPACE)
+        || !json.isMember(DEFAULT_TRACE_TAG_WORKLOAD_KIND) || !json.isMember(DEFAULT_TRACE_TAG_WORKLOAD_NAME)) {
         return false;
     }
 
-    for (const auto& key : json[imageKey].getMemberNames()) {
-        if (json[imageKey].isMember(key)) {
-            info.images[key] = json[imageKey][key].asString();
+    for (const auto& key : json[DEFAULT_TRACE_TAG_IMAGES].getMemberNames()) {
+        if (json[DEFAULT_TRACE_TAG_IMAGES].isMember(key)) {
+            info.images[key] = json[DEFAULT_TRACE_TAG_IMAGES][key].asString();
         }
     }
-    for (const auto& key : json[labelsKey].getMemberNames()) {
-        if (json[labelsKey].isMember(key)) {
-            info.labels[key] = json[labelsKey][key].asString();
+    for (const auto& key : json[DEFAULT_TRACE_TAG_LABELS].getMemberNames()) {
+        if (json[DEFAULT_TRACE_TAG_LABELS].isMember(key)) {
+            info.labels[key] = json[DEFAULT_TRACE_TAG_LABELS][key].asString();
 
-            if (key == appIdKey) {
-                info.appId = json[labelsKey][key].asString();
+            if (key == DEFAULT_TRACE_TAG_APPID) {
+                info.appId = json[DEFAULT_TRACE_TAG_LABELS][key].asString();
             }
         }
     }
 
-    info.k8sNamespace = json[namespaceKey].asString();
-    if (json.isMember(serviceNameKey)) {
-        info.serviceName = json[serviceNameKey].asString();
+    info.k8sNamespace = json[DEFAULT_TAG_NAMESPACE].asString();
+    if (json.isMember(DEFAULT_TRACE_TAG_SERVICENAME)) {
+        info.serviceName = json[DEFAULT_TRACE_TAG_SERVICENAME].asString();
     }
-    info.workloadKind = json[workloadKindKey].asString();
-    info.workloadName = json[workloadNameKey].asString();
+    info.workloadKind = json[DEFAULT_TRACE_TAG_WORKLOAD_KIND].asString();
+    info.workloadName = json[DEFAULT_TRACE_TAG_WORKLOAD_NAME].asString();
     info.timestamp = std::time(0);
     return true;
 }
