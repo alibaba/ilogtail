@@ -133,7 +133,7 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, stri
         return false;
     }
 
-    static LogGroupSerializer serializer;
+    thread_local LogGroupSerializer serializer;
     serializer.Prepare(logGroupSZ);
     switch (eventType) {
         case PipelineEvent::Type::LOG:
