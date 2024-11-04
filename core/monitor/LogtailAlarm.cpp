@@ -194,7 +194,15 @@ void LogtailAlarm::SendAllRegionAlarm() {
             // check sender queue status, if invalid jump this region
 
             QueueKey alarmPrjLogstoreKey = QueueKeyManager::GetInstance()->GetKey(
-                "-flusher_sls-" + GetProfileSender()->GetProfileProjectName(region) + "#logtail_alarm");
+                GetProfileSender()->GetProfileProjectName(region) + "-" + "logtail_alarm");
+            if (SenderQueueManager::GetInstance()->GetQueue(alarmPrjLogstoreKey) == nullptr) {
+                PipelineContext ctx;
+                SenderQueueManager::GetInstance()->CreateQueue(
+                    alarmPrjLogstoreKey,
+                    "",
+                    ctx,
+                    std::unordered_map<std::string, std::shared_ptr<ConcurrencyLimiter>>());
+            }
             if (!SenderQueueManager::GetInstance()->IsValidToPush(alarmPrjLogstoreKey)) {
                 // jump this region
                 ++sendRegionIndex;
