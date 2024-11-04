@@ -109,6 +109,16 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, stri
             break;
         case PipelineEvent::Type::SPAN:
             break;
+        case PipelineEvent::Type::RAW:
+            for (size_t i = 0; i < group.mEvents.size(); ++i) {
+                const auto& e = group.mEvents[i].Cast<RawEvent>();
+                if (e.GetContent().empty()) {
+                    continue;
+                }
+                size_t contentSZ = GetLogContentSize(DEFAULT_CONTENT_KEY.size(), e.GetContent().size());
+                logGroupSZ += GetLogSize(contentSZ, enableNs && e.GetTimestampNanosecond(), logSZ[i]);
+            }
+            break;
         default:
             break;
     }
@@ -164,6 +174,17 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, stri
             }
             break;
         case PipelineEvent::Type::SPAN:
+            break;
+        case PipelineEvent::Type::RAW:
+            for (size_t i = 0; i < group.mEvents.size(); ++i) {
+                const auto& e = group.mEvents[i].Cast<RawEvent>();
+                serializer.StartToAddLog(logSZ[i]);
+                serializer.AddLogTime(e.GetTimestamp());
+                serializer.AddLogContent(DEFAULT_CONTENT_KEY, e.GetContent());
+                if (enableNs && e.GetTimestampNanosecond()) {
+                    serializer.AddLogTimeNs(e.GetTimestampNanosecond().value());
+                }
+            }
             break;
         default:
             break;

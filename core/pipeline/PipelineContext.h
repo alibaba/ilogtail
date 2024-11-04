@@ -84,6 +84,8 @@ public:
     void SetIsFirstProcessorJsonFlag(bool flag) { mIsFirstProcessorJson = flag; }
     bool IsExactlyOnceEnabled() const {return mEnableExactlyOnce; }
     void SetExactlyOnceFlag(bool flag) { mEnableExactlyOnce = flag; }
+    bool HasNativeProcessors() const { return mHasNativeProcessors; }
+    void SetHasNativeProcessorsFlag(bool flag) { mHasNativeProcessors = flag; }
 
     ProcessProfile& GetProcessProfile() const { return mProcessProfile; }
     // LogFileProfiler& GetProfiler() { return *mProfiler; }
@@ -105,6 +107,7 @@ private:
     bool mIsFirstProcessorApsara = false;
     bool mIsFirstProcessorJson = false;
     bool mEnableExactlyOnce = false;
+    bool mHasNativeProcessors = false;
 
     mutable ProcessProfile mProcessProfile;
     // LogFileProfiler* mProfiler = LogFileProfiler::GetInstance();
