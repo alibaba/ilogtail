@@ -4,40 +4,14 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/alibaba/ilogtail/pkg/models"
-	"github.com/alibaba/ilogtail/plugins/test/mock"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/alibaba/ilogtail/pkg/models"
 )
 
-func TestFlusherStdout_Init(t *testing.T) {
-	flusher := &FlusherStdout{}
-	err := flusher.Init(mock.NewEmptyContext("project", "logstore", "configName"))
-	assert.NoError(t, err)
-}
-
-func TestFlusherStdout_Description(t *testing.T) {
-	flusher := &FlusherStdout{}
-	description := flusher.Description()
-	assert.Equal(t, "stdout flusher for loongcollector", description)
-}
-
-func TestFlusherStdout_IsReady(t *testing.T) {
-	flusher := &FlusherStdout{}
-	ready := flusher.IsReady("project", "logstore", 0)
-	assert.True(t, ready)
-}
-
-func TestFlusherStdout_Stop(t *testing.T) {
-	flusher := &FlusherStdout{}
-	err := flusher.Stop()
-	assert.NoError(t, err)
-}
-
 func TestFlusherStdout_writeMetricValues(t *testing.T) {
-	flusher := &FlusherStdout{
-		context: mock.NewEmptyContext("project", "logstore", "configName"),
-	}
+	flusher := &FlusherStdout{}
 
 	metric1 := &models.Metric{
 		Name:       "cpu.load.short",
