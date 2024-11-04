@@ -96,9 +96,7 @@ void SLSSerializerUnittest::TestSerializeEventGroup() {
         {
             // empty log content
             string res, errorMsg;
-            APSARA_TEST_TRUE(serializer.DoSerialize(CreateBatchedLogEvents(false, true), res, errorMsg));
-            sls_logs::LogGroup logGroup;
-            APSARA_TEST_FALSE(logGroup.ParseFromString(res));
+            APSARA_TEST_FALSE(serializer.DoSerialize(CreateBatchedLogEvents(false, true), res, errorMsg));
         }
     }
     {
@@ -211,9 +209,7 @@ void SLSSerializerUnittest::TestSerializeEventGroup() {
         {
             // empty metric value
             string res, errorMsg;
-            APSARA_TEST_TRUE(serializer.DoSerialize(CreateBatchedMetricEvents(false, 0, true, false), res, errorMsg));
-            sls_logs::LogGroup logGroup;
-            APSARA_TEST_FALSE(logGroup.ParseFromString(res));
+            APSARA_TEST_FALSE(serializer.DoSerialize(CreateBatchedMetricEvents(false, 0, true, false), res, errorMsg));
         }
     }
     {

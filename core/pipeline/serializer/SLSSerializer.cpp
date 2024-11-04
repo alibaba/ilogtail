@@ -113,7 +113,7 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, stri
             break;
     }
     if (logGroupSZ == 0) {
-        errorMsg = "all empty log";
+        errorMsg = "all empty logs";
         return false;
     }
 
