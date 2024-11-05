@@ -174,7 +174,7 @@ Server：应当通过capbilitiies上报Server自身的能力，这样如果新�
 
 Client：Agent启动后第一次向Server汇报全量信息，request字段应填尽填。request\_id、sequence\_num、capabilities、instance\_id、agent\_type、startup\_time为必填字段。
 
-Server：Server根据上报的信息返回响应。pipeline\_config\_updates、instance\_config\_updates中包含agent需要同步的配置，updates中必然包含name和version，是否包含detail取决于server端实现。custom\_command_updates包含要求agent执行的命令command中必然包含type、name和expire\_time。
+Server：Server根据上报的信息返回响应。pipeline\_config\_updates、instance\_config\_updates中包含agent需要同步的配置，updates中必然包含name和version，是否包含详情context和detail取决于server端实现。custom\_command_updates包含要求agent执行的命令command中必然包含type、name和expire\_time。
 
 Server是否保存Client信息取决于Server实现，如果服务端找不到或保存的sequence\_num + 1 ≠ 心跳的sequence\_num，那么就立刻返回并且flags中必须设置ReportFullStatus标识位。
 
@@ -257,5 +257,6 @@ Server: 服务端正常返回时HeartbeatResponse中的code应始终设置为0�
 Client: 当HeartbeatResponse中的code为0时，Agent应该正常处理下发的配置。当HeartbeatResponse中的code不为0时，Agent必须忽略除code和message外的其他字段，并择机重试。
 
 ### 辅助信息
-在command\_info, command\_detail, config\_info, config\_detail中，都预留有context字段，可以用于传递一些用户自定义的辅助信息。\
+在command\_info, command\_detail, config\_info, config\_detail中，都预留了context字段，可以用于传递一些额外的用户自定义的辅助信息。\
+
 注意：context仅作传递辅助信息使用，不会对管控行为造成任何影响。
