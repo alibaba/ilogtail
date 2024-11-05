@@ -23,6 +23,57 @@ import (
 	"github.com/alibaba/ilogtail/test/engine/setup"
 )
 
+/*
+********************
+input_process_security
+********************
+*/
+func TrigerProcessSecurityEvents(ctx context.Context, commandCnt int) (context.Context, error) {
+	time.Sleep(5 * time.Second)
+	if err := execveCommands(ctx, commandCnt); err != nil {
+		return ctx, err
+	}
+	return ctx, nil
+}
+
+func execveCommands(ctx context.Context, commandCnt int) error {
+	execveCommand := "ps -ef | grep loongcollector-e2e-test"
+	for i := 0; i < commandCnt; i++ {
+		if _, err := setup.Env.ExecOnSource(ctx, execveCommand); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+/*
+********************
+input_network_security
+********************
+*/
+func TrigerNetworksSecurityEvents(ctx context.Context, commandCnt int, url string) (context.Context, error) {
+	time.Sleep(5 * time.Second)
+	if err := curlURL(ctx, commandCnt, url); err != nil {
+		return ctx, err
+	}
+	return ctx, nil
+}
+
+func curlURL(ctx context.Context, commandCnt int, url string) error {
+	curlCommand := "curl --connect-timeout 1 " + url + ";"
+	for i := 0; i < commandCnt; i++ {
+		if _, err := setup.Env.ExecOnSource(ctx, curlCommand); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+/*
+********************
+input_file_security
+********************
+*/
 const triggerFileSecurityTemplate = "cd {{.WorkDir}} && COMMAND_CNT={{.CommandCnt}} FILE_NAME={{.FileName}} {{.Command}}"
 
 func TrigerFileSecurityEvents(ctx context.Context, commandCnt int, filenames string) (context.Context, error) {
@@ -43,17 +94,17 @@ func rwFile(ctx context.Context, commandCnt int, filenames string) error {
 	files := strings.Split(filenames, ",")
 	for _, file := range files {
 		touchFileCommand := "touch " + file + ";"
-		if err := setup.Env.ExecOnSource(ctx, touchFileCommand); err != nil {
+		if _, err := setup.Env.ExecOnSource(ctx, touchFileCommand); err != nil {
 			return err
 		}
 		catFileCommand := "echo 'Hello, World!' >> " + file + ";"
 		for i := 0; i < commandCnt; i++ {
-			if err := setup.Env.ExecOnSource(ctx, catFileCommand); err != nil {
+			if _, err := setup.Env.ExecOnSource(ctx, catFileCommand); err != nil {
 				return err
 			}
 		}
 		removeCommand := "rm " + file + ";"
-		if err := setup.Env.ExecOnSource(ctx, removeCommand); err != nil {
+		if _, err := setup.Env.ExecOnSource(ctx, removeCommand); err != nil {
 			return err
 		}
 	}
@@ -74,7 +125,7 @@ func mmapFile(ctx context.Context, commandCnt int, filenames string) error {
 		}); err != nil {
 			return err
 		}
-		if err := setup.Env.ExecOnSource(ctx, triggerEBPFCommand.String()); err != nil {
+		if _, err := setup.Env.ExecOnSource(ctx, triggerEBPFCommand.String()); err != nil {
 			return err
 		}
 	}
@@ -87,15 +138,15 @@ func truncateFile(ctx context.Context, commandCnt int, filenames string) error {
 		truncateFileCommand1 := "truncate -s 10k " + file + ";"
 		truncateFileCommand2 := "truncate -s 0 " + file + ";"
 		for i := 0; i < commandCnt/2; i++ {
-			if err := setup.Env.ExecOnSource(ctx, truncateFileCommand1); err != nil {
+			if _, err := setup.Env.ExecOnSource(ctx, truncateFileCommand1); err != nil {
 				return err
 			}
-			if err := setup.Env.ExecOnSource(ctx, truncateFileCommand2); err != nil {
+			if _, err := setup.Env.ExecOnSource(ctx, truncateFileCommand2); err != nil {
 				return err
 			}
 		}
 		if commandCnt%2 != 0 {
-			if err := setup.Env.ExecOnSource(ctx, truncateFileCommand1); err != nil {
+			if _, err := setup.Env.ExecOnSource(ctx, truncateFileCommand1); err != nil {
 				return err
 			}
 		}
