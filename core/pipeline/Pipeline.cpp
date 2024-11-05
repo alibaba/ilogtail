@@ -431,9 +431,11 @@ void Pipeline::Stop(bool isRemoving) {
     ProcessQueueManager::GetInstance()->DisablePop(mName, isRemoving);
     WaitAllItemsInProcessFinished();
 
-    if (!isRemoving) {
-        FlushBatch();
-    }
+    // flush or clear
+    // if (!isRemoving) {
+    FlushBatch();
+    // }
+    // TimeoutFlushManager::GetInstance()->ClearRecords(mName);
 
     if (!mGoPipelineWithoutInput.isNull()) {
         // Go pipeline `Stop` will stop and delete
