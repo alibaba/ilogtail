@@ -16,9 +16,10 @@ package trigger
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/test/engine/setup"
-	"time"
 )
 
 func TrigerHTTP(ctx context.Context, count int, interval int, url string) (context.Context, error) {
@@ -26,7 +27,7 @@ func TrigerHTTP(ctx context.Context, count int, interval int, url string) (conte
 	cmd := fmt.Sprintf("curl -vL %s", url)
 	time.Sleep(time.Second * 5)
 	for i := 0; i < count; i++ {
-		err := setup.Env.ExecOnSource(ctx, cmd)
+		_, err := setup.Env.ExecOnSource(ctx, cmd)
 		if err != nil {
 			return ctx, err
 		}
