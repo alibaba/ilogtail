@@ -76,6 +76,7 @@ public:
     QueueKey GetLogstoreKey() const;
     const FlusherSLS* GetSLSInfo() const { return mSLSInfo; }
     void SetSLSInfo(const FlusherSLS* flusherSLS) { mSLSInfo = flusherSLS; }
+    
     bool RequiringJsonReader() const { return mRequiringJsonReader; }
     void SetRequiringJsonReaderFlag(bool flag) { mRequiringJsonReader = flag; }
     bool IsFirstProcessorApsara() const { return mIsFirstProcessorApsara; }
@@ -86,6 +87,8 @@ public:
     void SetExactlyOnceFlag(bool flag) { mEnableExactlyOnce = flag; }
     bool HasNativeProcessors() const { return mHasNativeProcessors; }
     void SetHasNativeProcessorsFlag(bool flag) { mHasNativeProcessors = flag; }
+    bool IsFlushingThroughGoPipeline() const { return mIsFlushingThroughGoPipeline; }
+    void SetIsFlushingThroughGoPipelineFlag(bool flag) { mIsFlushingThroughGoPipeline = flag; }
 
     ProcessProfile& GetProcessProfile() const { return mProcessProfile; }
     // LogFileProfiler& GetProfiler() { return *mProfiler; }
@@ -101,13 +104,14 @@ private:
     QueueKey mProcessQueueKey = -1;
     Pipeline* mPipeline = nullptr;
 
-    // special members for compatability
     const FlusherSLS* mSLSInfo = nullptr;
+    // for input_file only
     bool mRequiringJsonReader = false;
     bool mIsFirstProcessorApsara = false;
     bool mIsFirstProcessorJson = false;
     bool mEnableExactlyOnce = false;
     bool mHasNativeProcessors = false;
+    bool mIsFlushingThroughGoPipeline = false;
 
     mutable ProcessProfile mProcessProfile;
     // LogFileProfiler* mProfiler = LogFileProfiler::GetInstance();

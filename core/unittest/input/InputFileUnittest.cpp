@@ -396,7 +396,7 @@ void InputFileUnittest::TestCreateInnerProcessors() {
     }
     {
         // disable raw content: flushing through go pipeline
-        p.mGoPipelineWithoutInput = "json";
+        ctx.SetIsFlushingThroughGoPipelineFlag(true);
         configStr = R"(
             {
                 "Type": "input_file",
@@ -413,7 +413,7 @@ void InputFileUnittest::TestCreateInnerProcessors() {
         APSARA_TEST_EQUAL(ProcessorSplitLogStringNative::sName, input->mInnerProcessors[0]->Name());
         auto plugin = static_cast<ProcessorSplitLogStringNative*>(input->mInnerProcessors[0]->mPlugin.get());
         APSARA_TEST_FALSE(plugin->mEnableRawContent);
-        p.mGoPipelineWithoutInput = Json::Value();
+        ctx.SetIsFlushingThroughGoPipelineFlag(false);
     }
     {
         // enable raw content

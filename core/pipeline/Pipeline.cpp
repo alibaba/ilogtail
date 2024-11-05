@@ -74,6 +74,7 @@ bool Pipeline::Init(PipelineConfig&& config) {
     mContext.SetPipeline(*this);
     mContext.SetIsFirstProcessorJsonFlag(config.mIsFirstProcessorJson);
     mContext.SetHasNativeProcessorsFlag(config.mHasNativeProcessor);
+    mContext.SetIsFlushingThroughGoPipelineFlag(config.IsFlushingThroughGoPipelineExisted());
 
     // for special treatment below
     const InputFile* inputFile = nullptr;
