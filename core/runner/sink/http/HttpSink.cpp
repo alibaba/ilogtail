@@ -40,8 +40,9 @@ bool HttpSink::Init() {
 
     WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
         mMetricsRecordRef,
-        {{METRIC_LABEL_KEY_RUNNER_NAME, METRIC_LABEL_VALUE_RUNNER_NAME_HTTP_SINK},
-         {METRIC_LABEL_KEY_METRIC_CATEGORY, METRIC_LABEL_KEY_METRIC_CATEGORY_RUNNER}});
+        {{METRIC_LABEL_KEY_RUNNER_NAME, METRIC_LABEL_VALUE_RUNNER_NAME_HTTP_SINK}},
+        {},
+        MetricCategory::METRIC_CATEGORY_RUNNER);
     mInItemsTotal = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_ITEMS_TOTAL);
     mLastRunTime = mMetricsRecordRef.CreateIntGauge(METRIC_RUNNER_LAST_RUN_TIME);
     mOutSuccessfulItemsTotal = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_SINK_OUT_SUCCESSFUL_ITEMS_TOTAL);
@@ -272,13 +273,13 @@ void HttpSink::HandleCompletedRequests(int& runningHandlers) {
                         static_cast<HttpFlusher*>(request->mItem->mFlusher)
                             ->OnSendDone(request->mResponse, request->mItem);
                         FlusherRunner::GetInstance()->DecreaseHttpSendingCnt();
-                        LOG_DEBUG(
-                            sLogger,
-                            ("failed to send http request", "abort")("item address", request->mItem)(
-                                "config-flusher-dst",
-                                QueueKeyManager::GetInstance()->GetName(request->mItem->mQueueKey))(
-                                "response time", ToString(responseTimeMs) + "ms")("try cnt", ToString(request->mTryCnt))(
-                                "sending cnt", ToString(FlusherRunner::GetInstance()->GetSendingBufferCount())));
+                        LOG_DEBUG(sLogger,
+                                  ("failed to send http request", "abort")("item address", request->mItem)(
+                                      "config-flusher-dst",
+                                      QueueKeyManager::GetInstance()->GetName(request->mItem->mQueueKey))(
+                                      "response time", ToString(responseTimeMs) + "ms")("try cnt",
+                                                                                        ToString(request->mTryCnt))(
+                                      "sending cnt", ToString(FlusherRunner::GetInstance()->GetSendingBufferCount())));
                     }
                     mOutFailedItemsTotal->Add(1);
                     mFailedItemTotalResponseTimeMs->Add(responseTime);

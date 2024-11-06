@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "monitor/metric_constants/MetricConstants.h"
 #include "monitor/PluginMetricManager.h"
+#include "monitor/metric_constants/MetricConstants.h"
 #include "unittest/Unittest.h"
 
 namespace logtail {
@@ -32,7 +32,8 @@ public:
         std::unordered_map<std::string, MetricType> metricKeys;
         metricKeys.emplace("default_counter", MetricType::METRIC_TYPE_COUNTER);
         metricKeys.emplace("default_gauge", MetricType::METRIC_TYPE_INT_GAUGE);
-        pluginMetricManager = std::make_shared<PluginMetricManager>(mMetricsRecordRef->GetLabels(), metricKeys);
+        pluginMetricManager = std::make_shared<PluginMetricManager>(
+            mMetricsRecordRef->GetLabels(), metricKeys, MetricCategory::METRIC_CATEGORY_PLUGIN_SOURCE);
     }
 
     void TearDown() {}

@@ -19,16 +19,6 @@
 
 namespace logtail {
 
-// label keys
-extern const std::string METRIC_LABEL_KEY_METRIC_CATEGORY;
-
-// label values
-extern const std::string METRIC_LABEL_KEY_METRIC_CATEGORY_AGENT;
-extern const std::string METRIC_LABEL_KEY_METRIC_CATEGORY_COMPONENT;
-extern const std::string METRIC_LABEL_KEY_METRIC_CATEGORY_PIPELINE;
-extern const std::string METRIC_LABEL_KEY_METRIC_CATEGORY_PLUGIN;
-extern const std::string METRIC_LABEL_KEY_METRIC_CATEGORY_RUNNER;
-
 //////////////////////////////////////////////////////////////////////////
 // agent
 //////////////////////////////////////////////////////////////////////////

@@ -31,8 +31,9 @@ public:
                                                             {
                                                                 {METRIC_LABEL_KEY_PROJECT, ctx.GetProjectName()},
                                                                 {METRIC_LABEL_KEY_PIPELINE_NAME, ctx.GetConfigName()},
-                                                                {METRIC_LABEL_KEY_METRIC_CATEGORY, METRIC_LABEL_KEY_METRIC_CATEGORY_COMPONENT},
-                                                            });
+                                                            },
+                                                            {},
+                                                            MetricCategory::METRIC_CATEGORY_COMPONENT);
 
         mInItemsTotal = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_IN_ITEMS_TOTAL);
         mInItemDataSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_IN_SIZE_BYTES);
