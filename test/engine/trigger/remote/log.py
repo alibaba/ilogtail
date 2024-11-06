@@ -74,7 +74,8 @@ def regexGBK(args, logger, faker):
 def regexMultiline(args, logger, faker):
     fileNo = random.randint(1, 1000)
     for i in range(args.count):
-        logger.info(f"""{get_random_mark()} file{fileNo}:{i} {faker.ipv4()} - [{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}] "{faker.http_method()} {faker.uri_path()} HTTP/2.0" {faker.http_status_code()} {random.randint(1, 10000)} {faker.user_agent()} java.lang.Exception: {'\n'.join(faker.sentences(nb=random.randint(1, 5)))}""")
+        multilineLog = '\n'.join(faker.sentences(nb=random.randint(1, 5)))
+        logger.info(f'{get_random_mark()} file{fileNo}:{i} {faker.ipv4()} - [{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}] "{faker.http_method()} {faker.uri_path()} HTTP/2.0" {faker.http_status_code()} {random.randint(1, 10000)} {faker.user_agent()} java.lang.Exception: {multilineLog}')
 
         if args.interval > 0:
             time.sleep(args.interval / 1000)
