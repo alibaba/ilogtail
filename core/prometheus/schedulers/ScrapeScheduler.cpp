@@ -52,16 +52,14 @@ size_t MetricWriteCallback(char* buffer, size_t size, size_t nmemb, void* data) 
     while (begin < sizes) {
         for (size_t end = begin; end < sizes; ++end) {
             if (buffer[end] == '\n') {
-                if (begin == 0) {
+                if (begin == 0 && !body->mCache.empty()) {
                     body->mCache.append(buffer, end);
-                    if (!body->mCache.empty()) {
-                        if (IsValidMetric(StringView(body->mCache))) {
-                            auto* e = body->mEventGroup.AddLogEvent();
-                            auto sb = body->mEventGroup.GetSourceBuffer()->CopyString(body->mCache);
-                            e->SetContentNoCopy(prometheus::PROMETHEUS, StringView(sb.data, sb.size));
-                        }
-                        body->mCache.clear();
+                    if (IsValidMetric(body->mCache)) {
+                        auto* e = body->mEventGroup.AddLogEvent();
+                        auto sb = body->mEventGroup.GetSourceBuffer()->CopyString(body->mCache);
+                        e->SetContentNoCopy(prometheus::PROMETHEUS, StringView(sb.data, sb.size));
                     }
+                    body->mCache.clear();
                 } else if (begin != end) {
                     if (IsValidMetric(StringView(buffer + begin, end - begin))) {
                         auto* e = body->mEventGroup.AddLogEvent();
@@ -69,8 +67,7 @@ size_t MetricWriteCallback(char* buffer, size_t size, size_t nmemb, void* data) 
                         e->SetContentNoCopy(prometheus::PROMETHEUS, StringView(sb.data, sb.size));
                     }
                 }
-                begin += end - begin + 1;
-                continue;
+                begin = end + 1;
             }
         }
         break;
