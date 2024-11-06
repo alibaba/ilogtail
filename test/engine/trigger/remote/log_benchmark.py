@@ -1,5 +1,6 @@
 import argparse
 import logging
+import math
 import random
 import time
 
@@ -8,15 +9,26 @@ from datetime import datetime
 from faker import Faker
 from faker.providers import internet, user_agent, lorem, misc
 
+BATCH_SIZE = 100
 
 def nginx(args, logger, faker):
-    exampleLog = f'{faker.ipv4()} - - [{datetime.now().strftime("%d/%b/%Y:%H:%M:%S %z")}] "{faker.http_method()} {faker.url()} HTTP/1.1" {faker.http_status_code()} {random.randint(1, 10000)} "{faker.url()}" "{faker.user_agent()}"'
-    sleepInterval = len(exampleLog) / (args.rate * 1024 * 1024)
+    startTime = time.perf_counter()
+    exampleLog = ''
+    for _ in range(BATCH_SIZE):
+        exampleLog += f'{faker.ipv4()} - - [{datetime.now().strftime("%d/%b/%Y:%H:%M:%S %z")}] "{faker.http_method()} {faker.url()} HTTP/1.1" {faker.http_status_code()} {random.randint(1, 10000)} "{faker.url()}" "{faker.user_agent()}\n"'
+    randomLogCost = (time.perf_counter() - startTime) / BATCH_SIZE
+    writeTimePerSecond = math.floor(args.rate * 1024 * 1024 / (len(exampleLog.encode('utf-8'))))
+    sleepInterval = 1 / writeTimePerSecond - randomLogCost
+
     startTime = datetime.now()
     while True:
         now = datetime.now()
-        logger.info(f'{faker.ipv4()} - - [{now.strftime("%d/%b/%Y:%H:%M:%S %z")}] "{faker.http_method()} {faker.url()} HTTP/1.1" {faker.http_status_code()} {random.randint(1, 10000)} "{faker.url()}" "{faker.user_agent()}"')
-        time.sleep(sleepInterval)
+        fakeLog = f'{faker.ipv4()} - - [{now.strftime("%d/%b/%Y:%H:%M:%S %z")}] "{faker.http_method()} {faker.url()} HTTP/1.1" {faker.http_status_code()} {random.randint(1, 10000)} "{faker.url()}" "{faker.user_agent()}"\n' * BATCH_SIZE
+        logger.info(fakeLog[:-1])
+        if sleepInterval > 0:
+            start = time.perf_counter()
+            while (time.perf_counter() - start) < sleepInterval:
+                pass
         if (now - startTime).seconds > args.duration * 60:
             break
 
@@ -40,7 +52,7 @@ def main():
     logger = logging.getLogger('log_generator')
     logger.setLevel(logging.INFO)
     # 快速轮转来模拟比较极端的情况
-    handler = TimedRotatingFileHandler(args.path, when="s", interval=5, backupCount=3)
+    handler = TimedRotatingFileHandler(args.path, when="s", interval=70, backupCount=3)
     formatter = logging.Formatter('%(message)s')
     handler.setFormatter(formatter)
     logger.addHandler(handler)
