@@ -23,7 +23,7 @@ import (
 	"github.com/alibaba/ilogtail/test/config"
 )
 
-const commandTemplate = "cd %s && python3 %s.py %s"
+const commandTemplate = "python3 %s.py %s"
 
 func BeginTrigger(ctx context.Context) (context.Context, error) {
 	startTime := time.Now().Unix()
@@ -35,5 +35,5 @@ func GetRunTriggerCommand(triggerName string, kvs ...string) string {
 	for i := 0; i < len(kvs); i += 2 {
 		args = append(args, fmt.Sprintf("--%s", kvs[i]), kvs[i+1])
 	}
-	return fmt.Sprintf(commandTemplate, filepath.Join(config.TestConfig.WorkDir, "test", "engine", "trigger", "remote"), triggerName, strings.Join(args, " "))
+	return fmt.Sprintf(commandTemplate, filepath.Join(config.TestConfig.WorkDir, "engine", "trigger", "remote", triggerName), strings.Join(args, " "))
 }

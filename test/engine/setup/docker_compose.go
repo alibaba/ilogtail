@@ -130,29 +130,9 @@ func (d *DockerComposeEnv) ExecOnLogtail(command string) (string, error) {
 
 func (d *DockerComposeEnv) ExecOnSource(ctx context.Context, command string) (string, error) {
 	// exec on host of docker compose
-	cmd := exec.Command(command)
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return "", err
-	}
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		return "", err
-	}
-	if err := cmd.Start(); err != nil {
-		return "", err
-	}
-	buf := make([]byte, 1024)
-	n, _ := stdout.Read(buf)
-	if n > 0 {
-		return string(buf[:n]), nil
-	}
-	n, _ = stderr.Read(buf)
-	if n > 0 {
-		return string(buf[:n]), nil
-	}
-	if err := cmd.Wait(); err != nil {
-		return "", err
-	}
-	return "", nil
+	fmt.Println(command)
+	cmd := exec.Command("sh", "-c", command)
+	output, err := cmd.CombinedOutput()
+	fmt.Println(string(output))
+	return string(output), err
 }

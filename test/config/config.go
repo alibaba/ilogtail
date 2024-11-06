@@ -15,6 +15,7 @@ package config
 
 import (
 	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -73,7 +74,8 @@ func ParseConfig() {
 	}
 	TestConfig.WorkDir = os.Getenv("WORK_DIR")
 	if len(TestConfig.WorkDir) == 0 {
-		TestConfig.WorkDir, _ = os.Getwd()
+		testFileDir, _ := os.Getwd()
+		TestConfig.WorkDir = filepath.Dir(testFileDir)
 	}
 
 	// SSH
