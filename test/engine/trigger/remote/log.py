@@ -59,14 +59,14 @@ def jsonMultiline(args, logger, faker):
 def regex(args, logger, faker):
     fileNo = random.randint(1, 1000)
     for i in range(args.count):
-        logger.info(f'{get_random_mark()} file{fileNo}:{i} {faker.ipv4()} - [{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}] "{faker.http_method()} {faker.uri_path()} HTTP/2.0" {faker.http_status_code()} {random.randint(1, 10000)} {faker.user_agent()} {faker.sentence()}')
+        logger.info(f'{get_random_mark()} file{fileNo}:{i} {faker.ipv4()} - [{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}] "{faker.http_method()} {faker.uri_path()} HTTP/2.0" {faker.http_status_code()} {random.randint(1, 10000)} "{faker.user_agent()}" "{faker.sentence()}"')
         if args.interval > 0:
             time.sleep(args.interval / 1000)
 
 def regexGBK(args, logger, faker):
     fileNo = random.randint(1, 1000)
     for i in range(args.count):
-        log = f'{get_random_mark()} file{fileNo}:{i} {faker.ipv4()} - [{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}] "{faker.http_method()} {faker.uri_path()} HTTP/2.0" {faker.http_status_code()} {random.randint(1, 10000)} {faker.user_agent()} {faker.sentence()}'
+        log = f'{get_random_mark()} file{fileNo}:{i} {faker.ipv4()} - [{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}] "{faker.http_method()} {faker.uri_path()} HTTP/2.0" {faker.http_status_code()} {random.randint(1, 10000)} "{faker.user_agent()}" "{faker.sentence()}"'
         logger.info(str(log.encode('gbk')))
         if args.interval > 0:
             time.sleep(args.interval / 1000)
@@ -75,7 +75,7 @@ def regexMultiline(args, logger, faker):
     fileNo = random.randint(1, 1000)
     for i in range(args.count):
         multilineLog = '\n'.join(faker.sentences(nb=random.randint(1, 5)))
-        logger.info(f'{get_random_mark()} file{fileNo}:{i} {faker.ipv4()} - [{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}] "{faker.http_method()} {faker.uri_path()} HTTP/2.0" {faker.http_status_code()} {random.randint(1, 10000)} {faker.user_agent()} java.lang.Exception: {multilineLog}')
+        logger.info(f'{get_random_mark()} file{fileNo}:{i} [{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}] [{get_random_level()}] java.lang.Exception: {multilineLog}')
 
         if args.interval > 0:
             time.sleep(args.interval / 1000)
