@@ -75,7 +75,6 @@ size_t SpanEvent::SpanLink::DataSize() const {
     return mTraceId.size() + mSpanId.size() + mTraceState.size() + mTags.DataSize();
 }
 
-#ifdef APSARA_UNIT_TEST_MAIN
 Json::Value SpanEvent::SpanLink::ToJson() const {
     Json::Value root;
     root["traceId"] = mTraceId.to_string();
@@ -84,7 +83,7 @@ Json::Value SpanEvent::SpanLink::ToJson() const {
         root["traceState"] = mTraceState.to_string();
     }
     if (!mTags.mInner.empty()) {
-        Json::Value& tags = root["tags"];
+        Json::Value& tags = root["attributes"];
         for (const auto& tag : mTags.mInner) {
             tags[tag.first.to_string()] = tag.second.to_string();
         }
@@ -92,6 +91,21 @@ Json::Value SpanEvent::SpanLink::ToJson() const {
     return root;
 }
 
+std::string SpanEvent::SerializeLinksToString() const {
+    if (mLinks.empty()) {
+        return "";
+    }
+    Json::Value root;
+    Json::Value jsonLinks(Json::arrayValue);
+    for (auto& link : mLinks) {
+        jsonLinks.append(link.ToJson());
+    }
+    root["links"] = jsonLinks;
+    Json::StreamWriterBuilder writer;
+    return Json::writeString(writer, root);
+}
+
+#ifdef APSARA_UNIT_TEST_MAIN
 void SpanEvent::SpanLink::FromJson(const Json::Value& value) {
     SetTraceId(value["traceId"].asString());
     SetSpanId(value["spanId"].asString());
@@ -155,7 +169,6 @@ size_t SpanEvent::InnerEvent::DataSize() const {
     return sizeof(decltype(mTimestampNs)) + mName.size() + mTags.DataSize();
 }
 
-#ifdef APSARA_UNIT_TEST_MAIN
 Json::Value SpanEvent::InnerEvent::ToJson() const {
     Json::Value root;
     root["name"] = mName.to_string();
@@ -169,6 +182,21 @@ Json::Value SpanEvent::InnerEvent::ToJson() const {
     return root;
 }
 
+std::string SpanEvent::SerializeEventsToString() const {
+    if (mEvents.empty()) {
+        return "";
+    }
+    Json::Value root;
+    Json::Value jsonLinks(Json::arrayValue);
+    for (auto& link : mEvents) {
+        jsonLinks.append(link.ToJson());
+    }
+    root["events"] = jsonLinks;
+    Json::StreamWriterBuilder writer;
+    return Json::writeString(writer, root);
+}
+
+#ifdef APSARA_UNIT_TEST_MAIN
 void SpanEvent::InnerEvent::FromJson(const Json::Value& value) {
     SetName(value["name"].asString());
     SetTimestampNs(value["timestampNs"].asUInt64());

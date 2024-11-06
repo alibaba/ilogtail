@@ -15,9 +15,13 @@
 #include "pipeline/serializer/SLSSerializer.h"
 
 #include "common/Flags.h"
+#include "constants/TagConstants.h"
 #include "common/compression/CompressType.h"
 #include "plugin/flusher/sls/FlusherSLS.h"
 #include "protobuf/sls/LogGroupSerializer.h"
+
+#include <json/json.h>
+#include <array>
 
 DEFINE_FLAG_INT32(max_send_log_group_size, "bytes", 10 * 1024 * 1024);
 
@@ -68,9 +72,10 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, stri
     // caculate serialized logGroup size first, where some critical results can be cached
     vector<size_t> logSZ(group.mEvents.size());
     vector<pair<string, size_t>> metricEventContentCache(group.mEvents.size());
+    vector<array<string, 6>> spanEventContentCache(group.mEvents.size());
     size_t logGroupSZ = 0;
     switch (eventType) {
-        case PipelineEvent::Type::LOG:
+        case PipelineEvent::Type::LOG:{
             for (size_t i = 0; i < group.mEvents.size(); ++i) {
                 const auto& e = group.mEvents[i].Cast<LogEvent>();
                 if (e.Empty()) {
@@ -83,7 +88,8 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, stri
                 logGroupSZ += GetLogSize(contentSZ, enableNs && e.GetTimestampNanosecond(), logSZ[i]);
             }
             break;
-        case PipelineEvent::Type::METRIC:
+        }
+        case PipelineEvent::Type::METRIC:{
             for (size_t i = 0; i < group.mEvents.size(); ++i) {
                 const auto& e = group.mEvents[i].Cast<MetricEvent>();
                 if (e.Is<UntypedSingleValue>()) {
@@ -107,7 +113,50 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, stri
                 logGroupSZ += GetLogSize(contentSZ, false, logSZ[i]);
             }
             break;
+        }
         case PipelineEvent::Type::SPAN:
+            for (size_t i = 0; i < group.mEvents.size(); ++i) {
+                const auto& e = group.mEvents[i].Cast<SpanEvent>();
+                size_t contentSZ = 0;
+                contentSZ += GetLogContentSize(DEFAULT_TRACE_TAG_TRACE_ID.size(), e.GetTraceId().size());
+                contentSZ += GetLogContentSize(DEFAULT_TRACE_TAG_SPAN_ID.size(), e.GetSpanId().size());
+                contentSZ += GetLogContentSize(DEFAULT_TRACE_TAG_PARENT_ID.size(), e.GetParentSpanId().size());
+                contentSZ += GetLogContentSize(DEFAULT_TRACE_TAG_SPAN_NAME.size(), e.GetName().size());
+                contentSZ += GetLogContentSize(DEFAULT_TRACE_TAG_SPAN_KIND.size(), e.GetKindString().size());
+                contentSZ += GetLogContentSize(DEFAULT_TRACE_TAG_STATUS_CODE.size(), e.GetStatusString().size());
+                // 
+                // set tags and scope tags
+                Json::Value jsonVal;
+                for (auto it = e.TagsBegin(); it != e.TagsEnd(); ++it) {
+                    jsonVal[it->first.to_string()] = it->second.to_string();
+                }
+                for (auto it = e.ScopeTagsBegin(); it != e.ScopeTagsEnd(); ++it) {
+                    jsonVal[it->first.to_string()] = it->second.to_string();
+                }
+                Json::StreamWriterBuilder writer;
+                std::string attrString = Json::writeString(writer, jsonVal);
+                contentSZ += GetLogContentSize(DEFAULT_TRACE_TAG_ATTRIBUTES.size(), attrString.size());
+                spanEventContentCache[i][0] = std::move(attrString);
+
+                auto linkString = e.SerializeLinksToString();
+                contentSZ += GetLogContentSize(DEFAULT_TRACE_TAG_LINKS.size(), linkString.size());
+                spanEventContentCache[i][1] = std::move(linkString);
+                auto eventString = e.SerializeEventsToString();
+                contentSZ += GetLogContentSize(DEFAULT_TRACE_TAG_EVENTS.size(), eventString.size());
+                spanEventContentCache[i][2] = std::move(eventString);
+
+                // time related
+                auto startTsNs = std::to_string(e.GetStartTimeNs());
+                contentSZ += GetLogContentSize(DEFAULT_TRACE_TAG_START_TIME_NANO.size(), startTsNs.size());
+                spanEventContentCache[i][3] = std::move(startTsNs);
+                auto endTsNs = std::to_string(e.GetEndTimeNs());
+                contentSZ += GetLogContentSize(DEFAULT_TRACE_TAG_END_TIME_NANO.size(), endTsNs.size());
+                spanEventContentCache[i][4] = std::move(endTsNs);
+                auto durationNs = std::to_string(e.GetEndTimeNs() - e.GetStartTimeNs());
+                contentSZ += GetLogContentSize(DEFAULT_TRACE_TAG_DURATION.size(), durationNs.size());
+                spanEventContentCache[i][5] = std::move(durationNs);
+                logGroupSZ += GetLogSize(contentSZ, false, logSZ[i]);
+            }
             break;
         default:
             break;
@@ -164,6 +213,58 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, stri
             }
             break;
         case PipelineEvent::Type::SPAN:
+            for (size_t i = 0; i < group.mEvents.size(); ++i) {
+                const auto& spanEvent = group.mEvents[i].Cast<SpanEvent>();
+
+                serializer.StartToAddLog(logSZ[i]);
+                // set trace_id span_id span_kind status etc
+                serializer.AddLogContent(DEFAULT_TRACE_TAG_TRACE_ID, spanEvent.GetTraceId());
+                serializer.AddLogContent(DEFAULT_TRACE_TAG_SPAN_ID, spanEvent.GetSpanId());
+                serializer.AddLogContent(DEFAULT_TRACE_TAG_PARENT_ID, spanEvent.GetParentSpanId());
+                // span_name
+                serializer.AddLogContent(DEFAULT_TRACE_TAG_SPAN_NAME, spanEvent.GetName());
+                // span_kind
+                serializer.AddLogContent(DEFAULT_TRACE_TAG_SPAN_KIND, spanEvent.GetKindString());
+                // status_code
+                serializer.AddLogContent(DEFAULT_TRACE_TAG_STATUS_CODE, spanEvent.GetStatusString());
+                
+                //// TODO @qianlu.kk enterprise
+                // ip
+                // auto ipView = spanEvent.GetTag("ip");
+                // if (ipView.size()) {
+                //     serializer.AddLogContent(DEFAULT_TRACE_TAG_IP, ipView.to_string());
+                // }
+                // pid
+                // auto appIdItr = group.mTags.mInner.find("pid");
+                // if (appIdItr != group.mTags.mInner.end()) {
+                //     serializer.AddLogContent(DEFAULT_TRACE_TAG_APP_ID, appIdItr->second.to_string());
+                // }
+                
+                
+                // set tags and scope tags
+                // Json::Value jsonVal;
+                // for (auto it = spanEvent.TagsBegin(); it != spanEvent.TagsEnd(); ++it) {
+                //     jsonVal[it->first.to_string()] = it->second.to_string();
+                // }
+                // for (auto it = spanEvent.ScopeTagsBegin(); it != spanEvent.ScopeTagsEnd(); ++it) {
+                //     jsonVal[it->first.to_string()] = it->second.to_string();
+                // }
+                // Json::StreamWriterBuilder writer;
+                // std::string attrString = Json::writeString(writer, jsonVal);
+                serializer.AddLogContent(DEFAULT_TRACE_TAG_ATTRIBUTES, spanEventContentCache[i][0]);
+                
+                serializer.AddLogTime(spanEvent.GetTimestamp());
+                serializer.AddLogContent(DEFAULT_TRACE_TAG_LINKS, spanEventContentCache[i][1]);
+                serializer.AddLogContent(DEFAULT_TRACE_TAG_EVENTS, spanEventContentCache[i][2]);
+
+                // start_time
+                serializer.AddLogContent(DEFAULT_TRACE_TAG_START_TIME_NANO, spanEventContentCache[i][3]);
+                // end_time
+                serializer.AddLogContent(DEFAULT_TRACE_TAG_END_TIME_NANO, spanEventContentCache[i][4]);
+                // duration
+                serializer.AddLogContent(DEFAULT_TRACE_TAG_DURATION, spanEventContentCache[i][5]);
+                
+            }
             break;
         default:
             break;

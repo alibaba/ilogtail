@@ -19,6 +19,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <json/json.h>
 
 #include "common/memory/SourceBuffer.h"
 #include "models/PipelineEvent.h"
@@ -67,8 +68,8 @@ public:
 
         size_t DataSize() const;
 
-#ifdef APSARA_UNIT_TEST_MAIN
         Json::Value ToJson() const;
+#ifdef APSARA_UNIT_TEST_MAIN
         void FromJson(const Json::Value& value);
 #endif
 
@@ -107,8 +108,8 @@ public:
 
         size_t DataSize() const;
 
-#ifdef APSARA_UNIT_TEST_MAIN
         Json::Value ToJson() const;
+#ifdef APSARA_UNIT_TEST_MAIN
         void FromJson(const Json::Value& value);
 #endif
 
@@ -146,6 +147,17 @@ public:
     void SetName(const std::string& name);
 
     Kind GetKind() const { return mKind; }
+    constexpr StringView GetKindString() const {
+        switch (mKind) {
+        case Kind::Unspecified: return "unspecified";
+        case Kind::Internal:   return "internal";
+        case Kind::Server:     return "server";
+        case Kind::Client:     return "client";
+        case Kind::Producer:   return "producer";
+        case Kind::Consumer:   return "consumer";
+        default:               return "Unknown";
+        }
+    }
     void SetKind(Kind kind) { mKind = kind; }
 
     uint64_t GetStartTimeNs() const { return mStartTimeNs; }
@@ -167,12 +179,22 @@ public:
 
     const std::vector<InnerEvent>& GetEvents() const { return mEvents; }
     InnerEvent* AddEvent();
+    std::string SerializeEventsToString() const;
 
     const std::vector<SpanLink>& GetLinks() const { return mLinks; }
     SpanLink* AddLink();
+    std::string SerializeLinksToString() const;
 
     StatusCode GetStatus() const { return mStatus; }
     void SetStatus(StatusCode status) { mStatus = status; }
+    constexpr StringView GetStatusString() const {
+        switch (mStatus) {
+        case StatusCode::Unset: return "UNSET";
+        case StatusCode::Ok:   return "OK";
+        case StatusCode::Error:     return "ERROR";
+        default:               return "UNSET";
+        }
+    }
 
     StringView GetScopeTag(StringView key) const;
     bool HasScopeTag(StringView key) const;

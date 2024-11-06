@@ -40,6 +40,7 @@ private:
     BatchedEvents CreateBatchedLogEvents(bool enableNanosecond, bool emptyContent);
     BatchedEvents
     CreateBatchedMetricEvents(bool enableNanosecond, uint32_t nanoTimestamp, bool emptyValue, bool onlyOneTag);
+    BatchedEvents CreateBatchedSpanEvents();
 
     static unique_ptr<FlusherSLS> sFlusher;
 
@@ -98,6 +99,19 @@ void SLSSerializerUnittest::TestSerializeEventGroup() {
             string res, errorMsg;
             APSARA_TEST_FALSE(serializer.DoSerialize(CreateBatchedLogEvents(false, true), res, errorMsg));
         }
+    }
+    {
+        // span
+        string res, errorMsg;
+        LOG_INFO(sLogger, ("begin", "span test"));
+        auto events = CreateBatchedSpanEvents();
+        APSARA_TEST_EQUAL(events.mEvents.size(), 1);
+        APSARA_TEST_TRUE(events.mEvents[0]->GetType() == PipelineEvent::Type::SPAN);
+        APSARA_TEST_TRUE(serializer.DoSerialize(std::move(events), res, errorMsg));
+        LOG_INFO(sLogger, ("res", res));
+        sls_logs::LogGroup logGroup;
+        APSARA_TEST_TRUE(logGroup.ParseFromString(res));
+        APSARA_TEST_EQUAL(1, logGroup.logs_size());
     }
     {
         // metric
@@ -213,9 +227,6 @@ void SLSSerializerUnittest::TestSerializeEventGroup() {
         }
     }
     {
-        // span
-    }
-    {
         // log group exceed size limit
         INT32_FLAG(max_send_log_group_size) = 0;
         string res, errorMsg;
@@ -307,6 +318,44 @@ BatchedEvents SLSSerializerUnittest::CreateBatchedMetricEvents(bool enableNanose
         e->SetValue<UntypedSingleValue>(value);
     }
     e->SetName("test_gauge");
+    BatchedEvents batch(std::move(group.MutableEvents()),
+                        std::move(group.GetSizedTags()),
+                        std::move(group.GetSourceBuffer()),
+                        group.GetMetadata(EventGroupMetaKey::SOURCE_ID),
+                        std::move(group.GetExactlyOnceCheckpoint()));
+    return batch;
+}
+
+BatchedEvents SLSSerializerUnittest::CreateBatchedSpanEvents() {
+    PipelineEventGroup group(make_shared<SourceBuffer>());
+    group.SetTag(LOG_RESERVED_KEY_TOPIC, "topic");
+    group.SetTag(LOG_RESERVED_KEY_SOURCE, "source");
+    group.SetTag(LOG_RESERVED_KEY_MACHINE_UUID, "aaa");
+    group.SetTag(LOG_RESERVED_KEY_PACKAGE_ID, "bbb");   
+    auto now = std::chrono::system_clock::now();
+    auto duration = now.time_since_epoch();
+    auto seconds = std::chrono::duration_cast<std::chrono::seconds>(duration).count();
+    auto nano = std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count(); 
+    StringBuffer b = group.GetSourceBuffer()->CopyString(string("pack_id"));
+    group.SetMetadataNoCopy(EventGroupMetaKey::SOURCE_ID, StringView(b.data, b.size));
+    group.SetExactlyOnceCheckpoint(RangeCheckpointPtr(new RangeCheckpoint));
+    SpanEvent* spanEvent = group.AddSpanEvent();
+    spanEvent->SetTag(std::string("workloadName"), std::string("arms-oneagent-test-ql"));
+    spanEvent->SetTag(std::string("workloadKind"), std::string("faceless"));
+    spanEvent->SetTag(std::string("source_ip"), std::string("10.54.0.33"));
+    spanEvent->SetTag(std::string("host"), std::string("10.54.0.33"));
+    spanEvent->SetTag(std::string("rpc"), std::string("/oneagent/qianlu/local/1"));
+    spanEvent->SetTag(std::string("rpcType"), std::string("25"));
+    spanEvent->SetTag(std::string("callType"), std::string("http-client"));
+    spanEvent->SetTag(std::string("statusCode"), std::string("200"));
+    spanEvent->SetTag(std::string("version"), std::string("HTTP1.1"));
+    spanEvent->SetName("/oneagent/qianlu/local/1");
+    spanEvent->SetKind(SpanEvent::Kind::Client);
+    spanEvent->SetSpanId("span-1-2-3-4-5");
+    spanEvent->SetTraceId("trace-1-2-3-4-5");
+    spanEvent->SetStartTimeNs(nano - 5e9);
+    spanEvent->SetEndTimeNs(nano);
+    spanEvent->SetTimestamp(seconds);
     BatchedEvents batch(std::move(group.MutableEvents()),
                         std::move(group.GetSizedTags()),
                         std::move(group.GetSourceBuffer()),
