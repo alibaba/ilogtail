@@ -60,6 +60,7 @@ DEFINE_FLAG_INT32(unknow_error_try_max, "discard data when try times > this valu
 DEFINE_FLAG_BOOL(global_network_success, "global network success flag, default false", false);
 DEFINE_FLAG_BOOL(enable_metricstore_channel, "only works for metrics data for enhance metrics query performance", true);
 DEFINE_FLAG_INT32(max_send_log_group_size, "bytes", 10 * 1024 * 1024);
+DEFINE_FLAG_INT32(sls_serialize_size_expansion_ratio, "", 1.15);
 
 DECLARE_FLAG_BOOL(send_prefer_real_ip);
 
@@ -475,10 +476,11 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
                              mContext->GetRegion());
     }
 
-    DefaultFlushStrategyOptions strategy{static_cast<uint32_t>(INT32_FLAG(max_send_log_group_size)),
-                                         static_cast<uint32_t>(INT32_FLAG(batch_send_metric_size)),
-                                         static_cast<uint32_t>(INT32_FLAG(merge_log_count_limit)),
-                                         static_cast<uint32_t>(INT32_FLAG(batch_send_interval))};
+    DefaultFlushStrategyOptions strategy{
+        static_cast<uint32_t>(INT32_FLAG(max_send_log_group_size) / INT32_FLAG(sls_serialize_size_expansion_ratio)),
+        static_cast<uint32_t>(INT32_FLAG(batch_send_metric_size)),
+        static_cast<uint32_t>(INT32_FLAG(merge_log_count_limit)),
+        static_cast<uint32_t>(INT32_FLAG(batch_send_interval))};
     if (!mBatcher.Init(
             itr ? *itr : Json::Value(), this, strategy, !mContext->IsExactlyOnceEnabled() && mShardHashKeys.empty())) {
         // when either exactly once is enabled or ShardHashKeys is not empty, we don't enable group batch
