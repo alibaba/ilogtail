@@ -393,8 +393,7 @@ void* LogInput::ProcessLoop() {
             else
                 ProcessEvent(dispatcher, ev);
         } else {
-            mutex mux;
-            unique_lock<mutex> lock(mux);
+            unique_lock<mutex> lock(mFeedbackMux);
             mFeedbackCV.wait_for(lock, chrono::microseconds(INT32_FLAG(log_input_thread_wait_interval)));
         }
 

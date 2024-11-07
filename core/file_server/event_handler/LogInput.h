@@ -91,6 +91,7 @@ private:
     mutable std::mutex mThreadRunningMux;
     mutable std::condition_variable mStopCV;
 
+    mutable std::mutex mFeedbackMux;
     mutable std::condition_variable mFeedbackCV;
 
 #ifdef APSARA_UNIT_TEST_MAIN
