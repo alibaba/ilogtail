@@ -12,7 +12,7 @@ from faker.providers import internet, user_agent, lorem, misc
 def apsara(args, logger, faker):
     fileNo = random.randint(1, 1000)
     for i in range(args.count):
-        logger.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}]\t[{get_random_level()}]\t[{random.randint(1, 10000)}]\t[{faker.uri_path()}]\tfile:file{fileNo}\tlogNo:{i}\tmark:{get_random_mark()}\tmsg:{faker.sentence()}')
+        logger.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}]\t[{get_random_level()}]\t[{random.randint(1, 10000)}]\t[{faker.uri_path()}:{i}]\tfile:file{fileNo}\tlogNo:{i}\tmark:{get_random_mark()}\tmsg:{faker.sentence()}')
         if args.interval > 0:
             time.sleep(args.interval / 1000)
 
@@ -50,8 +50,8 @@ def jsonMultiline(args, logger, faker):
     fileNo = random.randint(1, 1000)
     for i in range(args.count):
         log = f'{{"mark":"{get_random_mark()}", "file":"file{fileNo}", "logNo":{i}, "time":"{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}", "ip": "{faker.ipv4()}", "method": "{faker.http_method()}", "userAgent": "{faker.user_agent()}", "size": {random.randint(1, 10000)}}}'
-        breakLineIdx1 = random.randint(1, len(log) / 2)
-        breakLineIdx2 = random.randint(len(log) / 2, len(log) - 1)
+        breakLineIdx1 = random.randint(1, len(log) // 2)
+        breakLineIdx2 = random.randint(len(log) // 2 + 1, len(log) - 1)
         logger.info(log[:breakLineIdx1] + '\n' + log[breakLineIdx1:breakLineIdx2] + '\n' + log[breakLineIdx2:])
         if args.interval > 0:
             time.sleep(args.interval / 1000)

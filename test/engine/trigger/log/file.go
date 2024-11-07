@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/alibaba/ilogtail/test/engine/setup"
@@ -61,8 +62,11 @@ func Nginx(ctx context.Context, rate, duration int, path string) (context.Contex
 
 func generate(ctx context.Context, mode, path string, count, interval int, customKV ...string) (context.Context, error) {
 	time.Sleep(3 * time.Second)
-	customKV = append(customKV, "mode", mode, "path", path, "count", strconv.Itoa(count), "interval", strconv.Itoa(interval))
-	command := trigger.GetRunTriggerCommand("log", "file", customKV...)
+	customKVString := make([]string, 0)
+	for i := 0; i < len(customKV); i += 2 {
+		customKVString = append(customKVString, customKV[i]+"="+customKV[i+1])
+	}
+	command := trigger.GetRunTriggerCommand("log", "file", "mode", mode, "path", path, "count", strconv.Itoa(count), "interval", strconv.Itoa(interval), "custom", strings.Join(customKVString, " "))
 	go func() {
 		if _, err := setup.Env.ExecOnSource(ctx, command); err != nil {
 			fmt.Println(err)
@@ -73,8 +77,11 @@ func generate(ctx context.Context, mode, path string, count, interval int, custo
 
 func generateBenchmark(ctx context.Context, mode, path string, rate, duration int, customKV ...string) (context.Context, error) {
 	time.Sleep(3 * time.Second)
-	customKV = append(customKV, "mode", mode, "path", path, "rate", strconv.Itoa(rate), "duration", strconv.Itoa(duration))
-	command := trigger.GetRunTriggerCommand("log", "file_benchmark", customKV...)
+	customKVString := make([]string, 0)
+	for i := 0; i < len(customKV); i += 2 {
+		customKVString = append(customKVString, customKV[i]+"="+customKV[i+1])
+	}
+	command := trigger.GetRunTriggerCommand("log", "file_benchmark", "mode", mode, "path", path, "rate", strconv.Itoa(rate), "duration", strconv.Itoa(duration), "custom", strings.Join(customKVString, " "))
 	if _, err := setup.Env.ExecOnSource(ctx, command); err != nil {
 		return ctx, err
 	}
