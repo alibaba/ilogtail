@@ -1,4 +1,5 @@
 import argparse
+import json as jsonlib
 import logging
 import random
 import time
@@ -12,7 +13,7 @@ from faker.providers import internet, user_agent, lorem, misc
 def apsara(args, logger, faker):
     fileNo = random.randint(1, 1000)
     for i in range(args.count):
-        logger.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}]\t[{get_random_level()}]\t[{random.randint(1, 10000)}]\t[{faker.uri_path()}:{i}]\tfile:file{fileNo}\tlogNo:{i}\tmark:{get_random_mark()}\tmsg:{faker.sentence()}')
+        logger.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}]\t[{get_random_level()}]\t[{random.randint(1, 10000)}]\t[/build/core/application/Application:{i}]\tfile:file{fileNo}\tlogNo:{i}\tmark:{get_random_mark()}\tmsg:{faker.sentence()}')
         if args.interval > 0:
             time.sleep(args.interval / 1000)
 
@@ -87,11 +88,7 @@ def get_random_mark():
     return random.choice(['-', 'F'])
 
 def parse_custom_arg_to_dict(custom_arg):
-    custom_arg_dict = {}
-    for arg in custom_arg:
-        key, value = arg.split('=')
-        custom_arg_dict[key] = value
-    return custom_arg_dict
+    return jsonlib.loads(custom_arg)
 
 def main():
     parser = argparse.ArgumentParser(description='Log Generator Arg Parser')
@@ -99,7 +96,7 @@ def main():
     parser.add_argument('--path', type=str, default='default.log', help='Log Path')
     parser.add_argument('--count', type=int, default=100, help='Log Count')
     parser.add_argument('--interval', type=int, default=1, help='Log Interval (ms), < 0 means no interval')
-    parser.add_argument('--custom', nargs='*', type=parse_custom_arg_to_dict, help='Custom Args, in the format of key=value')
+    parser.add_argument('--custom', type=parse_custom_arg_to_dict, help='Custom Args, in the format of json')
 
     args = parser.parse_args()
 

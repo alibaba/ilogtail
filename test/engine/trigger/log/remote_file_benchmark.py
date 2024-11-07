@@ -1,4 +1,5 @@
 import argparse
+import json
 import logging
 import math
 import random
@@ -33,11 +34,7 @@ def nginx(args, logger, faker):
             break
 
 def parse_custom_arg_to_dict(custom_arg):
-    custom_arg_dict = {}
-    for arg in custom_arg:
-        key, value = arg.split('=')
-        custom_arg_dict[key] = value
-    return custom_arg_dict
+    return json.loads(custom_arg)
 
 def main():
     parser = argparse.ArgumentParser(description='Log Generator Arg Parser')
