@@ -30,10 +30,10 @@ func BeginTrigger(ctx context.Context) (context.Context, error) {
 	return context.WithValue(ctx, config.StartTimeContextKey, int32(startTime)), nil
 }
 
-func GetRunTriggerCommand(triggerName string, kvs ...string) string {
+func GetRunTriggerCommand(scenrio, triggerName string, kvs ...string) string {
 	args := make([]string, 0)
 	for i := 0; i < len(kvs); i += 2 {
 		args = append(args, fmt.Sprintf("--%s", kvs[i]), kvs[i+1])
 	}
-	return fmt.Sprintf(commandTemplate, filepath.Join(config.TestConfig.WorkDir, "engine", "trigger", "remote", triggerName), strings.Join(args, " "))
+	return fmt.Sprintf(commandTemplate, filepath.Join(config.TestConfig.WorkDir, "engine", "trigger", scenrio, "remote_"+triggerName), strings.Join(args, " "))
 }

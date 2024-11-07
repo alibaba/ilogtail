@@ -113,7 +113,7 @@ func rwFile(ctx context.Context, commandCnt int, filenames string) error {
 func mmapFile(ctx context.Context, commandCnt int, filenames string) error {
 	files := strings.Split(filenames, ",")
 	for _, file := range files {
-		mmapFileCommand := trigger.GetRunTriggerCommand("mmap", "commandCnt", strconv.FormatInt(int64(commandCnt), 10), "filename", file)
+		mmapFileCommand := trigger.GetRunTriggerCommand("ebpf", "mmap", "commandCnt", strconv.FormatInt(int64(commandCnt), 10), "filename", file)
 		if _, err := setup.Env.ExecOnSource(ctx, mmapFileCommand); err != nil {
 			return err
 		}
