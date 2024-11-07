@@ -169,7 +169,8 @@ void HttpSink::DoRun() {
         HandleCompletedRequests(runningHandlers);
 
         unique_ptr<HttpSinkRequest> request;
-        if (mQueue.TryPop(request)) {
+        bool hasRequest = false;
+        while (mQueue.TryPop(request)) {
             mInItemsTotal->Add(1);
             LOG_DEBUG(sLogger,
                       ("got item from flusher runner, item address", request->mItem)(
@@ -181,7 +182,11 @@ void HttpSink::DoRun() {
             if (AddRequestToClient(std::move(request))) {
                 ++runningHandlers;
                 mSendingItemsTotal->Add(1);
+                hasRequest = true;
             }
+        }
+        if (hasRequest) {
+            continue;
         }
 
         struct timeval timeout {
