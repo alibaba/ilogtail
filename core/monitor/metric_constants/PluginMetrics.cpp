@@ -90,12 +90,11 @@ const string METRIC_LABEL_VALUE_PLUGIN_TYPE_PROCESS_OBSERVER = "process_observer
 const string METRIC_LABEL_VALUE_PLUGIN_TYPE_PROCESS_SECURITY = "process_security";
 
 const string METRIC_PLUGIN_EBPF_LOSS_KERNEL_EVENTS_TOTAL = "ebpf_loss_kernel_events_total";
-const string METRIC_PLUGIN_EBPF_NETWORK_OBSERVER_CONNTRACKER_NUM = "network_observer_conntracker_num";
-const string METRIC_PLUGIN_EBPF_NETWORK_OBSERVER_WORKER_HANDLE_EVENTS_TOTAL
-    = "network_observer_worker_handle_events_total";
-const string METRIC_PLUGIN_EBPF_NETWORK_OBSERVER_PROTOCOL_PARSE_RECORDS_TOTAL = "network_observer_parse_records_total";
-const string METRIC_PLUGIN_EBPF_NETWORK_OBSERVER_AGGREGATE_EVENTS_TOTAL = "network_observer_aggregate_events_total";
-const string METRIC_PLUGIN_EBPF_NETWORK_OBSERVER_AGGREGATE_KEY_NUM = "network_observer_aggregate_key_num";
+const string METRIC_PLUGIN_EBPF_NETWORK_OBSERVER_CONNTRACKER_NUM = "conntracker_num";
+const string METRIC_PLUGIN_EBPF_NETWORK_OBSERVER_WORKER_HANDLE_EVENTS_TOTAL = "handle_events_total";
+const string METRIC_PLUGIN_EBPF_NETWORK_OBSERVER_PROTOCOL_PARSE_RECORDS_TOTAL = "parse_records_total";
+const string METRIC_PLUGIN_EBPF_NETWORK_OBSERVER_AGGREGATE_EVENTS_TOTAL = "aggregate_events_total";
+const string METRIC_PLUGIN_EBPF_NETWORK_OBSERVER_AGGREGATE_KEY_NUM = "aggregate_key_num";
 const string METRIC_PLUGIN_EBPF_PROCESS_CACHE_ENTRIES_NUM = "process_cache_entries_num";
 const string METRIC_PLUGIN_EBPF_PROCESS_CACHE_MISS_TOTAL = "process_cache_miss_total";
 

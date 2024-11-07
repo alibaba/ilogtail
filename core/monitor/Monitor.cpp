@@ -709,7 +709,7 @@ void LoongCollectorMonitor::Init() {
     });
 #endif
     WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
-        mMetricsRecordRef, std::move(labels), std::move(dynamicLabels), MetricCategory::METRIC_CATEGORY_AGENT);
+        mMetricsRecordRef, MetricCategory::METRIC_CATEGORY_AGENT, std::move(labels), std::move(dynamicLabels));
     // init value
     mAgentCpu = mMetricsRecordRef.CreateDoubleGauge(METRIC_AGENT_CPU);
     mAgentMemory = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_MEMORY);

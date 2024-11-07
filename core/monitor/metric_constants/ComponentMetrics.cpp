@@ -75,13 +75,9 @@ const string METRIC_COMPONENT_QUEUE_DISCARDED_EVENTS_TOTAL = "discarded_events_t
 const string METRIC_COMPONENT_QUEUE_FETCHED_ITEMS_TOTAL = "fetched_items_total";
 const string METRIC_COMPONENT_QUEUE_FETCH_TIMES_TOTAL = "fetch_times_total";
 const string METRIC_COMPONENT_QUEUE_VALID_FETCH_TIMES_TOTAL = "valid_fetch_times_total";
-const string METRIC_COMPONENT_QUEUE_FETCH_REJECTED_BY_REGION_LIMITER_TIMES_TOTAL
-    = "fetch_rejected_by_region_limiter_times_total";
-const string METRIC_COMPONENT_QUEUE_FETCH_REJECTED_BY_PROJECT_LIMITER_TIMES_TOTAL
-    = "fetch_rejected_by_project_limiter_times_total";
-const string METRIC_COMPONENT_QUEUE_FETCH_REJECTED_BY_LOGSTORE_LIMITER_TIMES_TOTAL
-    = "fetch_rejected_by_logstore_limiter_times_total";
-const string METRIC_COMPONENT_QUEUE_FETCH_REJECTED_BY_RATE_LIMITER_TIMES_TOTAL
-    = "fetch_rejected_by_rate_limiter_times_total";
+const string METRIC_COMPONENT_QUEUE_FETCH_REJECTED_BY_REGION_LIMITER_TIMES_TOTAL = "region_rejects_times_total";
+const string METRIC_COMPONENT_QUEUE_FETCH_REJECTED_BY_PROJECT_LIMITER_TIMES_TOTAL = "project_rejects_times_total";
+const string METRIC_COMPONENT_QUEUE_FETCH_REJECTED_BY_LOGSTORE_LIMITER_TIMES_TOTAL = "logstore_rejects_times_total";
+const string METRIC_COMPONENT_QUEUE_FETCH_REJECTED_BY_RATE_LIMITER_TIMES_TOTAL = "rate_rejects_times_total";
 
 } // namespace logtail

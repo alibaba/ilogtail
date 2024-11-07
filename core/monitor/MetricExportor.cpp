@@ -173,10 +173,10 @@ void MetricExportor::PushGoCppProvidedMetrics(std::vector<std::map<std::string, 
 
     for (auto metrics : metricsList) {
         for (auto metric : metrics) {
-            if (metric.first == METRIC_AGENT_MEMORY_GO) {
+            if (metric.first == METRIC_KEY_VALUE + "." + METRIC_AGENT_MEMORY_GO) {
                 LoongCollectorMonitor::GetInstance()->SetAgentGoMemory(std::stoi(metric.second));
             }
-            if (metric.first == METRIC_AGENT_GO_ROUTINES_TOTAL) {
+            if (metric.first == METRIC_KEY_VALUE + "." + METRIC_AGENT_GO_ROUTINES_TOTAL) {
                 LoongCollectorMonitor::GetInstance()->SetAgentGoRoutinesTotal(std::stoi(metric.second));
             }
             LogtailMonitor::GetInstance()->UpdateMetric(metric.first, metric.second);

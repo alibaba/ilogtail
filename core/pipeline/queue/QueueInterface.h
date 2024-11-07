@@ -28,12 +28,11 @@ class QueueInterface {
 public:
     QueueInterface(QueueKey key, size_t cap, const PipelineContext& ctx) : mKey(key), mCapacity(cap) {
         WriteMetrics::GetInstance()->CreateMetricsRecordRef(mMetricsRecordRef,
+                                                            MetricCategory::METRIC_CATEGORY_COMPONENT,
                                                             {
                                                                 {METRIC_LABEL_KEY_PROJECT, ctx.GetProjectName()},
                                                                 {METRIC_LABEL_KEY_PIPELINE_NAME, ctx.GetConfigName()},
-                                                            },
-                                                            {},
-                                                            MetricCategory::METRIC_CATEGORY_COMPONENT);
+                                                            });
 
         mInItemsTotal = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_IN_ITEMS_TOTAL);
         mInItemDataSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_IN_SIZE_BYTES);

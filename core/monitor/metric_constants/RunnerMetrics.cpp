@@ -46,8 +46,8 @@ const string METRIC_RUNNER_JOBS_TOTAL = "jobs_total";
  **********************************************************/
 const string METRIC_RUNNER_SINK_OUT_SUCCESSFUL_ITEMS_TOTAL = "out_successful_items_total";
 const string METRIC_RUNNER_SINK_OUT_FAILED_ITEMS_TOTAL = "out_failed_items_total";
-const string METRIC_RUNNER_SINK_SUCCESSFUL_ITEM_TOTAL_RESPONSE_TIME_MS = "successful_item_total_response_time_ms";
-const string METRIC_RUNNER_SINK_FAILED_ITEM_TOTAL_RESPONSE_TIME_MS = "failed_item_total_response_time_ms";
+const string METRIC_RUNNER_SINK_SUCCESSFUL_ITEM_TOTAL_RESPONSE_TIME_MS = "successful_response_time_ms";
+const string METRIC_RUNNER_SINK_FAILED_ITEM_TOTAL_RESPONSE_TIME_MS = "failed_response_time_ms";
 const string METRIC_RUNNER_SINK_SENDING_ITEMS_TOTAL = "sending_items_total";
 const string METRIC_RUNNER_SINK_SEND_CONCURRENCY = "send_concurrency";
 

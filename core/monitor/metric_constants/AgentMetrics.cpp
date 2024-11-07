@@ -30,7 +30,7 @@ const string METRIC_LABEL_KEY_UUID = "uuid";
 const string METRIC_LABEL_KEY_VERSION = "version";
 
 // metric keys
-const string METRIC_AGENT_CPU = "cpu_percent";
+const string METRIC_AGENT_CPU = "cpu";
 const string METRIC_AGENT_GO_ROUTINES_TOTAL = "go_routines_total";
 const string METRIC_AGENT_INSTANCE_CONFIG_TOTAL = "instance_config_total"; // Not Implemented
 const string METRIC_AGENT_MEMORY = "memory_used_mb";

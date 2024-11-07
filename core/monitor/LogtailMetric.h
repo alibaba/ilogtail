@@ -164,13 +164,13 @@ public:
     }
 
     void PrepareMetricsRecordRef(MetricsRecordRef& ref,
+                                 std::string category,
                                  MetricLabels&& labels,
-                                 DynamicMetricLabels&& dynamicLabels = {},
-                                 std::string category = MetricCategory::METRIC_CATEGORY_UNKNOWN);
+                                 DynamicMetricLabels&& dynamicLabels = {});
     void CreateMetricsRecordRef(MetricsRecordRef& ref,
+                                std::string category,
                                 MetricLabels&& labels,
-                                DynamicMetricLabels&& dynamicLabels = {},
-                                std::string category = MetricCategory::METRIC_CATEGORY_UNKNOWN);
+                                DynamicMetricLabels&& dynamicLabels = {});
     void CommitMetricsRecordRef(MetricsRecordRef& ref);
     MetricsRecord* DoSnapshot();
 

@@ -192,7 +192,7 @@ void ReentrantMetricsRecord::Init(std::string category,
                                   DynamicMetricLabels& dynamicLabels,
                                   std::unordered_map<std::string, MetricType>& metricKeys) {
     WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
-        mMetricsRecordRef, std::move(labels), std::move(dynamicLabels), category);
+        mMetricsRecordRef, category, std::move(labels), std::move(dynamicLabels));
     for (auto metric : metricKeys) {
         switch (metric.second) {
             case MetricType::METRIC_TYPE_COUNTER:
@@ -257,17 +257,17 @@ WriteMetrics::~WriteMetrics() {
 }
 
 void WriteMetrics::PrepareMetricsRecordRef(MetricsRecordRef& ref,
+                                           std::string category,
                                            MetricLabels&& labels,
-                                           DynamicMetricLabels&& dynamicLabels,
-                                           std::string category) {
-    CreateMetricsRecordRef(ref, std::move(labels), std::move(dynamicLabels), std::move(category));
+                                           DynamicMetricLabels&& dynamicLabels) {
+    CreateMetricsRecordRef(ref, std::move(category), std::move(labels), std::move(dynamicLabels));
     CommitMetricsRecordRef(ref);
 }
 
 void WriteMetrics::CreateMetricsRecordRef(MetricsRecordRef& ref,
+                                          std::string category,
                                           MetricLabels&& labels,
-                                          DynamicMetricLabels&& dynamicLabels,
-                                          std::string category) {
+                                          DynamicMetricLabels&& dynamicLabels) {
     MetricsRecord* cur = new MetricsRecord(
         std::make_shared<MetricLabels>(labels), std::make_shared<DynamicMetricLabels>(dynamicLabels), category);
     ref.SetMetricsRecord(cur);
