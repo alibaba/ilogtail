@@ -75,6 +75,7 @@ public:
 
     std::string mProject;
     std::string mLogstore;
+    std::string mSubpath;
     std::string mRegion;
     std::string mEndpoint;
     std::string mAliuid;

@@ -318,18 +318,6 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
                            mContext->GetRegion());
     }
 
-    // Logstore
-    if (!GetMandatoryStringParam(config, "Logstore", mLogstore, errorMsg)) {
-        PARAM_ERROR_RETURN(mContext->GetLogger(),
-                           mContext->GetAlarm(),
-                           errorMsg,
-                           sName,
-                           mContext->GetConfigName(),
-                           mContext->GetProjectName(),
-                           mContext->GetLogstoreName(),
-                           mContext->GetRegion());
-    }
-
 #ifdef __ENTERPRISE__
     if (EnterpriseConfigProvider::GetInstance()->IsDataServerPrivateCloud()) {
         mRegion = STRING_FLAG(default_region_name);
@@ -407,19 +395,75 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
                               mContext->GetProjectName(),
                               mContext->GetLogstoreName(),
                               mContext->GetRegion());
-    } else if (telemetryType == "metrics") {
-        mTelemetryType = BOOL_FLAG(enable_metricstore_channel) ? sls_logs::SLS_TELEMETRY_TYPE_METRICS
-                                                               : sls_logs::SLS_TELEMETRY_TYPE_LOGS;
-    } else if (!telemetryType.empty() && telemetryType != "logs") {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
-                              mContext->GetAlarm(),
-                              "string param TelemetryType is not valid",
-                              "logs",
-                              sName,
-                              mContext->GetConfigName(),
-                              mContext->GetProjectName(),
-                              mContext->GetLogstoreName(),
-                              mContext->GetRegion());
+    }
+
+    if (telemetryType == "arms") {
+        // Parse Match segment
+        const char* key = "Match";
+        const Json::Value* itr = config.find(key, key + strlen(key));
+        if (!itr) {
+            // Error
+            LOG_WARNING(sLogger, ("invalid config!", "telemetry arms need add match tags!"));
+            return false;
+        }
+        // Type
+        string type;
+        // Key
+        std::string tagKey;
+        // Value
+        std::string tagValue;
+        const std::set<std::string> supportDataTypes = {
+            "trace",
+            "metric",
+            "agent_info",
+        };
+        if (!itr->isObject() || !GetMandatoryStringParam(*itr, "Type", type, errorMsg) || type != "tag" || 
+            !GetMandatoryStringParam(*itr, "Key", tagKey, errorMsg) || 
+            !GetMandatoryStringParam(*itr, "Value", tagValue, errorMsg) || 
+            tagKey != "data_type" || !supportDataTypes.count(tagValue)) {
+            // error
+            LOG_WARNING(sLogger, ("invalid config!", "telemetry arms need add match tags!")("type",type)("key", tagKey)("value", tagValue));
+            return false;
+        }
+        if (tagValue == "trace") {
+            mSubpath = "/apm/trace/arms/v1/trace_log";
+            mLogstore = "__arms_default_trace__";
+            LOG_WARNING(sLogger, ("successfully set subpath", mSubpath) ("logstore", mLogstore));
+        } else if (tagValue == "metric") {
+            mSubpath = "/apm/metric/arms/v1/metric_log";
+            mLogstore = "__arms_default_metric__";
+            LOG_WARNING(sLogger, ("successfully set subpath", mSubpath) ("logstore", mLogstore));
+        } else if (tagValue == "agent_info") {
+            mSubpath = "/apm/metadata/arms/v1/meta_log";
+            mLogstore = "__arms_default_agentinfo__";
+            LOG_WARNING(sLogger, ("successfully set subpath", mSubpath) ("logstore", mLogstore));
+        }
+    } else {
+        // Logstore
+        if (!GetMandatoryStringParam(config, "Logstore", mLogstore, errorMsg)) {
+            PARAM_ERROR_RETURN(mContext->GetLogger(),
+                            mContext->GetAlarm(),
+                            errorMsg,
+                            sName,
+                            mContext->GetConfigName(),
+                            mContext->GetProjectName(),
+                            mContext->GetLogstoreName(),
+                            mContext->GetRegion());
+        }
+        if (telemetryType == "metrics") {
+            mTelemetryType = BOOL_FLAG(enable_metricstore_channel) ? sls_logs::SLS_TELEMETRY_TYPE_METRICS
+                                                                : sls_logs::SLS_TELEMETRY_TYPE_LOGS;
+        } else if (!telemetryType.empty() && telemetryType != "logs") {
+            PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                                mContext->GetAlarm(),
+                                "string param TelemetryType is not valid",
+                                "logs",
+                                sName,
+                                mContext->GetConfigName(),
+                                mContext->GetProjectName(),
+                                mContext->GetLogstoreName(),
+                                mContext->GetRegion());
+        }
     }
 
     // Batch
@@ -625,7 +669,7 @@ unique_ptr<HttpSinkRequest> FlusherSLS::BuildRequest(SenderQueueItem* item) cons
                                                                  ConvertCompressType(GetCompressType()),
                                                                  data->mData,
                                                                  data->mRawSize,
-                                                                 item);
+                                                                 item, "", 0, false, mSubpath);
             } else {
                 auto& exactlyOnceCpt = data->mExactlyOnceCheckpoint;
                 int64_t hashKeySeqID = exactlyOnceCpt ? exactlyOnceCpt->data.sequence_id() : sdk::kInvalidHashKeySeqID;
@@ -636,20 +680,20 @@ unique_ptr<HttpSinkRequest> FlusherSLS::BuildRequest(SenderQueueItem* item) cons
                                                                  data->mRawSize,
                                                                  item,
                                                                  data->mShardHashKey,
-                                                                 hashKeySeqID);
+                                                                 hashKeySeqID, false, mSubpath);
             }
         }
     } else {
         if (data->mShardHashKey.empty())
             return sendClient->CreatePostLogStoreLogPackageListRequest(
-                mProject, data->mLogstore, ConvertCompressType(GetCompressType()), data->mData, item);
+                mProject, data->mLogstore, ConvertCompressType(GetCompressType()), data->mData, item, "", mSubpath);
         else
             return sendClient->CreatePostLogStoreLogPackageListRequest(mProject,
                                                                        data->mLogstore,
                                                                        ConvertCompressType(GetCompressType()),
                                                                        data->mData,
                                                                        item,
-                                                                       data->mShardHashKey);
+                                                                       data->mShardHashKey, mSubpath);
     }
 }
 
@@ -657,6 +701,7 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
     if (mSendDoneCnt) {
         mSendDoneCnt->Add(1);
     }
+    LOG_INFO(sLogger, ("statusCode", response.GetStatusCode()) ("body", *response.GetBody<string>()));
     SLSResponse slsResponse;
     if (AppConfig::GetInstance()->IsResponseVerificationEnabled() && !IsSLSResponse(response)) {
         slsResponse.mStatusCode = 0;
