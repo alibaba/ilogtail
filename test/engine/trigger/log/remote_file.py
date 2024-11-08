@@ -23,7 +23,21 @@ def delimiter(args, logger, faker):
     delimiter = custom_args.get('delimiter', ' ')
     fileNo = random.randint(1, 1000)
     for i in range(args.count):
-        logger.info(f'{quote}{get_random_mark()}{quote}{delimiter}{quote}file{fileNo}{quote}{delimiter}{quote}logNo:{i}{quote}{delimiter}{quote}{faker.ipv4()}{quote}{delimiter}{quote}{faker.http_method()}{quote}{delimiter}{quote}{faker.uri_path()}{quote}{delimiter}{quote}HTTP/2.0{quote}{delimiter}{quote}{faker.http_status_code()}{quote}{delimiter}{quote}{faker.user_agent()}{quote}')
+        logParts = [
+            f'{quote}{get_random_mark()}{quote}',
+            f'{quote}file{fileNo}{quote}',
+            f'{quote}logNo:{i}{quote}',
+            f'{quote}{faker.ipv4()}{quote}',
+            f'{quote}{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}{quote}',
+            f'{quote}{faker.http_method()}{quote}',
+            f'{quote}{faker.uri_path()}{quote}',
+            f'{quote}HTTP/2.0{quote}',
+            f'{quote}{faker.http_status_code()}{quote}',
+            f'{quote}{random.randint(1, 10000)}{quote}',
+            f'{quote}{faker.user_agent()}{quote}'
+        ]
+        log = delimiter.join(logParts)
+        logger.info(log)
         if args.interval > 0:
             time.sleep(args.interval / 1000)
 
@@ -33,10 +47,21 @@ def delimiterMultiline(args, logger, faker):
     delimiter = custom_args.get('delimiter', ' ')
     fileNo = random.randint(1, 1000)
     for i in range(args.count):
-        log = f'{quote}{get_random_mark()}{quote}{delimiter}{quote}file{fileNo}{quote}{delimiter}{quote}logNo:{i}{quote}{delimiter}{quote}{faker.ipv4()}{quote}{delimiter}{quote}{faker.http_method()}{quote}{delimiter}{quote}{faker.uri_path()}{quote}{delimiter}{quote}HTTP/2.0{quote}{delimiter}{quote}{faker.http_status_code()}{quote}{delimiter}{quote}{faker.user_agent()}{quote}'
-        breakLineIdx1 = random.randint(1, len(log) / 2)
-        breakLineIdx2 = random.randint(len(log) / 2, len(log) - 1)
-        logger.info(log[:breakLineIdx1] + '\n' + log[breakLineIdx1:breakLineIdx2] + '\n' + log[breakLineIdx2:])
+        logParts = [
+            f'{quote}{get_random_mark()}{quote}',
+            f'{quote}fi\nle{fileNo}{quote}',
+            f'{quote}logNo\n:{i}{quote}',
+            f'{quote}{faker.ipv4()}{quote}',
+            f'{quote}{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}{quote}',
+            f'{quote}{faker.http_method()}{quote}',
+            f'{quote}{faker.uri_path()}{quote}',
+            f'{quote}HT\nTP/2.0{quote}',
+            f'{quote}{faker.http_status_code()}{quote}',
+            f'{quote}{random.randint(1, 10000)}{quote}',
+            f'{quote}{faker.user_agent()}{quote}'
+        ]
+        log = delimiter.join(logParts)
+        logger.info(log)
         if args.interval > 0:
             time.sleep(args.interval / 1000)
 
@@ -50,10 +75,18 @@ def json(args, logger, faker):
 def jsonMultiline(args, logger, faker):
     fileNo = random.randint(1, 1000)
     for i in range(args.count):
-        log = f'{{"mark":"{get_random_mark()}", "file":"file{fileNo}", "logNo":{i}, "time":"{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}", "ip": "{faker.ipv4()}", "method": "{faker.http_method()}", "userAgent": "{faker.user_agent()}", "size": {random.randint(1, 10000)}}}'
-        breakLineIdx1 = random.randint(1, len(log) // 2)
-        breakLineIdx2 = random.randint(len(log) // 2 + 1, len(log) - 1)
-        logger.info(log[:breakLineIdx1] + '\n' + log[breakLineIdx1:breakLineIdx2] + '\n' + log[breakLineIdx2:])
+        logParts = [
+            f'"mark":"{get_random_mark()}"',
+            f'"file":"file{fileNo}"',
+            f'"logNo":{i}',
+            f'"time":"{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}"',
+            f'"ip": "{faker.ipv4()}"',
+            f'"method": "{faker.http_method()}"',
+            f'"userAgent": "{faker.user_agent()}"',
+            f'"size": {random.randint(1, 10000)}'
+        ]
+        log = '{' + ',\n'.join(logParts) + '}'
+        logger.info(log)
         if args.interval > 0:
             time.sleep(args.interval / 1000)
 
@@ -106,6 +139,7 @@ def main():
     handler = TimedRotatingFileHandler(args.path, when="s", interval=5, backupCount=3)
     formatter = logging.Formatter('%(message)s')
     handler.setFormatter(formatter)
+    handler.flush = lambda: handler.stream.flush()
     logger.addHandler(handler)
 
     # 随机生成器

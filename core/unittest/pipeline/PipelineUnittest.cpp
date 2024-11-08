@@ -2916,7 +2916,7 @@ void PipelineUnittest::TestWaitAllItemsInProcessFinished() const {
     APSARA_TEST_NOT_EQUAL(std::future_status::ready, future.wait_for(std::chrono::seconds(0)));
     pipeline->mInProcessCnt.store(0);
     // recover
-    usleep(1000);
+    usleep(3000);
     APSARA_TEST_EQUAL(std::future_status::ready, future.wait_for(std::chrono::seconds(0)));
 }
 

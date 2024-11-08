@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/alibaba/ilogtail/test/engine/setup"
@@ -70,7 +71,8 @@ func generate(ctx context.Context, mode, path string, count, interval int, custo
 	if err != nil {
 		return ctx, err
 	}
-	command := trigger.GetRunTriggerCommand("log", "file", "mode", mode, "path", path, "count", strconv.Itoa(count), "interval", strconv.Itoa(interval), "custom", string(jsonStr))
+	command := trigger.GetRunTriggerCommand("log", "file", "mode", mode, "path", path, "count", strconv.Itoa(count), "interval", strconv.Itoa(interval), "custom", wrapperCustomArgs(string(jsonStr)))
+	fmt.Println(command)
 	go func() {
 		if _, err := setup.Env.ExecOnSource(ctx, command); err != nil {
 			fmt.Println(err)
@@ -89,9 +91,15 @@ func generateBenchmark(ctx context.Context, mode, path string, rate, duration in
 	if err != nil {
 		return ctx, err
 	}
-	command := trigger.GetRunTriggerCommand("log", "file_benchmark", "mode", mode, "path", path, "rate", strconv.Itoa(rate), "duration", strconv.Itoa(duration), "custom", string(jsonStr))
+	command := trigger.GetRunTriggerCommand("log", "file_benchmark", "mode", mode, "path", path, "rate", strconv.Itoa(rate), "duration", strconv.Itoa(duration), "custom", wrapperCustomArgs(string(jsonStr)))
 	if _, err := setup.Env.ExecOnSource(ctx, command); err != nil {
 		return ctx, err
 	}
 	return ctx, nil
+}
+
+func wrapperCustomArgs(customArgs string) string {
+	fmt.Println(customArgs)
+	customArgs = strings.ReplaceAll(customArgs, "\\", "\\\\")
+	return "\"" + strings.ReplaceAll(customArgs, "\"", "\\\"") + "\""
 }
