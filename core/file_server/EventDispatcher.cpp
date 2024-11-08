@@ -279,13 +279,6 @@ bool EventDispatcher::RegisterEventHandler(const char* path,
     bool dirTimeOutFlag = config.first->IsTimeout(path);
 
     if (!mEventListener->IsValidID(wd)) {
-        if (dirTimeOutFlag) {
-            LOG_DEBUG(
-                sLogger,
-                ("Drop timeout path, source", path)("config, basepath", config.first->GetBasePath())(
-                    "preseveDepth", config.first->mPreservedDirDepth)("maxDepth", config.first->mMaxDirSearchDepth));
-            return false;
-        }
         wd = mNonInotifyWd;
         if (mNonInotifyWd == INT_MIN)
             mNonInotifyWd = -1;

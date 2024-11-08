@@ -192,7 +192,7 @@ void PollingDirFile::Polling() {
                     for (size_t i = 0; i < config->GetContainerInfo()->size(); ++i) {
                         const string& basePath = (*config->GetContainerInfo())[i].mRealBaseDir;
                         fsutil::PathStat baseDirStat;
-                        if (!fsutil::PathStat::stat(basePath.c_str(), baseDirStat)) {
+                        if (!fsutil::PathStat::stat(basePath, baseDirStat)) {
                             LOG_DEBUG(sLogger,
                                       ("get docker base dir info error: ", basePath)(ctx->GetProjectName(),
                                                                                      ctx->GetLogstoreName()));
@@ -265,6 +265,7 @@ void PollingDirFile::Polling() {
 // NOTE: So, we can not find changes in subdirectories of the directory according to LMD.
 bool PollingDirFile::CheckAndUpdateDirMatchCache(const string& dirPath,
                                                  const fsutil::PathStat& statBuf,
+                                                 bool exceedPreservedDirDepth,
                                                  bool& newFlag) {
     int64_t sec, nsec;
     statBuf.GetLastWriteTime(sec, nsec);
@@ -277,6 +278,7 @@ bool PollingDirFile::CheckAndUpdateDirMatchCache(const string& dirPath,
     if (iter == mDirCacheMap.end()) {
         DirFileCache& dirCache = mDirCacheMap[dirPath];
         dirCache.SetConfigMatched(true);
+        dirCache.SetExceedPreservedDirDepth(exceedPreservedDirDepth);
         dirCache.SetCheckRound(mCurrentRound);
         dirCache.SetLastModifyTime(modifyTime);
         // Directories found at round 1 or too old are considered as old data.
@@ -301,7 +303,8 @@ bool PollingDirFile::CheckAndUpdateDirMatchCache(const string& dirPath,
 bool PollingDirFile::CheckAndUpdateFileMatchCache(const string& fileDir,
                                                   const string& fileName,
                                                   const fsutil::PathStat& statBuf,
-                                                  bool needFindBestMatch) {
+                                                  bool needFindBestMatch,
+                                                  bool exceedPreservedDirDepth) {
     int64_t sec, nsec;
     statBuf.GetLastWriteTime(sec, nsec);
     int64_t modifyTime = NANO_CONVERTING * sec + nsec;
@@ -317,6 +320,7 @@ bool PollingDirFile::CheckAndUpdateFileMatchCache(const string& fileDir,
 
         DirFileCache& fileCache = mFileCacheMap[filePath];
         fileCache.SetConfigMatched(matchFlag);
+        fileCache.SetExceedPreservedDirDepth(exceedPreservedDirDepth);
         fileCache.SetCheckRound(mCurrentRound);
         fileCache.SetLastModifyTime(modifyTime);
 
@@ -357,10 +361,23 @@ bool PollingDirFile::PollingNormalConfigPath(const FileDiscoveryConfig& pConfig,
                                              const string& obj,
                                              const fsutil::PathStat& statBuf,
                                              int depth) {
-    if (pConfig.first->mMaxDirSearchDepth >= 0 && depth > pConfig.first->mMaxDirSearchDepth)
+    if (pConfig.first->mMaxDirSearchDepth >= 0 && depth > pConfig.first->mMaxDirSearchDepth) {
         return false;
-    if (pConfig.first->mPreservedDirDepth >= 0 && depth > pConfig.first->mPreservedDirDepth)
-        return false;
+    }
+    bool exceedPreservedDirDepth = false;
+    if (pConfig.first->mPreservedDirDepth >= 0 && depth > pConfig.first->mPreservedDirDepth) {
+        exceedPreservedDirDepth = true;
+        int64_t sec = 0;
+        int64_t nsec = 0;
+        statBuf.GetLastWriteTime(sec, nsec);
+        auto curTime = time(nullptr);
+        LOG_DEBUG(sLogger,
+                  ("srcPath", srcPath)("obj", obj)("exceedPreservedDirDepth", exceedPreservedDirDepth)(
+                      "curTime", curTime)("sec", sec)("INT32_FLAG(timeout_interval)", INT32_FLAG(timeout_interval)));
+        if (curTime - sec > INT32_FLAG(timeout_interval)) {
+            return false;
+        }
+    }
 
     string dirPath = obj.empty() ? srcPath : PathJoin(srcPath, obj);
     if (AppConfig::GetInstance()->IsHostPathMatchBlacklist(dirPath)) {
@@ -368,7 +385,7 @@ bool PollingDirFile::PollingNormalConfigPath(const FileDiscoveryConfig& pConfig,
         return false;
     }
     bool isNewDirectory = false;
-    if (!CheckAndUpdateDirMatchCache(dirPath, statBuf, isNewDirectory))
+    if (!CheckAndUpdateDirMatchCache(dirPath, statBuf, exceedPreservedDirDepth, isNewDirectory))
         return true;
     if (isNewDirectory) {
         PollingEventQueue::GetInstance()->PushEvent(new Event(srcPath, obj, EVENT_CREATE | EVENT_ISDIR, -1, 0));
@@ -471,7 +488,7 @@ bool PollingDirFile::PollingNormalConfigPath(const FileDiscoveryConfig& pConfig,
         if (buf.IsDir() && (!needCheckDirMatch || !pConfig.first->IsDirectoryInBlacklist(item))) {
             PollingNormalConfigPath(pConfig, dirPath, entName, buf, depth + 1);
         } else if (buf.IsRegFile()) {
-            if (CheckAndUpdateFileMatchCache(dirPath, entName, buf, needFindBestMatch)) {
+            if (CheckAndUpdateFileMatchCache(dirPath, entName, buf, needFindBestMatch, exceedPreservedDirDepth)) {
                 LOG_DEBUG(sLogger, ("add to modify event", entName)("round", mCurrentRound));
                 mNewFileVec.push_back(SplitedFilePath(dirPath, entName));
             }
@@ -639,12 +656,50 @@ void PollingDirFile::ClearTimeoutFileAndDir() {
     }
 
     // Collect deleted files, so that it can notify PollingModify later.
+    s_lastClearTime = curTime;
     std::vector<SplitedFilePath> deleteFileVec;
     {
         ScopedSpinLock lock(mCacheLock);
+        bool clearExceedPreservedDirDepth = false;
+        for (auto iter = mDirCacheMap.begin(); iter != mDirCacheMap.end();) {
+            LOG_DEBUG(sLogger,
+                      ("Dir", iter->first)("GetExceedPreservedDirDepth", iter->second.GetExceedPreservedDirDepth())(
+                          "iter->second.GetLastModifyTime()", iter->second.GetLastModifyTime()));
+            if (iter->second.GetExceedPreservedDirDepth()
+                && (NANO_CONVERTING * curTime - iter->second.GetLastModifyTime())
+                    > NANO_CONVERTING * INT32_FLAG(timeout_interval)) {
+                iter = mDirCacheMap.erase(iter);
+                clearExceedPreservedDirDepth = true;
+            } else
+                ++iter;
+        }
+        if (clearExceedPreservedDirDepth) {
+            LOG_INFO(sLogger, ("After clear DirCache size", mDirCacheMap.size()));
+        }
+        clearExceedPreservedDirDepth = false;
+        for (auto iter = mFileCacheMap.begin(); iter != mFileCacheMap.end();) {
+            LOG_DEBUG(sLogger,
+                      ("File", iter->first)("GetExceedPreservedDirDepth", iter->second.GetExceedPreservedDirDepth())(
+                          "iter->second.GetLastModifyTime()", iter->second.GetLastModifyTime()));
+            if (iter->second.GetExceedPreservedDirDepth()
+                && (NANO_CONVERTING * curTime - iter->second.GetLastModifyTime())
+                    > NANO_CONVERTING * INT32_FLAG(timeout_interval)) {
+                // If the file has been added to PollingModify, remove it here.
+                if (iter->second.HasMatchedConfig() && iter->second.HasEventFlag()) {
+                    deleteFileVec.push_back(SplitedFilePath(iter->first));
+                    LOG_INFO(sLogger, ("delete file cache", iter->first)("vec size", deleteFileVec.size()));
+                }
+                iter = mFileCacheMap.erase(iter);
+                clearExceedPreservedDirDepth = true;
+            } else
+                ++iter;
+        }
+        if (clearExceedPreservedDirDepth) {
+            LOG_INFO(sLogger, ("After clear FileCache size", mFileCacheMap.size()));
+        }
+
         if (mDirCacheMap.size() > (size_t)INT32_FLAG(polling_dir_upperlimit)) {
             LOG_INFO(sLogger, ("start clear dir cache", mDirCacheMap.size()));
-            s_lastClearTime = curTime;
             for (auto iter = mDirCacheMap.begin(); iter != mDirCacheMap.end();) {
                 if ((NANO_CONVERTING * curTime - iter->second.GetLastModifyTime())
                     > NANO_CONVERTING * INT32_FLAG(polling_dir_timeout)) {
@@ -652,12 +707,11 @@ void PollingDirFile::ClearTimeoutFileAndDir() {
                 } else
                     ++iter;
             }
-            LOG_INFO(sLogger, ("After clear", mDirCacheMap.size())("Cost time", time(NULL) - s_lastClearTime));
+            LOG_INFO(sLogger, ("After clear DirCache size", mDirCacheMap.size()));
         }
 
         if (mFileCacheMap.size() > (size_t)INT32_FLAG(polling_file_upperlimit)) {
             LOG_INFO(sLogger, ("start clear file cache", mFileCacheMap.size()));
-            s_lastClearTime = curTime;
             for (auto iter = mFileCacheMap.begin(); iter != mFileCacheMap.end();) {
                 if ((NANO_CONVERTING * curTime - iter->second.GetLastModifyTime())
                     > NANO_CONVERTING * INT32_FLAG(polling_file_timeout)) {
@@ -670,7 +724,7 @@ void PollingDirFile::ClearTimeoutFileAndDir() {
                 } else
                     ++iter;
             }
-            LOG_INFO(sLogger, ("After clear", mFileCacheMap.size())("Cost time", time(NULL) - s_lastClearTime));
+            LOG_INFO(sLogger, ("After clear FileCache size", mFileCacheMap.size()));
         }
     }
 
