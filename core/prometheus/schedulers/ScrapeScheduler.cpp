@@ -49,28 +49,17 @@ size_t MetricWriteCallback(char* buffer, size_t size, size_t nmemb, void* data) 
     auto* body = static_cast<MetricResponseBody*>(data);
 
     size_t begin = 0;
-    while (begin < sizes) {
-        for (size_t end = begin; end < sizes; ++end) {
-            if (buffer[end] == '\n') {
-                if (begin == 0 && !body->mCache.empty()) {
-                    body->mCache.append(buffer, end);
-                    if (IsValidMetric(body->mCache)) {
-                        auto* e = body->mEventGroup.AddLogEvent();
-                        auto sb = body->mEventGroup.GetSourceBuffer()->CopyString(body->mCache);
-                        e->SetContentNoCopy(prometheus::PROMETHEUS, StringView(sb.data, sb.size));
-                    }
-                    body->mCache.clear();
-                } else if (begin != end) {
-                    if (IsValidMetric(StringView(buffer + begin, end - begin))) {
-                        auto* e = body->mEventGroup.AddLogEvent();
-                        auto sb = body->mEventGroup.GetSourceBuffer()->CopyString(buffer + begin, end - begin);
-                        e->SetContentNoCopy(prometheus::PROMETHEUS, StringView(sb.data, sb.size));
-                    }
-                }
-                begin = end + 1;
+    for (size_t end = begin; end < sizes; ++end) {
+        if (buffer[end] == '\n') {
+            if (begin == 0 && !body->mCache.empty()) {
+                body->mCache.append(buffer, end);
+                body->AddEvent(body->mCache.data(), body->mCache.size());
+                body->mCache.clear();
+            } else if (begin != end) {
+                body->AddEvent(buffer + begin, end - begin);
             }
+            begin = end + 1;
         }
-        break;
     }
     if (begin < sizes) {
         body->mCache.append(buffer + begin, sizes - begin);
@@ -103,6 +92,7 @@ ScrapeScheduler::ScrapeScheduler(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
 
 void ScrapeScheduler::OnMetricResult(HttpResponse& response, uint64_t timestampMilliSec) {
     auto& responseBody = *response.GetBody<MetricResponseBody>();
+    responseBody.FlushCache();
     mSelfMonitor->AddCounter(METRIC_PLUGIN_OUT_EVENTS_TOTAL, response.GetStatusCode());
     mSelfMonitor->AddCounter(METRIC_PLUGIN_OUT_SIZE_BYTES, response.GetStatusCode(), responseBody.mRawSize);
     mSelfMonitor->AddCounter(METRIC_PLUGIN_PROM_SCRAPE_TIME_MS,
