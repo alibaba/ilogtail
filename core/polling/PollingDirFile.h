@@ -85,8 +85,10 @@ private:
     // @newFlag: a boolean to indicate caller that it is a new directory, generate event for it.
     // @return a boolean to indicate should the directory be continued to poll.
     //   It will returns true always now (might change in future).
-    bool CheckAndUpdateDirMatchCache(const std::string& dirPath, const fsutil::PathStat& statBuf, bool& newFlag);
-
+    bool CheckAndUpdateDirMatchCache(const std::string& dirPath,
+                                     const fsutil::PathStat& statBuf,
+                                     bool exceedPreservedDirDepth,
+                                     bool& newFlag);
     // CheckAndUpdateFileMatchCache updates file cache (add if not existing).
     // @fileDir+@fileName: absolute path of the file.
     // @needFindBestMatch: false indicates that the file has already found the
@@ -96,7 +98,8 @@ private:
     bool CheckAndUpdateFileMatchCache(const std::string& fileDir,
                                       const std::string& fileName,
                                       const fsutil::PathStat& statBuf,
-                                      bool needFindBestMatch);
+                                      bool needFindBestMatch,
+                                      bool exceedPreservedDirDepth);
 
     // ClearUnavailableFileAndDir checks cache, remove unavailable items.
     // By default, it will be called every 20 rounds (flag check_not_exist_file_dir_round).
