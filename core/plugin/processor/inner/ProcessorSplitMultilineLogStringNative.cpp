@@ -18,6 +18,9 @@
 
 #include <boost/regex.hpp>
 #include <string>
+#ifdef USE_SIMD_AVX2
+#include <immintrin.h>
+#endif
 
 #include "app_config/AppConfig.h"
 #include "constants/Constants.h"
@@ -364,11 +367,36 @@ StringView ProcessorSplitMultilineLogStringNative::GetNextLine(StringView log, s
         return StringView();
     }
 
+#ifdef USE_SIMD_AVX2
+    const char * data = log.data();
+    const int vecSize = 32;
+    __m256i newlineVec = _mm256_set1_epi8('\n');
+
+    size_t pos = begin;
+    for (; pos + vecSize <= log.size(); pos += vecSize) {
+        __m256i chunk = _mm256_loadu_si256(reinterpret_cast<const __m256i *>(data + pos));
+        __m256i cmp = _mm256_cmpeq_epi8(chunk, newlineVec);
+        int mask = _mm256_movemask_epi8(cmp);
+
+        if (mask != 0) {
+            int offset = __builtin_ctz(mask);
+            return StringView(data + begin, pos + offset - begin);
+        }
+    }
+
+    // 处理不足32字节
+    for (; pos < log.size(); ++pos) {
+        if (log[pos] == '\n') {
+            return StringView(data + begin, pos - begin);
+        }
+    }
+#else
     for (size_t end = begin; end < log.size(); ++end) {
         if (log[end] == '\n') {
             return StringView(log.data() + begin, end - begin);
         }
     }
+#endif
     return StringView(log.data() + begin, log.size() - begin);
 }
 

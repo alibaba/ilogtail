@@ -33,6 +33,7 @@ cmake_dependent_option(ENABLE_STATIC_LINK_CRT "Build Logtail by linking CRT stat
 option(WITHOUTGDB "Build Logtail without gdb")
 option(WITHSPL "Build Logtail and UT with SPL" ON)
 option(BUILD_LOGTAIL_UT "Build unit test for Logtail")
+option(ENABLE_SIMD "Enable vectorization support" ON)
 set(PROVIDER_PATH "provider" CACHE PATH "Path to the provider module") # external provider path can be set with -DPROVIDER_PATH
 set(UNITTEST_PATH "unittest" CACHE PATH "Path to the unittest module") # external unittest path can be set with -DUNITTEST_PATH
 
@@ -52,6 +53,16 @@ endif ()
 if (NOT WITHSPL)
     add_definitions(-D__EXCLUDE_SPL__)
 endif()
+
+if (ENABLE_SIMD)
+    include(CheckCXXCompilerFlag)
+    check_cxx_compiler_flag("-mavx2" COMPILER_SUPPORTS_AVX2)
+
+    if (COMPILER_SUPPORTS_AVX2)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=haswell")
+        add_definitions(-DUSE_SIMD_AVX2)
+    endif ()
+endif ()
 
 # Default C/CXX flags.
 if (UNIX)
