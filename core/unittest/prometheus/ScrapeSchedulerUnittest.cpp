@@ -66,7 +66,7 @@ void ScrapeSchedulerUnittest::TestInitscrapeScheduler() {
 
 void ScrapeSchedulerUnittest::TestProcess() {
     HttpResponse httpResponse = HttpResponse(
-        new PromMetricResponseBody(), [](void* ptr) { delete static_cast<PromMetricResponseBody*>(ptr); }, MetricWriteCallback);
+        new PromMetricResponseBody(), [](void* ptr) { delete static_cast<PromMetricResponseBody*>(ptr); }, PromMetricWriteCallback);
     Labels labels;
     labels.Set(prometheus::ADDRESS_LABEL_NAME, "localhost:8080");
     labels.Set(prometheus::ADDRESS_LABEL_NAME, "localhost:8080");
@@ -104,7 +104,7 @@ void ScrapeSchedulerUnittest::TestProcess() {
                    "# HELP go_memstats_alloc_bytes_total Total number of bytes allocated, even if freed.\n"
                    "# TYPE go_memstats_alloc_bytes_total counter\n"
                    "go_memstats_alloc_bytes_total 1.5159292e+08";
-    MetricWriteCallback(
+    PromMetricWriteCallback(
         body1.data(), (size_t)1, (size_t)body1.length(), (void*)httpResponse.GetBody<PromMetricResponseBody>());
     event.OnMetricResult(httpResponse, 0);
     APSARA_TEST_EQUAL(1UL, event.mItem.size());
@@ -113,7 +113,7 @@ void ScrapeSchedulerUnittest::TestProcess() {
 
 void ScrapeSchedulerUnittest::TestStreamMetricWriteCallback() {
     HttpResponse httpResponse = HttpResponse(
-        new PromMetricResponseBody(), [](void* ptr) { delete static_cast<PromMetricResponseBody*>(ptr); }, MetricWriteCallback);
+        new PromMetricResponseBody(), [](void* ptr) { delete static_cast<PromMetricResponseBody*>(ptr); }, PromMetricWriteCallback);
     Labels labels;
     labels.Set(prometheus::ADDRESS_LABEL_NAME, "localhost:8080");
     labels.Set(prometheus::ADDRESS_LABEL_NAME, "localhost:8080");
@@ -143,7 +143,7 @@ void ScrapeSchedulerUnittest::TestStreamMetricWriteCallback() {
                    "# HELP go_memstats_alloc_bytes_total Total number of bytes allocated, even if freed.\n"
                    "# TYPE go_memstats_alloc_bytes_total counter\n"
                    "go_memstats_alloc_bytes_total 1.5159292e+08";
-    MetricWriteCallback(
+    PromMetricWriteCallback(
         body1.data(), (size_t)1, (size_t)body1.length(), (void*)httpResponse.GetBody<PromMetricResponseBody>());
     auto& res = httpResponse.GetBody<PromMetricResponseBody>()->mEventGroup;
     APSARA_TEST_EQUAL(7UL, res.GetEvents().size());
@@ -162,7 +162,7 @@ void ScrapeSchedulerUnittest::TestStreamMetricWriteCallback() {
     APSARA_TEST_EQUAL("go_gc_duration_seconds_count 850",
                       res.GetEvents()[6].Cast<LogEvent>().GetContent(prometheus::PROMETHEUS).to_string());
     // httpResponse.GetBody<MetricResponseBody>()->mEventGroup = PipelineEventGroup(std::make_shared<SourceBuffer>());
-    MetricWriteCallback(
+    PromMetricWriteCallback(
         body2.data(), (size_t)1, (size_t)body2.length(), (void*)httpResponse.GetBody<PromMetricResponseBody>());
     httpResponse.GetBody<PromMetricResponseBody>()->FlushCache();
     APSARA_TEST_EQUAL(11UL, res.GetEvents().size());

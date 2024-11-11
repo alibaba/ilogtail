@@ -37,7 +37,7 @@
 
 namespace logtail {
 
-size_t MetricWriteCallback(char* buffer, size_t size, size_t nmemb, void* data);
+size_t PromMetricWriteCallback(char* buffer, size_t size, size_t nmemb, void* data);
 
 struct PromMetricResponseBody {
     PipelineEventGroup mEventGroup;

@@ -39,7 +39,7 @@ using namespace std;
 
 namespace logtail {
 
-size_t MetricWriteCallback(char* buffer, size_t size, size_t nmemb, void* data) {
+size_t PromMetricWriteCallback(char* buffer, size_t size, size_t nmemb, void* data) {
     uint64_t sizes = size * nmemb;
 
     if (buffer == nullptr) {
@@ -216,7 +216,7 @@ std::unique_ptr<TimerEvent> ScrapeScheduler::BuildScrapeTimerEvent(std::chrono::
                                             HttpResponse(
                                                 new PromMetricResponseBody(),
                                                 [](void* ptr) { delete static_cast<PromMetricResponseBody*>(ptr); },
-                                                MetricWriteCallback),
+                                                PromMetricWriteCallback),
                                             mScrapeConfigPtr->mScrapeTimeoutSeconds,
                                             retry,
                                             this->mFuture,
