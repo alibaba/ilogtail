@@ -46,7 +46,7 @@ size_t MetricWriteCallback(char* buffer, size_t size, size_t nmemb, void* data) 
         return 0;
     }
 
-    auto* body = static_cast<MetricResponseBody*>(data);
+    auto* body = static_cast<PromMetricResponseBody*>(data);
 
     size_t begin = 0;
     for (size_t end = begin; end < sizes; ++end) {
@@ -91,7 +91,7 @@ ScrapeScheduler::ScrapeScheduler(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
 }
 
 void ScrapeScheduler::OnMetricResult(HttpResponse& response, uint64_t timestampMilliSec) {
-    auto& responseBody = *response.GetBody<MetricResponseBody>();
+    auto& responseBody = *response.GetBody<PromMetricResponseBody>();
     responseBody.FlushCache();
     mSelfMonitor->AddCounter(METRIC_PLUGIN_OUT_EVENTS_TOTAL, response.GetStatusCode());
     mSelfMonitor->AddCounter(METRIC_PLUGIN_OUT_SIZE_BYTES, response.GetStatusCode(), responseBody.mRawSize);
@@ -113,7 +113,7 @@ void ScrapeScheduler::OnMetricResult(HttpResponse& response, uint64_t timestampM
             sLogger,
             ("scrape failed, status code", response.GetStatusCode())("target", mHash)("http header", headerStr));
     }
-    auto eventGroup = std::move(responseBody.mEventGroup);
+    auto& eventGroup = responseBody.mEventGroup;
 
     SetAutoMetricMeta(eventGroup);
     SetTargetLabels(eventGroup);
@@ -214,8 +214,8 @@ std::unique_ptr<TimerEvent> ScrapeScheduler::BuildScrapeTimerEvent(std::chrono::
                                             mScrapeConfigPtr->mRequestHeaders,
                                             "",
                                             HttpResponse(
-                                                new MetricResponseBody(),
-                                                [](void* ptr) { delete static_cast<MetricResponseBody*>(ptr); },
+                                                new PromMetricResponseBody(),
+                                                [](void* ptr) { delete static_cast<PromMetricResponseBody*>(ptr); },
                                                 MetricWriteCallback),
                                             mScrapeConfigPtr->mScrapeTimeoutSeconds,
                                             retry,

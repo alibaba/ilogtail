@@ -39,12 +39,12 @@ namespace logtail {
 
 size_t MetricWriteCallback(char* buffer, size_t size, size_t nmemb, void* data);
 
-struct MetricResponseBody {
+struct PromMetricResponseBody {
     PipelineEventGroup mEventGroup;
     std::string mCache;
     size_t mRawSize = 0;
 
-    MetricResponseBody() : mEventGroup(std::make_shared<SourceBuffer>()) {};
+    PromMetricResponseBody() : mEventGroup(std::make_shared<SourceBuffer>()) {};
     void AddEvent(char* line, size_t len) {
         if (IsValidMetric(StringView(line, len))) {
             auto* e = mEventGroup.AddLogEvent();
