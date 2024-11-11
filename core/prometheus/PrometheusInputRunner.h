@@ -70,13 +70,13 @@ private:
     std::atomic<bool> mIsThreadRunning = true;
     std::future<void> mThreadRes;
 
-    std::unique_ptr<sdk::CurlClient> mClient;
-
     std::string mServiceHost;
     int32_t mServicePort;
     std::string mPodName;
 
+    std::unique_ptr<sdk::CurlClient> mClient;
     std::shared_ptr<Timer> mTimer;
+    std::shared_ptr<EventPool> mEventPool;
 
     mutable ReadWriteLock mSubscriberMapRWLock;
     std::map<std::string, std::shared_ptr<TargetSubscriberScheduler>> mTargetSubscriberSchedulerMap;

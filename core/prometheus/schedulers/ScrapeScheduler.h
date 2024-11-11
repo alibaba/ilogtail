@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "BaseScheduler.h"
 #include "common/http/HttpResponse.h"
@@ -43,11 +44,13 @@ struct PromMetricResponseBody {
     PipelineEventGroup mEventGroup;
     std::string mCache;
     size_t mRawSize = 0;
+    std::shared_ptr<EventPool> mEventPool;
 
-    PromMetricResponseBody() : mEventGroup(std::make_shared<SourceBuffer>()) {};
+    PromeMetricResponseBody(std::shared_ptr<EventPool> eventPool)
+        : mEventGroup(std::make_shared<SourceBuffer>()), mEventPool(std::move(eventPool)) {};
     void AddEvent(char* line, size_t len) {
         if (IsValidMetric(StringView(line, len))) {
-            auto* e = mEventGroup.AddRawEvent();
+            auto* e = mEventGroup.AddRawEvent(true, mEventPool.get());
             auto sb = mEventGroup.GetSourceBuffer()->CopyString(line, len);
             e->SetContentNoCopy(sb);
         }
@@ -70,7 +73,6 @@ public:
     ~ScrapeScheduler() override = default;
 
     void OnMetricResult(HttpResponse&, uint64_t timestampMilliSec);
-    void SetTimer(std::shared_ptr<Timer> timer);
 
     std::string GetId() const;
 
@@ -94,11 +96,8 @@ private:
     std::string mInstance;
     Labels mTargetLabels;
 
-    std::unique_ptr<TextParser> mParser;
-
     QueueKey mQueueKey;
     size_t mInputIndex;
-    std::shared_ptr<Timer> mTimer;
 
     // auto metrics
     uint64_t mScrapeTimestampMilliSec = 0;

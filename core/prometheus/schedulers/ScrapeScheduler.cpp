@@ -86,8 +86,6 @@ ScrapeScheduler::ScrapeScheduler(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
     mHash = mScrapeConfigPtr->mJobName + tmpTargetURL + ToString(mTargetLabels.Hash());
     mInstance = mHost + ":" + ToString(mPort);
     mInterval = mScrapeConfigPtr->mScrapeIntervalSeconds;
-
-    mParser = make_unique<TextParser>();
 }
 
 void ScrapeScheduler::OnMetricResult(HttpResponse& response, uint64_t timestampMilliSec) {
@@ -214,7 +212,7 @@ std::unique_ptr<TimerEvent> ScrapeScheduler::BuildScrapeTimerEvent(std::chrono::
                                             mScrapeConfigPtr->mRequestHeaders,
                                             "",
                                             HttpResponse(
-                                                new PromMetricResponseBody(),
+                                                new PromMetricResponseBody(mEventPool),
                                                 [](void* ptr) { delete static_cast<PromMetricResponseBody*>(ptr); },
                                                 PromMetricWriteCallback),
                                             mScrapeConfigPtr->mScrapeTimeoutSeconds,
@@ -236,10 +234,6 @@ void ScrapeScheduler::Cancel() {
         WriteLock lock(mLock);
         mValidState = false;
     }
-}
-
-void ScrapeScheduler::SetTimer(std::shared_ptr<Timer> timer) {
-    mTimer = std::move(timer);
 }
 
 void ScrapeScheduler::InitSelfMonitor(const MetricLabels& defaultLabels) {
