@@ -247,7 +247,6 @@ void TargetSubscriberScheduler::ScheduleNext() {
         this->OnSubscription(response, timestampMilliSec);
         this->ExecDone();
         this->ScheduleNext();
-        this->mEventPool->CheckGC();
         return true;
     });
     if (IsCancelled()) {

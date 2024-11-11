@@ -46,7 +46,7 @@ struct PromMetricResponseBody {
     size_t mRawSize = 0;
     std::shared_ptr<EventPool> mEventPool;
 
-    PromeMetricResponseBody(std::shared_ptr<EventPool> eventPool)
+    explicit PromMetricResponseBody(std::shared_ptr<EventPool> eventPool)
         : mEventGroup(std::make_shared<SourceBuffer>()), mEventPool(std::move(eventPool)) {};
     void AddEvent(char* line, size_t len) {
         if (IsValidMetric(StringView(line, len))) {

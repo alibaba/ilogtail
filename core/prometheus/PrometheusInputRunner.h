@@ -42,6 +42,11 @@ public:
         static PrometheusInputRunner sInstance;
         return &sInstance;
     }
+    void CheckGC() {
+        if (mEventPool) {
+            mEventPool->CheckGC();
+        }
+    }
 
     // input plugin update
     void UpdateScrapeInput(std::shared_ptr<TargetSubscriberScheduler> targetSubscriber,
