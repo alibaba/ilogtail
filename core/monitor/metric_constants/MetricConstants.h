@@ -16,6 +16,7 @@
 
 #pragma once
 #include <string>
+#include "MetricCommonConstants.h"
 
 namespace logtail {
 
@@ -229,7 +230,7 @@ extern const std::string METRIC_COMPONENT_OUT_SIZE_BYTES;
 extern const std::string METRIC_COMPONENT_TOTAL_DELAY_MS;
 extern const std::string METRIC_COMPONENT_TOTAL_PROCESS_TIME_MS;
 extern const std::string METRIC_COMPONENT_DISCARDED_ITEMS_TOTAL;
-extern const std::string METRIC_COMPONENT_DISCARDED_ITEMS_SIZE_BYTES;
+extern const std::string METRIC_COMPONENT_DISCARDED_SIZE_BYTES;
 
 /**********************************************************
  *   batcher

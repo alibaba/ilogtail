@@ -18,14 +18,31 @@ package helper
 // runner
 //////////////////////////////////////////////////////////////////////////
 
+// lebel keys
+const (
+	MetricLabelKeyRunnerName = "runner_name"
+)
+
 // label values
 const (
-	MetricLabelKeyMetricCategoryRunner = "runner"
+	MetricLabelValueMetricCategoryRunner = "runner"
 )
 
 /**********************************************************
 *   k8s meta
 **********************************************************/
+
+// label keys
+const (
+	MetricLabelKeyClusterID = "cluster_id"
+)
+
+// label values
+const (
+	MetricLabelValueRunnerNameK8sMeta = "k8s_meta"
+)
+
+// metric keys
 const (
 	MetricRunnerK8sMetaAddEventTotal    = "add_event_total"
 	MetricRunnerK8sMetaUpdateEventTotal = "update_event_total"
