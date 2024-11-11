@@ -37,8 +37,8 @@ namespace logtail {
 
 class FlusherSLS : public HttpFlusher {
 public:
-
-    static std::shared_ptr<ConcurrencyLimiter> GetLogstoreConcurrencyLimiter(const std::string& project, const std::string& logstore);
+    static std::shared_ptr<ConcurrencyLimiter> GetLogstoreConcurrencyLimiter(const std::string& project,
+                                                                             const std::string& logstore);
     static std::shared_ptr<ConcurrencyLimiter> GetProjectConcurrencyLimiter(const std::string& project);
     static std::shared_ptr<ConcurrencyLimiter> GetRegionConcurrencyLimiter(const std::string& region);
     static void ClearInvalidConcurrencyLimiters();
@@ -81,7 +81,6 @@ public:
     sls_logs::SlsTelemetryType mTelemetryType = sls_logs::SlsTelemetryType::SLS_TELEMETRY_TYPE_LOGS;
     std::vector<std::string> mShardHashKeys;
     uint32_t mMaxSendRate = 0; // preserved only for exactly once
-    uint32_t mFlowControlExpireTime = 0;
 
     // TODO: temporarily public for profile
     std::unique_ptr<Compressor> mCompressor;
