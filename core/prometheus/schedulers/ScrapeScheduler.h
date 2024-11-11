@@ -47,9 +47,9 @@ struct PromMetricResponseBody {
     PromMetricResponseBody() : mEventGroup(std::make_shared<SourceBuffer>()) {};
     void AddEvent(char* line, size_t len) {
         if (IsValidMetric(StringView(line, len))) {
-            auto* e = mEventGroup.AddLogEvent();
+            auto* e = mEventGroup.AddRawEvent();
             auto sb = mEventGroup.GetSourceBuffer()->CopyString(line, len);
-            e->SetContentNoCopy(prometheus::PROMETHEUS, StringView(sb.data, sb.size));
+            e->SetContentNoCopy(sb);
         }
     }
     void FlushCache() {
