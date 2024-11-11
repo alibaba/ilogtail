@@ -42,12 +42,8 @@ namespace logtail {
 size_t PromMetricWriteCallback(char* buffer, size_t size, size_t nmemb, void* data) {
     uint64_t sizes = size * nmemb;
 
-    if (buffer == nullptr) {
+    if (buffer == nullptr || data == nullptr) {
         return 0;
-    }
-
-    if (data == nullptr) {
-        return sizes;
     }
 
     auto* body = static_cast<PromMetricResponseBody*>(data);
