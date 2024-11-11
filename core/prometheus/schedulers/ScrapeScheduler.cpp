@@ -46,6 +46,10 @@ size_t PromMetricWriteCallback(char* buffer, size_t size, size_t nmemb, void* da
         return 0;
     }
 
+    if (data == nullptr) {
+        return sizes;
+    }
+
     auto* body = static_cast<PromMetricResponseBody*>(data);
 
     size_t begin = 0;
