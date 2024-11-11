@@ -85,7 +85,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
     APSARA_TEST_TRUE(extendedParams.isNull());
     APSARA_TEST_EQUAL(GlobalConfig::TopicType::NONE, config->mTopicType);
     APSARA_TEST_EQUAL("", config->mTopicFormat);
-    APSARA_TEST_EQUAL(0U, config->mPriority);
+    APSARA_TEST_EQUAL(1U, config->mPriority);
     APSARA_TEST_FALSE(config->mEnableTimestampNanosecond);
     APSARA_TEST_FALSE(config->mUsingOldContentTag);
 
