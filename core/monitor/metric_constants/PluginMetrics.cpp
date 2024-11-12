@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "MetricCommonConstants.h"
 #include "MetricConstants.h"
 
 using namespace std;
@@ -23,14 +24,14 @@ const string METRIC_LABEL_KEY_PLUGIN_ID = "plugin_id";
 const string METRIC_LABEL_KEY_PLUGIN_TYPE = "plugin_type";
 
 // metric keys
-const string METRIC_PLUGIN_IN_EVENTS_TOTAL = IN_EVENTS_TOTAL;
-const string METRIC_PLUGIN_IN_EVENT_GROUPS_TOTAL = IN_EVENT_GROUPS_TOTAL;
-const string METRIC_PLUGIN_IN_SIZE_BYTES = IN_SIZE_BYTES;
-const string METRIC_PLUGIN_OUT_EVENTS_TOTAL = OUT_EVENTS_TOTAL;
-const string METRIC_PLUGIN_OUT_EVENT_GROUPS_TOTAL = OUT_EVENT_GROUPS_TOTAL;
-const string METRIC_PLUGIN_OUT_SIZE_BYTES = OUT_SIZE_BYTES;
-const string METRIC_PLUGIN_TOTAL_DELAY_MS = TOTAL_DELAY_MS;
-const string METRIC_PLUGIN_TOTAL_PROCESS_TIME_MS = TOTAL_PROCESS_TIME_MS;
+const string& METRIC_PLUGIN_IN_EVENTS_TOTAL = IN_EVENTS_TOTAL;
+const string& METRIC_PLUGIN_IN_EVENT_GROUPS_TOTAL = IN_EVENT_GROUPS_TOTAL;
+const string& METRIC_PLUGIN_IN_SIZE_BYTES = IN_SIZE_BYTES;
+const string& METRIC_PLUGIN_OUT_EVENTS_TOTAL = OUT_EVENTS_TOTAL;
+const string& METRIC_PLUGIN_OUT_EVENT_GROUPS_TOTAL = OUT_EVENT_GROUPS_TOTAL;
+const string& METRIC_PLUGIN_OUT_SIZE_BYTES = OUT_SIZE_BYTES;
+const string& METRIC_PLUGIN_TOTAL_DELAY_MS = TOTAL_DELAY_MS;
+const string& METRIC_PLUGIN_TOTAL_PROCESS_TIME_MS = TOTAL_PROCESS_TIME_MS;
 
 /**********************************************************
  *   input_file
@@ -101,7 +102,7 @@ const string METRIC_PLUGIN_EBPF_PROCESS_CACHE_MISS_TOTAL = "process_cache_miss_t
 /**********************************************************
  *   all processor （所有解析类的处理插件通用指标。Todo：目前统计还不全、不准确）
  **********************************************************/
-const string METRIC_PLUGIN_DISCARDED_EVENTS_TOTAL = DISCARDED_EVENTS_TOTAL;
+const string& METRIC_PLUGIN_DISCARDED_EVENTS_TOTAL = DISCARDED_EVENTS_TOTAL;
 const string METRIC_PLUGIN_OUT_FAILED_EVENTS_TOTAL = "out_failed_events_total";
 const string METRIC_PLUGIN_OUT_KEY_NOT_FOUND_EVENTS_TOTAL = "out_key_not_found_events_total";
 const string METRIC_PLUGIN_OUT_SUCCESSFUL_EVENTS_TOTAL = "out_successful_events_total";

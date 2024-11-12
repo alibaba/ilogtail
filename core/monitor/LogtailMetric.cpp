@@ -36,8 +36,8 @@ const std::string MetricCategory::METRIC_CATEGORY_COMPONENT = "component";
 const std::string MetricCategory::METRIC_CATEGORY_PLUGIN = "plugin";
 const std::string MetricCategory::METRIC_CATEGORY_PLUGIN_SOURCE = "plugin_source";
 
-MetricsRecord::MetricsRecord(MetricLabelsPtr labels, DynamicMetricLabelsPtr dynamicLabels, std::string category)
-    : mLabels(labels), mDynamicLabels(dynamicLabels), mCategory(category), mDeleted(false) {
+MetricsRecord::MetricsRecord(const std::string& category, MetricLabelsPtr labels, DynamicMetricLabelsPtr dynamicLabels)
+    : mCategory(category), mLabels(labels), mDynamicLabels(dynamicLabels), mDeleted(false) {
 }
 
 CounterPtr MetricsRecord::CreateCounter(const std::string& name) {
@@ -72,7 +72,7 @@ bool MetricsRecord::IsDeleted() const {
     return mDeleted;
 }
 
-const std::string MetricsRecord::GetCategory() const {
+const std::string& MetricsRecord::GetCategory() const {
     return mCategory;
 }
 
@@ -101,7 +101,7 @@ const std::vector<DoubleGaugePtr>& MetricsRecord::GetDoubleGauges() const {
 }
 
 MetricsRecord* MetricsRecord::Collect() {
-    MetricsRecord* metrics = new MetricsRecord(mLabels, mDynamicLabels, mCategory);
+    MetricsRecord* metrics = new MetricsRecord(mCategory, mLabels, mDynamicLabels);
     for (auto& item : mCounters) {
         CounterPtr newPtr(item->Collect());
         metrics->mCounters.emplace_back(newPtr);
@@ -139,7 +139,7 @@ void MetricsRecordRef::SetMetricsRecord(MetricsRecord* metricRecord) {
     mMetrics = metricRecord;
 }
 
-const std::string MetricsRecordRef::GetCategory() const {
+const std::string& MetricsRecordRef::GetCategory() const {
     return mMetrics->GetCategory();
 }
 
@@ -187,7 +187,7 @@ bool MetricsRecordRef::HasLabel(const std::string& key, const std::string& value
 #endif
 
 // ReentrantMetricsRecord相关操作可以无锁，因为mCounters、mGauges只在初始化时会添加内容，后续只允许Get操作
-void ReentrantMetricsRecord::Init(std::string category,
+void ReentrantMetricsRecord::Init(const std::string& category,
                                   MetricLabels& labels,
                                   DynamicMetricLabels& dynamicLabels,
                                   std::unordered_map<std::string, MetricType>& metricKeys) {
@@ -257,19 +257,19 @@ WriteMetrics::~WriteMetrics() {
 }
 
 void WriteMetrics::PrepareMetricsRecordRef(MetricsRecordRef& ref,
-                                           std::string category,
+                                           const std::string& category,
                                            MetricLabels&& labels,
                                            DynamicMetricLabels&& dynamicLabels) {
-    CreateMetricsRecordRef(ref, std::move(category), std::move(labels), std::move(dynamicLabels));
+    CreateMetricsRecordRef(ref, category, std::move(labels), std::move(dynamicLabels));
     CommitMetricsRecordRef(ref);
 }
 
 void WriteMetrics::CreateMetricsRecordRef(MetricsRecordRef& ref,
-                                          std::string category,
+                                          const std::string& category,
                                           MetricLabels&& labels,
                                           DynamicMetricLabels&& dynamicLabels) {
     MetricsRecord* cur = new MetricsRecord(
-        std::make_shared<MetricLabels>(labels), std::make_shared<DynamicMetricLabels>(dynamicLabels), category);
+        category, std::make_shared<MetricLabels>(labels), std::make_shared<DynamicMetricLabels>(dynamicLabels));
     ref.SetMetricsRecord(cur);
 }
 

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "MetricCommonConstants.h"
 #include "MetricConstants.h"
 
 using namespace std;
@@ -30,13 +31,13 @@ const string METRIC_LABEL_VALUE_RUNNER_NAME_PROMETHEUS = "prometheus_runner";
 const string METRIC_LABEL_VALUE_RUNNER_NAME_EBPF_SERVER = "ebpf_server";
 
 // metric keys
-const string METRIC_RUNNER_IN_EVENTS_TOTAL = IN_EVENTS_TOTAL;
-const string METRIC_RUNNER_IN_EVENT_GROUPS_TOTAL = IN_EVENT_GROUPS_TOTAL;
-const string METRIC_RUNNER_IN_SIZE_BYTES = IN_SIZE_BYTES;
-const string METRIC_RUNNER_IN_ITEMS_TOTAL = IN_ITEMS_TOTAL;
+const string& METRIC_RUNNER_IN_EVENTS_TOTAL = IN_EVENTS_TOTAL;
+const string& METRIC_RUNNER_IN_EVENT_GROUPS_TOTAL = IN_EVENT_GROUPS_TOTAL;
+const string& METRIC_RUNNER_IN_SIZE_BYTES = IN_SIZE_BYTES;
+const string& METRIC_RUNNER_IN_ITEMS_TOTAL = IN_ITEMS_TOTAL;
 const string METRIC_RUNNER_LAST_RUN_TIME = "last_run_time";
-const string METRIC_RUNNER_OUT_ITEMS_TOTAL = OUT_ITEMS_TOTAL;
-const string METRIC_RUNNER_TOTAL_DELAY_MS = TOTAL_DELAY_MS;
+const string& METRIC_RUNNER_OUT_ITEMS_TOTAL = OUT_ITEMS_TOTAL;
+const string& METRIC_RUNNER_TOTAL_DELAY_MS = TOTAL_DELAY_MS;
 const string METRIC_RUNNER_CLIENT_REGISTER_STATE = "client_register_state";
 const string METRIC_RUNNER_CLIENT_REGISTER_RETRY_TOTAL = "client_register_retry_total";
 const string METRIC_RUNNER_JOBS_TOTAL = "jobs_total";
@@ -62,8 +63,7 @@ const string METRIC_RUNNER_FLUSHER_WAITING_ITEMS_TOTAL = "waiting_items_total";
  **********************************************************/
 const string METRIC_RUNNER_FILE_WATCHED_DIRS_TOTAL = "watched_dirs_total";
 const string METRIC_RUNNER_FILE_ACTIVE_READERS_TOTAL = "active_readers_total";
-const string METRIC_RUNNER_FILE_ENABLE_FILE_INCLUDED_BY_MULTI_CONFIGS_FLAG
-    = "enable_file_included_by_multi_configs";
+const string METRIC_RUNNER_FILE_ENABLE_FILE_INCLUDED_BY_MULTI_CONFIGS_FLAG = "enable_multi_configs";
 const string METRIC_RUNNER_FILE_POLLING_MODIFY_CACHE_SIZE = "polling_modify_cache_size";
 const string METRIC_RUNNER_FILE_POLLING_DIR_CACHE_SIZE = "polling_dir_cache_size";
 const string METRIC_RUNNER_FILE_POLLING_FILE_CACHE_SIZE = "polling_file_cache_size";

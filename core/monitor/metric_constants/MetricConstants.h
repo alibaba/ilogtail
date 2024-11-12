@@ -16,7 +16,6 @@
 
 #pragma once
 #include <string>
-#include "MetricCommonConstants.h"
 
 namespace logtail {
 
@@ -72,14 +71,14 @@ extern const std::string METRIC_LABEL_KEY_PLUGIN_ID;
 extern const std::string METRIC_LABEL_KEY_PLUGIN_TYPE;
 
 // metric keys
-extern const std::string METRIC_PLUGIN_IN_EVENTS_TOTAL;
-extern const std::string METRIC_PLUGIN_IN_EVENT_GROUPS_TOTAL;
-extern const std::string METRIC_PLUGIN_IN_SIZE_BYTES;
-extern const std::string METRIC_PLUGIN_OUT_EVENTS_TOTAL;
-extern const std::string METRIC_PLUGIN_OUT_EVENT_GROUPS_TOTAL;
-extern const std::string METRIC_PLUGIN_OUT_SIZE_BYTES;
-extern const std::string METRIC_PLUGIN_TOTAL_DELAY_MS;
-extern const std::string METRIC_PLUGIN_TOTAL_PROCESS_TIME_MS;
+extern const std::string& METRIC_PLUGIN_IN_EVENTS_TOTAL;
+extern const std::string& METRIC_PLUGIN_IN_EVENT_GROUPS_TOTAL;
+extern const std::string& METRIC_PLUGIN_IN_SIZE_BYTES;
+extern const std::string& METRIC_PLUGIN_OUT_EVENTS_TOTAL;
+extern const std::string& METRIC_PLUGIN_OUT_EVENT_GROUPS_TOTAL;
+extern const std::string& METRIC_PLUGIN_OUT_SIZE_BYTES;
+extern const std::string& METRIC_PLUGIN_TOTAL_DELAY_MS;
+extern const std::string& METRIC_PLUGIN_TOTAL_PROCESS_TIME_MS;
 
 /**********************************************************
  *   input_file
@@ -150,7 +149,7 @@ extern const std::string METRIC_PLUGIN_EBPF_PROCESS_CACHE_MISS_TOTAL;
 /**********************************************************
  *   all processor （所有解析类的处理插件通用指标。Todo：目前统计还不全、不准确）
  **********************************************************/
-extern const std::string METRIC_PLUGIN_DISCARDED_EVENTS_TOTAL;
+extern const std::string& METRIC_PLUGIN_DISCARDED_EVENTS_TOTAL;
 extern const std::string METRIC_PLUGIN_OUT_FAILED_EVENTS_TOTAL;
 extern const std::string METRIC_PLUGIN_OUT_KEY_NOT_FOUND_EVENTS_TOTAL;
 extern const std::string METRIC_PLUGIN_OUT_SUCCESSFUL_EVENTS_TOTAL;
@@ -221,16 +220,16 @@ extern const std::string METRIC_LABEL_VALUE_COMPONENT_NAME_SENDER_QUEUE;
 extern const std::string METRIC_LABEL_VALUE_COMPONENT_NAME_SERIALIZER;
 
 // metric keys
-extern const std::string METRIC_COMPONENT_IN_EVENTS_TOTAL;
-extern const std::string METRIC_COMPONENT_IN_SIZE_BYTES;
-extern const std::string METRIC_COMPONENT_IN_ITEMS_TOTAL;
-extern const std::string METRIC_COMPONENT_OUT_EVENTS_TOTAL;
-extern const std::string METRIC_COMPONENT_OUT_ITEMS_TOTAL;
-extern const std::string METRIC_COMPONENT_OUT_SIZE_BYTES;
-extern const std::string METRIC_COMPONENT_TOTAL_DELAY_MS;
-extern const std::string METRIC_COMPONENT_TOTAL_PROCESS_TIME_MS;
-extern const std::string METRIC_COMPONENT_DISCARDED_ITEMS_TOTAL;
-extern const std::string METRIC_COMPONENT_DISCARDED_SIZE_BYTES;
+extern const std::string& METRIC_COMPONENT_IN_EVENTS_TOTAL;
+extern const std::string& METRIC_COMPONENT_IN_SIZE_BYTES;
+extern const std::string& METRIC_COMPONENT_IN_ITEMS_TOTAL;
+extern const std::string& METRIC_COMPONENT_OUT_EVENTS_TOTAL;
+extern const std::string& METRIC_COMPONENT_OUT_ITEMS_TOTAL;
+extern const std::string& METRIC_COMPONENT_OUT_SIZE_BYTES;
+extern const std::string& METRIC_COMPONENT_TOTAL_DELAY_MS;
+extern const std::string& METRIC_COMPONENT_TOTAL_PROCESS_TIME_MS;
+extern const std::string& METRIC_COMPONENT_DISCARDED_ITEMS_TOTAL;
+extern const std::string& METRIC_COMPONENT_DISCARDED_SIZE_BYTES;
 
 /**********************************************************
  *   batcher
@@ -249,7 +248,7 @@ extern const std::string METRIC_COMPONENT_QUEUE_SIZE_BYTES;
 extern const std::string METRIC_COMPONENT_QUEUE_VALID_TO_PUSH_FLAG;
 extern const std::string METRIC_COMPONENT_QUEUE_EXTRA_BUFFER_SIZE;
 extern const std::string METRIC_COMPONENT_QUEUE_EXTRA_BUFFER_SIZE_BYTES;
-extern const std::string METRIC_COMPONENT_QUEUE_DISCARDED_EVENTS_TOTAL;
+extern const std::string& METRIC_COMPONENT_QUEUE_DISCARDED_EVENTS_TOTAL;
 
 extern const std::string METRIC_COMPONENT_QUEUE_FETCHED_ITEMS_TOTAL;
 extern const std::string METRIC_COMPONENT_QUEUE_FETCH_TIMES_TOTAL;
@@ -275,22 +274,26 @@ extern const std::string METRIC_LABEL_VALUE_RUNNER_NAME_PROMETHEUS;
 extern const std::string METRIC_LABEL_VALUE_RUNNER_NAME_EBPF_SERVER;
 
 // metric keys
-extern const std::string METRIC_RUNNER_IN_EVENTS_TOTAL;
-extern const std::string METRIC_RUNNER_IN_EVENT_GROUPS_TOTAL;
-extern const std::string METRIC_RUNNER_IN_SIZE_BYTES;
-extern const std::string METRIC_RUNNER_IN_ITEMS_TOTAL;
+extern const std::string& METRIC_RUNNER_IN_EVENTS_TOTAL;
+extern const std::string& METRIC_RUNNER_IN_EVENT_GROUPS_TOTAL;
+extern const std::string& METRIC_RUNNER_IN_SIZE_BYTES;
+extern const std::string& METRIC_RUNNER_IN_ITEMS_TOTAL;
 extern const std::string METRIC_RUNNER_LAST_RUN_TIME;
-extern const std::string METRIC_RUNNER_OUT_ITEMS_TOTAL;
-extern const std::string METRIC_RUNNER_TOTAL_DELAY_MS;
+extern const std::string& METRIC_RUNNER_OUT_ITEMS_TOTAL;
+extern const std::string& METRIC_RUNNER_TOTAL_DELAY_MS;
+extern const std::string METRIC_RUNNER_CLIENT_REGISTER_STATE;
+extern const std::string METRIC_RUNNER_CLIENT_REGISTER_RETRY_TOTAL;
+extern const std::string METRIC_RUNNER_JOBS_TOTAL;
+
+/**********************************************************
+ *   all sinks
+ **********************************************************/
 extern const std::string METRIC_RUNNER_SINK_OUT_SUCCESSFUL_ITEMS_TOTAL;
 extern const std::string METRIC_RUNNER_SINK_OUT_FAILED_ITEMS_TOTAL;
 extern const std::string METRIC_RUNNER_SINK_SUCCESSFUL_ITEM_TOTAL_RESPONSE_TIME_MS;
 extern const std::string METRIC_RUNNER_SINK_FAILED_ITEM_TOTAL_RESPONSE_TIME_MS;
 extern const std::string METRIC_RUNNER_SINK_SENDING_ITEMS_TOTAL;
 extern const std::string METRIC_RUNNER_SINK_SEND_CONCURRENCY;
-extern const std::string METRIC_RUNNER_CLIENT_REGISTER_STATE;
-extern const std::string METRIC_RUNNER_CLIENT_REGISTER_RETRY_TOTAL;
-extern const std::string METRIC_RUNNER_JOBS_TOTAL;
 
 /**********************************************************
  *   flusher runner

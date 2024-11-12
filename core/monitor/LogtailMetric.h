@@ -44,9 +44,9 @@ public:
 
 class MetricsRecord {
 private:
+    std::string mCategory;
     MetricLabelsPtr mLabels;
     DynamicMetricLabelsPtr mDynamicLabels;
-    std::string mCategory;
     std::vector<CounterPtr> mCounters;
     std::vector<TimeCounterPtr> mTimeCounters;
     std::vector<IntGaugePtr> mIntGauges;
@@ -56,13 +56,11 @@ private:
     MetricsRecord* mNext = nullptr;
 
 public:
-    MetricsRecord(MetricLabelsPtr labels,
-                  DynamicMetricLabelsPtr dynamicLabels = nullptr,
-                  std::string category = MetricCategory::METRIC_CATEGORY_UNKNOWN);
+    MetricsRecord(const std::string& category, MetricLabelsPtr labels, DynamicMetricLabelsPtr dynamicLabels = nullptr);
     MetricsRecord() = default;
     void MarkDeleted();
     bool IsDeleted() const;
-    const std::string GetCategory() const;
+    const std::string& GetCategory() const;
     const MetricLabelsPtr& GetLabels() const;
     const DynamicMetricLabelsPtr& GetDynamicLabels() const;
     const std::vector<CounterPtr>& GetCounters() const;
@@ -94,7 +92,7 @@ public:
     MetricsRecordRef(MetricsRecordRef&&) = delete;
     MetricsRecordRef& operator=(MetricsRecordRef&&) = delete;
     void SetMetricsRecord(MetricsRecord* metricRecord);
-    const std::string GetCategory() const;
+    const std::string& GetCategory() const;
     const MetricLabelsPtr& GetLabels() const;
     const DynamicMetricLabelsPtr& GetDynamicLabels() const;
     CounterPtr CreateCounter(const std::string& name);
@@ -134,7 +132,7 @@ private:
     std::unordered_map<std::string, DoubleGaugePtr> mDoubleGauges;
 
 public:
-    void Init(std::string category,
+    void Init(const std::string& category,
               MetricLabels& labels,
               DynamicMetricLabels& dynamicLabels,
               std::unordered_map<std::string, MetricType>& metricKeys);
@@ -164,11 +162,11 @@ public:
     }
 
     void PrepareMetricsRecordRef(MetricsRecordRef& ref,
-                                 std::string category,
+                                 const std::string& category,
                                  MetricLabels&& labels,
                                  DynamicMetricLabels&& dynamicLabels = {});
     void CreateMetricsRecordRef(MetricsRecordRef& ref,
-                                std::string category,
+                                const std::string& category,
                                 MetricLabels&& labels,
                                 DynamicMetricLabels&& dynamicLabels = {});
     void CommitMetricsRecordRef(MetricsRecordRef& ref);
