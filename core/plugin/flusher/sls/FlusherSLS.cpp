@@ -434,7 +434,7 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
             mLogstore = "__arms_default_metric__";
             LOG_WARNING(sLogger, ("successfully set subpath", mSubpath) ("logstore", mLogstore));
         } else if (tagValue == "agent_info") {
-            mSubpath = "/apm/metadata/arms/v1/meta_log";
+            mSubpath = "/apm/metadata/arms/v1/meta_log/AgentInfo";
             mLogstore = "__arms_default_agentinfo__";
             LOG_WARNING(sLogger, ("successfully set subpath", mSubpath) ("logstore", mLogstore));
         }

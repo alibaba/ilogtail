@@ -663,6 +663,7 @@ bool DiskBufferWriter::SendToBufferFile(SenderQueueItem* dataPtr) {
     bufferMeta.set_shardhashkey(data->mShardHashKey);
     bufferMeta.set_compresstype(ConvertCompressType(flusher->GetCompressType()));
     bufferMeta.set_telemetrytype(flusher->mTelemetryType);
+    bufferMeta.set_subpath(flusher->mSubpath);
     string encodedInfo;
     bufferMeta.SerializeToString(&encodedInfo);
 
@@ -753,23 +754,23 @@ SendResult DiskBufferWriter::SendToNetSync(sdk::Client* sendClient,
                                                  bufferMeta.compresstype(),
                                                  logData,
                                                  bufferMeta.rawsize(),
-                                                 bufferMeta.shardhashkey());
+                                                 bufferMeta.shardhashkey(), false, bufferMeta.has_subpath() ? bufferMeta.subpath(): "");
                 else
                     sendClient->PostLogStoreLogs(bufferMeta.project(),
                                                  bufferMeta.logstore(),
                                                  bufferMeta.compresstype(),
                                                  logData,
-                                                 bufferMeta.rawsize());
+                                                 bufferMeta.rawsize(), "", false, bufferMeta.has_subpath() ? bufferMeta.subpath(): "");
             } else {
                 if (bufferMeta.has_shardhashkey() && !bufferMeta.shardhashkey().empty())
                     sendClient->PostLogStoreLogPackageList(bufferMeta.project(),
                                                            bufferMeta.logstore(),
                                                            bufferMeta.compresstype(),
                                                            logData,
-                                                           bufferMeta.shardhashkey());
+                                                           bufferMeta.shardhashkey(), bufferMeta.has_subpath() ? bufferMeta.subpath(): "");
                 else
                     sendClient->PostLogStoreLogPackageList(
-                        bufferMeta.project(), bufferMeta.logstore(), bufferMeta.compresstype(), logData);
+                        bufferMeta.project(), bufferMeta.logstore(), bufferMeta.compresstype(), logData, "", bufferMeta.has_subpath() ? bufferMeta.subpath(): "");
             }
             return SEND_OK;
         } catch (sdk::LOGException& ex) {
