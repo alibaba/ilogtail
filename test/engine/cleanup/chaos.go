@@ -16,6 +16,7 @@ package cleanup
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -42,7 +43,9 @@ func DestoryAllChaos(ctx context.Context) (context.Context, error) {
 		}
 		for _, result := range status.Result {
 			command = "/opt/chaosblade/blade destroy " + result["Uid"]
-			setup.Env.ExecOnLogtail(command)
+			if _, err := setup.Env.ExecOnLogtail(command); err != nil {
+				fmt.Println("Destroy chaos failed: ", err)
+			}
 		}
 	case "daemonset", "deployment":
 		k8sEnv := setup.Env.(*setup.K8sEnv)

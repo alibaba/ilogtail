@@ -88,7 +88,7 @@ func NetworkDelay(ctx context.Context, time int, ip string) (context.Context, er
 	case "daemonset", "deployment":
 		dir := filepath.Join("test_cases", "chaos")
 		filename := "loss-pod-network.yaml"
-		_ = os.Mkdir(dir, 0755)
+		_ = os.Mkdir(dir, 0750)
 		file, err := os.OpenFile(filepath.Join(dir, filename), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644) //nolint:gosec
 		if err != nil {
 			return ctx, err
@@ -122,12 +122,12 @@ func NetworkLoss(ctx context.Context, percentage int, ip string) (context.Contex
 	case "daemonset", "deployment":
 		dir := filepath.Join("test_cases", "chaos")
 		filename := "loss-pod-network.yaml"
-		_ = os.Mkdir(dir, 0755)
+		_ = os.Mkdir(dir, 0750)
 		file, err := os.OpenFile(filepath.Join(dir, filename), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644) //nolint:gosec
 		if err != nil {
 			return ctx, err
 		}
-		defer file.Close()
+		defer file.Close() //nolint:gosec
 
 		networkLossCRD, _ := template.New("networkLoss").Parse(networkLossCRDTmpl)
 		if err = networkLossCRD.Execute(file, map[string]string{

@@ -23,19 +23,26 @@ import (
 )
 
 func RestartAgent(ctx context.Context) (context.Context, error) {
-	setup.Env.ExecOnLogtail("/etc/init.d/loongcollectord restart")
+	if _, err := setup.Env.ExecOnLogtail("/etc/init.d/loongcollectord restart"); err != nil {
+		return ctx, err
+	}
 	return setup.SetAgentPID(ctx)
 }
 
 func ForceRestartAgent(ctx context.Context) (context.Context, error) {
 	currentPID := ctx.Value(config.AgentPIDKey)
 	if currentPID != nil {
-		currentPIDs := strings.Split(currentPID.(string), "\n")
+		currentPIDs := strings.Split(strings.TrimSpace(currentPID.(string)), "\n")
 		for _, pid := range currentPIDs {
-			setup.Env.ExecOnLogtail("kill -9 " + pid)
+			if _, err := setup.Env.ExecOnLogtail("kill -9 " + pid); err != nil {
+				fmt.Println("Force kill agent pid failed: ", err)
+			}
 		}
+	} else {
+		fmt.Println("No agent pid found, skip force restart")
 	}
-	fmt.Println("No agent pid found, skip force restart")
-	setup.Env.ExecOnLogtail("/etc/init.d/loongcollectord start")
+	if _, err := setup.Env.ExecOnLogtail("/etc/init.d/loongcollectord restart"); err != nil {
+		return ctx, err
+	}
 	return setup.SetAgentPID(ctx)
 }

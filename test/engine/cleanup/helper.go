@@ -53,9 +53,6 @@ func All() {
 	if _, err := AllGeneratedLog(ctx); err != nil {
 		fmt.Println(red + err.Error() + reset)
 	}
-	if _, err := GoTestCache(ctx); err != nil {
-		fmt.Println(red + err.Error() + reset)
-	}
 	if _, err := DestoryAllChaos(ctx); err != nil {
 		fmt.Println(red + err.Error() + reset)
 	}
