@@ -1064,7 +1064,8 @@ func (dc *DockerCenter) fetchAll() error {
 	var containerMap = make(map[string]*DockerInfoDetail)
 
 	for _, container := range containers {
-		containerDetail, err := dc.inspectOneContainer(container.ID)
+		var containerDetail types.ContainerJSON
+		containerDetail, err = dc.inspectOneContainer(container.ID)
 		if err == nil {
 			containerMap[container.ID] = dc.CreateInfoDetail(containerDetail, envConfigPrefix, false)
 		}
