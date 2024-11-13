@@ -18,18 +18,18 @@ using namespace std;
 
 namespace logtail {
 
-const string DISCARDED_EVENTS_TOTAL = "discarded_events_total";
-const string DISCARDED_ITEMS_TOTAL = "discarded_items_total";
-const string DISCARDED_SIZE_BYTES = "discarded_size_bytes";
-const string IN_EVENTS_TOTAL = "in_events_total";
-const string IN_EVENT_GROUPS_TOTAL = "in_event_groups_total";
-const string IN_ITEMS_TOTAL = "in_items_total";
-const string IN_SIZE_BYTES = "in_size_bytes";
-const string OUT_EVENTS_TOTAL = "out_events_total";
-const string OUT_EVENT_GROUPS_TOTAL = "out_event_groups_total";
-const string OUT_ITEMS_TOTAL = "out_items_total";
-const string OUT_SIZE_BYTES = "out_size_bytes";
-const string TOTAL_DELAY_MS = "total_delay_ms";
-const string TOTAL_PROCESS_TIME_MS = "total_process_time_ms";
+const string METRIC_DISCARDED_EVENTS_TOTAL = "discarded_events_total";
+const string METRIC_DISCARDED_ITEMS_TOTAL = "discarded_items_total";
+const string METRIC_DISCARDED_SIZE_BYTES = "discarded_size_bytes";
+const string METRIC_IN_EVENTS_TOTAL = "in_events_total";
+const string METRIC_IN_EVENT_GROUPS_TOTAL = "in_event_groups_total";
+const string METRIC_IN_ITEMS_TOTAL = "in_items_total";
+const string METRIC_IN_SIZE_BYTES = "in_size_bytes";
+const string METRIC_OUT_EVENTS_TOTAL = "out_events_total";
+const string METRIC_OUT_EVENT_GROUPS_TOTAL = "out_event_groups_total";
+const string METRIC_OUT_ITEMS_TOTAL = "out_items_total";
+const string METRIC_OUT_SIZE_BYTES = "out_size_bytes";
+const string METRIC_TOTAL_DELAY_MS = "total_delay_ms";
+const string METRIC_TOTAL_PROCESS_TIME_MS = "total_process_time_ms";
 
 }

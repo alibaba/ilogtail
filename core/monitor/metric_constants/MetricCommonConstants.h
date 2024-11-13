@@ -19,18 +19,18 @@
 
 namespace logtail {
 
-extern const std::string DISCARDED_EVENTS_TOTAL;
-extern const std::string DISCARDED_ITEMS_TOTAL;
-extern const std::string DISCARDED_SIZE_BYTES;
-extern const std::string IN_EVENTS_TOTAL;
-extern const std::string IN_EVENT_GROUPS_TOTAL;
-extern const std::string IN_ITEMS_TOTAL;
-extern const std::string IN_SIZE_BYTES;
-extern const std::string OUT_EVENTS_TOTAL;
-extern const std::string OUT_EVENT_GROUPS_TOTAL;
-extern const std::string OUT_ITEMS_TOTAL;
-extern const std::string OUT_SIZE_BYTES;
-extern const std::string TOTAL_DELAY_MS;
-extern const std::string TOTAL_PROCESS_TIME_MS;
+extern const std::string METRIC_DISCARDED_EVENTS_TOTAL;
+extern const std::string METRIC_DISCARDED_ITEMS_TOTAL;
+extern const std::string METRIC_DISCARDED_SIZE_BYTES;
+extern const std::string METRIC_IN_EVENTS_TOTAL;
+extern const std::string METRIC_IN_EVENT_GROUPS_TOTAL;
+extern const std::string METRIC_IN_ITEMS_TOTAL;
+extern const std::string METRIC_IN_SIZE_BYTES;
+extern const std::string METRIC_OUT_EVENTS_TOTAL;
+extern const std::string METRIC_OUT_EVENT_GROUPS_TOTAL;
+extern const std::string METRIC_OUT_ITEMS_TOTAL;
+extern const std::string METRIC_OUT_SIZE_BYTES;
+extern const std::string METRIC_TOTAL_DELAY_MS;
+extern const std::string METRIC_TOTAL_PROCESS_TIME_MS;
 
 }

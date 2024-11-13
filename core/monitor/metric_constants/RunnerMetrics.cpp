@@ -21,6 +21,7 @@ namespace logtail {
 
 // label keys
 const string METRIC_LABEL_KEY_RUNNER_NAME = "runner_name";
+const string METRIC_LABEL_KEY_THREAD_NO = "thread_no";
 
 // label values
 const string METRIC_LABEL_VALUE_RUNNER_NAME_FILE_SERVER = "file_server";
@@ -31,13 +32,13 @@ const string METRIC_LABEL_VALUE_RUNNER_NAME_PROMETHEUS = "prometheus_runner";
 const string METRIC_LABEL_VALUE_RUNNER_NAME_EBPF_SERVER = "ebpf_server";
 
 // metric keys
-const string& METRIC_RUNNER_IN_EVENTS_TOTAL = IN_EVENTS_TOTAL;
-const string& METRIC_RUNNER_IN_EVENT_GROUPS_TOTAL = IN_EVENT_GROUPS_TOTAL;
-const string& METRIC_RUNNER_IN_SIZE_BYTES = IN_SIZE_BYTES;
-const string& METRIC_RUNNER_IN_ITEMS_TOTAL = IN_ITEMS_TOTAL;
+const string& METRIC_RUNNER_IN_EVENTS_TOTAL = METRIC_IN_EVENTS_TOTAL;
+const string& METRIC_RUNNER_IN_EVENT_GROUPS_TOTAL = METRIC_IN_EVENT_GROUPS_TOTAL;
+const string& METRIC_RUNNER_IN_SIZE_BYTES = METRIC_IN_SIZE_BYTES;
+const string& METRIC_RUNNER_IN_ITEMS_TOTAL = METRIC_IN_ITEMS_TOTAL;
 const string METRIC_RUNNER_LAST_RUN_TIME = "last_run_time";
-const string& METRIC_RUNNER_OUT_ITEMS_TOTAL = OUT_ITEMS_TOTAL;
-const string& METRIC_RUNNER_TOTAL_DELAY_MS = TOTAL_DELAY_MS;
+const string& METRIC_RUNNER_OUT_ITEMS_TOTAL = METRIC_OUT_ITEMS_TOTAL;
+const string& METRIC_RUNNER_TOTAL_DELAY_MS = METRIC_TOTAL_DELAY_MS;
 const string METRIC_RUNNER_CLIENT_REGISTER_STATE = "client_register_state";
 const string METRIC_RUNNER_CLIENT_REGISTER_RETRY_TOTAL = "client_register_retry_total";
 const string METRIC_RUNNER_JOBS_TOTAL = "jobs_total";
