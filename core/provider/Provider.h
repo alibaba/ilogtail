@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "monitor/MetricManager.h"
 #include "config/provider/ConfigProvider.h"
 #include "monitor/profile_sender/ProfileSender.h"
 
@@ -31,6 +32,9 @@ std::vector<ConfigProvider*> GetRemoteConfigProviders();
 // InitRemoteConfigProviders initializes the remote config providers.
 // It currently initializes the LegacyCommonConfigProvider and CommonConfigProvider.
 void InitRemoteConfigProviders();
+
+// GetReadMetrics returns the ReadMetrics instance.
+ReadMetrics* GetReadMetrics();
 
 // GetProfileSender returns the ProfileSender instance.
 ProfileSender* GetProfileSender();

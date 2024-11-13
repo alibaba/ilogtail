@@ -17,8 +17,8 @@ project(provider)
 
 file(GLOB LIB_SOURCE_FILES *.cpp *.h)
 
-set(PROVIDER_SUB_DIRECTORIES_LIST    
-    monitor/profile_sender config/feedbacker config/provider config/common_provider protobuf/config_server/v1 protobuf/config_server/v2
+set(PROVIDER_SUB_DIRECTORIES_LIST
+    monitor monitor/profile_sender config/feedbacker config/provider config/common_provider protobuf/config_server/v1 protobuf/config_server/v2
 )
 
 foreach(DIR_NAME IN LISTS PROVIDER_SUB_DIRECTORIES_LIST)

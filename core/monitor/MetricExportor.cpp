@@ -25,6 +25,7 @@
 #include "common/TimeUtil.h"
 #include "go_pipeline/LogtailPlugin.h"
 #include "pipeline/PipelineManager.h"
+#include "provider/Provider.h"
 #include "protobuf/sls/sls_logs.pb.h"
 
 using namespace sls_logs;
@@ -51,7 +52,7 @@ void MetricExportor::PushMetrics(bool forceSend) {
     }
 
     // go指标在Cpp指标前获取，是为了在 Cpp 部分指标做 SnapShot
-    // 前（即调用 ReadMetrics::GetInstance()->UpdateMetrics() 函数），把go部分的进程级指标填写到 Cpp
+    // 前（即调用 GetReadMetrics()->UpdateMetrics() 函数），把go部分的进程级指标填写到 Cpp
     // 的进程级指标中去，随Cpp的进程级指标一起输出
     if (LogtailPlugin::GetInstance()->IsPluginOpened()) {
         PushGoMetrics();
@@ -60,17 +61,21 @@ void MetricExportor::PushMetrics(bool forceSend) {
 }
 
 void MetricExportor::PushCppMetrics() {
-    ReadMetrics::GetInstance()->UpdateMetrics();
+    GetReadMetrics()->UpdateMetrics();
 
     if ("sls" == STRING_FLAG(metrics_report_method)) {
         std::map<std::string, sls_logs::LogGroup*> logGroupMap;
-        ReadMetrics::GetInstance()->ReadAsLogGroup(METRIC_LABEL_KEY_REGION, METRIC_REGION_DEFAULT, logGroupMap);
+        GetReadMetrics()->ReadAsLogGroup(METRIC_LABEL_KEY_REGION, METRIC_REGION_DEFAULT, logGroupMap);
         SendToSLS(logGroupMap);
     } else if ("file" == STRING_FLAG(metrics_report_method)) {
         std::string metricsContent;
-        ReadMetrics::GetInstance()->ReadAsFileBuffer(metricsContent);
+        GetReadMetrics()->ReadAsFileBuffer(metricsContent);
         SendToLocalFile(metricsContent, "self-metrics-cpp");
-    }
+    } else if ("custom" == STRING_FLAG(metrics_report_method)) {
+        std::string metricsContent;
+        GetReadMetrics()->ReadAsCustomizedProtocol(metricsContent);
+        GetProfileSender()->SendMetricContent(metricsContent);
+    }       
 }
 
 void MetricExportor::PushGoMetrics() {
@@ -162,7 +167,11 @@ void MetricExportor::PushGoDirectMetrics(std::vector<std::map<std::string, std::
         std::string metricsContent;
         SerializeGoDirectMetricsListToString(metricsList, metricsContent);
         SendToLocalFile(metricsContent, "self-metrics-go");
-    }
+    }  else if ("custom" == STRING_FLAG(metrics_report_method)) {
+        std::string metricsContent;
+        GetReadMetrics()->ReadAsCustomizedProtocol(metricsContent);
+        GetProfileSender()->SendMetricContent(metricsContent);
+    }          
 }
 
 // metrics from Go that are provided by cpp

@@ -21,6 +21,7 @@
 #include "MetricManager.h"
 #include "MetricExportor.h"
 #include "MetricConstants.h"
+#include "provider/Provider.h"
 
 namespace logtail {
 
@@ -33,7 +34,7 @@ public:
     void SetUp() {}
 
     void TearDown() {
-        ReadMetrics::GetInstance()->Clear();
+        GetReadMetrics()->Clear();
         WriteMetrics::GetInstance()->Clear();
     }
 
@@ -76,7 +77,7 @@ void MetricManagerUnittest::TestCreateMetricAutoDelete() {
 
 
     // assert ReadMetrics count
-    tmp = ReadMetrics::GetInstance()->GetHead();
+    tmp = GetReadMetrics()->GetHead();
     count = 0;
     while (tmp) {
         tmp = tmp->GetNext();
@@ -121,7 +122,7 @@ void MetricManagerUnittest::TestCreateMetricAutoDelete() {
 
 
     // assert ReadMetrics count
-    tmp = ReadMetrics::GetInstance()->GetHead();
+    tmp = GetReadMetrics()->GetHead();
     count = 0;
     while (tmp) {
         tmp = tmp->GetNext();
@@ -189,7 +190,7 @@ void MetricManagerUnittest::TestCreateMetricAutoDeleteMultiThread() {
     APSARA_TEST_EQUAL(count, 0);
 
     // assert ReadMetrics count
-    tmp = ReadMetrics::GetInstance()->GetHead();
+    tmp = GetReadMetrics()->GetHead();
     count = 0;
     while (tmp) {
         tmp = tmp->GetNext();
@@ -281,7 +282,7 @@ void MetricManagerUnittest::TestCreateAndDeleteMetric() {
     }
 
     // assert ReadMetrics count
-    tmp = ReadMetrics::GetInstance()->GetHead();
+    tmp = GetReadMetrics()->GetHead();
     count = 0;
     while (tmp) {
         tmp = tmp->GetNext();
@@ -291,7 +292,7 @@ void MetricManagerUnittest::TestCreateAndDeleteMetric() {
 
     // assert readMetric value
     if (count == 1) {
-        tmp = ReadMetrics::GetInstance()->GetHead();
+        tmp = GetReadMetrics()->GetHead();
         std::vector<CounterPtr> values = tmp->GetCounters();
         APSARA_TEST_EQUAL(values.size(), 1);
         if (values.size() == 1) {
@@ -308,7 +309,7 @@ void MetricManagerUnittest::TestCreateAndDeleteMetric() {
 
     MetricExportor::GetInstance()->PushMetrics(true);
     // assert ReadMetrics count
-    tmp = ReadMetrics::GetInstance()->GetHead();
+    tmp = GetReadMetrics()->GetHead();
     count = 0;
     while (tmp) {
         tmp = tmp->GetNext();
@@ -318,7 +319,7 @@ void MetricManagerUnittest::TestCreateAndDeleteMetric() {
 
     // assert readMetric value
     if (count == 1) {
-        tmp = ReadMetrics::GetInstance()->GetHead();
+        tmp = GetReadMetrics()->GetHead();
         std::vector<CounterPtr> values = tmp->GetCounters();
         APSARA_TEST_EQUAL(values.size(), 1);
         if (values.size() == 1) {
