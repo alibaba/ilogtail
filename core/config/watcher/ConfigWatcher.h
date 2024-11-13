@@ -16,43 +16,33 @@
 
 #pragma once
 
-#include <cstdint>
 #include <filesystem>
 #include <map>
+#include <mutex>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "config/ConfigDiff.h"
-
 namespace logtail {
-
-class PipelineManager;
 
 class ConfigWatcher {
 public:
     ConfigWatcher(const ConfigWatcher&) = delete;
     ConfigWatcher& operator=(const ConfigWatcher&) = delete;
 
-    static ConfigWatcher* GetInstance() {
-        static ConfigWatcher instance;
-        return &instance;
-    }
-
-    PipelineConfigDiff CheckConfigDiff();
     void AddSource(const std::string& dir, std::mutex* mux = nullptr);
-    // for ut
-    void SetPipelineManager(const PipelineManager* pm) { mPipelineManager = pm; }
-    void ClearEnvironment();
 
-private:
-    ConfigWatcher();
-    ~ConfigWatcher() = default;
+#ifdef APSARA_UNIT_TEST_MAIN
+    void ClearEnvironment();
+#endif
+
+protected:
+    ConfigWatcher() = default;
+    virtual ~ConfigWatcher() = default;
 
     std::vector<std::filesystem::path> mSourceDir;
-    std::unordered_map<std::string, std::mutex*> mDirMutexMap;
+    std::map<std::string, std::mutex*> mDirMutexMap;
     std::map<std::string, std::pair<uintmax_t, std::filesystem::file_time_type>> mFileInfoMap;
-    const PipelineManager* mPipelineManager = nullptr;
 };
 
 } // namespace logtail

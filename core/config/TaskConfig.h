@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 iLogtail Authors
+ * Copyright 2024 iLogtail Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,26 +16,31 @@
 
 #pragma once
 
-#include <string>
-#include <vector>
+#include <json/json.h>
 
-#include "config/InstanceConfig.h"
-#include "config/PipelineConfig.h"
-#include "config/TaskConfig.h"
+#include <cstdint>
+#include <memory>
+#include <string>
 
 namespace logtail {
 
-template <class T>
-struct ConfigDiff {
-    std::vector<T> mAdded;
-    std::vector<T> mModified;
-    std::vector<std::string> mRemoved;
+struct TaskConfig {
+    std::string mName;
+    std::unique_ptr<Json::Value> mDetail;
+    uint32_t mCreateTime = 0;
 
-    bool IsEmpty() { return mRemoved.empty() && mAdded.empty() && mModified.empty(); }
+    TaskConfig(const std::string& name, std::unique_ptr<Json::Value>&& detail)
+        : mName(name), mDetail(std::move(detail)) {}
+
+    bool Parse();
 };
 
-using PipelineConfigDiff = ConfigDiff<PipelineConfig>;
-using TaskConfigDiff = ConfigDiff<TaskConfig>;
-using InstanceConfigDiff = ConfigDiff<InstanceConfig>;
+inline bool operator==(const TaskConfig& lhs, const TaskConfig& rhs) {
+    return (lhs.mName == rhs.mName) && (*lhs.mDetail == *rhs.mDetail);
+}
+
+inline bool operator!=(const TaskConfig& lhs, const TaskConfig& rhs) {
+    return !(lhs == rhs);
+}
 
 } // namespace logtail
