@@ -63,6 +63,10 @@ target_link_libraries(boost_regex_benchmark ${UT_BASE_TARGET})
 add_executable(processor_prom_parse_metric_native_unittest ProcessorPromParseMetricNativeUnittest.cpp)
 target_link_libraries(processor_prom_parse_metric_native_unittest unittest_base)
 
+add_executable(json_benchmark_test JsonBenchmark.cpp)
+target_link_libraries(json_benchmark_test ${UT_BASE_TARGET})
+
+
 include(GoogleTest)
 gtest_discover_tests(processor_split_log_string_native_unittest)
 gtest_discover_tests(processor_split_multiline_log_string_native_unittest)
