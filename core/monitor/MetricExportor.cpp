@@ -169,7 +169,7 @@ void MetricExportor::PushGoDirectMetrics(std::vector<std::map<std::string, std::
         SendToLocalFile(metricsContent, "self-metrics-go");
     }  else if ("custom" == STRING_FLAG(metrics_report_method)) {
         std::string metricsContent;
-        GetReadMetrics()->ReadAsCustomizedProtocol(metricsContent);
+        GetReadMetrics()->SerializeMetricsToString(metricsList, metricsContent);
         GetProfileSender()->SendMetricContent(metricsContent);
     }          
 }
