@@ -63,14 +63,14 @@ public:
 
 class ReadMetrics {
 protected:
-    ReadMetrics() = default;    
+    ReadMetrics() = default;
     mutable ReadWriteLock mReadWriteLock;
     MetricsRecord* mHead = nullptr;
     void Clear();
     MetricsRecord* GetHead();
 
 public:
-    virtual ~ReadMetrics();        
+    virtual ~ReadMetrics();
     static ReadMetrics* GetInstance() {
         static ReadMetrics* ptr = new ReadMetrics();
         return ptr;
@@ -81,17 +81,12 @@ public:
     
     void ReadAsFileBuffer(std::string& metricsContent) const;
     
-    
-    virtual void ReadAsLogGroup(const std::string& regionFieldName,
-                                const std::string& defaultRegion,
-                                std::unordered_map<std::string, sls_logs::LogGroup>& logGroupMap) const;
 
-
-    // serlesialize metrics to other format
+    // serialize input metrics to metricsContent
     virtual void SerializeMetricsToString(std::vector<std::map<std::string, std::string>>& metricsList,
                                           std::string& metricsContent) const {}
 
-    // read metrics to other format    
+    // iterate through the metrics list to serialize into metricsContent
     virtual void ReadAsCustomizedProtocol(std::string& metricsContent) const {}
     
     void UpdateMetrics();

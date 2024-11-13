@@ -34,6 +34,7 @@ std::vector<ConfigProvider*> GetRemoteConfigProviders();
 void InitRemoteConfigProviders();
 
 // GetReadMetrics returns the ReadMetrics instance.
+// It currently can marshal metrics to sls and file format.
 ReadMetrics* GetReadMetrics();
 
 // GetProfileSender returns the ProfileSender instance.
