@@ -110,7 +110,7 @@ public:
         } else {
             labels.emplace_back(METRIC_LABEL_KEY_GROUP_BATCH_ENABLED, "false");
         }
-        MetricManager::GetInstance()->PrepareMetricsRecordRef(
+        WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
             mMetricsRecordRef, MetricCategory::METRIC_CATEGORY_COMPONENT, std::move(labels));
         mInEventsTotal = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_IN_EVENTS_TOTAL);
         mInGroupDataSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_IN_SIZE_BYTES);

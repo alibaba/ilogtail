@@ -62,7 +62,7 @@ PrometheusInputRunner::PrometheusInputRunner()
     DynamicMetricLabels dynamicLabels;
     dynamicLabels.emplace_back(METRIC_LABEL_KEY_PROJECT, [this]() -> std::string { return this->GetAllProjects(); });
 
-    MetricManager::GetInstance()->PrepareMetricsRecordRef(
+    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
         mMetricsRecordRef, MetricCategory::METRIC_CATEGORY_RUNNER, std::move(labels), std::move(dynamicLabels));
 
     mPromRegisterState = mMetricsRecordRef.CreateIntGauge(METRIC_RUNNER_CLIENT_REGISTER_STATE);

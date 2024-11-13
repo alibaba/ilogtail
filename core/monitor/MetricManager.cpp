@@ -24,11 +24,11 @@ using namespace sls_logs;
 
 namespace logtail {
 
-MetricManager::~MetricManager() {
+WriteMetrics::~WriteMetrics() {
     Clear();
 }
 
-void MetricManager::PrepareMetricsRecordRef(MetricsRecordRef& ref,
+void WriteMetrics::PrepareMetricsRecordRef(MetricsRecordRef& ref,
                                            const std::string& category,
                                            MetricLabels&& labels,
                                            DynamicMetricLabels&& dynamicLabels) {
@@ -36,7 +36,7 @@ void MetricManager::PrepareMetricsRecordRef(MetricsRecordRef& ref,
     CommitMetricsRecordRef(ref);
 }
 
-void MetricManager::CreateMetricsRecordRef(MetricsRecordRef& ref,
+void WriteMetrics::CreateMetricsRecordRef(MetricsRecordRef& ref,
                                           const std::string& category,
                                           MetricLabels&& labels,
                                           DynamicMetricLabels&& dynamicLabels) {
@@ -45,18 +45,18 @@ void MetricManager::CreateMetricsRecordRef(MetricsRecordRef& ref,
     ref.SetMetricsRecord(cur);
 }
 
-void MetricManager::CommitMetricsRecordRef(MetricsRecordRef& ref) {
+void WriteMetrics::CommitMetricsRecordRef(MetricsRecordRef& ref) {
     std::lock_guard<std::mutex> lock(mMutex);
     ref.mMetrics->SetNext(mHead);
     mHead = ref.mMetrics;
 }
 
-MetricsRecord* MetricManager::GetHead() {
+MetricsRecord* WriteMetrics::GetHead() {
     std::lock_guard<std::mutex> lock(mMutex);
     return mHead;
 }
 
-void MetricManager::Clear() {
+void WriteMetrics::Clear() {
     std::lock_guard<std::mutex> lock(mMutex);
     while (mHead) {
         MetricsRecord* toDeleted = mHead;
@@ -65,7 +65,7 @@ void MetricManager::Clear() {
     }
 }
 
-MetricsRecord* MetricManager::DoSnapshot() {
+MetricsRecord* WriteMetrics::DoSnapshot() {
     // new read head
     MetricsRecord* snapshot = nullptr;
     MetricsRecord* toDeleteHead = nullptr;
@@ -146,11 +146,11 @@ MetricsRecord* MetricManager::DoSnapshot() {
     return snapshot;
 }
 
-MetricManagerReader::~MetricManagerReader() {
+ReadMetrics::~ReadMetrics() {
     Clear();
 }
 
-void MetricManagerReader::ReadAsLogGroup(const std::string& regionFieldName,
+void ReadMetrics::ReadAsLogGroup(const std::string& regionFieldName,
                                  const std::string& defaultRegion,
                                  std::map<std::string, sls_logs::LogGroup*>& logGroupMap) const {
     ReadLock lock(mReadWriteLock);
@@ -241,7 +241,7 @@ void MetricManagerReader::ReadAsLogGroup(const std::string& regionFieldName,
     }
 }
 
-void MetricManagerReader::ReadAsFileBuffer(std::string& metricsContent) const {
+void ReadMetrics::ReadAsFileBuffer(std::string& metricsContent) const {
     ReadLock lock(mReadWriteLock);
 
     std::ostringstream oss;
@@ -292,8 +292,8 @@ void MetricManagerReader::ReadAsFileBuffer(std::string& metricsContent) const {
     metricsContent = oss.str();
 }
 
-void MetricManagerReader::UpdateMetrics() {
-    MetricsRecord* snapshot = MetricManager::GetInstance()->DoSnapshot();
+void ReadMetrics::UpdateMetrics() {
+    MetricsRecord* snapshot = WriteMetrics::GetInstance()->DoSnapshot();
     MetricsRecord* toDelete;
     {
         // Only lock when change head
@@ -309,12 +309,12 @@ void MetricManagerReader::UpdateMetrics() {
     }
 }
 
-MetricsRecord* MetricManagerReader::GetHead() {
+MetricsRecord* ReadMetrics::GetHead() {
     WriteLock lock(mReadWriteLock);
     return mHead;
 }
 
-void MetricManagerReader::Clear() {
+void ReadMetrics::Clear() {
     WriteLock lock(mReadWriteLock);
     while (mHead) {
         MetricsRecord* toDelete = mHead;

@@ -47,7 +47,7 @@ template <typename T>
 class Serializer {
 public:
     Serializer(Flusher* f) : mFlusher(f) {
-        MetricManager::GetInstance()->PrepareMetricsRecordRef(
+        WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
             mMetricsRecordRef,
             MetricCategory::METRIC_CATEGORY_COMPONENT,
             {{METRIC_LABEL_KEY_PROJECT, f->GetContext().GetProjectName()},

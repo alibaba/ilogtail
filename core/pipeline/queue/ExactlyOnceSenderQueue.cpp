@@ -33,7 +33,7 @@ ExactlyOnceSenderQueue::ExactlyOnceSenderQueue(const std::vector<RangeCheckpoint
       mRangeCheckpoints(checkpoints) {
     mQueue.resize(checkpoints.size());
     mMetricsRecordRef.AddLabels({{METRIC_LABEL_KEY_EXACTLY_ONCE_ENABLED, "true"}});
-    MetricManager::GetInstance()->CommitMetricsRecordRef(mMetricsRecordRef);
+    WriteMetrics::GetInstance()->CommitMetricsRecordRef(mMetricsRecordRef);
 }
 
 bool ExactlyOnceSenderQueue::Push(unique_ptr<SenderQueueItem>&& item) {

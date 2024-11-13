@@ -27,7 +27,7 @@ SenderQueue::SenderQueue(
     mFetchTimesCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_QUEUE_FETCH_TIMES_TOTAL);
     mValidFetchTimesCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_QUEUE_VALID_FETCH_TIMES_TOTAL);
     mFetchedItemsCnt = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_QUEUE_FETCHED_ITEMS_TOTAL);
-    MetricManager::GetInstance()->CommitMetricsRecordRef(mMetricsRecordRef);
+    WriteMetrics::GetInstance()->CommitMetricsRecordRef(mMetricsRecordRef);
 }
 
 bool SenderQueue::Push(unique_ptr<SenderQueueItem>&& item) {

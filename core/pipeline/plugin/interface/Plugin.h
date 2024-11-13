@@ -37,7 +37,7 @@ public:
     void SetContext(PipelineContext& context) { mContext = &context; }
     MetricsRecordRef& GetMetricsRecordRef() const { return mMetricsRecordRef; }
     void SetMetricsRecordRef(const std::string& name, const std::string& id) {
-        MetricManager::GetInstance()->PrepareMetricsRecordRef(
+        WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
             mMetricsRecordRef,
             MetricCategory::METRIC_CATEGORY_PLUGIN,
             {{METRIC_LABEL_KEY_PROJECT, mContext->GetProjectName()},

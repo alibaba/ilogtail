@@ -2702,7 +2702,7 @@ void PipelineUnittest::TestProcess() const {
     processor->Init(Json::Value(), ctx);
     pipeline.mProcessorLine.emplace_back(std::move(processor));
 
-    MetricManager::GetInstance()->PrepareMetricsRecordRef(pipeline.mMetricsRecordRef, MetricCategory::METRIC_CATEGORY_UNKNOWN, {});
+    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(pipeline.mMetricsRecordRef, MetricCategory::METRIC_CATEGORY_UNKNOWN, {});
     pipeline.mProcessorsInEventsTotal
         = pipeline.mMetricsRecordRef.CreateCounter(METRIC_PIPELINE_PROCESSORS_IN_EVENTS_TOTAL);
     pipeline.mProcessorsInGroupsTotal
@@ -2750,7 +2750,7 @@ void PipelineUnittest::TestSend() const {
         configs.emplace_back(1, nullptr);
         pipeline.mRouter.Init(configs, ctx);
 
-        MetricManager::GetInstance()->PrepareMetricsRecordRef(pipeline.mMetricsRecordRef, MetricCategory::METRIC_CATEGORY_UNKNOWN, {});
+        WriteMetrics::GetInstance()->PrepareMetricsRecordRef(pipeline.mMetricsRecordRef, MetricCategory::METRIC_CATEGORY_UNKNOWN, {});
         pipeline.mFlushersInGroupsTotal
             = pipeline.mMetricsRecordRef.CreateCounter(METRIC_PIPELINE_FLUSHERS_IN_EVENT_GROUPS_TOTAL);
         pipeline.mFlushersInEventsTotal
@@ -2816,7 +2816,7 @@ void PipelineUnittest::TestSend() const {
         configs.emplace_back(configJson.size(), nullptr);
         pipeline.mRouter.Init(configs, ctx);
 
-        MetricManager::GetInstance()->PrepareMetricsRecordRef(pipeline.mMetricsRecordRef, MetricCategory::METRIC_CATEGORY_UNKNOWN, {});
+        WriteMetrics::GetInstance()->PrepareMetricsRecordRef(pipeline.mMetricsRecordRef, MetricCategory::METRIC_CATEGORY_UNKNOWN, {});
         pipeline.mFlushersInGroupsTotal
             = pipeline.mMetricsRecordRef.CreateCounter(METRIC_PIPELINE_FLUSHERS_IN_EVENT_GROUPS_TOTAL);
         pipeline.mFlushersInEventsTotal

@@ -28,9 +28,9 @@
 
 namespace logtail {
 
-class MetricManager {
+class WriteMetrics {
 private:
-    MetricManager() = default;
+    WriteMetrics() = default;
     std::mutex mMutex;
     MetricsRecord* mHead = nullptr;
 
@@ -38,9 +38,9 @@ private:
     MetricsRecord* GetHead();
 
 public:
-    ~MetricManager();
-    static MetricManager* GetInstance() {
-        static MetricManager* ptr = new MetricManager();
+    ~WriteMetrics();
+    static WriteMetrics* GetInstance() {
+        static WriteMetrics* ptr = new WriteMetrics();
         return ptr;
     }
 
@@ -61,18 +61,18 @@ public:
 #endif
 };
 
-class MetricManagerReader {
+class ReadMetrics {
 private:
-    MetricManagerReader() = default;
+    ReadMetrics() = default;
     mutable ReadWriteLock mReadWriteLock;
     MetricsRecord* mHead = nullptr;
     void Clear();
     MetricsRecord* GetHead();
 
 public:
-    ~MetricManagerReader();
-    static MetricManagerReader* GetInstance() {
-        static MetricManagerReader* ptr = new MetricManagerReader();
+    ~ReadMetrics();
+    static ReadMetrics* GetInstance() {
+        static ReadMetrics* ptr = new ReadMetrics();
         return ptr;
     }
     void ReadAsLogGroup(const std::string& regionFieldName,

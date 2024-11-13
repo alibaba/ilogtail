@@ -221,7 +221,7 @@ void ScrapeScheduler::InitSelfMonitor(const MetricLabels& defaultLabels) {
 
     mSelfMonitor->InitMetricManager(sScrapeMetricKeys, labels);
 
-    MetricManager::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, MetricCategory::METRIC_CATEGORY_PLUGIN_SOURCE, std::move(labels));
+    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, MetricCategory::METRIC_CATEGORY_PLUGIN_SOURCE, std::move(labels));
     mPromDelayTotal = mMetricsRecordRef.CreateCounter(METRIC_PLUGIN_PROM_SCRAPE_DELAY_TOTAL);
     mPluginTotalDelayMs = mMetricsRecordRef.CreateCounter(METRIC_PLUGIN_TOTAL_DELAY_MS);
 }

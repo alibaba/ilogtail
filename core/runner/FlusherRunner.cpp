@@ -43,7 +43,7 @@ bool FlusherRunner::Init() {
     mCallback = [this]() { return LoadModuleConfig(false); };
     AppConfig::GetInstance()->RegisterCallback("max_bytes_per_sec", &mCallback);
 
-    MetricManager::GetInstance()->PrepareMetricsRecordRef(
+    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
         mMetricsRecordRef,
         MetricCategory::METRIC_CATEGORY_RUNNER,
         {{METRIC_LABEL_KEY_RUNNER_NAME, METRIC_LABEL_VALUE_RUNNER_NAME_FLUSHER}});

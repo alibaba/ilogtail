@@ -32,7 +32,7 @@ using namespace std;
 namespace logtail {
 
 FileServer::FileServer() {
-    MetricManager::GetInstance()->PrepareMetricsRecordRef(
+    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
         mMetricsRecordRef,
         MetricCategory::METRIC_CATEGORY_RUNNER,
         {{METRIC_LABEL_KEY_RUNNER_NAME, METRIC_LABEL_VALUE_RUNNER_NAME_FILE_SERVER}});

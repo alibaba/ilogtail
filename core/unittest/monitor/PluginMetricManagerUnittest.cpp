@@ -28,7 +28,7 @@ public:
         defaultLabels->emplace_back(METRIC_LABEL_KEY_PIPELINE_NAME, "default_config");
         defaultLabels->emplace_back(METRIC_LABEL_KEY_PLUGIN_TYPE, "default_plugin");
         defaultLabels->emplace_back(METRIC_LABEL_KEY_PLUGIN_ID, "default_id");
-        MetricManager::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, MetricCategory::METRIC_CATEGORY_UNKNOWN, std::move(*defaultLabels));
+        WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, MetricCategory::METRIC_CATEGORY_UNKNOWN, std::move(*defaultLabels));
         std::unordered_map<std::string, MetricType> metricKeys;
         metricKeys.emplace("default_counter", MetricType::METRIC_TYPE_COUNTER);
         metricKeys.emplace("default_gauge", MetricType::METRIC_TYPE_INT_GAUGE);

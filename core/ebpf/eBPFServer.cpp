@@ -151,7 +151,7 @@ void eBPFServer::Init() {
     mMonitorMgr = std::make_unique<eBPFSelfMonitorMgr>();
     DynamicMetricLabels dynamicLabels;
     dynamicLabels.emplace_back(METRIC_LABEL_KEY_PROJECT, [this]() -> std::string { return this->GetAllProjects(); });
-    MetricManager::GetInstance()->PrepareMetricsRecordRef(mRef,
+    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mRef,
                                             MetricCategory::METRIC_CATEGORY_RUNNER,
                                             {{METRIC_LABEL_KEY_RUNNER_NAME, METRIC_LABEL_VALUE_RUNNER_NAME_EBPF_SERVER}}, 
                                             std::move(dynamicLabels));
