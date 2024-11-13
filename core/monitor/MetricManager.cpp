@@ -24,48 +24,52 @@ using namespace sls_logs;
 
 namespace logtail {
 
-WriteMetrics::~WriteMetrics() {
-    Clear();
+MetricManager::~MetricManager() {
+    ClearWriteList();
+    ClearReadList();
 }
 
-void WriteMetrics::PrepareMetricsRecordRef(MetricsRecordRef& ref,
-                                           const std::string& category,
-                                           MetricLabels&& labels,
-                                           DynamicMetricLabels&& dynamicLabels) {
+/**********************************************************
+ *   write list
+ **********************************************************/
+void MetricManager::PrepareMetricsRecordRef(MetricsRecordRef& ref,
+                                            const std::string& category,
+                                            MetricLabels&& labels,
+                                            DynamicMetricLabels&& dynamicLabels) {
     CreateMetricsRecordRef(ref, category, std::move(labels), std::move(dynamicLabels));
     CommitMetricsRecordRef(ref);
 }
 
-void WriteMetrics::CreateMetricsRecordRef(MetricsRecordRef& ref,
-                                          const std::string& category,
-                                          MetricLabels&& labels,
-                                          DynamicMetricLabels&& dynamicLabels) {
+void MetricManager::CreateMetricsRecordRef(MetricsRecordRef& ref,
+                                           const std::string& category,
+                                           MetricLabels&& labels,
+                                           DynamicMetricLabels&& dynamicLabels) {
     MetricsRecord* cur = new MetricsRecord(
         category, std::make_shared<MetricLabels>(labels), std::make_shared<DynamicMetricLabels>(dynamicLabels));
     ref.SetMetricsRecord(cur);
 }
 
-void WriteMetrics::CommitMetricsRecordRef(MetricsRecordRef& ref) {
-    std::lock_guard<std::mutex> lock(mMutex);
-    ref.mMetrics->SetNext(mHead);
-    mHead = ref.mMetrics;
+void MetricManager::CommitMetricsRecordRef(MetricsRecordRef& ref) {
+    std::lock_guard<std::mutex> lock(mWriteListMutex);
+    ref.mMetrics->SetNext(mWriteListHead);
+    mWriteListHead = ref.mMetrics;
 }
 
-MetricsRecord* WriteMetrics::GetHead() {
-    std::lock_guard<std::mutex> lock(mMutex);
-    return mHead;
-}
-
-void WriteMetrics::Clear() {
-    std::lock_guard<std::mutex> lock(mMutex);
-    while (mHead) {
-        MetricsRecord* toDeleted = mHead;
-        mHead = mHead->GetNext();
+void MetricManager::ClearWriteList() {
+    std::lock_guard<std::mutex> lock(mWriteListMutex);
+    while (mWriteListHead) {
+        MetricsRecord* toDeleted = mWriteListHead;
+        mWriteListHead = mWriteListHead->GetNext();
         delete toDeleted;
     }
 }
 
-MetricsRecord* WriteMetrics::DoSnapshot() {
+MetricsRecord* MetricManager::GetWriteListHead() {
+    std::lock_guard<std::mutex> lock(mWriteListMutex);
+    return mWriteListHead;
+}
+
+MetricsRecord* MetricManager::DoSnapshot() {
     // new read head
     MetricsRecord* snapshot = nullptr;
     MetricsRecord* toDeleteHead = nullptr;
@@ -80,8 +84,8 @@ MetricsRecord* WriteMetrics::DoSnapshot() {
 
     // find the first undeleted node and set as new mHead
     {
-        std::lock_guard<std::mutex> lock(mMutex);
-        emptyHead.SetNext(mHead);
+        std::lock_guard<std::mutex> lock(mWriteListMutex);
+        emptyHead.SetNext(mWriteListHead);
         preTmp = &emptyHead;
         tmp = preTmp->GetNext();
         bool findHead = false;
@@ -94,8 +98,8 @@ MetricsRecord* WriteMetrics::DoSnapshot() {
                 writeMetricsTotal++;
             } else {
                 // find head
-                mHead = tmp;
-                preTmp = mHead;
+                mWriteListHead = tmp;
+                preTmp = mWriteListHead;
                 tmp = tmp->GetNext();
                 findHead = true;
                 break;
@@ -103,8 +107,8 @@ MetricsRecord* WriteMetrics::DoSnapshot() {
         }
         // if no undeleted node, set null to mHead
         if (!findHead) {
-            mHead = nullptr;
-            preTmp = mHead;
+            mWriteListHead = nullptr;
+            preTmp = mWriteListHead;
         }
     }
 
@@ -146,15 +150,31 @@ MetricsRecord* WriteMetrics::DoSnapshot() {
     return snapshot;
 }
 
-ReadMetrics::~ReadMetrics() {
-    Clear();
+/**********************************************************
+ *   read list
+ **********************************************************/
+void MetricManager::UpdateMetrics() {
+    MetricsRecord* snapshot = DoSnapshot();
+    MetricsRecord* toDelete;
+    {
+        // Only lock when change head
+        WriteLock lock(mReadListLock);
+        toDelete = mReadListHead;
+        mReadListHead = snapshot;
+    }
+    // delete old linklist
+    while (toDelete) {
+        MetricsRecord* obj = toDelete;
+        toDelete = toDelete->GetNext();
+        delete obj;
+    }
 }
 
-void ReadMetrics::ReadAsLogGroup(const std::string& regionFieldName,
-                                 const std::string& defaultRegion,
-                                 std::map<std::string, sls_logs::LogGroup*>& logGroupMap) const {
-    ReadLock lock(mReadWriteLock);
-    MetricsRecord* tmp = mHead;
+void MetricManager::ReadAsLogGroup(const std::string& regionFieldName,
+                                   const std::string& defaultRegion,
+                                   std::map<std::string, sls_logs::LogGroup*>& logGroupMap) const {
+    ReadLock lock(mReadListLock);
+    MetricsRecord* tmp = mReadListHead;
     while (tmp) {
         Log* logPtr = nullptr;
 
@@ -241,12 +261,12 @@ void ReadMetrics::ReadAsLogGroup(const std::string& regionFieldName,
     }
 }
 
-void ReadMetrics::ReadAsFileBuffer(std::string& metricsContent) const {
-    ReadLock lock(mReadWriteLock);
+void MetricManager::ReadAsFileBuffer(std::string& metricsContent) const {
+    ReadLock lock(mReadListLock);
 
     std::ostringstream oss;
 
-    MetricsRecord* tmp = mHead;
+    MetricsRecord* tmp = mReadListHead;
     while (tmp) {
         Json::Value metricsRecordJson, metricsRecordLabel;
         auto now = GetCurrentLogtailTime();
@@ -292,35 +312,18 @@ void ReadMetrics::ReadAsFileBuffer(std::string& metricsContent) const {
     metricsContent = oss.str();
 }
 
-void ReadMetrics::UpdateMetrics() {
-    MetricsRecord* snapshot = WriteMetrics::GetInstance()->DoSnapshot();
-    MetricsRecord* toDelete;
-    {
-        // Only lock when change head
-        WriteLock lock(mReadWriteLock);
-        toDelete = mHead;
-        mHead = snapshot;
-    }
-    // delete old linklist
-    while (toDelete) {
-        MetricsRecord* obj = toDelete;
-        toDelete = toDelete->GetNext();
-        delete obj;
-    }
-}
-
-MetricsRecord* ReadMetrics::GetHead() {
-    WriteLock lock(mReadWriteLock);
-    return mHead;
-}
-
-void ReadMetrics::Clear() {
-    WriteLock lock(mReadWriteLock);
-    while (mHead) {
-        MetricsRecord* toDelete = mHead;
-        mHead = mHead->GetNext();
+void MetricManager::ClearReadList() {
+    WriteLock lock(mReadListLock);
+    while (mReadListHead) {
+        MetricsRecord* toDelete = mReadListHead;
+        mReadListHead = mReadListHead->GetNext();
         delete toDelete;
     }
+}
+
+MetricsRecord* MetricManager::GetReadListHead() {
+    WriteLock lock(mReadListLock);
+    return mReadListHead;
 }
 
 } // namespace logtail

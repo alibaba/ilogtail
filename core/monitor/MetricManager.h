@@ -28,22 +28,29 @@
 
 namespace logtail {
 
-class WriteMetrics {
+class MetricManager {
 private:
-    WriteMetrics() = default;
-    std::mutex mMutex;
-    MetricsRecord* mHead = nullptr;
-
-    void Clear();
-    MetricsRecord* GetHead();
+    MetricManager() = default;
+    // write list
+    std::mutex mWriteListMutex;
+    MetricsRecord* mWriteListHead = nullptr;
+    void ClearWriteList();
+    MetricsRecord* GetWriteListHead();
+    MetricsRecord* DoSnapshot();
+    // read list
+    mutable ReadWriteLock mReadListLock;
+    MetricsRecord* mReadListHead = nullptr;
+    void ClearReadList();
+    MetricsRecord* GetReadListHead();
 
 public:
-    ~WriteMetrics();
-    static WriteMetrics* GetInstance() {
-        static WriteMetrics* ptr = new WriteMetrics();
+    ~MetricManager();
+    static MetricManager* GetInstance() {
+        static MetricManager* ptr = new MetricManager();
         return ptr;
     }
 
+    // write
     void PrepareMetricsRecordRef(MetricsRecordRef& ref,
                                  const std::string& category,
                                  MetricLabels&& labels,
@@ -53,33 +60,13 @@ public:
                                 MetricLabels&& labels,
                                 DynamicMetricLabels&& dynamicLabels = {});
     void CommitMetricsRecordRef(MetricsRecordRef& ref);
-    MetricsRecord* DoSnapshot();
 
-
-#ifdef APSARA_UNIT_TEST_MAIN
-    friend class MetricManagerUnittest;
-#endif
-};
-
-class ReadMetrics {
-private:
-    ReadMetrics() = default;
-    mutable ReadWriteLock mReadWriteLock;
-    MetricsRecord* mHead = nullptr;
-    void Clear();
-    MetricsRecord* GetHead();
-
-public:
-    ~ReadMetrics();
-    static ReadMetrics* GetInstance() {
-        static ReadMetrics* ptr = new ReadMetrics();
-        return ptr;
-    }
+    // read
+    void UpdateMetrics();
     void ReadAsLogGroup(const std::string& regionFieldName,
                         const std::string& defaultRegion,
                         std::map<std::string, sls_logs::LogGroup*>& logGroupMap) const;
     void ReadAsFileBuffer(std::string& metricsContent) const;
-    void UpdateMetrics();
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class MetricManagerUnittest;

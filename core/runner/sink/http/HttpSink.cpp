@@ -38,7 +38,7 @@ bool HttpSink::Init() {
         return false;
     }
 
-    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
+    MetricManager::GetInstance()->PrepareMetricsRecordRef(
         mMetricsRecordRef,
         MetricCategory::METRIC_CATEGORY_RUNNER,
         {{METRIC_LABEL_KEY_RUNNER_NAME, METRIC_LABEL_VALUE_RUNNER_NAME_HTTP_SINK}});

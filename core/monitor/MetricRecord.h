@@ -68,7 +68,7 @@ public:
 };
 
 class MetricsRecordRef {
-    friend class WriteMetrics;
+    friend class MetricManager;
     friend bool operator==(const MetricsRecordRef& lhs, std::nullptr_t rhs);
     friend bool operator==(std::nullptr_t rhs, const MetricsRecordRef& lhs);
 
@@ -91,7 +91,7 @@ public:
     IntGaugePtr CreateIntGauge(const std::string& name);
     DoubleGaugePtr CreateDoubleGauge(const std::string& name);
     const MetricsRecord* operator->() const;
-    // this is not thread-safe, and should be only used before WriteMetrics::CommitMetricsRecordRef
+    // this is not thread-safe, and should be only used before MetricManager::CommitMetricsRecordRef
     void AddLabels(MetricLabels&& labels);
 #ifdef APSARA_UNIT_TEST_MAIN
     bool HasLabel(const std::string& key, const std::string& value) const;

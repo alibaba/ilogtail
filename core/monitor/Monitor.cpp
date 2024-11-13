@@ -708,7 +708,7 @@ void LoongCollectorMonitor::Init() {
         return EnterpriseConfigProvider::GetInstance()->GetUserDefinedIdSet();
     });
 #endif
-    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
+    MetricManager::GetInstance()->PrepareMetricsRecordRef(
         mMetricsRecordRef, MetricCategory::METRIC_CATEGORY_AGENT, std::move(labels), std::move(dynamicLabels));
     // init value
     mAgentCpu = mMetricsRecordRef.CreateDoubleGauge(METRIC_AGENT_CPU);

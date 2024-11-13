@@ -87,7 +87,7 @@ void ProcessorRunner::Run(uint32_t threadNo) {
     LOG_INFO(sLogger, ("processor runner", "started")("thread no", threadNo));
 
     // thread local metrics should be initialized in each thread
-    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
+    MetricManager::GetInstance()->PrepareMetricsRecordRef(
         sMetricsRecordRef,
         MetricCategory::METRIC_CATEGORY_RUNNER,
         {{METRIC_LABEL_KEY_RUNNER_NAME, METRIC_LABEL_VALUE_RUNNER_NAME_PROCESSOR},

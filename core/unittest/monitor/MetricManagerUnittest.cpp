@@ -33,8 +33,8 @@ public:
     void SetUp() {}
 
     void TearDown() {
-        ReadMetrics::GetInstance()->Clear();
-        WriteMetrics::GetInstance()->Clear();
+        MetricManager::GetInstance()->ClearWriteList();
+        MetricManager::GetInstance()->ClearReadList();
     }
 
     void TestCreateMetricAutoDelete();
@@ -54,7 +54,7 @@ void MetricManagerUnittest::TestCreateMetricAutoDelete() {
     labels.emplace_back(std::make_pair<std::string, std::string>("region", "cn-hangzhou"));
 
     MetricsRecordRef fileMetric;
-    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(fileMetric, MetricCategory::METRIC_CATEGORY_UNKNOWN, std::move(labels));
+    MetricManager::GetInstance()->PrepareMetricsRecordRef(fileMetric, MetricCategory::METRIC_CATEGORY_UNKNOWN, std::move(labels));
     APSARA_TEST_EQUAL(fileMetric->GetLabels()->size(), 3);
 
 
@@ -65,8 +65,8 @@ void MetricManagerUnittest::TestCreateMetricAutoDelete() {
 
     MetricExportor::GetInstance()->PushMetrics(true);
 
-    // assert WriteMetrics count
-    MetricsRecord* tmp = WriteMetrics::GetInstance()->GetHead();
+    // assert MetricManager count
+    MetricsRecord* tmp = MetricManager::GetInstance()->GetWriteListHead();
     int count = 0;
     while (tmp) {
         tmp = tmp->GetNext();
@@ -75,8 +75,8 @@ void MetricManagerUnittest::TestCreateMetricAutoDelete() {
     APSARA_TEST_EQUAL(count, 1);
 
 
-    // assert ReadMetrics count
-    tmp = ReadMetrics::GetInstance()->GetHead();
+    // assert MetricManager count
+    tmp = MetricManager::GetInstance()->GetReadListHead();
     count = 0;
     while (tmp) {
         tmp = tmp->GetNext();
@@ -92,7 +92,7 @@ void MetricManagerUnittest::TestCreateMetricAutoDelete() {
         labels.emplace_back(std::make_pair<std::string, std::string>("region", "cn-hangzhou"));
 
         MetricsRecordRef fileMetric2;
-        WriteMetrics::GetInstance()->PrepareMetricsRecordRef(fileMetric2, MetricCategory::METRIC_CATEGORY_UNKNOWN, std::move(labels));
+        MetricManager::GetInstance()->PrepareMetricsRecordRef(fileMetric2, MetricCategory::METRIC_CATEGORY_UNKNOWN, std::move(labels));
         CounterPtr fileCounter2 = fileMetric2.CreateCounter("filed2");
         fileCounter2->Add(222UL);
     }
@@ -103,15 +103,15 @@ void MetricManagerUnittest::TestCreateMetricAutoDelete() {
         labels.emplace_back(std::make_pair<std::string, std::string>("logstore", "logstore1"));
         labels.emplace_back(std::make_pair<std::string, std::string>("region", "cn-hangzhou"));
         MetricsRecordRef fileMetric3;
-        WriteMetrics::GetInstance()->PrepareMetricsRecordRef(fileMetric3, MetricCategory::METRIC_CATEGORY_UNKNOWN, std::move(labels));
+        MetricManager::GetInstance()->PrepareMetricsRecordRef(fileMetric3, MetricCategory::METRIC_CATEGORY_UNKNOWN, std::move(labels));
         CounterPtr fileCounter3 = fileMetric3.CreateCounter("filed3");
         fileCounter3->Add(333UL);
     }
 
     MetricExportor::GetInstance()->PushMetrics(true);
 
-    // assert WriteMetrics count
-    tmp = WriteMetrics::GetInstance()->GetHead();
+    // assert MetricManager count
+    tmp = MetricManager::GetInstance()->GetWriteListHead();
     count = 0;
     while (tmp) {
         tmp = tmp->GetNext();
@@ -120,8 +120,8 @@ void MetricManagerUnittest::TestCreateMetricAutoDelete() {
     APSARA_TEST_EQUAL(count, 1);
 
 
-    // assert ReadMetrics count
-    tmp = ReadMetrics::GetInstance()->GetHead();
+    // assert MetricManager count
+    tmp = MetricManager::GetInstance()->GetReadListHead();
     count = 0;
     while (tmp) {
         tmp = tmp->GetNext();
@@ -144,7 +144,7 @@ void createMetrics(int count) {
         labels.emplace_back(std::make_pair<std::string, std::string>("count", std::to_string(count)));
         labels.emplace_back(std::make_pair<std::string, std::string>("region", "cn-beijing"));
         MetricsRecordRef fileMetric;
-        WriteMetrics::GetInstance()->PrepareMetricsRecordRef(fileMetric, MetricCategory::METRIC_CATEGORY_UNKNOWN, std::move(labels));
+        MetricManager::GetInstance()->PrepareMetricsRecordRef(fileMetric, MetricCategory::METRIC_CATEGORY_UNKNOWN, std::move(labels));
         CounterPtr fileCounter = fileMetric.CreateCounter("filed1");
         fileCounter->Add(111UL);
     }
@@ -161,8 +161,8 @@ void MetricManagerUnittest::TestCreateMetricAutoDeleteMultiThread() {
     t3.join();
     t4.join();
 
-    // assert WriteMetrics count
-    MetricsRecord* tmp = WriteMetrics::GetInstance()->GetHead();
+    // assert MetricManager count
+    MetricsRecord* tmp = MetricManager::GetInstance()->GetWriteListHead();
     int count = 0;
     while (tmp) {
         tmp = tmp->GetNext();
@@ -175,8 +175,8 @@ void MetricManagerUnittest::TestCreateMetricAutoDeleteMultiThread() {
         MetricExportor::GetInstance()->PushMetrics(true);
     }
 
-    // assert WriteMetrics count
-    tmp = WriteMetrics::GetInstance()->GetHead();
+    // assert MetricManager count
+    tmp = MetricManager::GetInstance()->GetWriteListHead();
     count = 0;
     while (tmp) {
         for (auto item = tmp->GetLabels()->begin(); item != tmp->GetLabels()->end(); ++item) {
@@ -188,8 +188,8 @@ void MetricManagerUnittest::TestCreateMetricAutoDeleteMultiThread() {
     }
     APSARA_TEST_EQUAL(count, 0);
 
-    // assert ReadMetrics count
-    tmp = ReadMetrics::GetInstance()->GetHead();
+    // assert MetricManager count
+    tmp = MetricManager::GetInstance()->GetReadListHead();
     count = 0;
     while (tmp) {
         tmp = tmp->GetNext();
@@ -212,7 +212,7 @@ void MetricManagerUnittest::TestCreateAndDeleteMetric() {
     labels.emplace_back(std::make_pair<std::string, std::string>("project", "test1"));
     labels.emplace_back(std::make_pair<std::string, std::string>("logstore", "test1"));
     labels.emplace_back(std::make_pair<std::string, std::string>("region", "cn-beijing"));
-    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(*fileMetric1, MetricCategory::METRIC_CATEGORY_UNKNOWN, std::move(labels));
+    MetricManager::GetInstance()->PrepareMetricsRecordRef(*fileMetric1, MetricCategory::METRIC_CATEGORY_UNKNOWN, std::move(labels));
     CounterPtr fileCounter = fileMetric1->CreateCounter("filed1");
     fileCounter->Add(111UL);
 
@@ -221,7 +221,7 @@ void MetricManagerUnittest::TestCreateAndDeleteMetric() {
         labels.emplace_back(std::make_pair<std::string, std::string>("project", "test2"));
         labels.emplace_back(std::make_pair<std::string, std::string>("logstore", "test2"));
         labels.emplace_back(std::make_pair<std::string, std::string>("region", "cn-beijing"));
-        WriteMetrics::GetInstance()->PrepareMetricsRecordRef(*fileMetric2, MetricCategory::METRIC_CATEGORY_UNKNOWN, std::move(labels));
+        MetricManager::GetInstance()->PrepareMetricsRecordRef(*fileMetric2, MetricCategory::METRIC_CATEGORY_UNKNOWN, std::move(labels));
         CounterPtr fileCounter = fileMetric2->CreateCounter("filed1");
         fileCounter->Add(111UL);
     }
@@ -231,7 +231,7 @@ void MetricManagerUnittest::TestCreateAndDeleteMetric() {
         labels.emplace_back(std::make_pair<std::string, std::string>("project", "test3"));
         labels.emplace_back(std::make_pair<std::string, std::string>("logstore", "test3"));
         labels.emplace_back(std::make_pair<std::string, std::string>("region", "cn-beijing"));
-        WriteMetrics::GetInstance()->PrepareMetricsRecordRef(*fileMetric3, MetricCategory::METRIC_CATEGORY_UNKNOWN, std::move(labels));
+        MetricManager::GetInstance()->PrepareMetricsRecordRef(*fileMetric3, MetricCategory::METRIC_CATEGORY_UNKNOWN, std::move(labels));
         CounterPtr fileCounter = fileMetric3->CreateCounter("filed1");
         fileCounter->Add(111UL);
     }
@@ -243,8 +243,8 @@ void MetricManagerUnittest::TestCreateAndDeleteMetric() {
     t2.join();
     t3.join();
     t4.join();
-    // assert WriteMetrics count
-    MetricsRecord* tmp = WriteMetrics::GetInstance()->GetHead();
+    // assert MetricManager count
+    MetricsRecord* tmp = MetricManager::GetInstance()->GetWriteListHead();
     int count = 0;
     while (tmp) {
         tmp = tmp->GetNext();
@@ -258,8 +258,8 @@ void MetricManagerUnittest::TestCreateAndDeleteMetric() {
 
     MetricExportor::GetInstance()->PushMetrics(true);
 
-    // assert WriteMetrics count
-    tmp = WriteMetrics::GetInstance()->GetHead();
+    // assert MetricManager count
+    tmp = MetricManager::GetInstance()->GetWriteListHead();
     count = 0;
     while (tmp) {
         for (auto item = tmp->GetLabels()->begin(); item != tmp->GetLabels()->end(); ++item) {
@@ -272,7 +272,7 @@ void MetricManagerUnittest::TestCreateAndDeleteMetric() {
     APSARA_TEST_EQUAL(count, 1);
     // assert writeMetric value
     if (count == 1) {
-        tmp = WriteMetrics::GetInstance()->GetHead();
+        tmp = MetricManager::GetInstance()->GetWriteListHead();
         std::vector<CounterPtr> values = tmp->GetCounters();
         APSARA_TEST_EQUAL(values.size(), 1);
         if (values.size() == 1) {
@@ -280,8 +280,8 @@ void MetricManagerUnittest::TestCreateAndDeleteMetric() {
         }
     }
 
-    // assert ReadMetrics count
-    tmp = ReadMetrics::GetInstance()->GetHead();
+    // assert MetricManager count
+    tmp = MetricManager::GetInstance()->GetReadListHead();
     count = 0;
     while (tmp) {
         tmp = tmp->GetNext();
@@ -291,7 +291,7 @@ void MetricManagerUnittest::TestCreateAndDeleteMetric() {
 
     // assert readMetric value
     if (count == 1) {
-        tmp = ReadMetrics::GetInstance()->GetHead();
+        tmp = MetricManager::GetInstance()->GetReadListHead();
         std::vector<CounterPtr> values = tmp->GetCounters();
         APSARA_TEST_EQUAL(values.size(), 1);
         if (values.size() == 1) {
@@ -307,8 +307,8 @@ void MetricManagerUnittest::TestCreateAndDeleteMetric() {
     APSARA_TEST_EQUAL(fileCounter->GetValue(), 333);
 
     MetricExportor::GetInstance()->PushMetrics(true);
-    // assert ReadMetrics count
-    tmp = ReadMetrics::GetInstance()->GetHead();
+    // assert MetricManager count
+    tmp = MetricManager::GetInstance()->GetReadListHead();
     count = 0;
     while (tmp) {
         tmp = tmp->GetNext();
@@ -318,7 +318,7 @@ void MetricManagerUnittest::TestCreateAndDeleteMetric() {
 
     // assert readMetric value
     if (count == 1) {
-        tmp = ReadMetrics::GetInstance()->GetHead();
+        tmp = MetricManager::GetInstance()->GetReadListHead();
         std::vector<CounterPtr> values = tmp->GetCounters();
         APSARA_TEST_EQUAL(values.size(), 1);
         if (values.size() == 1) {
