@@ -320,9 +320,8 @@ bool Pipeline::Init(PipelineConfig&& config) {
 
     WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
         mMetricsRecordRef,
-        {{METRIC_LABEL_KEY_PROJECT, mContext.GetProjectName()},
-         {METRIC_LABEL_KEY_PIPELINE_NAME, mName},
-         {METRIC_LABEL_KEY_METRIC_CATEGORY, METRIC_LABEL_KEY_METRIC_CATEGORY_PIPELINE}});
+        MetricCategory::METRIC_CATEGORY_PIPELINE,
+        {{METRIC_LABEL_KEY_PROJECT, mContext.GetProjectName()}, {METRIC_LABEL_KEY_PIPELINE_NAME, mName}});
     mStartTime = mMetricsRecordRef.CreateIntGauge(METRIC_PIPELINE_START_TIME);
     mProcessorsInEventsTotal = mMetricsRecordRef.CreateCounter(METRIC_PIPELINE_PROCESSORS_IN_EVENTS_TOTAL);
     mProcessorsInGroupsTotal = mMetricsRecordRef.CreateCounter(METRIC_PIPELINE_PROCESSORS_IN_EVENT_GROUPS_TOTAL);
@@ -503,7 +502,7 @@ bool Pipeline::LoadGoPipelines() const {
             LOG_ERROR(mContext.GetLogger(),
                       ("failed to init pipeline", "Go pipeline is invalid, see go_plugin.LOG for detail")(
                           "Go pipeline num", "2")("Go pipeline content", content)("config", mName));
-            LogtailAlarm::GetInstance()->SendAlarm(CATEGORY_CONFIG_ALARM,
+            AlarmManager::GetInstance()->SendAlarm(CATEGORY_CONFIG_ALARM,
                                                    "Go pipeline is invalid, content: " + content + ", config: " + mName,
                                                    mContext.GetProjectName(),
                                                    mContext.GetLogstoreName(),
@@ -522,7 +521,7 @@ bool Pipeline::LoadGoPipelines() const {
             LOG_ERROR(mContext.GetLogger(),
                       ("failed to init pipeline", "Go pipeline is invalid, see go_plugin.LOG for detail")(
                           "Go pipeline num", "1")("Go pipeline content", content)("config", mName));
-            LogtailAlarm::GetInstance()->SendAlarm(CATEGORY_CONFIG_ALARM,
+            AlarmManager::GetInstance()->SendAlarm(CATEGORY_CONFIG_ALARM,
                                                    "Go pipeline is invalid, content: " + content + ", config: " + mName,
                                                    mContext.GetProjectName(),
                                                    mContext.GetLogstoreName(),
@@ -553,7 +552,7 @@ void Pipeline::WaitAllItemsInProcessFinished() {
         uint64_t duration = GetCurrentTimeInMilliSeconds() - startTime;
         if (!alarmOnce && duration > 10000) { // 10s
             LOG_ERROR(sLogger, ("pipeline stop", "too slow")("config", mName)("cost", duration));
-            LogtailAlarm::GetInstance()->SendAlarm(CONFIG_UPDATE_ALARM,
+            AlarmManager::GetInstance()->SendAlarm(CONFIG_UPDATE_ALARM,
                                                    string("pipeline stop too slow, config: ") + mName
                                                        + "; cost:" + std::to_string(duration),
                                                    mContext.GetProjectName(),
