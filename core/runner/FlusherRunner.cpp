@@ -20,7 +20,7 @@
 #include "common/StringTools.h"
 #include "common/http/HttpRequest.h"
 #include "logger/Logger.h"
-#include "monitor/LogtailAlarm.h"
+#include "monitor/AlarmManager.h"
 #include "pipeline/plugin/interface/HttpFlusher.h"
 #include "pipeline/queue/QueueKeyManager.h"
 #include "pipeline/queue/SenderQueueItem.h"
@@ -43,7 +43,7 @@ bool FlusherRunner::Init() {
     mCallback = [this]() { return LoadModuleConfig(false); };
     AppConfig::GetInstance()->RegisterCallback("max_bytes_per_sec", &mCallback);
 
-    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
+    MetricManager::GetInstance()->PrepareMetricsRecordRef(
         mMetricsRecordRef,
         MetricCategory::METRIC_CATEGORY_RUNNER,
         {{METRIC_LABEL_KEY_RUNNER_NAME, METRIC_LABEL_VALUE_RUNNER_NAME_FLUSHER}});

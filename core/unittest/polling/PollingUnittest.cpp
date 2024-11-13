@@ -45,7 +45,7 @@
 #include <boost/regex.hpp>
 #include "protobuf/sls/metric.pb.h"
 #include "protobuf/sls/sls_logs.pb.h"
-#include "monitor/LogtailAlarm.h"
+#include "monitor/AlarmManager.h"
 #include "file_server/event_handler/LogInput.h"
 #include "common/FileEncryption.h"
 #include "common/FileSystemUtil.h"
@@ -182,7 +182,7 @@ string MergeVectorString(vector<string>& input) {
     return output;
 }
 
-void WriteMetrics(const Json::Value& metrics) {
+void MetricManager(const Json::Value& metrics) {
     std::ofstream(STRING_FLAG(user_log_config)) << metrics << std::endl;
 }
 
@@ -274,7 +274,7 @@ void WriteConfigJson(bool isFilter = false,
                      bool hasEndpoint = false,
                      int projectNum = 1,
                      bool hasTopic = false) {
-    WriteMetrics(MakeConfigJson(isFilter, hasAliuid, hasEndpoint, projectNum, hasTopic));
+    MetricManager(MakeConfigJson(isFilter, hasAliuid, hasEndpoint, projectNum, hasTopic));
 }
 
 bool gNetWorkStat;
@@ -1541,7 +1541,7 @@ void PollingUnittest::testPollingWindowsRootPathCaseSetUp(bool enable,
             dirBlacklist.append(kRootPath + "\\" + p);
         }
     }
-    WriteMetrics(metrics);
+    MetricManager(metrics);
     commonCaseSetUp();
     ASSERT_EQ(BOOL_FLAG(enable_root_path_collection), enable);
 

@@ -32,7 +32,7 @@ using namespace std;
 namespace logtail {
 
 FileServer::FileServer() {
-    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
+    MetricManager::GetInstance()->PrepareMetricsRecordRef(
         mMetricsRecordRef,
         MetricCategory::METRIC_CATEGORY_RUNNER,
         {{METRIC_LABEL_KEY_RUNNER_NAME, METRIC_LABEL_VALUE_RUNNER_NAME_FILE_SERVER}});
@@ -79,7 +79,7 @@ void FileServer::PauseInner() {
     LogInput::GetInstance()->HoldOn();
     auto holdOnCost = GetCurrentTimeInMilliSeconds() - holdOnStart;
     if (holdOnCost >= 60 * 1000) {
-        LogtailAlarm::GetInstance()->SendAlarm(HOLD_ON_TOO_SLOW_ALARM,
+        AlarmManager::GetInstance()->SendAlarm(HOLD_ON_TOO_SLOW_ALARM,
                                                "Pausing file server took " + ToString(holdOnCost) + "ms");
     }
     LOG_INFO(sLogger, ("file server pause", "succeeded")("cost", ToString(holdOnCost) + "ms"));

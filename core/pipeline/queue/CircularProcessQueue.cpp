@@ -26,7 +26,7 @@ CircularProcessQueue::CircularProcessQueue(size_t cap, int64_t key, uint32_t pri
     : QueueInterface<std::unique_ptr<ProcessQueueItem>>(key, cap, ctx), ProcessQueueInterface(key, cap, priority, ctx) {
     mMetricsRecordRef.AddLabels({{METRIC_LABEL_KEY_QUEUE_TYPE, "circular"}});
     mDiscardedEventsTotal = mMetricsRecordRef.CreateCounter(METRIC_COMPONENT_QUEUE_DISCARDED_EVENTS_TOTAL);
-    WriteMetrics::GetInstance()->CommitMetricsRecordRef(mMetricsRecordRef);
+    MetricManager::GetInstance()->CommitMetricsRecordRef(mMetricsRecordRef);
 }
 
 bool CircularProcessQueue::Push(unique_ptr<ProcessQueueItem>&& item) {

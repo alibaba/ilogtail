@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "monitor/LogtailMetric.h"
+#include "monitor/MetricManager.h"
 #include "monitor/metric_constants/MetricConstants.h"
 #include "pipeline/PipelineContext.h"
 #include "pipeline/queue/QueueKey.h"
@@ -27,7 +27,7 @@ template <typename T>
 class QueueInterface {
 public:
     QueueInterface(QueueKey key, size_t cap, const PipelineContext& ctx) : mKey(key), mCapacity(cap) {
-        WriteMetrics::GetInstance()->CreateMetricsRecordRef(mMetricsRecordRef,
+        MetricManager::GetInstance()->CreateMetricsRecordRef(mMetricsRecordRef,
                                                             MetricCategory::METRIC_CATEGORY_COMPONENT,
                                                             {
                                                                 {METRIC_LABEL_KEY_PROJECT, ctx.GetProjectName()},

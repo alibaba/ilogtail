@@ -36,7 +36,7 @@
 #include "go_pipeline/LogtailPlugin.h"
 #include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"
-#include "monitor/LogtailAlarm.h"
+#include "monitor/AlarmManager.h"
 #include "monitor/MetricExportor.h"
 #include "plugin/flusher/sls/FlusherSLS.h"
 #include "protobuf/sls/sls_logs.pb.h"
@@ -240,9 +240,9 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
     if (lastReadEventTime > 0
         && (now.tv_sec - lastReadEventTime > AppConfig::GetInstance()->GetForceQuitReadTimeout())) {
         LOG_ERROR(sLogger, ("last read event time is too old", lastReadEventTime)("prepare force exit", ""));
-        LogtailAlarm::GetInstance()->SendAlarm(
+        AlarmManager::GetInstance()->SendAlarm(
             LOGTAIL_CRASH_ALARM, "last read event time is too old: " + ToString(lastReadEventTime) + " force exit");
-        LogtailAlarm::GetInstance()->ForceToSend();
+        AlarmManager::GetInstance()->ForceToSend();
         sleep(10);
         _exit(1);
     }
@@ -708,7 +708,7 @@ void LoongCollectorMonitor::Init() {
         return EnterpriseConfigProvider::GetInstance()->GetUserDefinedIdSet();
     });
 #endif
-    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
+    MetricManager::GetInstance()->PrepareMetricsRecordRef(
         mMetricsRecordRef, MetricCategory::METRIC_CATEGORY_AGENT, std::move(labels), std::move(dynamicLabels));
     // init value
     mAgentCpu = mMetricsRecordRef.CreateDoubleGauge(METRIC_AGENT_CPU);

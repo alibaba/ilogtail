@@ -17,7 +17,7 @@
 #include <filesystem>
 
 #include "LogFileProfiler.h"
-#include "LogtailMetric.h"
+#include "MetricManager.h"
 #include "MetricConstants.h"
 #include "app_config/AppConfig.h"
 #include "common/FileSystemUtil.h"
@@ -51,7 +51,7 @@ void MetricExportor::PushMetrics(bool forceSend) {
     }
 
     // go指标在Cpp指标前获取，是为了在 Cpp 部分指标做 SnapShot
-    // 前（即调用 ReadMetrics::GetInstance()->UpdateMetrics() 函数），把go部分的进程级指标填写到 Cpp
+    // 前（即调用 MetricManagerReader::GetInstance()->UpdateMetrics() 函数），把go部分的进程级指标填写到 Cpp
     // 的进程级指标中去，随Cpp的进程级指标一起输出
     if (LogtailPlugin::GetInstance()->IsPluginOpened()) {
         PushGoMetrics();
@@ -60,15 +60,15 @@ void MetricExportor::PushMetrics(bool forceSend) {
 }
 
 void MetricExportor::PushCppMetrics() {
-    ReadMetrics::GetInstance()->UpdateMetrics();
+    MetricManagerReader::GetInstance()->UpdateMetrics();
 
     if ("sls" == STRING_FLAG(metrics_report_method)) {
         std::map<std::string, sls_logs::LogGroup*> logGroupMap;
-        ReadMetrics::GetInstance()->ReadAsLogGroup(METRIC_LABEL_KEY_REGION, METRIC_REGION_DEFAULT, logGroupMap);
+        MetricManagerReader::GetInstance()->ReadAsLogGroup(METRIC_LABEL_KEY_REGION, METRIC_REGION_DEFAULT, logGroupMap);
         SendToSLS(logGroupMap);
     } else if ("file" == STRING_FLAG(metrics_report_method)) {
         std::string metricsContent;
-        ReadMetrics::GetInstance()->ReadAsFileBuffer(metricsContent);
+        MetricManagerReader::GetInstance()->ReadAsFileBuffer(metricsContent);
         SendToLocalFile(metricsContent, "self-metrics-cpp");
     }
 }
