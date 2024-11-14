@@ -36,7 +36,7 @@ protected:
 public:
     void TestGetByContainerIds() {
         LOG_INFO(sLogger, ("TestGetByContainerIds() begin", time(NULL)));
-                const std::string jsonData = R"({"containerd://286effd2650c0689b779018e42e9ec7aa3d2cb843005e038204e85fc3d4f9144":{"k8s.namespace.name":"default","workloadName":"oneagent-demo-658648895b","workloadKind":"replicaset","service.name":"","labels":{"app":"oneagent-demo","pod-template-hash":"658648895b"},"envs":{},"container.image.name":{"oneagent-demo":"sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/centos7-cve-fix:1.0.0"}}})";
+                const std::string jsonData = R"({"containerd://286effd2650c0689b779018e42e9ec7aa3d2cb843005e038204e85fc3d4f9144":{"k8s.namespace.name":"default","workload.name":"oneagent-demo-658648895b","workload.kind":"replicaset","service.name":"","labels":{"app":"oneagent-demo","pod-template-hash":"658648895b"},"envs":{},"container.image.name":{"oneagent-demo":"sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/centos7-cve-fix:1.0.0"}}})";
 
         Json::Value root;
         Json::CharReaderBuilder readerBuilder;
@@ -64,8 +64,8 @@ public:
         const std::string jsonData = R"({
             "10.41.0.2": {
                 "k8s.namespace.name": "kube-system",
-                "workloadName": "coredns-7b669cbb96",
-                "workloadKind": "replicaset",
+                "workload.name": "coredns-7b669cbb96",
+                "workload.kind": "replicaset",
                 "service.name": "",
                 "labels": {
                     "k8s-app": "kube-dns",
@@ -81,8 +81,8 @@ public:
             },
             "10.41.0.3": {
                 "k8s.namespace.name": "kube-system",
-                "workloadName": "csi-provisioner-8bd988c55",
-                "workloadKind": "replicaset",
+                "workload.name": "csi-provisioner-8bd988c55",
+                "workload.kind": "replicaset",
                 "service.name": "",
                 "labels": {
                     "app": "csi-provisioner",
@@ -108,8 +108,8 @@ public:
             },
             "172.16.20.108": {
                 "k8s.namespace.name": "kube-system",
-                "workloadName": "kube-proxy-worker",
-                "workloadKind": "daemonset",
+                "workload.name": "kube-proxy-worker",
+                "workload.kind": "daemonset",
                 "service.name": "",
                 "labels": {
                     "controller-revision-hash": "756748b889",
@@ -148,7 +148,7 @@ public:
 {
         "name": "test",
         "tags": {
-            "remote_ip": "172.16.20.108"
+            "remote.ip": "172.16.20.108"
         },
         "timestamp" : 12345678901,
         "timestampNanosecond" : 0,
@@ -174,7 +174,7 @@ public:
         processor.AddLabelToLogGroup(eventGroup);
         EventsContainer& eventsEnd = eventGroup.MutableEvents();
         auto& metricEvent = eventsEnd[0].Cast<MetricEvent>();
-        APSARA_TEST_EQUAL("kube-proxy-worker", metricEvent.GetTag("peerWorkloadName").to_string());
+        APSARA_TEST_EQUAL("kube-proxy-worker", metricEvent.GetTag("peer.workload.name").to_string());
         APSARA_TEST_TRUE_FATAL(k8sMetadata.GetInfoByIpFromCache("10.41.0.2") != nullptr);
     }
 
@@ -184,8 +184,8 @@ public:
         const std::string jsonData = R"({
             "10.41.0.2": {
                 "k8s.namespace.name": "kube-system",
-                "workloadName": "coredns-7b669cbb96",
-                "workloadKind": "replicaset",
+                "workload.name": "coredns-7b669cbb96",
+                "workload.kind": "replicaset",
                 "service.name": "",
                 "labels": {
                     "k8s-app": "kube-dns",
@@ -201,8 +201,8 @@ public:
             },
             "10.41.0.3": {
                 "k8s.namespace.name": "kube-system",
-                "workloadName": "csi-provisioner-8bd988c55",
-                "workloadKind": "replicaset",
+                "workload.name": "csi-provisioner-8bd988c55",
+                "workload.kind": "replicaset",
                 "service.name": "",
                 "labels": {
                     "app": "csi-provisioner",
@@ -228,8 +228,8 @@ public:
             },
             "172.16.20.108": {
                 "k8s.namespace.name": "kube-system",
-                "workloadName": "kube-proxy-worker",
-                "workloadKind": "daemonset",
+                "workload.name": "kube-proxy-worker",
+                "workload.kind": "daemonset",
                 "service.name": "",
                 "labels": {
                     "controller-revision-hash": "756748b889",
@@ -274,7 +274,7 @@ public:
         mSpanEvent->SetStartTimeNs(1715826723000000000);
         mSpanEvent->SetEndTimeNs(1715826725000000000);
         mSpanEvent->SetTag(string("key1"), string("value1"));
-        mSpanEvent->SetTag(string("remote_ip"), string("172.16.20.108"));
+        mSpanEvent->SetTag(string("remote.ip"), string("172.16.20.108"));
         SpanEvent::InnerEvent* e = mSpanEvent->AddEvent();
         e->SetName("test_event");
         e->SetTimestampNs(1715826724000000000);
@@ -287,7 +287,7 @@ public:
         mSpanEvent->SetScopeTag(string("key2"), string("value2"));
         LabelingK8sMetadata& processor = *(new LabelingK8sMetadata);
         processor.AddLabels(*mSpanEvent, container_vec, remote_ip_vec);
-        APSARA_TEST_EQUAL("kube-proxy-worker", mSpanEvent->GetTag("peerWorkloadName").to_string());
+        APSARA_TEST_EQUAL("kube-proxy-worker", mSpanEvent->GetTag("peer.workload.name").to_string());
         APSARA_TEST_TRUE_FATAL(k8sMetadata.GetInfoByIpFromCache("10.41.0.2") != nullptr);
     }
 
@@ -383,7 +383,7 @@ public:
 {
         "name": "test",
         "tags": {
-            "remote_ip": "172.16.20.108"
+            "remote.ip": "172.16.20.108"
         },
         "timestamp" : 12345678901,
         "timestampNanosecond" : 0,
@@ -412,7 +412,7 @@ public:
         processor.AddLabels(events[0].Cast<MetricEvent>(), container_vec, remote_ip_vec);
         EventsContainer& eventsEnd = eventGroup.MutableEvents();
         auto& metricEvent = eventsEnd[0].Cast<MetricEvent>();
-        APSARA_TEST_EQUAL("kube-proxy-worker", metricEvent.GetTag("peerWorkloadName").to_string());
+        APSARA_TEST_EQUAL("kube-proxy-worker", metricEvent.GetTag("peer.workload.name").to_string());
         APSARA_TEST_TRUE_FATAL(k8sMetadata.GetInfoByIpFromCache("10.41.0.2") != nullptr);
     }
 };
