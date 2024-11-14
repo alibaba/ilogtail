@@ -836,6 +836,7 @@ void EventDispatcher::UnregisterEventHandler(const char* path) {
             mBrokenLinkSet.insert(path);
         }
     }
+    LOG_INFO(sLogger, ("remove a new watcher for dir", path)("wd", wd));
     RemoveOneToOneMapEntry(wd);
     mWdUpdateTimeMap.erase(wd);
     if (mEventListener->IsValidID(wd) && mEventListener->IsInit()) {
@@ -897,7 +898,7 @@ void EventDispatcher::HandleTimeout() {
     time_t curTime = time(NULL);
     MapType<int, time_t>::Type::iterator itr = mWdUpdateTimeMap.begin();
     for (; itr != mWdUpdateTimeMap.end(); ++itr) {
-        if (curTime - (itr->second) >= INT32_FLAG(timeout_interval)) {
+        if (curTime - (itr->second) > INT32_FLAG(timeout_interval)) {
             // add to vector then batch process to avoid possible iterator change problem
             // mHandler may remove what itr points to, thus change the layout of the map container
             // what follows may not work

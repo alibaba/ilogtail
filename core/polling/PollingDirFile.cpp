@@ -371,9 +371,6 @@ bool PollingDirFile::PollingNormalConfigPath(const FileDiscoveryConfig& pConfig,
         int64_t nsec = 0;
         statBuf.GetLastWriteTime(sec, nsec);
         auto curTime = time(nullptr);
-        LOG_DEBUG(sLogger,
-                  ("srcPath", srcPath)("obj", obj)("exceedPreservedDirDepth", exceedPreservedDirDepth)(
-                      "curTime", curTime)("sec", sec)("INT32_FLAG(timeout_interval)", INT32_FLAG(timeout_interval)));
         if (curTime - sec > INT32_FLAG(timeout_interval)) {
             return false;
         }
@@ -655,9 +652,6 @@ void PollingDirFile::ClearTimeoutFileAndDir() {
         ScopedSpinLock lock(mCacheLock);
         bool clearExceedPreservedDirDepth = false;
         for (auto iter = mDirCacheMap.begin(); iter != mDirCacheMap.end();) {
-            LOG_DEBUG(sLogger,
-                      ("Dir", iter->first)("GetExceedPreservedDirDepth", iter->second.GetExceedPreservedDirDepth())(
-                          "iter->second.GetLastModifyTime()", iter->second.GetLastModifyTime()));
             if (iter->second.GetExceedPreservedDirDepth()
                 && (NANO_CONVERTING * curTime - iter->second.GetLastModifyTime())
                     > NANO_CONVERTING * INT32_FLAG(timeout_interval)) {
@@ -671,9 +665,6 @@ void PollingDirFile::ClearTimeoutFileAndDir() {
         }
         clearExceedPreservedDirDepth = false;
         for (auto iter = mFileCacheMap.begin(); iter != mFileCacheMap.end();) {
-            LOG_DEBUG(sLogger,
-                      ("File", iter->first)("GetExceedPreservedDirDepth", iter->second.GetExceedPreservedDirDepth())(
-                          "iter->second.GetLastModifyTime()", iter->second.GetLastModifyTime()));
             if (iter->second.GetExceedPreservedDirDepth()
                 && (NANO_CONVERTING * curTime - iter->second.GetLastModifyTime())
                     > NANO_CONVERTING * INT32_FLAG(timeout_interval)) {
