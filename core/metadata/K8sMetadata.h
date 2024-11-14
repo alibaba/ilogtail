@@ -29,7 +29,7 @@ namespace logtail {
     const std::string TAG_IMAGES = "images";
     const std::string TAG_WORKLOADNAME = "workloadName";
     const std::string TAG_WORKLOADKIND = "workloadKind"; 
-    const std::string TAG_SERVICENAME = "serviceName"
+    const std::string TAG_SERVICENAME = "serviceName";
     const std::string TAG_LABELS = "labels";
 
     struct k8sContainerInfo {
