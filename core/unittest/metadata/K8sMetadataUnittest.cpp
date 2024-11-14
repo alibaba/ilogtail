@@ -55,7 +55,6 @@ public:
         EXPECT_TRUE(result);
         EXPECT_EQ(info.images["image1"], "nginx:latest");
         EXPECT_EQ(info.labels["app_id"], "my_app_id");
-        EXPECT_EQ(info.appId, "my_app_id");
         EXPECT_EQ(info.k8sNamespace, "default");
         EXPECT_EQ(info.workloadKind, "Deployment");
         EXPECT_EQ(info.workloadName, "nginx-deployment");
@@ -315,6 +314,8 @@ public:
         mSpanEvent->SetScopeTag(string("key2"), string("value2"));
         LabelingK8sMetadata& processor = *(new LabelingK8sMetadata);
         processor.AddLabels(*mSpanEvent, container_vec, remote_ip_vec);
+        APSARA_TEST_EQUAL("kube-system", mSpanEvent->GetTag("k8s.namespace.name").to_string());
+        APSARA_TEST_EQUAL("daemonset", mSpanEvent->GetTag("peer.workload.kind").to_string());
         APSARA_TEST_EQUAL("kube-proxy-worker", mSpanEvent->GetTag("peer.workload.name").to_string());
         APSARA_TEST_TRUE_FATAL(k8sMetadata.GetInfoByIpFromCache("10.41.0.2") != nullptr);
     }
