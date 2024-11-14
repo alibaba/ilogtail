@@ -298,8 +298,8 @@ public:
         const std::string jsonData = R"({
             "10.41.0.2": {
                 "k8s.namespace.name": "kube-system",
-                "workloadName": "coredns-7b669cbb96",
-                "workloadKind": "replicaset",
+                "workload.name": "coredns-7b669cbb96",
+                "workload.kind": "replicaset",
                 "service.name": "",
                 "k8s.pod.label": {
                     "k8s-app": "kube-dns",
@@ -315,8 +315,8 @@ public:
             },
             "10.41.0.3": {
                 "k8s.namespace.name": "kube-system",
-                "workloadName": "csi-provisioner-8bd988c55",
-                "workloadKind": "replicaset",
+                "workload.name": "csi-provisioner-8bd988c55",
+                "workload.kind": "replicaset",
                 "service.name": "",
                 "k8s.pod.label": {
                     "app": "csi-provisioner",
@@ -342,8 +342,8 @@ public:
             },
             "172.16.20.108": {
                 "k8s.namespace.name": "kube-system",
-                "workloadName": "kube-proxy-worker",
-                "workloadKind": "daemonset",
+                "workload.name": "kube-proxy-worker",
+                "workload.kind": "daemonset",
                 "service.name": "",
                 "k8s.pod.label": {
                     "controller-revision-hash": "756748b889",
