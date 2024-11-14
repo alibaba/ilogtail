@@ -63,7 +63,7 @@ public:
 private:
     LogInput();
     ~LogInput();
-    void* ProcessLoop();
+    void ProcessLoop();
     void ProcessEvent(EventDispatcher* dispatcher, Event* ev);
     Event* PopEventQueue();
     void UpdateCriticalMetric(int32_t curTime);
@@ -86,8 +86,8 @@ private:
     IntGaugePtr mEnableFileIncludedByMultiConfigs;
 
     std::atomic_int mLastReadEventTime{0};
+    std::future<void> mThreadRes;
     mutable std::mutex mThreadRunningMux;
-    mutable std::condition_variable mStopCV;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class LogInputUnittest;

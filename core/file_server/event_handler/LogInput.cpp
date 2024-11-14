@@ -89,11 +89,14 @@ void LogInput::Start() {
     mInteruptFlag = false;
 
     mLastRunTime = FileServer::GetInstance()->GetMetricsRecordRef().CreateIntGauge(METRIC_RUNNER_LAST_RUN_TIME);
-    mRegisterdHandlersTotal = FileServer::GetInstance()->GetMetricsRecordRef().CreateIntGauge(METRIC_RUNNER_FILE_WATCHED_DIRS_TOTAL);
-    mActiveReadersTotal = FileServer::GetInstance()->GetMetricsRecordRef().CreateIntGauge(METRIC_RUNNER_FILE_ACTIVE_READERS_TOTAL);
-    mEnableFileIncludedByMultiConfigs = FileServer::GetInstance()->GetMetricsRecordRef().CreateIntGauge(METRIC_RUNNER_FILE_ENABLE_FILE_INCLUDED_BY_MULTI_CONFIGS_FLAG);
+    mRegisterdHandlersTotal
+        = FileServer::GetInstance()->GetMetricsRecordRef().CreateIntGauge(METRIC_RUNNER_FILE_WATCHED_DIRS_TOTAL);
+    mActiveReadersTotal
+        = FileServer::GetInstance()->GetMetricsRecordRef().CreateIntGauge(METRIC_RUNNER_FILE_ACTIVE_READERS_TOTAL);
+    mEnableFileIncludedByMultiConfigs = FileServer::GetInstance()->GetMetricsRecordRef().CreateIntGauge(
+        METRIC_RUNNER_FILE_ENABLE_FILE_INCLUDED_BY_MULTI_CONFIGS_FLAG);
 
-    new Thread([this]() { ProcessLoop(); });
+    mThreadRes = async(launch::async, &LogInput::ProcessLoop, this);
 }
 
 void LogInput::Resume() {
@@ -104,15 +107,20 @@ void LogInput::Resume() {
 }
 
 void LogInput::HoldOn() {
-    LOG_INFO(sLogger, ("event handle daemon pause", "starts"));
-    if (BOOL_FLAG(enable_full_drain_mode) && Application::GetInstance()->IsExiting()) {
+    if (Application::GetInstance()->IsExiting()) {
+        LOG_INFO(sLogger, ("input event handle daemon", "stop starts"));
         unique_lock<mutex> lock(mThreadRunningMux);
-        mStopCV.wait(lock, [this]() { return mInteruptFlag; });
+        if (!mThreadRes.valid()) {
+            return;
+        }
+        mThreadRes.wait(); // should we set a timeout here? what it network outrage for an hour?
+        LOG_INFO(sLogger, ("input event handle daemon", "stopped successfully"));
     } else {
+        LOG_INFO(sLogger, ("input event handle daemon pause", "starts"));
         mInteruptFlag = true;
         mAccessMainThreadRWL.lock();
+        LOG_INFO(sLogger, ("input event handle daemon pause", "succeeded"));
     }
-    LOG_INFO(sLogger, ("event handle daemon pause", "succeeded"));
 }
 
 void LogInput::TryReadEvents(bool forceRead) {
@@ -213,8 +221,7 @@ bool LogInput::ReadLocalEvents() {
     }
     // set discard old data flag, so that history data will not be dropped.
     BOOL_FLAG(ilogtail_discard_old_data) = false;
-    LOG_INFO(sLogger,
-             ("load local events", GetLocalEventDataFileName())("event count", localEventJson.size()));
+    LOG_INFO(sLogger, ("load local events", GetLocalEventDataFileName())("event count", localEventJson.size()));
     for (Json::ValueIterator iter = localEventJson.begin(); iter != localEventJson.end(); ++iter) {
         const Json::Value& eventItem = *iter;
         if (!eventItem.isObject()) {
@@ -365,7 +372,7 @@ void LogInput::UpdateCriticalMetric(int32_t curTime) {
     mEventProcessCount = 0;
 }
 
-void* LogInput::ProcessLoop() {
+void LogInput::ProcessLoop() {
     LOG_INFO(sLogger, ("event handle daemon", "started"));
     EventDispatcher* dispatcher = EventDispatcher::GetInstance();
     dispatcher->StartTimeCount();
@@ -463,19 +470,13 @@ void* LogInput::ProcessLoop() {
             lastClearConfigCache = curTime;
         }
 
-        if (BOOL_FLAG(enable_full_drain_mode) && Application::GetInstance()->IsExiting()
-            && EventDispatcher::GetInstance()->IsAllFileRead()) {
+        if (Application::GetInstance()->IsExiting()
+            && (!BOOL_FLAG(enable_full_drain_mode) || EventDispatcher::GetInstance()->IsAllFileRead())) {
             break;
         }
     }
 
     mInteruptFlag = true;
-    mStopCV.notify_one();
-
-    if (!BOOL_FLAG(enable_full_drain_mode)) {
-        LOG_WARNING(sLogger, ("LogInputThread", "Exit"));
-    }
-    return NULL;
 }
 
 void LogInput::PushEventQueue(std::vector<Event*>& eventVec) {

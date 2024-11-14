@@ -58,6 +58,7 @@ private:
     ~PollingDirFile();
 
     void Polling();
+    void PollingIteration();
 
     // PollingNormalConfigPath polls config with normal base path recursively.
     // @config: config to poll.

@@ -95,6 +95,7 @@ enum LogtailAlarmType {
     COMPRESS_FAIL_ALARM = 65,
     SERIALIZE_FAIL_ALARM = 66,
     RELABEL_METRIC_FAIL_ALARM = 67,
+    REGISTER_HANDLERS_TOO_SLOW_ALARM = 68,
     ALL_LOGTAIL_ALARM_NUM = 68
 };
 
@@ -134,7 +135,7 @@ public:
     bool IsLowLevelAlarmValid();
 
 private:
-    typedef std::vector<std::map<std::string, LogtailAlarmMessage*> > LogtailAlarmVector;
+    typedef std::vector<std::map<std::string, std::unique_ptr<LogtailAlarmMessage>>> LogtailAlarmVector;
 
     LogtailAlarm();
     ~LogtailAlarm() = default;

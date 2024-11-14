@@ -123,8 +123,7 @@ void CheckPointManager::LoadCheckPoint() {
     Json::Value root;
     ParseConfResult cptRes = ParseConfig(AppConfig::GetInstance()->GetCheckPointFilePath(), root);
     // if new checkpoint file not exist, check old checkpoint file.
-    if (cptRes == CONFIG_NOT_EXIST
-        && AppConfig::GetInstance()->GetCheckPointFilePath() != GetCheckPointFileName()) {
+    if (cptRes == CONFIG_NOT_EXIST && AppConfig::GetInstance()->GetCheckPointFilePath() != GetCheckPointFileName()) {
         cptRes = ParseConfig(GetCheckPointFileName(), root);
     }
     if (cptRes != CONFIG_OK) {
@@ -408,7 +407,7 @@ bool CheckPointManager::DumpCheckPointToLocal() {
     result["dir_check_point"] = dirJson;
     result["version"] = Json::Value(Json::UInt(INT32_FLAG(check_point_version)));
     fout << result.toStyledString();
-    if (!fout.good()) {
+    if (!fout) {
         LOG_ERROR(sLogger, ("dump check point to file failed", checkPointFile));
         LogtailAlarm::GetInstance()->SendAlarm(CHECKPOINT_ALARM, "dump check point to file failed");
         fout.close();

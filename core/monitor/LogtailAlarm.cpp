@@ -117,6 +117,9 @@ void LogtailAlarm::Stop() {
         mIsThreadRunning = false;
     }
     mStopCV.notify_one();
+    if (!mThreadRes.valid()) {
+        return;
+    }
     future_status s = mThreadRes.wait_for(chrono::seconds(1));
     if (s == future_status::ready) {
         LOG_INFO(sLogger, ("alarm gathering", "stopped successfully"));
@@ -141,7 +144,6 @@ bool LogtailAlarm::SendAlarmLoop() {
 }
 
 void LogtailAlarm::SendAllRegionAlarm() {
-    LogtailAlarmMessage* messagePtr = nullptr;
     int32_t currentTime = time(nullptr);
     size_t sendRegionIndex = 0;
     size_t sendAlarmTypeIndex = 0;
@@ -186,7 +188,7 @@ void LogtailAlarm::SendAllRegionAlarm() {
 
             // LOG_DEBUG(sLogger, ("3Send Alarm", region)("region", sendRegionIndex)("alarm index",
             // mMessageType[sendAlarmTypeIndex]));
-            map<string, LogtailAlarmMessage*>& alarmMap = alarmBufferVec[sendAlarmTypeIndex];
+            map<string, unique_ptr<LogtailAlarmMessage>>& alarmMap = alarmBufferVec[sendAlarmTypeIndex];
             if (alarmMap.size() == 0
                 || currentTime - lastUpdateTimeVec[sendAlarmTypeIndex] < INT32_FLAG(logtail_alarm_interval)) {
                 // go next alarm type
@@ -220,9 +222,10 @@ void LogtailAlarm::SendAllRegionAlarm() {
             logGroup.set_source(LogFileProfiler::mIpAddr);
             logGroup.set_category(ALARM_SLS_LOGSTORE_NAME);
             auto now = GetCurrentLogtailTime();
-            for (map<string, LogtailAlarmMessage*>::iterator mapIter = alarmMap.begin(); mapIter != alarmMap.end();
+            for (map<string, unique_ptr<LogtailAlarmMessage>>::iterator mapIter = alarmMap.begin();
+                 mapIter != alarmMap.end();
                  ++mapIter) {
-                messagePtr = mapIter->second;
+                auto& messagePtr = mapIter->second;
 
                 // LOG_DEBUG(sLogger, ("5Send Alarm", region)("region", sendRegionIndex)("alarm index",
                 // sendAlarmTypeIndex)("msg", messagePtr->mMessage));
@@ -266,7 +269,6 @@ void LogtailAlarm::SendAllRegionAlarm() {
                     contentPtr->set_key("category");
                     contentPtr->set_value(messagePtr->mCategory);
                 }
-                delete messagePtr;
             }
             lastUpdateTimeVec[sendAlarmTypeIndex] = currentTime;
             alarmMap.clear();
@@ -319,9 +321,8 @@ void LogtailAlarm::SendAlarm(const LogtailAlarmType alarmType,
     string key = projectName + "_" + category;
     LogtailAlarmVector& alarmBufferVec = *MakesureLogtailAlarmMapVecUnlocked(region);
     if (alarmBufferVec[alarmType].find(key) == alarmBufferVec[alarmType].end()) {
-        LogtailAlarmMessage* messagePtr
-            = new LogtailAlarmMessage(mMessageType[alarmType], projectName, category, message, 1);
-        alarmBufferVec[alarmType].insert(pair<string, LogtailAlarmMessage*>(key, messagePtr));
+        auto* messagePtr = new LogtailAlarmMessage(mMessageType[alarmType], projectName, category, message, 1);
+        alarmBufferVec[alarmType].emplace(key, messagePtr);
     } else
         alarmBufferVec[alarmType][key]->IncCount();
 }

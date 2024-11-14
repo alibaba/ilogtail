@@ -36,7 +36,6 @@
 #include "app_config/AppConfig.h"
 #include "checkpoint/CheckPointManager.h"
 #include "common/CompressTools.h"
-#include "constants/Constants.h"
 #include "common/ErrorUtil.h"
 #include "common/ExceptionBase.h"
 #include "common/FileSystemUtil.h"
@@ -46,9 +45,10 @@
 #include "common/StringTools.h"
 #include "common/TimeUtil.h"
 #include "common/version.h"
+#include "constants/Constants.h"
 #include "file_server/EventDispatcher.h"
-#include "file_server/event_handler/EventHandler.h"
 #include "file_server/FileServer.h"
+#include "file_server/event_handler/EventHandler.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/LogtailAlarm.h"
 #include "pipeline/Pipeline.h"
@@ -101,7 +101,7 @@ DEFINE_FLAG_INT32(docker_config_update_interval, "interval between docker config
 
 namespace logtail {
 
-// 
+//
 ParseConfResult ParseConfig(const std::string& configName, Json::Value& jsonRoot) {
     // Get full path, if it is a relative path, prepend process execution dir.
     std::string fullPath = configName;
@@ -111,10 +111,15 @@ ParseConfResult ParseConfig(const std::string& configName, Json::Value& jsonRoot
 
     ifstream is;
     is.open(fullPath.c_str());
-    if (!is.good()) {
+    if (!is) { // https://horstmann.com/cpp/pitfalls.html
         return CONFIG_NOT_EXIST;
     }
-    std::string buffer((std::istreambuf_iterator<char>(is)), (std::istreambuf_iterator<char>()));
+    std::string buffer;
+    try {
+        buffer.assign(std::istreambuf_iterator<char>(is), std::istreambuf_iterator<char>());
+    } catch (const std::ios_base::failure& e) {
+        return CONFIG_NOT_EXIST;
+    }
     if (!IsValidJson(buffer.c_str(), buffer.length())) {
         return CONFIG_INVALID_FORMAT;
     }
@@ -456,8 +461,9 @@ bool ConfigManager::RegisterDirectory(const std::string& source, const std::stri
     // e.g.: source: /path/to/monitor, file pattern: *.log, object: subdir.
     // Match(subdir, *.log) = false.
     FileDiscoveryConfig config = FindBestMatch(source, object);
-    if (config.first && !config.first->IsDirectoryInBlacklist(source))
+    if (config.first && !config.first->IsDirectoryInBlacklist(source)) {
         return EventDispatcher::GetInstance()->RegisterEventHandler(source.c_str(), config, mSharedHandler);
+    }
     return false;
 }
 

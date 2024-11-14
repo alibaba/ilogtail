@@ -774,7 +774,7 @@ void ModifyHandler::Handle(const Event& event) {
                     reader->GetQueueKey(), mConfigName, event, reader->GetDevInode(), curTime);
                 return;
             }
-            unique_ptr<LogBuffer> logBuffer(new LogBuffer);
+            auto logBuffer = make_unique<LogBuffer>();
             hasMoreData = reader->ReadLog(*logBuffer, &event);
             int32_t pushRetry = PushLogToProcessor(reader, logBuffer.get());
             if (!hasMoreData) {
@@ -1066,10 +1066,10 @@ void ModifyHandler::DeleteRollbackReader() {
 }
 
 void ModifyHandler::ForceReadLogAndPush(LogFileReaderPtr reader) {
-    LogBuffer* logBuffer = new LogBuffer;
+    auto logBuffer = make_unique<LogBuffer>();
     auto pEvent = reader->CreateFlushTimeoutEvent();
     reader->ReadLog(*logBuffer, pEvent.get());
-    PushLogToProcessor(reader, logBuffer);
+    PushLogToProcessor(reader, logBuffer.get());
 }
 
 int32_t ModifyHandler::PushLogToProcessor(LogFileReaderPtr reader, LogBuffer* logBuffer) {
