@@ -49,6 +49,9 @@ public:
     static void SetDefaultRegion(const std::string& region);
     static std::string GetAllProjects();
     static bool IsRegionContainingConfig(const std::string& region);
+    static std::string GetProjectRegion(const std::string& project);
+    static void SetProjectRegion(const std::string& project, const std::string& region);
+    static void RemoveProjectRegion(const std::string& project);
 
     // TODO: should be moved to enterprise config provider
     static bool GetRegionStatus(const std::string& region);
@@ -102,6 +105,9 @@ private:
 
     static std::mutex sDefaultRegionLock;
     static std::string sDefaultRegion;
+
+    static std::mutex sProjectRegionMapLock;
+    static std::unordered_map<std::string, std::string> sProjectRegionMap;
 
     static std::mutex sProjectRefCntMapLock;
     static std::unordered_map<std::string, int32_t> sProjectRefCntMap;

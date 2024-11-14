@@ -17,8 +17,8 @@
 #include <filesystem>
 
 #include "LogFileProfiler.h"
-#include "MetricManager.h"
 #include "MetricConstants.h"
+#include "MetricManager.h"
 #include "app_config/AppConfig.h"
 #include "common/FileSystemUtil.h"
 #include "common/RuntimeUtil.h"
@@ -34,12 +34,8 @@ DECLARE_FLAG_STRING(metrics_report_method);
 
 namespace logtail {
 
-const string METRIC_REGION_DEFAULT = "default";
 const string METRIC_SLS_LOGSTORE_NAME = "shennong_log_profile";
-const string METRIC_TOPIC_TYPE = "loong_collector_metric";
-
-const std::string METRIC_EXPORT_TYPE_GO = "direct";
-const std::string METRIC_EXPORT_TYPE_CPP = "cpp_provided";
+const string METRIC_TOPIC_TYPE = "loongcollector_metric";
 
 MetricExportor::MetricExportor() : mSendInterval(60), mLastSendTime(time(NULL) - (rand() % (mSendInterval / 10)) * 10) {
 }
@@ -49,38 +45,17 @@ void MetricExportor::PushMetrics(bool forceSend) {
     if (!forceSend && (curTime - mLastSendTime < mSendInterval)) {
         return;
     }
-
-    // go指标在Cpp指标前获取，是为了在 Cpp 部分指标做 SnapShot
-    // 前（即调用 ReadMetrics::GetInstance()->UpdateMetrics() 函数），把go部分的进程级指标填写到 Cpp
-    // 的进程级指标中去，随Cpp的进程级指标一起输出
-    if (LogtailPlugin::GetInstance()->IsPluginOpened()) {
-        PushGoMetrics();
-    }
-    PushCppMetrics();
-}
-
-void MetricExportor::PushCppMetrics() {
     ReadMetrics::GetInstance()->UpdateMetrics();
 
     if ("sls" == STRING_FLAG(metrics_report_method)) {
         std::map<std::string, sls_logs::LogGroup*> logGroupMap;
-        ReadMetrics::GetInstance()->ReadAsLogGroup(METRIC_LABEL_KEY_REGION, METRIC_REGION_DEFAULT, logGroupMap);
+        ReadMetrics::GetInstance()->ReadAsLogGroup(logGroupMap);
         SendToSLS(logGroupMap);
     } else if ("file" == STRING_FLAG(metrics_report_method)) {
         std::string metricsContent;
         ReadMetrics::GetInstance()->ReadAsFileBuffer(metricsContent);
-        SendToLocalFile(metricsContent, "self-metrics-cpp");
+        SendToLocalFile(metricsContent, "self-metrics");
     }
-}
-
-void MetricExportor::PushGoMetrics() {
-    std::vector<std::map<std::string, std::string>> goDirectMetircsList;
-    LogtailPlugin::GetInstance()->GetGoMetrics(goDirectMetircsList, METRIC_EXPORT_TYPE_GO);
-    std::vector<std::map<std::string, std::string>> goCppProvidedMetircsList;
-    LogtailPlugin::GetInstance()->GetGoMetrics(goCppProvidedMetircsList, METRIC_EXPORT_TYPE_CPP);
-
-    PushGoCppProvidedMetrics(goCppProvidedMetircsList);
-    PushGoDirectMetrics(goDirectMetircsList);
 }
 
 void MetricExportor::SendToSLS(std::map<std::string, sls_logs::LogGroup*>& logGroupMap) {
@@ -90,11 +65,7 @@ void MetricExportor::SendToSLS(std::map<std::string, sls_logs::LogGroup*>& logGr
         logGroup->set_category(METRIC_SLS_LOGSTORE_NAME);
         logGroup->set_source(LogFileProfiler::mIpAddr);
         logGroup->set_topic(METRIC_TOPIC_TYPE);
-        if (METRIC_REGION_DEFAULT == iter->first) {
-            GetProfileSender()->SendToProfileProject(GetProfileSender()->GetDefaultProfileRegion(), *logGroup);
-        } else {
-            GetProfileSender()->SendToProfileProject(iter->first, *logGroup);
-        }
+        GetProfileSender()->SendToProfileProject(iter->first, *logGroup);
         delete logGroup;
     }
 }
@@ -146,139 +117,6 @@ void MetricExportor::SendToLocalFile(std::string& metricsContent, const std::str
             outFile.close();
         }
     }
-}
-
-// metrics from Go that are directly outputted
-void MetricExportor::PushGoDirectMetrics(std::vector<std::map<std::string, std::string>>& metricsList) {
-    if (metricsList.size() == 0) {
-        return;
-    }
-
-    if ("sls" == STRING_FLAG(metrics_report_method)) {
-        std::map<std::string, sls_logs::LogGroup*> logGroupMap;
-        SerializeGoDirectMetricsListToLogGroupMap(metricsList, logGroupMap);
-        SendToSLS(logGroupMap);
-    } else if ("file" == STRING_FLAG(metrics_report_method)) {
-        std::string metricsContent;
-        SerializeGoDirectMetricsListToString(metricsList, metricsContent);
-        SendToLocalFile(metricsContent, "self-metrics-go");
-    }
-}
-
-// metrics from Go that are provided by cpp
-void MetricExportor::PushGoCppProvidedMetrics(std::vector<std::map<std::string, std::string>>& metricsList) {
-    if (metricsList.size() == 0) {
-        return;
-    }
-
-    for (auto metrics : metricsList) {
-        for (auto metric : metrics) {
-            if (metric.first == METRIC_KEY_VALUE + "." + METRIC_AGENT_MEMORY_GO) {
-                LoongCollectorMonitor::GetInstance()->SetAgentGoMemory(std::stoi(metric.second));
-            }
-            if (metric.first == METRIC_KEY_VALUE + "." + METRIC_AGENT_GO_ROUTINES_TOTAL) {
-                LoongCollectorMonitor::GetInstance()->SetAgentGoRoutinesTotal(std::stoi(metric.second));
-            }
-            LogtailMonitor::GetInstance()->UpdateMetric(metric.first, metric.second);
-        }
-    }
-}
-
-void MetricExportor::SerializeGoDirectMetricsListToLogGroupMap(
-    std::vector<std::map<std::string, std::string>>& metricsList,
-    std::map<std::string, sls_logs::LogGroup*>& logGroupMap) {
-    for (auto& metrics : metricsList) {
-        std::string configName = "";
-        std::string region = METRIC_REGION_DEFAULT;
-        {
-            // get the pipeline_name label
-            for (const auto& metric : metrics) {
-                if (metric.first == METRIC_KEY_LABEL + "." + METRIC_LABEL_KEY_PIPELINE_NAME) {
-                    configName = metric.second;
-                    break;
-                }
-            }
-            if (!configName.empty()) {
-                // get region info by pipeline_name
-                shared_ptr<Pipeline> p = PipelineManager::GetInstance()->FindConfigByName(configName);
-                if (p) {
-                    FlusherSLS* pConfig = NULL;
-                    pConfig = const_cast<FlusherSLS*>(static_cast<const FlusherSLS*>(p->GetFlushers()[0]->GetPlugin()));
-                    if (pConfig) {
-                        region = pConfig->mRegion;
-                    }
-                }
-            }
-        }
-        Log* logPtr = nullptr;
-        auto LogGroupIter = logGroupMap.find(region);
-        if (LogGroupIter != logGroupMap.end()) {
-            sls_logs::LogGroup* logGroup = LogGroupIter->second;
-            logPtr = logGroup->add_logs();
-        } else {
-            sls_logs::LogGroup* logGroup = new sls_logs::LogGroup();
-            logPtr = logGroup->add_logs();
-            logGroupMap.insert(std::pair<std::string, sls_logs::LogGroup*>(region, logGroup));
-        }
-        auto now = GetCurrentLogtailTime();
-        SetLogTime(logPtr,
-                   AppConfig::GetInstance()->EnableLogTimeAutoAdjust() ? now.tv_sec + GetTimeDelta() : now.tv_sec);
-
-        Json::Value metricsRecordLabel;
-        for (const auto& metric : metrics) {
-            // category
-            if (metric.first.compare("label.metric_category") == 0) {
-                Log_Content* contentPtr = logPtr->add_contents();
-                contentPtr->set_key(METRIC_KEY_CATEGORY);
-                contentPtr->set_value(metric.second);
-                continue;
-            }
-            // label
-            if (metric.first.compare(0, METRIC_KEY_LABEL.length(), METRIC_KEY_LABEL)) {
-                metricsRecordLabel[metric.first.substr(METRIC_KEY_LABEL.length() + 1)] = metric.second;
-                continue;
-            }
-            // value
-            Log_Content* contentPtr = logPtr->add_contents();
-            contentPtr->set_key(metric.first);
-            contentPtr->set_value(metric.second);
-        }
-        Json::StreamWriterBuilder writer;
-        writer["indentation"] = "";
-        std::string jsonString = Json::writeString(writer, metricsRecordLabel);
-        Log_Content* contentPtr = logPtr->add_contents();
-        contentPtr->set_key(METRIC_KEY_LABEL);
-        contentPtr->set_value(jsonString);
-    }
-}
-
-void MetricExportor::SerializeGoDirectMetricsListToString(std::vector<std::map<std::string, std::string>>& metricsList,
-                                                          std::string& metricsContent) {
-    std::ostringstream oss;
-
-    for (auto& metrics : metricsList) {
-        Json::Value metricsRecordJson, metricsRecordLabel;
-        auto now = GetCurrentLogtailTime();
-        metricsRecordJson["time"]
-            = AppConfig::GetInstance()->EnableLogTimeAutoAdjust() ? now.tv_sec + GetTimeDelta() : now.tv_sec;
-        for (const auto& metric : metrics) {
-            if (metric.first.compare("label.metric_category") == 0) {
-                metricsRecordJson[METRIC_KEY_CATEGORY] = metric.second;
-                continue;
-            }
-            if (metric.first.compare(0, METRIC_KEY_LABEL.length(), METRIC_KEY_LABEL) == 0) {
-                metricsRecordLabel[metric.first.substr(METRIC_KEY_LABEL.length() + 1)] = metric.second;
-                continue;
-            }
-            metricsRecordJson[metric.first.substr(METRIC_KEY_VALUE.length() + 1)] = metric.second;
-        }
-        metricsRecordJson[METRIC_KEY_LABEL] = metricsRecordLabel;
-        Json::StreamWriterBuilder writer;
-        writer["indentation"] = "";
-        std::string jsonString = Json::writeString(writer, metricsRecordJson);
-        oss << jsonString << '\n';
-    }
-    metricsContent = oss.str();
 }
 
 } // namespace logtail

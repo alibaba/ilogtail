@@ -66,8 +66,10 @@ private:
     ReadMetrics() = default;
     mutable ReadWriteLock mReadWriteLock;
     MetricsRecord* mHead = nullptr;
+    std::vector<std::map<std::string, std::string>> mGoMetrics;
     void Clear();
     MetricsRecord* GetHead();
+    void UpdateGoCppProvidedMetrics(std::vector<std::map<std::string, std::string>>& metricsList);
 
 public:
     ~ReadMetrics();
@@ -75,9 +77,7 @@ public:
         static ReadMetrics* ptr = new ReadMetrics();
         return ptr;
     }
-    void ReadAsLogGroup(const std::string& regionFieldName,
-                        const std::string& defaultRegion,
-                        std::map<std::string, sls_logs::LogGroup*>& logGroupMap) const;
+    void ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup*>& logGroupMap) const;
     void ReadAsFileBuffer(std::string& metricsContent) const;
     void UpdateMetrics();
 
