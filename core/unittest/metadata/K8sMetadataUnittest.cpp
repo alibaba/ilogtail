@@ -34,6 +34,34 @@ protected:
     }
     
 public:
+
+    void TestFromInfoJson() {
+        // 创建Json测试数据
+        Json::Value testJson;
+        testJson["images"]["image1"] = "nginx:latest";
+        testJson["labels"]["app_id"] = "my_app_id";
+        testJson["namespace"] = "default";
+        testJson["workloadKind"] = "Deployment";
+        testJson["workloadName"] = "nginx-deployment";
+        testJson["serviceName"] = "nginx-service";
+
+        k8sContainerInfo info;
+        auto& k8sMetadata = K8sMetadata::GetInstance();
+
+        // 调用函数
+        bool result = k8sMetadata.FromInfoJson(testJson, info);
+
+        // 验证结果
+        EXPECT_TRUE(result);
+        EXPECT_EQ(info.images["image1"], "nginx:latest");
+        EXPECT_EQ(info.labels["app_id"], "my_app_id");
+        EXPECT_EQ(info.appId, "my_app_id");
+        EXPECT_EQ(info.k8sNamespace, "default");
+        EXPECT_EQ(info.workloadKind, "Deployment");
+        EXPECT_EQ(info.workloadName, "nginx-deployment");
+        EXPECT_EQ(info.serviceName, "nginx-service");
+    }
+
     void TestGetByContainerIds() {
         LOG_INFO(sLogger, ("TestGetByContainerIds() begin", time(NULL)));
                 const std::string jsonData = R"({"containerd://286effd2650c0689b779018e42e9ec7aa3d2cb843005e038204e85fc3d4f9144":{"namespace":"default","workloadName":"oneagent-demo-658648895b","workloadKind":"replicaset","serviceName":"","labels":{"app":"oneagent-demo","pod-template-hash":"658648895b"},"envs":{},""images"":{"oneagent-demo":"sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/centos7-cve-fix:1.0.0"}}})";
@@ -421,6 +449,7 @@ APSARA_UNIT_TEST_CASE(k8sMetadataUnittest, TestGetByContainerIds, 0);
 APSARA_UNIT_TEST_CASE(k8sMetadataUnittest, TestGetByLocalHost, 1);
 APSARA_UNIT_TEST_CASE(k8sMetadataUnittest, TestAddLabelToMetric, 2);
 APSARA_UNIT_TEST_CASE(k8sMetadataUnittest, TestAddLabelToSpan, 3);
+APSARA_UNIT_TEST_CASE(k8sMetadataUnittest, TestFromInfoJson, 4);
 
 
 

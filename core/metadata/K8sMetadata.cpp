@@ -33,7 +33,7 @@ size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
 }
 
 bool K8sMetadata::FromInfoJson(const Json::Value& json, k8sContainerInfo& info) {
-    if (!json.isMember(TAG_IMAGES) || !json.isMember("labels") || !json.isMember(TAG_NAMESPACE)
+    if (!json.isMember(TAG_IMAGES) || !json.isMember(TAG_LABELS) || !json.isMember(TAG_NAMESPACE)
         || !json.isMember(TAG_WORKLOADKIND) || !json.isMember(TAG_WORKLOADNAME)) {
         return false;
     }
