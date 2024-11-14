@@ -36,7 +36,7 @@ protected:
 public:
     void TestGetByContainerIds() {
         LOG_INFO(sLogger, ("TestGetByContainerIds() begin", time(NULL)));
-                const std::string jsonData = R"({"containerd://286effd2650c0689b779018e42e9ec7aa3d2cb843005e038204e85fc3d4f9144":{"namespace":"default","workloadName":"oneagent-demo-658648895b","workloadKind":"replicaset","serviceName":"","labels":{"app":"oneagent-demo","pod-template-hash":"658648895b"},"envs":{},"images":{"oneagent-demo":"sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/centos7-cve-fix:1.0.0"}}})";
+                const std::string jsonData = R"({"containerd://286effd2650c0689b779018e42e9ec7aa3d2cb843005e038204e85fc3d4f9144":{"k8s.namespace.name":"default","workloadName":"oneagent-demo-658648895b","workloadKind":"replicaset","service.name":"","labels":{"app":"oneagent-demo","pod-template-hash":"658648895b"},"envs":{},"container.image.name":{"oneagent-demo":"sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/centos7-cve-fix:1.0.0"}}})";
 
         Json::Value root;
         Json::CharReaderBuilder readerBuilder;
@@ -63,10 +63,10 @@ public:
         // Sample JSON data
         const std::string jsonData = R"({
             "10.41.0.2": {
-                "namespace": "kube-system",
+                "k8s.namespace.name": "kube-system",
                 "workloadName": "coredns-7b669cbb96",
                 "workloadKind": "replicaset",
-                "serviceName": "",
+                "service.name": "",
                 "labels": {
                     "k8s-app": "kube-dns",
                     "pod-template-hash": "7b669cbb96"
@@ -75,15 +75,15 @@ public:
                     "COREDNS_NAMESPACE": "",
                     "COREDNS_POD_NAME": ""
                 },
-                "images": {
+                "container.image.name": {
                     "coredns": "registry-cn-chengdu-vpc.ack.aliyuncs.com/acs/coredns:v1.9.3.10-7dfca203-aliyun"
                 }
             },
             "10.41.0.3": {
-                "namespace": "kube-system",
+                "k8s.namespace.name": "kube-system",
                 "workloadName": "csi-provisioner-8bd988c55",
                 "workloadKind": "replicaset",
-                "serviceName": "",
+                "service.name": "",
                 "labels": {
                     "app": "csi-provisioner",
                     "pod-template-hash": "8bd988c55"
@@ -94,7 +94,7 @@ public:
                     "KUBE_NODE_NAME": "",
                     "SERVICE_TYPE": "provisioner"
                 },
-                "images": {
+                "container.image.name": {
                     "csi-provisioner": "registry-cn-chengdu-vpc.ack.aliyuncs.com/acs/csi-plugin:v1.30.3-921e63a-aliyun",
                     "external-csi-snapshotter": "registry-cn-chengdu-vpc.ack.aliyuncs.com/acs/csi-snapshotter:v4.0.0-a230d5b-aliyun",
                     "external-disk-attacher": "registry-cn-chengdu-vpc.ack.aliyuncs.com/acs/csi-attacher:v4.5.0-4a01fda6-aliyun",
@@ -107,10 +107,10 @@ public:
                 }
             },
             "172.16.20.108": {
-                "namespace": "kube-system",
+                "k8s.namespace.name": "kube-system",
                 "workloadName": "kube-proxy-worker",
                 "workloadKind": "daemonset",
-                "serviceName": "",
+                "service.name": "",
                 "labels": {
                     "controller-revision-hash": "756748b889",
                     "k8s-app": "kube-proxy-worker",
@@ -119,7 +119,7 @@ public:
                 "envs": {
                     "NODE_NAME": ""
                 },
-                "images": {
+                "container.image.name": {
                     "kube-proxy-worker": "registry-cn-chengdu-vpc.ack.aliyuncs.com/acs/kube-proxy:v1.30.1-aliyun.1"
                 }
             }
@@ -183,10 +183,10 @@ public:
         // Sample JSON data
         const std::string jsonData = R"({
             "10.41.0.2": {
-                "namespace": "kube-system",
+                "k8s.namespace.name": "kube-system",
                 "workloadName": "coredns-7b669cbb96",
                 "workloadKind": "replicaset",
-                "serviceName": "",
+                "service.name": "",
                 "labels": {
                     "k8s-app": "kube-dns",
                     "pod-template-hash": "7b669cbb96"
@@ -195,15 +195,15 @@ public:
                     "COREDNS_NAMESPACE": "",
                     "COREDNS_POD_NAME": ""
                 },
-                "images": {
+                "container.image.name": {
                     "coredns": "registry-cn-chengdu-vpc.ack.aliyuncs.com/acs/coredns:v1.9.3.10-7dfca203-aliyun"
                 }
             },
             "10.41.0.3": {
-                "namespace": "kube-system",
+                "k8s.namespace.name": "kube-system",
                 "workloadName": "csi-provisioner-8bd988c55",
                 "workloadKind": "replicaset",
-                "serviceName": "",
+                "service.name": "",
                 "labels": {
                     "app": "csi-provisioner",
                     "pod-template-hash": "8bd988c55"
@@ -214,7 +214,7 @@ public:
                     "KUBE_NODE_NAME": "",
                     "SERVICE_TYPE": "provisioner"
                 },
-                "images": {
+                "container.image.name": {
                     "csi-provisioner": "registry-cn-chengdu-vpc.ack.aliyuncs.com/acs/csi-plugin:v1.30.3-921e63a-aliyun",
                     "external-csi-snapshotter": "registry-cn-chengdu-vpc.ack.aliyuncs.com/acs/csi-snapshotter:v4.0.0-a230d5b-aliyun",
                     "external-disk-attacher": "registry-cn-chengdu-vpc.ack.aliyuncs.com/acs/csi-attacher:v4.5.0-4a01fda6-aliyun",
@@ -227,10 +227,10 @@ public:
                 }
             },
             "172.16.20.108": {
-                "namespace": "kube-system",
+                "k8s.namespace.name": "kube-system",
                 "workloadName": "kube-proxy-worker",
                 "workloadKind": "daemonset",
-                "serviceName": "",
+                "service.name": "",
                 "labels": {
                     "controller-revision-hash": "756748b889",
                     "k8s-app": "kube-proxy-worker",
@@ -239,7 +239,7 @@ public:
                 "envs": {
                     "NODE_NAME": ""
                 },
-                "images": {
+                "container.image.name": {
                     "kube-proxy-worker": "registry-cn-chengdu-vpc.ack.aliyuncs.com/acs/kube-proxy:v1.30.1-aliyun.1"
                 }
             }
@@ -297,10 +297,10 @@ public:
         // Sample JSON data
         const std::string jsonData = R"({
             "10.41.0.2": {
-                "namespace": "kube-system",
+                "k8s.namespace.name": "kube-system",
                 "workloadName": "coredns-7b669cbb96",
                 "workloadKind": "replicaset",
-                "serviceName": "",
+                "service.name": "",
                 "labels": {
                     "k8s-app": "kube-dns",
                     "pod-template-hash": "7b669cbb96"
@@ -309,15 +309,15 @@ public:
                     "COREDNS_NAMESPACE": "",
                     "COREDNS_POD_NAME": ""
                 },
-                "images": {
+                "container.image.name": {
                     "coredns": "registry-cn-chengdu-vpc.ack.aliyuncs.com/acs/coredns:v1.9.3.10-7dfca203-aliyun"
                 }
             },
             "10.41.0.3": {
-                "namespace": "kube-system",
+                "k8s.namespace.name": "kube-system",
                 "workloadName": "csi-provisioner-8bd988c55",
                 "workloadKind": "replicaset",
-                "serviceName": "",
+                "service.name": "",
                 "labels": {
                     "app": "csi-provisioner",
                     "pod-template-hash": "8bd988c55"
@@ -328,7 +328,7 @@ public:
                     "KUBE_NODE_NAME": "",
                     "SERVICE_TYPE": "provisioner"
                 },
-                "images": {
+                "container.image.name": {
                     "csi-provisioner": "registry-cn-chengdu-vpc.ack.aliyuncs.com/acs/csi-plugin:v1.30.3-921e63a-aliyun",
                     "external-csi-snapshotter": "registry-cn-chengdu-vpc.ack.aliyuncs.com/acs/csi-snapshotter:v4.0.0-a230d5b-aliyun",
                     "external-disk-attacher": "registry-cn-chengdu-vpc.ack.aliyuncs.com/acs/csi-attacher:v4.5.0-4a01fda6-aliyun",
@@ -341,10 +341,10 @@ public:
                 }
             },
             "172.16.20.108": {
-                "namespace": "kube-system",
+                "k8s.namespace.name": "kube-system",
                 "workloadName": "kube-proxy-worker",
                 "workloadKind": "daemonset",
-                "serviceName": "",
+                "service.name": "",
                 "labels": {
                     "controller-revision-hash": "756748b889",
                     "k8s-app": "kube-proxy-worker",
@@ -353,7 +353,7 @@ public:
                 "envs": {
                     "NODE_NAME": ""
                 },
-                "images": {
+                "container.image.name": {
                     "kube-proxy-worker": "registry-cn-chengdu-vpc.ack.aliyuncs.com/acs/kube-proxy:v1.30.1-aliyun.1"
                 }
             }
