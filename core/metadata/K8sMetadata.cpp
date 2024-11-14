@@ -33,32 +33,32 @@ size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
 }
 
 bool K8sMetadata::FromInfoJson(const Json::Value& json, k8sContainerInfo& info) {
-    if (!json.isMember("images") || !json.isMember("labels") || !json.isMember("namespace")
-        || !json.isMember("workloadKind") || !json.isMember("workloadName")) {
+    if (!json.isMember(TAG_IMAGES) || !json.isMember("labels") || !json.isMember(TAG_NAMESPACE)
+        || !json.isMember(TAG_WORKLOADKIND) || !json.isMember(TAG_WORKLOADNAME)) {
         return false;
     }
 
-    for (const auto& key : json["images"].getMemberNames()) {
-        if (json["images"].isMember(key)) {
-            info.images[key] = json["images"][key].asString();
+    for (const auto& key : json[TAG_IMAGES].getMemberNames()) {
+        if (json[TAG_IMAGES].isMember(key)) {
+            info.images[key] = json[TAG_IMAGES][key].asString();
         }
     }
-    for (const auto& key : json["lables"].getMemberNames()) {
-        if (json["lables"].isMember(key)) {
-            info.labels[key] = json["lables"][key].asString();
+    for (const auto& key : json[TAG_LABELS].getMemberNames()) {
+        if (json[TAG_LABELS].isMember(key)) {
+            info.labels[key] = json[TAG_LABELS][key].asString();
 
             if (key == DEFAULT_TRACE_TAG_APPID) {
-                info.appId = json["lables"][key].asString();
+                info.appId = json[TAG_LABELS][key].asString();
             }
         }
     }
 
-    info.k8sNamespace = json["namespace"].asString();
-    if (json.isMember("serviceName")) {
-        info.serviceName = json["serviceName"].asString();
+    info.k8sNamespace = json[TAG_NAMESPACE].asString();
+    if (json.isMember(TAG_SERVICENAME)) {
+        info.serviceName = json[TAG_SERVICENAME].asString();
     }
-    info.workloadKind = json["workloadKind"].asString();
-    info.workloadName = json["workloadName"].asString();
+    info.workloadKind = json[TAG_WORKLOADKIND].asString();
+    info.workloadName = json[TAG_WORKLOADNAME].asString();
     info.timestamp = std::time(0);
     return true;
 }

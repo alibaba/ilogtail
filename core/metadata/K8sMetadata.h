@@ -24,6 +24,14 @@ DECLARE_FLAG_STRING(loong_collector_operator_service);
 DECLARE_FLAG_INT32(loong_collector_k8s_meta_service_port);
 
 namespace logtail {
+
+    const std::string TAG_NAMESPACE = "namespace";
+    const std::string TAG_IMAGES = "images";
+    const std::string TAG_WORKLOADNAME = "workloadName";
+    const std::string TAG_WORKLOADKIND = "workloadKind"; 
+    const std::string TAG_SERVICENAME = "serviceName"
+    const std::string TAG_LABELS = "labels";
+
     struct k8sContainerInfo {
         std::unordered_map<std::string, std::string> images;
         std::unordered_map<std::string, std::string> labels;
