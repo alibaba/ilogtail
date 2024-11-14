@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 iLogtail Authors
+ * Copyright 2024 iLogtail Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,35 +15,43 @@
  */
 
 #pragma once
-
-#include <atomic>
-#include <mutex>
-#include <string>
-#include <unordered_map>
-#include <vector>
-
-#include "common/Lock.h"
-#include "monitor/LoongCollectorMetricTypes.h"
-#include "protobuf/sls/sls_logs.pb.h"
+#include "MetricTypes.h"
 
 namespace logtail {
 
+extern const std::string METRIC_KEY_LABEL;
+extern const std::string METRIC_KEY_VALUE;
+extern const std::string METRIC_KEY_CATEGORY;
+class MetricCategory {
+public:
+    static const std::string METRIC_CATEGORY_UNKNOWN;
+    static const std::string METRIC_CATEGORY_AGENT;
+    static const std::string METRIC_CATEGORY_RUNNER;
+    static const std::string METRIC_CATEGORY_PIPELINE;
+    static const std::string METRIC_CATEGORY_COMPONENT;
+    static const std::string METRIC_CATEGORY_PLUGIN;
+    static const std::string METRIC_CATEGORY_PLUGIN_SOURCE;
+};
+
 class MetricsRecord {
 private:
+    std::string mCategory;
     MetricLabelsPtr mLabels;
     DynamicMetricLabelsPtr mDynamicLabels;
-    std::atomic_bool mDeleted;
     std::vector<CounterPtr> mCounters;
     std::vector<TimeCounterPtr> mTimeCounters;
     std::vector<IntGaugePtr> mIntGauges;
     std::vector<DoubleGaugePtr> mDoubleGauges;
+
+    std::atomic_bool mDeleted;
     MetricsRecord* mNext = nullptr;
 
 public:
-    MetricsRecord(MetricLabelsPtr labels, DynamicMetricLabelsPtr dynamicLabels = nullptr);
+    MetricsRecord(const std::string& category, MetricLabelsPtr labels, DynamicMetricLabelsPtr dynamicLabels = nullptr);
     MetricsRecord() = default;
     void MarkDeleted();
     bool IsDeleted() const;
+    const std::string& GetCategory() const;
     const MetricLabelsPtr& GetLabels() const;
     const DynamicMetricLabelsPtr& GetDynamicLabels() const;
     const std::vector<CounterPtr>& GetCounters() const;
@@ -75,6 +83,7 @@ public:
     MetricsRecordRef(MetricsRecordRef&&) = delete;
     MetricsRecordRef& operator=(MetricsRecordRef&&) = delete;
     void SetMetricsRecord(MetricsRecord* metricRecord);
+    const std::string& GetCategory() const;
     const MetricLabelsPtr& GetLabels() const;
     const DynamicMetricLabelsPtr& GetDynamicLabels() const;
     CounterPtr CreateCounter(const std::string& name);
@@ -105,76 +114,4 @@ inline bool operator!=(std::nullptr_t lhs, const MetricsRecordRef& rhs) {
     return !(lhs == rhs);
 }
 
-class ReentrantMetricsRecord {
-private:
-    MetricsRecordRef mMetricsRecordRef;
-    std::unordered_map<std::string, CounterPtr> mCounters;
-    std::unordered_map<std::string, TimeCounterPtr> mTimeCounters;
-    std::unordered_map<std::string, IntGaugePtr> mIntGauges;
-    std::unordered_map<std::string, DoubleGaugePtr> mDoubleGauges;
-
-public:
-    void Init(MetricLabels& labels, std::unordered_map<std::string, MetricType>& metricKeys);
-    const MetricLabelsPtr& GetLabels() const;
-    const DynamicMetricLabelsPtr& GetDynamicLabels() const;
-    CounterPtr GetCounter(const std::string& name);
-    TimeCounterPtr GetTimeCounter(const std::string& name);
-    IntGaugePtr GetIntGauge(const std::string& name);
-    DoubleGaugePtr GetDoubleGauge(const std::string& name);
-};
-using ReentrantMetricsRecordRef = std::shared_ptr<ReentrantMetricsRecord>;
-
-class WriteMetrics {
-private:
-    WriteMetrics() = default;
-    std::mutex mMutex;
-    MetricsRecord* mHead = nullptr;
-
-    void Clear();
-    MetricsRecord* GetHead();
-
-public:
-    ~WriteMetrics();
-    static WriteMetrics* GetInstance() {
-        static WriteMetrics* ptr = new WriteMetrics();
-        return ptr;
-    }
-
-    void
-    PrepareMetricsRecordRef(MetricsRecordRef& ref, MetricLabels&& labels, DynamicMetricLabels&& dynamicLabels = {});
-    void CreateMetricsRecordRef(MetricsRecordRef& ref, MetricLabels&& labels, DynamicMetricLabels&& dynamicLabels = {});
-    void CommitMetricsRecordRef(MetricsRecordRef& ref);
-    MetricsRecord* DoSnapshot();
-
-
-#ifdef APSARA_UNIT_TEST_MAIN
-    friend class ILogtailMetricUnittest;
-#endif
-};
-
-class ReadMetrics {
-private:
-    ReadMetrics() = default;
-    mutable ReadWriteLock mReadWriteLock;
-    MetricsRecord* mHead = nullptr;
-    void Clear();
-    MetricsRecord* GetHead();
-
-public:
-    ~ReadMetrics();
-    static ReadMetrics* GetInstance() {
-        static ReadMetrics* ptr = new ReadMetrics();
-        return ptr;
-    }
-    void ReadAsLogGroup(const std::string& regionFieldName,
-                        const std::string& defaultRegion,
-                        std::map<std::string, sls_logs::LogGroup*>& logGroupMap) const;
-    void ReadAsFileBuffer(std::string& metricsContent) const;
-    void UpdateMetrics();
-
-#ifdef APSARA_UNIT_TEST_MAIN
-    friend class ILogtailMetricUnittest;
-#endif
-};
-
-} // namespace logtail
+}
