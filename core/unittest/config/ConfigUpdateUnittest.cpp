@@ -35,9 +35,8 @@ public:
         mConfig = std::move(config.mDetail);
         WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
             mMetricsRecordRef,
-            {{METRIC_LABEL_KEY_PROJECT, mContext.GetProjectName()},
-             {METRIC_LABEL_KEY_PIPELINE_NAME, mName},
-             {METRIC_LABEL_KEY_METRIC_CATEGORY, METRIC_LABEL_KEY_METRIC_CATEGORY_PIPELINE}});
+            MetricCategory::METRIC_CATEGORY_PIPELINE,
+            {{METRIC_LABEL_KEY_PROJECT, mContext.GetProjectName()}, {METRIC_LABEL_KEY_PIPELINE_NAME, mName}});
         mStartTime = mMetricsRecordRef.CreateIntGauge(METRIC_PIPELINE_START_TIME);
         return (*mConfig)["valid"].asBool();
     }

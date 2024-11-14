@@ -47,7 +47,7 @@ void FileServer::Start() {
     ConfigManager::GetInstance()->RegisterHandlers();
     auto costMs = GetCurrentTimeInMilliSeconds() - start;
     if (costMs >= 60 * 1000) {
-        LogtailAlarm::GetInstance()->SendAlarm(REGISTER_HANDLERS_TOO_SLOW_ALARM,
+        AlarmManager::GetInstance()->SendAlarm(REGISTER_HANDLERS_TOO_SLOW_ALARM,
                                                "Registering handlers took " + ToString(costMs) + " ms");
         LOG_WARNING(sLogger, ("watch dirs", "succeeded")("costMs", costMs));
     } else {
