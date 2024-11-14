@@ -30,7 +30,7 @@
 
 namespace logtail {
 
-enum LogtailAlarmType {
+enum AlarmType {
     USER_CONFIG_ALARM = 0,
     GLOBAL_CONFIG_ALARM = 1,
     DOMAIN_SOCKET_BIND_ALARM = 2,
@@ -96,36 +96,36 @@ enum LogtailAlarmType {
     SERIALIZE_FAIL_ALARM = 66,
     RELABEL_METRIC_FAIL_ALARM = 67,
     REGISTER_HANDLERS_TOO_SLOW_ALARM = 68,
-    ALL_LOGTAIL_ALARM_NUM = 68
+    ALL_LOGTAIL_ALARM_NUM = 69
 };
 
-struct LogtailAlarmMessage {
+struct AlarmMessage {
     std::string mMessageType;
     std::string mProjectName;
     std::string mCategory;
     std::string mMessage;
     int32_t mCount;
 
-    LogtailAlarmMessage(const std::string& type,
-                        const std::string& projectName,
-                        const std::string& category,
-                        const std::string& message,
-                        const int32_t count)
+    AlarmMessage(const std::string& type,
+                 const std::string& projectName,
+                 const std::string& category,
+                 const std::string& message,
+                 const int32_t count)
         : mMessageType(type), mProjectName(projectName), mCategory(category), mMessage(message), mCount(count) {}
     void IncCount(int32_t inc = 1) { mCount += inc; }
 };
 
-class LogtailAlarm {
+class AlarmManager {
 public:
-    static LogtailAlarm* GetInstance() {
-        static LogtailAlarm instance;
+    static AlarmManager* GetInstance() {
+        static AlarmManager instance;
         return &instance;
     }
 
     void Init();
     void Stop();
 
-    void SendAlarm(const LogtailAlarmType alarmType,
+    void SendAlarm(const AlarmType alarmType,
                    const std::string& message,
                    const std::string& projectName = "",
                    const std::string& category = "",
@@ -135,14 +135,14 @@ public:
     bool IsLowLevelAlarmValid();
 
 private:
-    typedef std::vector<std::map<std::string, std::unique_ptr<LogtailAlarmMessage>>> LogtailAlarmVector;
+    using AlarmVector = std::vector<std::map<std::string, std::unique_ptr<AlarmMessage>>>;
 
-    LogtailAlarm();
-    ~LogtailAlarm() = default;
+    AlarmManager();
+    ~AlarmManager() = default;
 
     bool SendAlarmLoop();
     // without lock
-    LogtailAlarmVector* MakesureLogtailAlarmMapVecUnlocked(const std::string& region);
+    AlarmVector* MakesureLogtailAlarmMapVecUnlocked(const std::string& region);
     void SendAllRegionAlarm();
 
     std::future<bool> mThreadRes;
@@ -152,7 +152,7 @@ private:
 
 
     std::vector<std::string> mMessageType;
-    std::map<std::string, std::pair<std::shared_ptr<LogtailAlarmVector>, std::vector<int32_t> > > mAllAlarmMap;
+    std::map<std::string, std::pair<std::shared_ptr<AlarmVector>, std::vector<int32_t>>> mAllAlarmMap;
     PTMutex mAlarmBufferMutex;
 
     std::atomic_int mLastLowLevelTime{0};

@@ -37,7 +37,7 @@
 #include "file_server/reader/GloablFileDescriptorManager.h"
 #include "file_server/reader/LogFileReader.h"
 #include "logger/Logger.h"
-#include "monitor/LogtailAlarm.h"
+#include "monitor/AlarmManager.h"
 #include "monitor/Monitor.h"
 #ifdef __ENTERPRISE__
 #include "config/provider/EnterpriseConfigProvider.h"
@@ -127,19 +127,14 @@ void LogInput::TryReadEvents(bool forceRead) {
     if (mInteruptFlag)
         return;
 
-    if (!forceRead) {
-        int64_t curMicroSeconds = GetCurrentTimeInMicroSeconds();
-        if (curMicroSeconds - mLastReadEventMicroSeconds >= INT64_FLAG(read_fs_events_interval))
-            mLastReadEventMicroSeconds = curMicroSeconds;
-        else
-            return;
-    } else
-        mLastReadEventMicroSeconds = GetCurrentTimeInMicroSeconds();
-
-    vector<Event*> inotifyEvents;
-    EventDispatcher::GetInstance()->ReadInotifyEvents(inotifyEvents);
-    if (inotifyEvents.size() > 0) {
-        PushEventQueue(inotifyEvents);
+    int64_t curMicroSeconds = GetCurrentTimeInMicroSeconds();
+    if (forceRead || curMicroSeconds - mLastReadEventMicroSeconds >= INT64_FLAG(read_fs_events_interval)) {
+        vector<Event*> inotifyEvents;
+        EventDispatcher::GetInstance()->ReadInotifyEvents(inotifyEvents);
+        if (inotifyEvents.size() > 0) {
+            PushEventQueue(inotifyEvents);
+        }
+        mLastReadEventMicroSeconds = curMicroSeconds;
     }
 
     vector<Event*> feedbackEvents;
@@ -290,7 +285,7 @@ bool LogInput::ReadLocalEvents() {
             sLogger,
             ("process local event, dir", source)("file name", object)("config", configName)(
                 "project", readerConfig.second->GetProjectName())("logstore", readerConfig.second->GetLogstoreName()));
-        LogtailAlarm::GetInstance()->SendAlarm(LOAD_LOCAL_EVENT_ALARM,
+        AlarmManager::GetInstance()->SendAlarm(LOAD_LOCAL_EVENT_ALARM,
                                                string("process local event, dir:") + source + ", file name:" + object
                                                    + ", config:" + configName
                                                    + ", file count:" + ToString(objList.size()),
@@ -403,8 +398,11 @@ void LogInput::ProcessLoop() {
                 delete ev;
             else
                 ProcessEvent(dispatcher, ev);
-        } else
-            usleep(INT32_FLAG(log_input_thread_wait_interval));
+        } else {
+            unique_lock<mutex> lock(mFeedbackMux);
+            mFeedbackCV.wait_for(lock, chrono::microseconds(INT32_FLAG(log_input_thread_wait_interval)));
+        }
+
         if (mIdleFlag)
             continue;
 

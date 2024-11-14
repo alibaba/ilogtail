@@ -60,6 +60,8 @@ public:
 
     int32_t GetLastReadEventTime() { return mLastReadEventTime; }
 
+    void Trigger() { mFeedbackCV.notify_one(); }
+
 private:
     LogInput();
     ~LogInput();
@@ -88,6 +90,9 @@ private:
     std::atomic_int mLastReadEventTime{0};
     std::future<void> mThreadRes;
     mutable std::mutex mThreadRunningMux;
+
+    mutable std::mutex mFeedbackMux;
+    mutable std::condition_variable mFeedbackCV;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class LogInputUnittest;

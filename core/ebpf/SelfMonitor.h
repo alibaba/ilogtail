@@ -21,7 +21,7 @@
 #include "ebpf/include/export.h"
 #include "monitor/PluginMetricManager.h"
 #include "common/Lock.h"
-#include "monitor/LoongCollectorMetricTypes.h"
+#include "monitor/MetricTypes.h"
 #include "monitor/metric_constants/MetricConstants.h"
 
 namespace logtail {
@@ -122,7 +122,7 @@ public:
 class eBPFSelfMonitorMgr {
 public:
     eBPFSelfMonitorMgr();
-    void Init(const nami::PluginType type, std::shared_ptr<PluginMetricManager> mgr, const std::string& name, const std::string& project);
+    void Init(const nami::PluginType type, PluginMetricManagerPtr mgr, const std::string& name, const std::string& project);
     void Release(const nami::PluginType type);
     void Suspend(const nami::PluginType type);
     void HandleStatistic(std::vector<nami::eBPFStatistics>&& stats);
