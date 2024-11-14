@@ -24,7 +24,7 @@
 #include "models/SpanEvent.h"
 #include "monitor/metric_constants/MetricConstants.h"
 #include <boost/utility/string_view.hpp>
-#include "K8sMetadata.h"
+
 
 using logtail::StringView; 
 
