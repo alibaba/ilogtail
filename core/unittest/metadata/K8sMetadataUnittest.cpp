@@ -36,7 +36,7 @@ protected:
 public:
     void TestGetByContainerIds() {
         LOG_INFO(sLogger, ("TestGetByContainerIds() begin", time(NULL)));
-                const std::string jsonData = R"({"containerd://286effd2650c0689b779018e42e9ec7aa3d2cb843005e038204e85fc3d4f9144":{"k8s.namespace.name":"default","workload.name":"oneagent-demo-658648895b","workload.kind":"replicaset","service.name":"","pod.labels":{"app":"oneagent-demo","pod-template-hash":"658648895b"},"envs":{},"container.image.name":{"oneagent-demo":"sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/centos7-cve-fix:1.0.0"}}})";
+                const std::string jsonData = R"({"containerd://286effd2650c0689b779018e42e9ec7aa3d2cb843005e038204e85fc3d4f9144":{"k8s.namespace.name":"default","workload.name":"oneagent-demo-658648895b","workload.kind":"replicaset","service.name":"","k8s.pod.label":{"app":"oneagent-demo","pod-template-hash":"658648895b"},"envs":{},"container.image.name":{"oneagent-demo":"sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/centos7-cve-fix:1.0.0"}}})";
 
         Json::Value root;
         Json::CharReaderBuilder readerBuilder;
@@ -67,7 +67,7 @@ public:
                 "workload.name": "coredns-7b669cbb96",
                 "workload.kind": "replicaset",
                 "service.name": "",
-                "pod.labels": {
+                "k8s.pod.label": {
                     "k8s-app": "kube-dns",
                     "pod-template-hash": "7b669cbb96"
                 },
@@ -84,7 +84,7 @@ public:
                 "workload.name": "csi-provisioner-8bd988c55",
                 "workload.kind": "replicaset",
                 "service.name": "",
-                "pod.labels": {
+                "k8s.pod.label": {
                     "app": "csi-provisioner",
                     "pod-template-hash": "8bd988c55"
                 },
@@ -111,7 +111,7 @@ public:
                 "workload.name": "kube-proxy-worker",
                 "workload.kind": "daemonset",
                 "service.name": "",
-                "pod.labels": {
+                "k8s.pod.label": {
                     "controller-revision-hash": "756748b889",
                     "k8s-app": "kube-proxy-worker",
                     "pod-template-generation": "1"
@@ -187,7 +187,7 @@ public:
                 "workload.name": "coredns-7b669cbb96",
                 "workload.kind": "replicaset",
                 "service.name": "",
-                "pod.labels": {
+                "k8s.pod.label": {
                     "k8s-app": "kube-dns",
                     "pod-template-hash": "7b669cbb96"
                 },
@@ -204,7 +204,7 @@ public:
                 "workload.name": "csi-provisioner-8bd988c55",
                 "workload.kind": "replicaset",
                 "service.name": "",
-                "pod.labels": {
+                "k8s.pod.label": {
                     "app": "csi-provisioner",
                     "pod-template-hash": "8bd988c55"
                 },
@@ -231,7 +231,7 @@ public:
                 "workload.name": "kube-proxy-worker",
                 "workload.kind": "daemonset",
                 "service.name": "",
-                "pod.labels": {
+                "k8s.pod.label": {
                     "controller-revision-hash": "756748b889",
                     "k8s-app": "kube-proxy-worker",
                     "pod-template-generation": "1"
@@ -301,7 +301,7 @@ public:
                 "workloadName": "coredns-7b669cbb96",
                 "workloadKind": "replicaset",
                 "service.name": "",
-                "pod.labels": {
+                "k8s.pod.label": {
                     "k8s-app": "kube-dns",
                     "pod-template-hash": "7b669cbb96"
                 },
@@ -318,7 +318,7 @@ public:
                 "workloadName": "csi-provisioner-8bd988c55",
                 "workloadKind": "replicaset",
                 "service.name": "",
-                "pod.labels": {
+                "k8s.pod.label": {
                     "app": "csi-provisioner",
                     "pod-template-hash": "8bd988c55"
                 },
@@ -345,7 +345,7 @@ public:
                 "workloadName": "kube-proxy-worker",
                 "workloadKind": "daemonset",
                 "service.name": "",
-                "pod.labels": {
+                "k8s.pod.label": {
                     "controller-revision-hash": "756748b889",
                     "k8s-app": "kube-proxy-worker",
                     "pod-template-generation": "1"
