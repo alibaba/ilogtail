@@ -440,15 +440,6 @@ string GetAgentStatusLogName() {
     }
 }
 
-string GetProfileSnapshotDumpFileName() {
-    if (BOOL_FLAG(logtail_mode)) {
-        return GetProcessExecutionDir() + STRING_FLAG(logtail_profile_snapshot);
-    } else {
-        return GetAgentLogDir() + "loongcollector_profile_snapshot";
-    }
-}
-
-
 string GetObserverEbpfHostPath() {
     if (BOOL_FLAG(logtail_mode)) {
         return STRING_FLAG(sls_observer_ebpf_host_path);

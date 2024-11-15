@@ -50,7 +50,6 @@ std::string GetAgentLoggersPrefix();
 std::string GetAgentLogName();
 std::string GetAgentSnapshotDir();
 std::string GetAgentStatusLogName();
-std::string GetProfileSnapshotDumpFileName();
 std::string GetObserverEbpfHostPath();
 std::string GetSendBufferFileNamePrefix();
 std::string GetLegacyUserLocalConfigFilePath();
