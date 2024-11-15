@@ -59,7 +59,7 @@ namespace logtail {
 ////////////////////////// Trace ////////////////////////
 #ifndef __ENTERPRISE__ // 开源版
     const std::string DEFAULT_TRACE_TAG_NAMESPACE = "k8s.namespace.name";
-    const std::string DEFAULT_TRACE_TAG_CONTAINER_ID = "k8s.container.name";
+    const std::string DEFAULT_TRACE_TAG_CONTAINER_ID = "k8s.container.id";
     const std::string DEFAULT_TRACE_TAG_PID = "service.instance.id";
     const std::string DEFAULT_TRACE_TAG_REMOTE_IP = "remote.ip";
     const std::string DEFAULT_TRACE_TAG_PEER_WORKLOAD_NAME = "peer.workload.name";
