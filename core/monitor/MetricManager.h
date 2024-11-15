@@ -24,6 +24,7 @@
 
 #include "MetricRecord.h"
 #include "common/Lock.h"
+#include "models/PipelineEventGroup.h"
 #include "protobuf/sls/sls_logs.pb.h"
 
 namespace logtail {
@@ -77,6 +78,7 @@ public:
         static ReadMetrics* ptr = new ReadMetrics();
         return ptr;
     }
+    void ReadAsPipelineEventGroup(std::map<std::string, PipelineEventGroup>& pipelineEventGroupMap) const;
     void ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup*>& logGroupMap) const;
     void ReadAsFileBuffer(std::string& metricsContent) const;
     void UpdateMetrics();

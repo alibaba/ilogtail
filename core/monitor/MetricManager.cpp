@@ -33,7 +33,8 @@ namespace logtail {
 const string METRIC_EXPORT_TYPE_GO = "direct";
 const string METRIC_EXPORT_TYPE_CPP = "cpp_provided";
 
-Log* CreateLogPtr(std::map<std::string, sls_logs::LogGroup*>& logGroupMap, const string& region);
+LogEvent* CreateLogEvent(map<string, PipelineEventGroup>& pipelineEventGroupMap, const string& region);
+Log* CreateLogPtr(map<string, sls_logs::LogGroup*>& logGroupMap, const string& region);
 string FindProjectFromMetricRecord(const MetricsRecord* tmp);
 string FindProjectFromGoMetricRecord(const map<string, string>& metric);
 set<string> GetRegionsByProjects(string projects);
@@ -47,7 +48,7 @@ void WriteMetrics::PrepareMetricsRecordRef(MetricsRecordRef& ref,
                                            const string& category,
                                            MetricLabels&& labels,
                                            DynamicMetricLabels&& dynamicLabels) {
-    CreateMetricsRecordRef(ref, category, std::move(labels), std::move(dynamicLabels));
+    CreateMetricsRecordRef(ref, category, move(labels), move(dynamicLabels));
     CommitMetricsRecordRef(ref);
 }
 
@@ -56,23 +57,23 @@ void WriteMetrics::CreateMetricsRecordRef(MetricsRecordRef& ref,
                                           MetricLabels&& labels,
                                           DynamicMetricLabels&& dynamicLabels) {
     MetricsRecord* cur = new MetricsRecord(
-        category, std::make_shared<MetricLabels>(labels), std::make_shared<DynamicMetricLabels>(dynamicLabels));
+        category, make_shared<MetricLabels>(labels), make_shared<DynamicMetricLabels>(dynamicLabels));
     ref.SetMetricsRecord(cur);
 }
 
 void WriteMetrics::CommitMetricsRecordRef(MetricsRecordRef& ref) {
-    std::lock_guard<std::mutex> lock(mMutex);
+    lock_guard<mutex> lock(mMutex);
     ref.mMetrics->SetNext(mHead);
     mHead = ref.mMetrics;
 }
 
 MetricsRecord* WriteMetrics::GetHead() {
-    std::lock_guard<std::mutex> lock(mMutex);
+    lock_guard<mutex> lock(mMutex);
     return mHead;
 }
 
 void WriteMetrics::Clear() {
-    std::lock_guard<std::mutex> lock(mMutex);
+    lock_guard<mutex> lock(mMutex);
     while (mHead) {
         MetricsRecord* toDeleted = mHead;
         mHead = mHead->GetNext();
@@ -95,7 +96,7 @@ MetricsRecord* WriteMetrics::DoSnapshot() {
 
     // find the first undeleted node and set as new mHead
     {
-        std::lock_guard<std::mutex> lock(mMutex);
+        lock_guard<mutex> lock(mMutex);
         emptyHead.SetNext(mHead);
         preTmp = &emptyHead;
         tmp = preTmp->GetNext();
@@ -165,6 +166,119 @@ ReadMetrics::~ReadMetrics() {
     Clear();
 }
 
+void ReadMetrics::ReadAsPipelineEventGroup(map<string, PipelineEventGroup>& pipelineEventGroupMap) const {
+    ReadLock lock(mReadWriteLock);
+
+    // c++ metrics
+    MetricsRecord* tmp = mHead;
+    while (tmp) {
+        // get region by project
+        set<string> regions = GetRegionsByProjects(FindProjectFromMetricRecord(tmp));
+        if (tmp->GetCategory() == MetricCategory::METRIC_CATEGORY_AGENT) {
+            regions.insert(GetProfileSender()->GetDefaultProfileRegion());
+        }
+
+        LogEvent* logBasePtr = nullptr;
+        for (const auto& region : regions) {
+            // create logPtr
+            LogEvent* logPtr = CreateLogEvent(pipelineEventGroupMap, region);
+            if (logBasePtr == nullptr) {
+                // set time
+                auto now = GetCurrentLogtailTime();
+                logPtr->SetTimestamp(AppConfig::GetInstance()->EnableLogTimeAutoAdjust() ? now.tv_sec + GetTimeDelta()
+                                                                                         : now.tv_sec);
+                // set content
+                { // category
+                    logPtr->SetContent(METRIC_KEY_CATEGORY, tmp->GetCategory());
+                }
+                { // label
+                    Json::Value metricsRecordLabel;
+                    for (auto item = tmp->GetLabels()->begin(); item != tmp->GetLabels()->end(); ++item) {
+                        pair<string, string> pair = *item;
+                        metricsRecordLabel[pair.first] = pair.second;
+                    }
+                    for (auto item = tmp->GetDynamicLabels()->begin(); item != tmp->GetDynamicLabels()->end(); ++item) {
+                        pair<string, function<string()>> pair = *item;
+                        metricsRecordLabel[pair.first] = pair.second();
+                    }
+                    logPtr->SetContent(METRIC_KEY_LABEL, GenJsonString(metricsRecordLabel));
+                }
+                { // value
+                    for (auto& item : tmp->GetCounters()) {
+                        CounterPtr counter = item;
+                        logPtr->SetContent(counter->GetName(), ToString(counter->GetValue()));
+                    }
+                    for (auto& item : tmp->GetTimeCounters()) {
+                        TimeCounterPtr counter = item;
+                        logPtr->SetContent(counter->GetName(), ToString(counter->GetValue()));
+                    }
+                    for (auto& item : tmp->GetIntGauges()) {
+                        IntGaugePtr gauge = item;
+                        logPtr->SetContent(gauge->GetName(), ToString(gauge->GetValue()));
+                    }
+                    for (auto& item : tmp->GetDoubleGauges()) {
+                        DoubleGaugePtr gauge = item;
+                        logPtr->SetContent(gauge->GetName(), ToString(gauge->GetValue()));
+                    }
+                }
+                logBasePtr = logPtr;
+            } else {
+                logPtr->SetTimestamp(logBasePtr->GetTimestamp());
+                for (auto it = logBasePtr->begin(); it != logBasePtr->end(); it++) {
+                    logPtr->SetContent(it->first, it->second);
+                }
+            }
+        }
+
+        tmp = tmp->GetNext();
+    }
+
+    // go metrics
+    for (auto& metrics : mGoMetrics) {
+        // get region by project
+        set<string> regions = GetRegionsByProjects(FindProjectFromGoMetricRecord(metrics));
+
+        LogEvent* logBasePtr = nullptr;
+        for (const auto& region : regions) {
+            // create logPtr
+            LogEvent* logPtr = CreateLogEvent(pipelineEventGroupMap, region);
+            if (logBasePtr == nullptr) {
+                // set time
+                auto now = GetCurrentLogtailTime();
+                logPtr->SetTimestamp(AppConfig::GetInstance()->EnableLogTimeAutoAdjust() ? now.tv_sec + GetTimeDelta()
+                                                                                         : now.tv_sec);
+
+                // set content
+                Json::Value metricsRecordLabel;
+                for (const auto& metric : metrics) {
+                    // category
+                    if (metric.first.compare("label.metric_category") == 0) {
+                        logPtr->SetContent(METRIC_KEY_CATEGORY, metric.second);
+                        continue;
+                    }
+                    // label
+                    if (metric.first.compare(0, METRIC_KEY_LABEL.length(), METRIC_KEY_LABEL) == 0) {
+                        metricsRecordLabel[metric.first.substr(METRIC_KEY_LABEL.length() + 1)] = metric.second;
+                        continue;
+                    }
+                    // value
+                    if (metric.first.compare(0, METRIC_KEY_VALUE.length(), METRIC_KEY_VALUE) == 0) {
+                        logPtr->SetContent(metric.first.substr(METRIC_KEY_VALUE.length() + 1), metric.second);
+                        continue;
+                    }
+                }
+                logPtr->SetContent(METRIC_KEY_LABEL, GenJsonString(metricsRecordLabel));
+                logBasePtr = logPtr;
+            } else {
+                logPtr->SetTimestamp(logBasePtr->GetTimestamp());
+                for (auto it = logBasePtr->begin(); it != logBasePtr->end(); it++) {
+                    logPtr->SetContent(it->first, it->second);
+                }
+            }
+        }
+    }
+}
+
 void ReadMetrics::ReadAsLogGroup(map<string, sls_logs::LogGroup*>& logGroupMap) const {
     ReadLock lock(mReadWriteLock);
 
@@ -173,6 +287,9 @@ void ReadMetrics::ReadAsLogGroup(map<string, sls_logs::LogGroup*>& logGroupMap) 
     while (tmp) {
         // get region by project
         set<string> regions = GetRegionsByProjects(FindProjectFromMetricRecord(tmp));
+        if (tmp->GetCategory() == MetricCategory::METRIC_CATEGORY_AGENT) {
+            regions.insert(GetProfileSender()->GetDefaultProfileRegion());
+        }
 
         Log* logBasePtr = nullptr;
         for (const auto& region : regions) {
@@ -193,11 +310,11 @@ void ReadMetrics::ReadAsLogGroup(map<string, sls_logs::LogGroup*>& logGroupMap) 
                 { // label
                     Json::Value metricsRecordLabel;
                     for (auto item = tmp->GetLabels()->begin(); item != tmp->GetLabels()->end(); ++item) {
-                        std::pair<string, string> pair = *item;
+                        pair<string, string> pair = *item;
                         metricsRecordLabel[pair.first] = pair.second;
                     }
                     for (auto item = tmp->GetDynamicLabels()->begin(); item != tmp->GetDynamicLabels()->end(); ++item) {
-                        std::pair<string, std::function<string()>> pair = *item;
+                        pair<string, function<string()>> pair = *item;
                         metricsRecordLabel[pair.first] = pair.second();
                     }
                     Log_Content* contentPtr = logPtr->add_contents();
@@ -266,14 +383,17 @@ void ReadMetrics::ReadAsLogGroup(map<string, sls_logs::LogGroup*>& logGroupMap) 
                         continue;
                     }
                     // label
-                    if (metric.first.compare(0, METRIC_KEY_LABEL.length(), METRIC_KEY_LABEL)) {
+                    if (metric.first.compare(0, METRIC_KEY_LABEL.length(), METRIC_KEY_LABEL) == 0) {
                         metricsRecordLabel[metric.first.substr(METRIC_KEY_LABEL.length() + 1)] = metric.second;
                         continue;
                     }
                     // value
-                    Log_Content* contentPtr = logPtr->add_contents();
-                    contentPtr->set_key(metric.first);
-                    contentPtr->set_value(metric.second);
+                    if (metric.first.compare(0, METRIC_KEY_VALUE.length(), METRIC_KEY_VALUE) == 0) {
+                        Log_Content* contentPtr = logPtr->add_contents();
+                        contentPtr->set_key(metric.first.substr(METRIC_KEY_VALUE.length() + 1));
+                        contentPtr->set_value(metric.second);
+                        continue;
+                    }
                 }
                 Log_Content* contentPtr = logPtr->add_contents();
                 contentPtr->set_key(METRIC_KEY_LABEL);
@@ -289,7 +409,7 @@ void ReadMetrics::ReadAsLogGroup(map<string, sls_logs::LogGroup*>& logGroupMap) 
 void ReadMetrics::ReadAsFileBuffer(string& metricsContent) const {
     ReadLock lock(mReadWriteLock);
 
-    std::ostringstream oss;
+    ostringstream oss;
 
     // c++ metrics
     MetricsRecord* tmp = mHead;
@@ -302,11 +422,11 @@ void ReadMetrics::ReadAsFileBuffer(string& metricsContent) const {
         metricsRecordJson[METRIC_KEY_CATEGORY] = tmp->GetCategory();
 
         for (auto item = tmp->GetLabels()->begin(); item != tmp->GetLabels()->end(); ++item) {
-            std::pair<string, string> pair = *item;
+            pair<string, string> pair = *item;
             metricsRecordLabel[pair.first] = pair.second;
         }
         for (auto item = tmp->GetDynamicLabels()->begin(); item != tmp->GetDynamicLabels()->end(); ++item) {
-            std::pair<string, std::function<string()>> pair = *item;
+            pair<string, function<string()>> pair = *item;
             metricsRecordLabel[pair.first] = pair.second();
         }
         metricsRecordJson[METRIC_KEY_LABEL] = metricsRecordLabel;
@@ -362,7 +482,7 @@ void ReadMetrics::UpdateMetrics() {
     // 前（即调用 ReadMetrics::GetInstance()->UpdateMetrics() 函数），把go部分的进程级指标填写到 Cpp
     // 的进程级指标中去，随Cpp的进程级指标一起输出
     if (LogtailPlugin::GetInstance()->IsPluginOpened()) {
-        std::vector<std::map<string, string>> goCppProvidedMetircsList;
+        vector<map<string, string>> goCppProvidedMetircsList;
         LogtailPlugin::GetInstance()->GetGoMetrics(goCppProvidedMetircsList, METRIC_EXPORT_TYPE_CPP);
         UpdateGoCppProvidedMetrics(goCppProvidedMetircsList);
 
@@ -404,7 +524,7 @@ void ReadMetrics::Clear() {
 }
 
 // metrics from Go that are provided by cpp
-void ReadMetrics::UpdateGoCppProvidedMetrics(std::vector<std::map<string, string>>& metricsList) {
+void ReadMetrics::UpdateGoCppProvidedMetrics(vector<map<string, string>>& metricsList) {
     if (metricsList.size() == 0) {
         return;
     }
@@ -412,39 +532,52 @@ void ReadMetrics::UpdateGoCppProvidedMetrics(std::vector<std::map<string, string
     for (auto metrics : metricsList) {
         for (auto metric : metrics) {
             if (metric.first == METRIC_KEY_VALUE + "." + METRIC_AGENT_MEMORY_GO) {
-                LoongCollectorMonitor::GetInstance()->SetAgentGoMemory(std::stoi(metric.second));
+                LoongCollectorMonitor::GetInstance()->SetAgentGoMemory(stoi(metric.second));
             }
             if (metric.first == METRIC_KEY_VALUE + "." + METRIC_AGENT_GO_ROUTINES_TOTAL) {
-                LoongCollectorMonitor::GetInstance()->SetAgentGoRoutinesTotal(std::stoi(metric.second));
+                LoongCollectorMonitor::GetInstance()->SetAgentGoRoutinesTotal(stoi(metric.second));
             }
             LogtailMonitor::GetInstance()->UpdateMetric(metric.first, metric.second);
         }
     }
 }
 
-Log* CreateLogPtr(std::map<std::string, sls_logs::LogGroup*>& logGroupMap, const string& region) {
+LogEvent* CreateLogEvent(map<string, PipelineEventGroup>& pipelineEventGroupMap, const string& region) {
+    LogEvent* logPtr = nullptr;
+    map<string, PipelineEventGroup>::iterator iter = pipelineEventGroupMap.find(region);
+    if (iter != pipelineEventGroupMap.end()) {
+        logPtr = iter->second.AddLogEvent();
+    } else {
+        PipelineEventGroup pipelineEventGroup(make_shared<SourceBuffer>());
+        logPtr = pipelineEventGroup.AddLogEvent();
+        pipelineEventGroupMap.insert(pair<string, PipelineEventGroup>(region, move(pipelineEventGroup)));
+    }
+    return logPtr;
+}
+
+Log* CreateLogPtr(map<string, sls_logs::LogGroup*>& logGroupMap, const string& region) {
     Log* logPtr = nullptr;
-    std::map<string, sls_logs::LogGroup*>::iterator iter = logGroupMap.find(region);
+    map<string, sls_logs::LogGroup*>::iterator iter = logGroupMap.find(region);
     if (iter != logGroupMap.end()) {
         sls_logs::LogGroup* logGroup = iter->second;
         logPtr = logGroup->add_logs();
     } else {
         sls_logs::LogGroup* logGroup = new sls_logs::LogGroup();
         logPtr = logGroup->add_logs();
-        logGroupMap.insert(std::pair<string, sls_logs::LogGroup*>(region, logGroup));
+        logGroupMap.insert(pair<string, sls_logs::LogGroup*>(region, logGroup));
     }
     return logPtr;
 }
 
 string FindProjectFromMetricRecord(const MetricsRecord* tmp) {
     for (auto item = tmp->GetLabels()->begin(); item != tmp->GetLabels()->end(); ++item) {
-        std::pair<string, string> pair = *item;
+        pair<string, string> pair = *item;
         if (METRIC_LABEL_KEY_PROJECT == pair.first) {
             return pair.second;
         }
     }
     for (auto item = tmp->GetDynamicLabels()->begin(); item != tmp->GetDynamicLabels()->end(); ++item) {
-        std::pair<string, std::function<string()>> pair = *item;
+        pair<string, function<string()>> pair = *item;
         if (METRIC_LABEL_KEY_PROJECT == pair.first) {
             return pair.second();
         }
