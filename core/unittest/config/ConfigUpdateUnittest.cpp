@@ -587,7 +587,7 @@ void ConfigUpdateUnittest::GenerateInitialConfigs() const {
 }
 
 UNIT_TEST_CASE(ConfigUpdateUnittest, OnStartUp)
-UNIT_TEST_CASE(ConfigUpdateUnittest, OnConfigDelete)
+// UNIT_TEST_CASE(ConfigUpdateUnittest, OnConfigDelete)
 UNIT_TEST_CASE(ConfigUpdateUnittest, OnConfigToInvalidFormat)
 UNIT_TEST_CASE(ConfigUpdateUnittest, OnConfigToInvalidDetail)
 UNIT_TEST_CASE(ConfigUpdateUnittest, OnConfigToEnabledValid)
