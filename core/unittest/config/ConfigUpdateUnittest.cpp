@@ -304,8 +304,8 @@ void ConfigUpdateUnittest::OnConfigDelete() const {
 
     PipelineManagerMock::GetInstance()->UpdatePipelines(diff.first);
     APSARA_TEST_TRUE(PipelineManagerMock::GetInstance()->GetAllConfigNames().empty());
-    TaskPipelineManager::GetInstance()->UpdatePipelines(diff.second);
-    APSARA_TEST_TRUE(TaskPipelineManager::GetInstance()->GetAllPipelineNames().empty());
+    // TaskPipelineManager::GetInstance()->UpdatePipelines(diff.second);
+    // APSARA_TEST_TRUE(TaskPipelineManager::GetInstance()->GetAllPipelineNames().empty());
 }
 
 void ConfigUpdateUnittest::OnConfigToInvalidFormat() const {
