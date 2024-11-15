@@ -84,7 +84,7 @@ pair<PipelineConfigDiff, TaskConfigDiff> PipelineConfigWatcher::CheckConfigDiff(
             filesystem::file_time_type mTime = filesystem::last_write_time(path, ec);
             if (iter == mFileInfoMap.end()) {
                 mFileInfoMap[filepath] = make_pair(size, mTime);
-                unique_ptr<Json::Value> detail = make_unique<Json::Value>(new Json::Value());
+                unique_ptr<Json::Value> detail = make_unique<Json::Value>();
                 if (!LoadConfigDetailFromFile(path, *detail)) {
                     continue;
                 }
@@ -98,7 +98,7 @@ pair<PipelineConfigDiff, TaskConfigDiff> PipelineConfigWatcher::CheckConfigDiff(
             } else if (iter->second.first != size || iter->second.second != mTime) {
                 // for config currently running, we leave it untouched if new config is invalid
                 mFileInfoMap[filepath] = make_pair(size, mTime);
-                unique_ptr<Json::Value> detail = make_unique<Json::Value>(new Json::Value());
+                unique_ptr<Json::Value> detail = make_unique<Json::Value>();
                 if (!LoadConfigDetailFromFile(path, *detail)) {
                     continue;
                 }
@@ -153,10 +153,12 @@ pair<PipelineConfigDiff, TaskConfigDiff> PipelineConfigWatcher::CheckConfigDiff(
                      ("existing valid config is removed", "prepare to stop current running task")("config", name));
         }
     }
-    for (const auto& item : mFileInfoMap) {
-        string configName = filesystem::path(item.first).stem().string();
+    for (auto it = mFileInfoMap.begin(); it != mFileInfoMap.end();) {
+        string configName = filesystem::path(it->first).stem().string();
         if (configSet.find(configName) == configSet.end()) {
-            mFileInfoMap.erase(item.first);
+            it = mFileInfoMap.erase(it);
+        } else {
+            ++it;
         }
     }
 
