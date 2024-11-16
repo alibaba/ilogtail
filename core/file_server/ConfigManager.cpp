@@ -150,7 +150,7 @@ bool ConfigManager::RegisterHandlersRecursively(const std::string& path,
         return result;
 
     if (!config.first->IsDirectoryInBlacklist(path))
-        result = EventDispatcher::GetInstance()->RegisterEventHandler(path.c_str(), config, mSharedHandler);
+        result = EventDispatcher::GetInstance()->RegisterEventHandler(path, config, mSharedHandler);
 
     if (!result)
         return result;
@@ -462,7 +462,7 @@ bool ConfigManager::RegisterDirectory(const std::string& source, const std::stri
     // Match(subdir, *.log) = false.
     FileDiscoveryConfig config = FindBestMatch(source, object);
     if (config.first && !config.first->IsDirectoryInBlacklist(source)) {
-        return EventDispatcher::GetInstance()->RegisterEventHandler(source.c_str(), config, mSharedHandler);
+        return EventDispatcher::GetInstance()->RegisterEventHandler(source, config, mSharedHandler);
     }
     return false;
 }
@@ -478,16 +478,7 @@ bool ConfigManager::RegisterHandlersWithinDepth(const std::string& path,
         LOG_INFO(sLogger, ("ignore path matching host path blacklist", path));
         return false;
     }
-    if (preservedDirDepth <= 0) {
-        DirCheckPointPtr dirCheckPoint;
-        if (CheckPointManager::Instance()->GetDirCheckPoint(path, dirCheckPoint)) {
-            // path had dircheckpoint means it was watched before, so it is valid
-            const set<string>& subdir = dirCheckPoint.get()->mSubDir;
-            for (const auto& it : subdir) {
-                RegisterHandlersWithinDepth(it, config, preservedDirDepth - 1, maxDepth - 1);
-            }
-            return true;
-        }
+    if (preservedDirDepth < 0) {
         fsutil::PathStat statBuf;
         if (!fsutil::PathStat::stat(path, statBuf)) {
             return true;
@@ -513,14 +504,25 @@ bool ConfigManager::RegisterHandlersWithinDepth(const std::string& path,
         LOG_ERROR(sLogger, ("Open dir error: ", path.c_str())("errno", err));
         return false;
     }
-    if (!(EventDispatcher::GetInstance()->RegisterEventHandler(path.c_str(), config, mSharedHandler))) {
+    if (!(EventDispatcher::GetInstance()->RegisterEventHandler(path, config, mSharedHandler))) {
         // break;// fail early, do not try to register others
         return false;
     }
     if (maxDepth == 0) {
         return true;
     }
-    bool result = true;
+
+    if (preservedDirDepth == 0) {
+        DirCheckPointPtr dirCheckPoint;
+        if (CheckPointManager::Instance()->GetDirCheckPoint(path, dirCheckPoint)) {
+            // path had dircheckpoint means it was watched before, so it is valid
+            const set<string>& subdir = dirCheckPoint.get()->mSubDir;
+            for (const auto& it : subdir) {
+                RegisterHandlersWithinDepth(it, config, 0, maxDepth - 1);
+            }
+            return true;
+        }
+    }
     fsutil::Entry ent;
     while ((ent = dir.ReadNext())) {
         string item = PathJoin(path, ent.Name());
@@ -528,8 +530,7 @@ bool ConfigManager::RegisterHandlersWithinDepth(const std::string& path,
             RegisterHandlersWithinDepth(item, config, preservedDirDepth - 1, maxDepth - 1);
         }
     }
-
-    return result;
+    return true;
 }
 
 // path not terminated by '/', path already registered
@@ -553,7 +554,7 @@ bool ConfigManager::RegisterDescendants(const string& path, const FileDiscoveryC
         LOG_ERROR(sLogger, ("Open dir error: ", path.c_str())("errno", err));
         return false;
     }
-    if (!EventDispatcher::GetInstance()->RegisterEventHandler(path.c_str(), config, mSharedHandler)) {
+    if (!EventDispatcher::GetInstance()->RegisterEventHandler(path, config, mSharedHandler)) {
         // break;// fail early, do not try to register others
         return false;
     }

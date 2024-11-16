@@ -119,7 +119,7 @@ void NormalEventHandler::Handle(const Event& event) {
                           "max depth", config.first->mMaxDirSearchDepth));
             EventHandler* newHandler = new CreateModifyHandler(mCreateHandlerPtr);
             EventHandler* handler = newHandler;
-            if (EventDispatcher::GetInstance()->RegisterEventHandler(path.c_str(), config, handler)) {
+            if (EventDispatcher::GetInstance()->RegisterEventHandler(path, config, handler)) {
                 if (handler != newHandler)
                     delete newHandler;
                 else
@@ -157,11 +157,13 @@ void CreateHandler::Handle(const Event& event) {
     if (!config.first)
         return;
     else if (event.IsDir())
-        ConfigManager::GetInstance()->RegisterHandlersRecursively(path, config, false);
+        ConfigManager::GetInstance()->RegisterHandlers(path, config);
     else {
         // symbolic link
-        if (EventDispatcher::GetInstance()->IsDirRegistered(path) == PATH_INODE_NOT_REGISTERED)
+        if (EventDispatcher::GetInstance()->IsDirRegistered(path) == PATH_INODE_NOT_REGISTERED) {
+            // TODO: why not use RegisterHandlers
             ConfigManager::GetInstance()->RegisterHandlersRecursively(path, config, true);
+        }
     }
 }
 
@@ -173,8 +175,9 @@ void CreateHandler::HandleTimeOut() {
 // TimeoutHandler implementation
 void TimeoutHandler::Handle(const Event& ev) {
     const string& dir = ev.GetSource();
-    EventDispatcher::GetInstance()->UnregisterEventHandler(dir.c_str());
+    EventDispatcher::GetInstance()->UnregisterEventHandler(dir);
     ConfigManager::GetInstance()->RemoveHandler(dir);
+    CheckPointManager::Instance()->DeleteDirCheckPoint(dir);
 }
 
 

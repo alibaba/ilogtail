@@ -366,13 +366,14 @@ bool PollingDirFile::PollingNormalConfigPath(const FileDiscoveryConfig& pConfig,
     if (pConfig.first->mMaxDirSearchDepth >= 0 && depth > pConfig.first->mMaxDirSearchDepth) {
         return false;
     }
-    bool exceedPreservedDirDepth = false;
+    int exceedPreservedDirDepth = 0;
     if (pConfig.first->mPreservedDirDepth >= 0 && depth > pConfig.first->mPreservedDirDepth) {
         exceedPreservedDirDepth = true;
         int64_t sec = 0;
         int64_t nsec = 0;
         statBuf.GetLastWriteTime(sec, nsec);
         auto curTime = time(nullptr);
+        LOG_DEBUG(sLogger, ("PollingNormalConfigPath", srcPath + "/" + obj)("curTime", curTime)("writeTime", sec));
         if (curTime - sec > INT32_FLAG(timeout_interval)) {
             return false;
         }

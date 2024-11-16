@@ -89,7 +89,7 @@ DEFINE_FLAG_INT32(default_max_inotify_watch_num, "the max allowed inotify watch 
 
 namespace logtail {
 
-EventDispatcher::EventDispatcher() : mWatchNum(0), mInotifyWatchNum(0) {
+EventDispatcher::EventDispatcher() : mWatchNum(0), mInotifyWatchNum(0), mEventListener(EventListener::GetInstance()) {
     /*
      * May add multiple inotify fd instances in the future,
      * so use epoll here though a little more sophisticated than select
@@ -100,7 +100,6 @@ EventDispatcher::EventDispatcher() : mWatchNum(0), mInotifyWatchNum(0) {
     //     mListenFd = -1;
     //     mStreamLogTcpFd = -1;
     // #endif
-    mEventListener = EventListener::GetInstance();
     if (!AppConfig::GetInstance()->NoInotify()) {
         if (!mEventListener->Init()) {
             AlarmManager::GetInstance()->SendAlarm(EPOLL_ERROR_ALARM,
@@ -142,7 +141,7 @@ EventDispatcher::~EventDispatcher() {
         delete mTimeoutHandler;
 }
 
-bool EventDispatcher::RegisterEventHandler(const char* path,
+bool EventDispatcher::RegisterEventHandler(const string& path,
                                            const FileDiscoveryConfig& config,
                                            EventHandler*& handler) {
     if (AppConfig::GetInstance()->IsHostPathMatchBlacklist(path)) {
@@ -177,7 +176,7 @@ bool EventDispatcher::RegisterEventHandler(const char* path,
         return false;
     }
     uint64_t inode = statBuf.GetDevInode().inode;
-    int wd;
+    int wd = -1;
     MapType<string, int>::Type::iterator pathIter = mPathWdMap.find(path);
     if (pathIter != mPathWdMap.end()) {
         wd = pathIter->second;
@@ -236,8 +235,8 @@ bool EventDispatcher::RegisterEventHandler(const char* path,
     } else {
         // need check mEventListener valid
         if (mEventListener->IsInit() && !AppConfig::GetInstance()->IsInInotifyBlackList(path)) {
-            wd = mEventListener->AddWatch(path);
-            if (!mEventListener->IsValidID(wd)) {
+            wd = mEventListener->AddWatch(path.c_str());
+            if (!EventListener::IsValidID(wd)) {
                 string str = ErrnoToString(GetErrno());
                 LOG_WARNING(sLogger, ("failed to register dir", path)("reason", str));
 #if defined(__linux__)
@@ -279,7 +278,7 @@ bool EventDispatcher::RegisterEventHandler(const char* path,
 
     bool dirTimeOutFlag = config.first->IsTimeout(path);
 
-    if (!mEventListener->IsValidID(wd)) {
+    if (!EventListener::IsValidID(wd)) {
         wd = mNonInotifyWd;
         if (mNonInotifyWd == INT_MIN)
             mNonInotifyWd = -1;
@@ -311,7 +310,7 @@ bool EventDispatcher::RegisterEventHandler(const char* path,
 }
 
 // read files when add dir inotify watcher at first time
-void EventDispatcher::AddExistedFileEvents(const char* path, int wd) {
+void EventDispatcher::AddExistedFileEvents(const string& path, int wd) {
     fsutil::Dir dir(path);
     if (!dir.Open()) {
         auto err = GetErrno();
@@ -618,7 +617,7 @@ void EventDispatcher::AddExistedCheckPointFileEvents() {
     // Because they are not in v1 checkpoint manager, no need to delete them.
     auto exactlyOnceConfigs = FileServer::GetInstance()->GetExactlyOnceConfigs();
     if (!exactlyOnceConfigs.empty()) {
-        static auto sCptMV2 = CheckpointManagerV2::GetInstance();
+        static auto* sCptMV2 = CheckpointManagerV2::GetInstance();
         auto exactlyOnceCpts = sCptMV2->ScanCheckpoints(exactlyOnceConfigs);
         LOG_INFO(sLogger,
                  ("start add exactly once checkpoint events",
@@ -687,14 +686,13 @@ void EventDispatcher::AddExistedCheckPointFileEvents() {
     }
 }
 
-bool EventDispatcher::AddTimeoutWatch(const char* path) {
+bool EventDispatcher::AddTimeoutWatch(const string& path) {
     MapType<string, int>::Type::iterator itr = mPathWdMap.find(path);
     if (itr != mPathWdMap.end()) {
         mWdUpdateTimeMap[itr->second] = time(NULL);
         return true;
-    } else {
-        return false;
     }
+    return false;
 }
 
 void EventDispatcher::AddOneToOneMapEntry(DirInfo* dirInfo, int wd) {
@@ -811,11 +809,11 @@ void EventDispatcher::UnregisterAllDir(const string& baseDir) {
     LOG_DEBUG(sLogger, ("Remove all sub dir", baseDir));
     auto subDirAndHandlers = FindAllSubDirAndHandler(baseDir);
     for (auto& subDirAndHandler : subDirAndHandlers) {
-        mTimeoutHandler->Handle(Event(subDirAndHandler.first.c_str(), "", 0, 0));
+        mTimeoutHandler->Handle(Event(subDirAndHandler.first, "", 0, 0));
     }
 }
 
-void EventDispatcher::UnregisterEventHandler(const char* path) {
+void EventDispatcher::UnregisterEventHandler(const string& path) {
     MapType<string, int>::Type::iterator pos = mPathWdMap.find(path);
     if (pos == mPathWdMap.end())
         return;
@@ -828,10 +826,9 @@ void EventDispatcher::UnregisterEventHandler(const char* path) {
             mBrokenLinkSet.insert(path);
         }
     }
-    LOG_INFO(sLogger, ("remove a new watcher for dir", path)("wd", wd));
     RemoveOneToOneMapEntry(wd);
     mWdUpdateTimeMap.erase(wd);
-    if (mEventListener->IsValidID(wd) && mEventListener->IsInit()) {
+    if (EventListener::IsValidID(wd) && mEventListener->IsInit()) {
         mEventListener->RemoveWatch(wd);
         mInotifyWatchNum--;
     }
@@ -843,7 +840,7 @@ void EventDispatcher::StopAllDir(const string& baseDir) {
     LOG_DEBUG(sLogger, ("Stop all sub dir", baseDir));
     auto subDirAndHandlers = FindAllSubDirAndHandler(baseDir);
     for (auto& subDirAndHandler : subDirAndHandlers) {
-        Event e(subDirAndHandler.first.c_str(), "", EVENT_ISDIR | EVENT_CONTAINER_STOPPED, -1, 0);
+        Event e(subDirAndHandler.first, "", EVENT_ISDIR | EVENT_CONTAINER_STOPPED, -1, 0);
         subDirAndHandler.second->Handle(e);
     }
 }
@@ -864,7 +861,7 @@ DirRegisterStatus EventDispatcher::IsDirRegistered(const string& path) {
     return PATH_INODE_NOT_REGISTERED;
 }
 
-bool EventDispatcher::IsRegistered(const char* path) {
+bool EventDispatcher::IsRegistered(const std::string& path) {
     MapType<string, int>::Type::iterator itr = mPathWdMap.find(path);
     if (itr == mPathWdMap.end())
         return false;
@@ -890,6 +887,8 @@ void EventDispatcher::HandleTimeout() {
     time_t curTime = time(NULL);
     MapType<int, time_t>::Type::iterator itr = mWdUpdateTimeMap.begin();
     for (; itr != mWdUpdateTimeMap.end(); ++itr) {
+        LOG_ERROR(sLogger,
+                  ("path", mWdDirInfoMap[itr->first]->mPath)("curTime", curTime)("lastupdatetime", itr->second));
         if (curTime - (itr->second) > INT32_FLAG(timeout_interval)) {
             // add to vector then batch process to avoid possible iterator change problem
             // mHandler may remove what itr points to, thus change the layout of the map container
@@ -911,33 +910,30 @@ void EventDispatcher::HandleTimeout() {
     }
 }
 
-void EventDispatcher::PropagateTimeout(const char* path) {
-    char* tmp = strdup(path);
-    MapType<string, int>::Type::iterator pathpos = mPathWdMap.find(tmp);
+void EventDispatcher::PropagateTimeout(const std::string& path) {
+    auto pathpos = mPathWdMap.find(path);
     if (pathpos == mPathWdMap.end()) {
         // walkarond of bug#5760293, should find the scenarios
-        AlarmManager::GetInstance()->SendAlarm(
-            INVALID_MEMORY_ACCESS_ALARM, "PropagateTimeout access invalid key of mPathWdMap, path : " + string(tmp));
-        LOG_ERROR(sLogger, ("PropagateTimeout access invalid key of mPathWdMap, path", string(tmp)));
-        free(tmp);
+        AlarmManager::GetInstance()->SendAlarm(INVALID_MEMORY_ACCESS_ALARM,
+                                               "PropagateTimeout access invalid key of mPathWdMap, path : " + path);
+        LOG_ERROR(sLogger, ("PropagateTimeout access invalid key of mPathWdMap, path", path));
         return;
     }
-    MapType<int, time_t>::Type::iterator pos = mWdUpdateTimeMap.find(pathpos->second);
-    char* slashpos;
-    time_t curTime = time(NULL);
+    string tmp(path);
+    auto pos = mWdUpdateTimeMap.find(pathpos->second);
+    time_t curTime = time(nullptr);
     while (pos != mWdUpdateTimeMap.end()) {
         pos->second = curTime;
-        slashpos = strrchr(tmp, '/');
-        if (slashpos == NULL)
+        auto slashpos = tmp.rfind('/');
+        if (slashpos == string::npos)
             break;
-        *slashpos = '\0';
+        tmp.resize(slashpos);
         pathpos = mPathWdMap.find(tmp);
         if (pathpos != mPathWdMap.end())
             pos = mWdUpdateTimeMap.find(pathpos->second);
         else
             break;
     }
-    free(tmp);
 }
 
 void EventDispatcher::StartTimeCount() {
@@ -963,7 +959,7 @@ void EventDispatcher::DumpAllHandlersMeta(bool remove) {
         int wd = timeout[i];
         string path = mWdDirInfoMap[wd]->mPath;
         if (remove) {
-            UnregisterEventHandler(path.c_str());
+            UnregisterEventHandler(path);
             ConfigManager::GetInstance()->RemoveHandler(path, false);
             if (ConfigManager::GetInstance()->FindBestMatch(path).first == NULL) {
                 continue;
@@ -979,24 +975,27 @@ void EventDispatcher::ProcessHandlerTimeOut() {
     for (; mapIter != mWdDirInfoMap.end(); ++mapIter) {
         mapIter->second->mHandler->HandleTimeOut();
     }
-    return;
 }
 
 void EventDispatcher::DumpCheckPointPeriod(int32_t curTime) {
     if (CheckPointManager::Instance()->NeedDump(curTime)) {
-        LOG_INFO(sLogger, ("checkpoint dump", "starts"));
-        FileServer::GetInstance()->Pause(false);
-        DumpAllHandlersMeta(false);
-
-        if (!(CheckPointManager::Instance()->DumpCheckPointToLocal()))
-            LOG_WARNING(sLogger, ("dump checkpoint to local", "failed"));
-        else
-            LOG_DEBUG(sLogger, ("dump checkpoint to local", "succeeded"));
-        // after save checkpoint, we should clear all checkpoint
-        CheckPointManager::Instance()->RemoveAllCheckPoint();
-        FileServer::GetInstance()->Resume(false);
-        LOG_INFO(sLogger, ("checkpoint dump", "succeeded"));
+        DumpCheckPoint();
     }
+}
+
+void EventDispatcher::DumpCheckPoint() {
+    LOG_INFO(sLogger, ("checkpoint dump", "starts"));
+    FileServer::GetInstance()->Pause(false);
+    DumpAllHandlersMeta(false);
+
+    if (!(CheckPointManager::Instance()->DumpCheckPointToLocal()))
+        LOG_WARNING(sLogger, ("dump checkpoint to local", "failed"));
+    else
+        LOG_DEBUG(sLogger, ("dump checkpoint to local", "succeeded"));
+    // after save checkpoint, we should clear all checkpoint
+    CheckPointManager::Instance()->RemoveAllCheckPoint();
+    FileServer::GetInstance()->Resume(false);
+    LOG_INFO(sLogger, ("checkpoint dump", "succeeded"));
 }
 
 bool EventDispatcher::IsAllFileRead() {

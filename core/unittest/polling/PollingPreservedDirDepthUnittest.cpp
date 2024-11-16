@@ -36,42 +36,41 @@ struct TestVector {
     int mPreservedDirDepth;
     bool mLetTimeoutBefore2ndWriteTestFile0;
     // expected results
+    bool mCollectTestFile1stWrite;
     bool mCollectTestFile2ndWrite;
+    bool mCollectTestFile3rdWrite;
     bool mCollectTestFile2;
 };
 
 // clang-format off
-/*
-| No. |  PreservedDirDepth  |  Path  |  第一次文件和目录变化  |  预期采集结果  |  第二次变化时间  |  第二次文件和目录变化  |  第三次变化时间  |  第三次文件和目录变化  |  预期采集结果 /var/log/0/0.log  |  预期采集结果 /var/log/1/0.log  |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-|  0  |  0  |  /var/\*\/log  |  /var/log/0/0.log  |  采集  |  \>timeout  |  在原有文件上追加数据  |  \>timeout  |  /var/log/1/0.log  |  不采集  |  采集  |
-|  1  |  0  |  /var/log  |  /var/log/app/0/0.log  |  采集  |  <timeout  |  在原有文件上追加数据  |  \>timeout  |  /var/log/app/1/0.log  |  采集  |  不采集  |
-|  2  |  0  |  /var/\*\/log  |  /var/app/log/0/0.log  |  采集  |  \>timeout  |  在原有文件上追加数据  |  \>timeout  |  /var/app/log/1/0.log  |  不采集  |  采集  |
-|  3  |  1  |  /var/\*\/log  |  /var/log/app/0/0.log  |  采集  |  \>timeout  |  在原有文件上追加数据  |  \>timeout  |  /var/log/app/1/0.log  |  不采集  |  采集  |
-|  4  |  0  |  /var/log  |  /var/log/0/0.log  |  采集  |  <timeout  |  在原有文件上追加数据  |  \>timeout  |  /var/log/1/0.log  |  采集  |  采集  |
-|  5  |  0  |  /var/\*\/log  |  /var/log/app/0/0.log  |  采集  |  \>timeout  |  在原有文件上追加数据  |  \>timeout  |  /var/log/app/1/0.log  |  不采集  |  不采集  |
-|  6  |  0  |  /var/log  |  /var/app/log/0/0.log  |  采集  |  <timeout  |  在原有文件上追加数据  |  \>timeout  |  /var/app/log/1/0.log  |  采集  |  采集  |
-|  7  |  1  |  /var/\*\/log  |  /var/log/0/0.log  |  采集  |  \>timeout  |  在原有文件上追加数据  |  \>timeout  |  /var/log/1/0.log  |  采集  |  采集  |
-|  8  |  1  |  /var/\*\/log  |  /var/app/log/0/0.log  |  采集  |  \>timeout  |  在原有文件上追加数据  |  \>timeout  |  /var/app/log/1/0.log  |  采集  |  采集  |
-*/
+// |  用例  |  PreservedDirDepth  |  Path  |  第一次文件和目录变化  |  预期采集结果  |  第二次变化时间  |  第二次文件和目录变化  |  预期采集结果  |  第三次变化时间  |  第三次文件和目录变化  |  预期采集结果 /var/log/0/0.log  |  预期采集结果 /var/log/1/0.log  |
+// | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+// |  0  |  0  |  /var/log  |  /var/log/app/0/0.log  |  采集  |  <timeout  |  在原有文件上追加数据  |  采集  |  \>timeout  |  /var/log/app/1/0.log  |  不采集  |  采集  |
+// |  1  |  0  |  /var/\*/log  |  /var/app/log/0/0.log  |  采集  |  \>timeout  |  在原有文件上追加数据  |  不采集  |  \>timeout  |  /var/app/log/1/0.log  |  不采集  |  采集  |
+// |  2  |  1  |  /var/log  |  /var/app/log/0/0.log  |  不采集  |  <timeout  |  在原有文件上追加数据  |  不采集  |  \>timeout  |  /var/app/log/1/0.log  |  不采集  |  不采集  |
+// |  3  |  0  |  /var/log  |  /var/log/0/0.log  |  采集  |  <timeout  |  在原有文件上追加数据  |  采集  |  \>timeout  |  /var/log/1/0.log  |  不采集  |  采集  |
+// |  4  |  1  |  /var/\*/log  |  /var/log/0/0.log  |  不采集  |  \>timeout  |  在原有文件上追加数据  |  不采集  |  \>timeout  |  /var/log/1/0.log  |  不采集  |  不采集  |
+// |  5  |  1  |  /var/\*/log  |  /var/app/log/0/0.log  |  采集  |  \>timeout  |  在原有文件上追加数据  |  采集  |  \>timeout  |  /var/app/log/1/0.log  |  采集  |  采集  |
+// |  6  |  0  |  /var/log  |  /var/log/app/0/0.log  |  采集  |  <timeout  |  在原有文件上追加数据  |  采集  |  \>timeout  |  /var/log/app/0/1/0.log  |  不采集  |  不采集  |
 // clang-format on
 
 class PollingPreservedDirDepthUnittest : public ::testing::Test {
     static std::string gRootDir;
+    static std::string gCheckpoint;
     static vector<TestVector> gTestMatrix;
 
 public:
     static void SetUpTestCase() {
         gRootDir = GetProcessExecutionDir() + "var" + PATH_SEPARATOR;
-        gTestMatrix = {{"*/log", "log/0", "log/1", 0, true, false, true},
-                       {"log", "log/app/0", "log/app/1", 0, false, true, false},
-                       {"*/log", "app/log/0", "app/log/1", 0, true, false, true},
-                       {"*/log", "log/app/0", "log/app/1", 1, true, false, true},
-                       {"log", "log/0", "log/1", 0, false, true, true},
-                       {"*/log", "log/app/0", "log/app/1", 0, true, false, false},
-                       {"log", "app/log/0", "app/log/1", 0, false, true, true},
-                       {"*/log", "log/0", "log/1", 1, true, true, true},
-                       {"*/log", "app/log/0", "app/log/1", 1, true, true, true}};
+        gTestMatrix = {
+            {"log", "log/app/0", "log/app/1", 0, false, true, true, false, true},
+            {"*/log", "app/log/0", "app/log/1", 0, true, true, false, false, true},
+            {"log", "app/log/0", "app/log/1", 1, false, false, false, false, false},
+            {"log", "log/0", "log/1", 0, false, true, true, false, true},
+            {"*/log", "log/0", "log/1", 1, true, false, false, false, false},
+            {"*/log", "app/log/0", "app/log/1", 1, true, true, true, true, true},
+            {"log", "log/app/0", "log/app/0/1", 0, false, true, true, false, false},
+        };
 
         sLogger->set_level(spdlog::level::trace);
         srand(time(nullptr));
@@ -81,6 +80,10 @@ public:
         INT32_FLAG(check_timeout_interval) = 0;
         INT32_FLAG(check_not_exist_file_dir_round) = 1;
         INT32_FLAG(polling_check_timeout_interval) = 0;
+        AppConfig::GetInstance()->mCheckPointFilePath = GetProcessExecutionDir() + gCheckpoint;
+        if (bfs::exists(AppConfig::GetInstance()->mCheckPointFilePath)) {
+            bfs::remove_all(AppConfig::GetInstance()->mCheckPointFilePath);
+        }
         LogFileProfiler::GetInstance();
         LoongCollectorMonitor::GetInstance()->Init();
         FlusherRunner::GetInstance()->Init(); // reference: Application::Start
@@ -103,6 +106,9 @@ public:
     }
 
     void SetUp() override {
+        if (bfs::exists(AppConfig::GetInstance()->mCheckPointFilePath)) {
+            bfs::remove_all(AppConfig::GetInstance()->mCheckPointFilePath);
+        }
         if (bfs::exists(gRootDir)) {
             bfs::remove_all(gRootDir);
         }
@@ -119,11 +125,16 @@ public:
         // ConfigManager::GetInstance()->CleanEnviroments();
         PollingDirFile::GetInstance()->ClearCache();
         PollingModify::GetInstance()->ClearCache();
+        CheckPointManager::Instance()->RemoveAllCheckPoint();
         // PollingEventQueue::GetInstance()->Clear();
         bfs::remove_all(gRootDir);
+        if (bfs::exists(AppConfig::GetInstance()->mCheckPointFilePath)) {
+            bfs::remove_all(AppConfig::GetInstance()->mCheckPointFilePath);
+        }
         FileServer::GetInstance()->Resume();
     }
 
+private:
     unique_ptr<Json::Value> createPipelineConfig(const string& filePath, int preservedDirDepth) {
         const char* confCstr = R"({
             "inputs": [
@@ -150,6 +161,7 @@ public:
     }
 
     void generateLog(const string& testFile) {
+        LOG_DEBUG(sLogger, ("Generate log", testFile));
         auto pos = testFile.rfind(PATH_SEPARATOR);
         auto dir = testFile.substr(0, pos);
         bfs::create_directories(dir);
@@ -166,9 +178,9 @@ public:
 
     void testPollingDirFile(const TestVector& testVector) {
         auto configInputFilePath
-            = gRootDir + gTestMatrix[0].mConfigInputDir + PATH_SEPARATOR + "**" + PATH_SEPARATOR + "0.log";
-        auto testFile1 = gRootDir + gTestMatrix[0].mTestDir0 + PATH_SEPARATOR + "0.log";
-        auto testFile2 = gRootDir + gTestMatrix[0].mTestDir1 + PATH_SEPARATOR + "0.log";
+            = gRootDir + testVector.mConfigInputDir + PATH_SEPARATOR + "**" + PATH_SEPARATOR + "0.log";
+        auto testFile1 = gRootDir + testVector.mTestDir0 + PATH_SEPARATOR + "0.log";
+        auto testFile2 = gRootDir + testVector.mTestDir1 + PATH_SEPARATOR + "0.log";
         FileServer::GetInstance()->Pause();
         auto configJson = createPipelineConfig(configInputFilePath, testVector.mPreservedDirDepth);
         PipelineConfig pipelineConfig("polling", std::move(configJson));
@@ -185,13 +197,17 @@ public:
         std::this_thread::sleep_for(std::chrono::microseconds(
             10 * INT32_FLAG(log_input_thread_wait_interval))); // give enough time to consume event
 
-        // generate log for testFile1 for the 1st time
+        // write testFile1 for the 1st time
         generateLog(testFile1);
         PollingDirFile::GetInstance()->PollingIteration();
         PollingModify::GetInstance()->PollingIteration();
         std::this_thread::sleep_for(std::chrono::microseconds(
             10 * INT32_FLAG(log_input_thread_wait_interval))); // give enough time to consume event
-        APSARA_TEST_TRUE_FATAL(isFileDirRegistered(testFile1));
+        if (testVector.mCollectTestFile1stWrite) {
+            APSARA_TEST_TRUE_FATAL(isFileDirRegistered(testFile1));
+        } else {
+            APSARA_TEST_FALSE_FATAL(isFileDirRegistered(testFile1));
+        }
 
         if (testVector.mLetTimeoutBefore2ndWriteTestFile0) {
             std::this_thread::sleep_for(std::chrono::seconds(
@@ -200,7 +216,10 @@ public:
                     timeout_interval))); // let timeout happen, must *2 since timeout happen only if time interval > 1s
         }
 
-        // generate log for testFile1 for the 2nd time
+        // trigger clean timeout polling cache
+        PollingDirFile::GetInstance()->PollingIteration();
+        PollingModify::GetInstance()->PollingIteration();
+        // write testFile1 for the 2nd time
         generateLog(testFile1);
         PollingDirFile::GetInstance()->PollingIteration();
         PollingModify::GetInstance()->PollingIteration();
@@ -217,13 +236,16 @@ public:
             * INT32_FLAG(
                 timeout_interval))); // let timeout happen, must *2 since timeout happen only if time interval > 1s
 
+        // trigger clean timeout polling cache
+        PollingDirFile::GetInstance()->PollingIteration();
+        PollingModify::GetInstance()->PollingIteration();
         generateLog(testFile1);
         generateLog(testFile2);
         PollingDirFile::GetInstance()->PollingIteration();
         PollingModify::GetInstance()->PollingIteration();
         std::this_thread::sleep_for(std::chrono::microseconds(
             10 * INT32_FLAG(log_input_thread_wait_interval))); // give enough time to consume event
-        if (testVector.mCollectTestFile2ndWrite) {
+        if (testVector.mCollectTestFile3rdWrite) {
             APSARA_TEST_TRUE_FATAL(isFileDirRegistered(testFile1));
         } else {
             APSARA_TEST_FALSE_FATAL(isFileDirRegistered(testFile1));
@@ -235,15 +257,65 @@ public:
         }
     }
 
+public:
     void TestPollingDirFile0() { testPollingDirFile(gTestMatrix[0]); }
     void TestPollingDirFile1() { testPollingDirFile(gTestMatrix[1]); }
     void TestPollingDirFile2() { testPollingDirFile(gTestMatrix[2]); }
     void TestPollingDirFile3() { testPollingDirFile(gTestMatrix[3]); }
     void TestPollingDirFile4() { testPollingDirFile(gTestMatrix[4]); }
     void TestPollingDirFile5() { testPollingDirFile(gTestMatrix[5]); }
+
     void TestPollingDirFile6() { testPollingDirFile(gTestMatrix[6]); }
-    void TestPollingDirFile7() { testPollingDirFile(gTestMatrix[7]); }
-    void TestPollingDirFile8() { testPollingDirFile(gTestMatrix[8]); }
+
+    void TestCheckpoint() {
+        auto configInputFilePath = gRootDir + "log/**/0.log";
+        auto testFile = gRootDir + "log/0/0.log";
+        FileServer::GetInstance()->Pause();
+        auto configJson = createPipelineConfig(configInputFilePath, 0);
+        PipelineConfig pipelineConfig("polling", std::move(configJson));
+        APSARA_TEST_TRUE_FATAL(pipelineConfig.Parse());
+        auto p = PipelineManager::GetInstance()->BuildPipeline(
+            std::move(pipelineConfig)); // reference: PipelineManager::UpdatePipelines
+        APSARA_TEST_FALSE_FATAL(p.get() == nullptr);
+        PipelineManager::GetInstance()->mPipelineNameEntityMap[pipelineConfig.mName] = p;
+        p->Start();
+        FileServer::GetInstance()->Resume();
+
+        PollingDirFile::GetInstance()->PollingIteration();
+        PollingModify::GetInstance()->PollingIteration();
+        std::this_thread::sleep_for(std::chrono::microseconds(
+            10 * INT32_FLAG(log_input_thread_wait_interval))); // give enough time to consume event
+
+        // generate log for testFile1 for the 1st time
+        generateLog(testFile);
+        PollingDirFile::GetInstance()->PollingIteration();
+        PollingModify::GetInstance()->PollingIteration();
+        std::this_thread::sleep_for(std::chrono::microseconds(
+            10 * INT32_FLAG(log_input_thread_wait_interval))); // give enough time to consume event
+        APSARA_TEST_TRUE_FATAL(isFileDirRegistered(testFile));
+
+        // Dump and load checkpoint
+        FileServer::GetInstance()->Pause(true);
+        std::this_thread::sleep_for(std::chrono::seconds(
+            2
+            * INT32_FLAG(
+                timeout_interval))); // let timeout happen, must *2 since timeout happen only if time interval > 1s
+        FileServer::GetInstance()->Resume(true);
+        // Should remain registered after checkpoint
+        APSARA_TEST_TRUE_FATAL(isFileDirRegistered(testFile));
+
+        std::this_thread::sleep_for(std::chrono::seconds(
+            2
+            * INT32_FLAG(
+                timeout_interval))); // let timeout happen, must *2 since timeout happen only if time interval > 1s
+
+        APSARA_TEST_FALSE_FATAL(isFileDirRegistered(testFile));
+        // Dump and load checkpoint
+        FileServer::GetInstance()->Pause(true);
+        FileServer::GetInstance()->Resume(true);
+        // Should remain unregistered after checkpoint
+        APSARA_TEST_FALSE_FATAL(isFileDirRegistered(testFile));
+    }
 };
 
 UNIT_TEST_CASE(PollingPreservedDirDepthUnittest, TestPollingDirFile0);
@@ -252,11 +324,10 @@ UNIT_TEST_CASE(PollingPreservedDirDepthUnittest, TestPollingDirFile2);
 UNIT_TEST_CASE(PollingPreservedDirDepthUnittest, TestPollingDirFile3);
 UNIT_TEST_CASE(PollingPreservedDirDepthUnittest, TestPollingDirFile4);
 UNIT_TEST_CASE(PollingPreservedDirDepthUnittest, TestPollingDirFile5);
-UNIT_TEST_CASE(PollingPreservedDirDepthUnittest, TestPollingDirFile6);
-UNIT_TEST_CASE(PollingPreservedDirDepthUnittest, TestPollingDirFile7);
-UNIT_TEST_CASE(PollingPreservedDirDepthUnittest, TestPollingDirFile8);
+UNIT_TEST_CASE(PollingPreservedDirDepthUnittest, TestCheckpoint);
 
 std::string PollingPreservedDirDepthUnittest::gRootDir;
+std::string PollingPreservedDirDepthUnittest::gCheckpoint = "checkpoint";
 vector<TestVector> PollingPreservedDirDepthUnittest::gTestMatrix;
 } // namespace logtail
 
