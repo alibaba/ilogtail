@@ -836,7 +836,6 @@ void EventDispatcher::UnregisterEventHandler(const char* path) {
             mBrokenLinkSet.insert(path);
         }
     }
-    LOG_INFO(sLogger, ("remove a new watcher for dir", path)("wd", wd));
     RemoveOneToOneMapEntry(wd);
     mWdUpdateTimeMap.erase(wd);
     if (mEventListener->IsValidID(wd) && mEventListener->IsInit()) {

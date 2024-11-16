@@ -130,126 +130,7 @@ void PollingDirFile::Polling() {
     LOG_INFO(sLogger, ("polling discovery", "started"));
     mHoldOnFlag = false;
     while (mRuningFlag) {
-        LOG_DEBUG(sLogger, ("start dir file polling, mCurrentRound", mCurrentRound));
-        {
-            PTScopedLock thradLock(mPollingThreadLock);
-            mStatCount = 0;
-            mNewFileVec.clear();
-            ++mCurrentRound;
-
-            // Get a copy of config list from ConfigManager.
-            // PollingDirFile has to be held on at first because raw pointers are used here.
-            vector<FileDiscoveryConfig> sortedConfigs;
-            vector<FileDiscoveryConfig> wildcardConfigs;
-            auto nameConfigMap = FileServer::GetInstance()->GetAllFileDiscoveryConfigs();
-            for (auto itr = nameConfigMap.begin(); itr != nameConfigMap.end(); ++itr) {
-                if (itr->second.first->GetWildcardPaths().empty())
-                    sortedConfigs.push_back(itr->second);
-                else
-                    wildcardConfigs.push_back(itr->second);
-            }
-            sort(sortedConfigs.begin(), sortedConfigs.end(), FileDiscoveryOptions::CompareByPathLength);
-
-            size_t configTotal = nameConfigMap.size();
-            LogtailMonitor::GetInstance()->UpdateMetric("config_count", configTotal);
-            mGlobalConfigTotal->Set(configTotal);
-            {
-                ScopedSpinLock lock(mCacheLock);
-                size_t pollingDirCacheSize = mDirCacheMap.size();
-                LogtailMonitor::GetInstance()->UpdateMetric("polling_dir_cache", pollingDirCacheSize);
-                mGlobalPollingDirCacheSizeTotal->Set(pollingDirCacheSize);
-                size_t pollingFileCacheSize = mFileCacheMap.size();
-                LogtailMonitor::GetInstance()->UpdateMetric("polling_file_cache", pollingFileCacheSize);
-                mGlobalPollingFileCacheSizeTotal->Set(pollingFileCacheSize);
-            }
-
-            // Iterate all normal configs, make sure stat count will not exceed limit.
-            for (auto itr = sortedConfigs.begin();
-                 itr != sortedConfigs.end() && mStatCount <= INT32_FLAG(polling_max_stat_count);
-                 ++itr) {
-                if (!mRuningFlag || mHoldOnFlag)
-                    break;
-
-                const FileDiscoveryOptions* config = itr->first;
-                const PipelineContext* ctx = itr->second;
-                if (!config->IsContainerDiscoveryEnabled()) {
-                    fsutil::PathStat baseDirStat;
-                    if (!fsutil::PathStat::stat(config->GetBasePath(), baseDirStat)) {
-                        LOG_DEBUG(sLogger,
-                                  ("get base dir info error: ", config->GetBasePath())(ctx->GetProjectName(),
-                                                                                       ctx->GetLogstoreName()));
-                        continue;
-                    }
-
-                    int32_t lastConfigStatCount = mStatCount;
-                    if (!PollingNormalConfigPath(*itr, config->GetBasePath(), string(), baseDirStat, 0)) {
-                        LOG_DEBUG(sLogger,
-                                  ("logPath in config not exist", config->GetBasePath())(ctx->GetProjectName(),
-                                                                                         ctx->GetLogstoreName()));
-                    }
-                    CheckConfigPollingStatCount(lastConfigStatCount, *itr, false);
-                } else {
-                    for (size_t i = 0; i < config->GetContainerInfo()->size(); ++i) {
-                        const string& basePath = (*config->GetContainerInfo())[i].mRealBaseDir;
-                        fsutil::PathStat baseDirStat;
-                        if (!fsutil::PathStat::stat(basePath, baseDirStat)) {
-                            LOG_DEBUG(sLogger,
-                                      ("get docker base dir info error: ", basePath)(ctx->GetProjectName(),
-                                                                                     ctx->GetLogstoreName()));
-                            continue;
-                        }
-                        int32_t lastConfigStatCount = mStatCount;
-                        if (!PollingNormalConfigPath(*itr, basePath, string(), baseDirStat, 0)) {
-                            LOG_DEBUG(sLogger,
-                                      ("docker logPath in config not exist", basePath)(ctx->GetProjectName(),
-                                                                                       ctx->GetLogstoreName()));
-                        }
-                        CheckConfigPollingStatCount(lastConfigStatCount, *itr, true);
-                    }
-                }
-            }
-
-            // Iterate all wildcard configs, make sure stat count will not exceed limit.
-            for (auto itr = wildcardConfigs.begin();
-                 itr != wildcardConfigs.end() && mStatCount <= INT32_FLAG(polling_max_stat_count);
-                 ++itr) {
-                if (!mRuningFlag || mHoldOnFlag)
-                    break;
-
-                const FileDiscoveryOptions* config = itr->first;
-                const PipelineContext* ctx = itr->second;
-                if (!config->IsContainerDiscoveryEnabled()) {
-                    int32_t lastConfigStatCount = mStatCount;
-                    if (!PollingWildcardConfigPath(*itr, config->GetWildcardPaths()[0], 0)) {
-                        LOG_DEBUG(sLogger,
-                                  ("can not find matched path in config, Wildcard begin logPath",
-                                   config->GetBasePath())(ctx->GetProjectName(), ctx->GetLogstoreName()));
-                    }
-                    CheckConfigPollingStatCount(lastConfigStatCount, *itr, false);
-                } else {
-                    for (size_t i = 0; i < config->GetContainerInfo()->size(); ++i) {
-                        const string& baseWildcardPath = (*config->GetContainerInfo())[i].mRealBaseDir;
-                        int32_t lastConfigStatCount = mStatCount;
-                        if (!PollingWildcardConfigPath(*itr, baseWildcardPath, 0)) {
-                            LOG_DEBUG(sLogger,
-                                      ("can not find matched path in config, "
-                                       "Wildcard begin logPath ",
-                                       baseWildcardPath)(ctx->GetProjectName(), ctx->GetLogstoreName()));
-                        }
-                        CheckConfigPollingStatCount(lastConfigStatCount, *itr, true);
-                    }
-                }
-            }
-
-            // Add collected new files to PollingModify.
-            PollingModify::GetInstance()->AddNewFile(mNewFileVec);
-
-            // Check cache, clear unavailable and overtime items.
-            if (mCurrentRound % INT32_FLAG(check_not_exist_file_dir_round) == 0) {
-                ClearUnavailableFileAndDir();
-            }
-            ClearTimeoutFileAndDir();
-        }
+        PollingIteration();
 
         // Sleep for a while, by default, 5s on Linux, 1s on Windows.
         for (int i = 0; i < 10 && mRuningFlag; ++i) {
@@ -257,6 +138,127 @@ void PollingDirFile::Polling() {
         }
     }
     LOG_DEBUG(sLogger, ("dir file polling thread done", ""));
+}
+
+void PollingDirFile::PollingIteration() {
+    LOG_DEBUG(sLogger, ("start dir file polling, mCurrentRound", mCurrentRound));
+    PTScopedLock thradLock(mPollingThreadLock);
+    mStatCount = 0;
+    mNewFileVec.clear();
+    ++mCurrentRound;
+
+    // Get a copy of config list from ConfigManager.
+    // PollingDirFile has to be held on at first because raw pointers are used here.
+    vector<FileDiscoveryConfig> sortedConfigs;
+    vector<FileDiscoveryConfig> wildcardConfigs;
+    auto nameConfigMap = FileServer::GetInstance()->GetAllFileDiscoveryConfigs();
+    for (auto itr = nameConfigMap.begin(); itr != nameConfigMap.end(); ++itr) {
+        if (itr->second.first->GetWildcardPaths().empty())
+            sortedConfigs.push_back(itr->second);
+        else
+            wildcardConfigs.push_back(itr->second);
+    }
+    sort(sortedConfigs.begin(), sortedConfigs.end(), FileDiscoveryOptions::CompareByPathLength);
+
+    size_t configTotal = nameConfigMap.size();
+    LogtailMonitor::GetInstance()->UpdateMetric("config_count", configTotal);
+    mGlobalConfigTotal->Set(configTotal);
+    {
+        ScopedSpinLock lock(mCacheLock);
+        size_t pollingDirCacheSize = mDirCacheMap.size();
+        LogtailMonitor::GetInstance()->UpdateMetric("polling_dir_cache", pollingDirCacheSize);
+        mGlobalPollingDirCacheSizeTotal->Set(pollingDirCacheSize);
+        size_t pollingFileCacheSize = mFileCacheMap.size();
+        LogtailMonitor::GetInstance()->UpdateMetric("polling_file_cache", pollingFileCacheSize);
+        mGlobalPollingFileCacheSizeTotal->Set(pollingFileCacheSize);
+    }
+
+    // Iterate all normal configs, make sure stat count will not exceed limit.
+    for (auto itr = sortedConfigs.begin();
+         itr != sortedConfigs.end() && mStatCount <= INT32_FLAG(polling_max_stat_count);
+         ++itr) {
+        if (!mRuningFlag || mHoldOnFlag)
+            break;
+
+        const FileDiscoveryOptions* config = itr->first;
+        const PipelineContext* ctx = itr->second;
+        if (!config->IsContainerDiscoveryEnabled()) {
+            fsutil::PathStat baseDirStat;
+            if (!fsutil::PathStat::stat(config->GetBasePath(), baseDirStat)) {
+                LOG_DEBUG(sLogger,
+                          ("get base dir info error: ", config->GetBasePath())(ctx->GetProjectName(),
+                                                                               ctx->GetLogstoreName()));
+                continue;
+            }
+
+            int32_t lastConfigStatCount = mStatCount;
+            if (!PollingNormalConfigPath(*itr, config->GetBasePath(), string(), baseDirStat, 0)) {
+                LOG_DEBUG(sLogger,
+                          ("logPath in config not exist", config->GetBasePath())(ctx->GetProjectName(),
+                                                                                 ctx->GetLogstoreName()));
+            }
+            CheckConfigPollingStatCount(lastConfigStatCount, *itr, false);
+        } else {
+            for (size_t i = 0; i < config->GetContainerInfo()->size(); ++i) {
+                const string& basePath = (*config->GetContainerInfo())[i].mRealBaseDir;
+                fsutil::PathStat baseDirStat;
+                if (!fsutil::PathStat::stat(basePath, baseDirStat)) {
+                    LOG_DEBUG(
+                        sLogger,
+                        ("get docker base dir info error: ", basePath)(ctx->GetProjectName(), ctx->GetLogstoreName()));
+                    continue;
+                }
+                int32_t lastConfigStatCount = mStatCount;
+                if (!PollingNormalConfigPath(*itr, basePath, string(), baseDirStat, 0)) {
+                    LOG_DEBUG(sLogger,
+                              ("docker logPath in config not exist", basePath)(ctx->GetProjectName(),
+                                                                               ctx->GetLogstoreName()));
+                }
+                CheckConfigPollingStatCount(lastConfigStatCount, *itr, true);
+            }
+        }
+    }
+
+    // Iterate all wildcard configs, make sure stat count will not exceed limit.
+    for (auto itr = wildcardConfigs.begin();
+         itr != wildcardConfigs.end() && mStatCount <= INT32_FLAG(polling_max_stat_count);
+         ++itr) {
+        if (!mRuningFlag || mHoldOnFlag)
+            break;
+
+        const FileDiscoveryOptions* config = itr->first;
+        const PipelineContext* ctx = itr->second;
+        if (!config->IsContainerDiscoveryEnabled()) {
+            int32_t lastConfigStatCount = mStatCount;
+            if (!PollingWildcardConfigPath(*itr, config->GetWildcardPaths()[0], 0)) {
+                LOG_DEBUG(sLogger,
+                          ("can not find matched path in config, Wildcard begin logPath",
+                           config->GetBasePath())(ctx->GetProjectName(), ctx->GetLogstoreName()));
+            }
+            CheckConfigPollingStatCount(lastConfigStatCount, *itr, false);
+        } else {
+            for (size_t i = 0; i < config->GetContainerInfo()->size(); ++i) {
+                const string& baseWildcardPath = (*config->GetContainerInfo())[i].mRealBaseDir;
+                int32_t lastConfigStatCount = mStatCount;
+                if (!PollingWildcardConfigPath(*itr, baseWildcardPath, 0)) {
+                    LOG_DEBUG(sLogger,
+                              ("can not find matched path in config, "
+                               "Wildcard begin logPath ",
+                               baseWildcardPath)(ctx->GetProjectName(), ctx->GetLogstoreName()));
+                }
+                CheckConfigPollingStatCount(lastConfigStatCount, *itr, true);
+            }
+        }
+    }
+
+    // Add collected new files to PollingModify.
+    PollingModify::GetInstance()->AddNewFile(mNewFileVec);
+
+    // Check cache, clear unavailable and overtime items.
+    if (mCurrentRound % INT32_FLAG(check_not_exist_file_dir_round) == 0) {
+        ClearUnavailableFileAndDir();
+    }
+    ClearTimeoutFileAndDir();
 }
 
 // Last Modified Time (LMD) of directory changes when a file or a subdirectory is added,

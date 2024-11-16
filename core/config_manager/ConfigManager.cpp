@@ -114,10 +114,15 @@ ParseConfResult ParseConfig(const std::string& configName, Json::Value& jsonRoot
 
     ifstream is;
     is.open(fullPath.c_str());
-    if (!is.good()) {
+    if (!is) { // https://horstmann.com/cpp/pitfalls.html
         return CONFIG_NOT_EXIST;
     }
-    std::string buffer((std::istreambuf_iterator<char>(is)), (std::istreambuf_iterator<char>()));
+    std::string buffer;
+    try {
+        buffer.assign(std::istreambuf_iterator<char>(is), std::istreambuf_iterator<char>());
+    } catch (const std::ios_base::failure& e) {
+        return CONFIG_NOT_EXIST;
+    }
     if (!IsValidJson(buffer.c_str(), buffer.length())) {
         return CONFIG_INVALID_FORMAT;
     }
@@ -468,16 +473,7 @@ bool ConfigManager::RegisterHandlersWithinDepth(const std::string& path,
         LOG_INFO(sLogger, ("ignore path matching host path blacklist", path));
         return false;
     }
-    if (preservedDirDepth <= 0) {
-        DirCheckPointPtr dirCheckPoint;
-        if (CheckPointManager::Instance()->GetDirCheckPoint(path, dirCheckPoint)) {
-            // path had dircheckpoint means it was watched before, so it is valid
-            const set<string>& subdir = dirCheckPoint.get()->mSubDir;
-            for (const auto& it : subdir) {
-                RegisterHandlersWithinDepth(it, config, preservedDirDepth - 1, maxDepth - 1);
-            }
-            return true;
-        }
+    if (preservedDirDepth < 0) {
         fsutil::PathStat statBuf;
         if (!fsutil::PathStat::stat(path, statBuf)) {
             return true;
@@ -510,7 +506,18 @@ bool ConfigManager::RegisterHandlersWithinDepth(const std::string& path,
     if (maxDepth == 0) {
         return true;
     }
-    bool result = true;
+
+    if (preservedDirDepth == 0) {
+        DirCheckPointPtr dirCheckPoint;
+        if (CheckPointManager::Instance()->GetDirCheckPoint(path, dirCheckPoint)) {
+            // path had dircheckpoint means it was watched before, so it is valid
+            const set<string>& subdir = dirCheckPoint.get()->mSubDir;
+            for (const auto& it : subdir) {
+                RegisterHandlersWithinDepth(it, config, 0, maxDepth - 1);
+            }
+            return true;
+        }
+    }
     fsutil::Entry ent;
     while ((ent = dir.ReadNext())) {
         string item = PathJoin(path, ent.Name());
@@ -519,7 +526,7 @@ bool ConfigManager::RegisterHandlersWithinDepth(const std::string& path,
         }
     }
 
-    return result;
+    return true;
 }
 
 // path not terminated by '/', path already registered

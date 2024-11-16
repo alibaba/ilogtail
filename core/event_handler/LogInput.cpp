@@ -365,7 +365,7 @@ void* LogInput::ProcessLoop() {
     int32_t prevTime = time(NULL);
     mLastReadEventTime = prevTime;
     int32_t curTime = prevTime;
-    srand(prevTime);
+    srand(0); // avoid random failures in unit tests
     int32_t lastCheckDir = prevTime - rand() % 60;
     int32_t lastCheckSymbolicLink = prevTime - rand() % 60;
     time_t lastCheckHandlerTimeOut = prevTime - rand() % 60;
