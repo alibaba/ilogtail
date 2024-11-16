@@ -366,7 +366,7 @@ bool PollingDirFile::PollingNormalConfigPath(const FileDiscoveryConfig& pConfig,
     if (pConfig.first->mMaxDirSearchDepth >= 0 && depth > pConfig.first->mMaxDirSearchDepth) {
         return false;
     }
-    int exceedPreservedDirDepth = 0;
+    bool exceedPreservedDirDepth = false;
     if (pConfig.first->mPreservedDirDepth >= 0 && depth > pConfig.first->mPreservedDirDepth) {
         exceedPreservedDirDepth = true;
         int64_t sec = 0;
