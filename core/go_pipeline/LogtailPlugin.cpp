@@ -50,10 +50,13 @@ LogtailPlugin::LogtailPlugin() {
     mPluginValid = false;
     mPluginAlarmConfig.mLogstore = "logtail_alarm";
     mPluginAlarmConfig.mAliuid = STRING_FLAG(logtail_profile_aliuid);
+    mPluginAlarmConfig.mCompressType = FlusherSLS::CompressType::ZSTD;
     mPluginProfileConfig.mLogstore = "shennong_log_profile";
     mPluginProfileConfig.mAliuid = STRING_FLAG(logtail_profile_aliuid);
+    mPluginProfileConfig.mCompressType = FlusherSLS::CompressType::ZSTD;
     mPluginContainerConfig.mLogstore = "logtail_containers";
     mPluginContainerConfig.mAliuid = STRING_FLAG(logtail_profile_aliuid);
+    mPluginContainerConfig.mCompressType = FlusherSLS::CompressType::ZSTD;
 
     mPluginCfg["LogtailSysConfDir"] = AppConfig::GetInstance()->GetLogtailSysConfDir();
     mPluginCfg["HostIP"] = LogFileProfiler::mIpAddr;
