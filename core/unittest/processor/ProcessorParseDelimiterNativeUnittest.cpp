@@ -1577,7 +1577,7 @@ HTTP/2.0' '200' '154' 'go-sdk'"
 
             // run function ProcessorParseDelimiterNative
             ProcessorParseDelimiterNative& processorParseDelimiterNative = *(new ProcessorParseDelimiterNative);
-            ProcessorInstance processorInstance(&processorParseDelimiterNative, pluginId);
+            ProcessorInstance processorInstance(&processorParseDelimiterNative, getPluginMeta());
             APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
             processorParseDelimiterNative.Process(eventGroup);
 
