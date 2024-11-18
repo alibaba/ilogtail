@@ -26,9 +26,13 @@
 #elif defined(_MSC_VER)
 #include <Windows.h>
 #endif
+#include <boost/filesystem.hpp>
+
 #include "DevInode.h"
 #include "ErrorUtil.h"
 #include "LogtailCommonFlags.h"
+
+namespace bfs = boost::filesystem;
 
 // Filesystem utility.
 namespace logtail {
@@ -86,6 +90,19 @@ void TrimLastSeperator(std::string& path);
 
 // ReadFileContent reads all content of @fileName to @content.
 bool ReadFileContent(const std::string& fileName, std::string& content, uint32_t maxFileSize = 8192);
+
+int GetLines(std::istream& is,
+             bool enableEmptyLine,
+             const std::function<void(const std::string&)>& pushBack,
+             std::string* errorMessage);
+int GetLines(const bfs::path& filename,
+             bool enableEmptyLine,
+             const std::function<void(const std::string&)>& pushBack,
+             std::string* errorMessage);
+int GetFileLines(const bfs::path& filename,
+                 std::vector<std::string>& res,
+                 bool enableEmptyLine = true,
+                 std::string* errorMessage = nullptr);
 
 // OverwriteFile overwrides @fileName with @content.
 bool OverwriteFile(const std::string& fileName, const std::string& content);

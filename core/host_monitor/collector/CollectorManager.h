@@ -16,23 +16,29 @@
 
 #pragma once
 
-#include <chrono>
+#include <memory>
+#include <unordered_map>
 
+#include "host_monitor/collector/BaseCollector.h"
 namespace logtail {
 
-class TimerEvent {
+class CollectorManager {
 public:
-    TimerEvent(std::chrono::steady_clock::time_point execTime) : mExecTime(execTime) {}
-    virtual ~TimerEvent() = default;
+    static CollectorManager* GetInstance() {
+        static CollectorManager sInstance;
+        return &sInstance;
+    }
 
-    virtual bool IsValid() const = 0;
-    virtual bool Execute() = 0;
-
-    std::chrono::steady_clock::time_point GetExecTime() const { return mExecTime; }
-    void SetExecTime(std::chrono::steady_clock::time_point nextExecTime) { mExecTime = nextExecTime; }
+    std::shared_ptr<BaseCollector> GetCollector(const std::string& collectorName);
 
 private:
-    std::chrono::steady_clock::time_point mExecTime;
+    CollectorManager();
+    ~CollectorManager() = default;
+
+    template <typename T>
+    void RegisterCollector();
+
+    std::unordered_map<std::string, std::shared_ptr<BaseCollector>> mCollectorMap;
 };
 
 } // namespace logtail
