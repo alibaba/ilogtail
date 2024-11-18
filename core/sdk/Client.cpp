@@ -21,7 +21,7 @@
 #include "logger/Logger.h"
 #include "plugin/flusher/sls/SLSClientManager.h"
 #include "app_config/AppConfig.h"
-#include "monitor/LogFileProfiler.h"
+#include "monitor/LoongCollectorMonitor.h"
 
 namespace logtail {
 namespace sdk {
@@ -318,7 +318,7 @@ namespace sdk {
     PostLogStoreLogsResponse
     Client::PingSLSServer(const std::string& project, const std::string& logstore, std::string* realIpPtr) {
         sls_logs::LogGroup logGroup;
-        logGroup.set_source(LogFileProfiler::mIpAddr);
+        logGroup.set_source(LoongCollectorMonitor::mIpAddr);
         auto serializeData = logGroup.SerializeAsString();
 
         std::map<string, string> httpHeader;

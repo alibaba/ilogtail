@@ -677,8 +677,8 @@ void SLSClientManager::GenerateUserAgent() {
     if (-1 == uname(buf)) {
         LOG_WARNING(
             sLogger,
-            ("get os info part of user agent failed", errno)("use default os info", LogFileProfiler::mOsDetail));
-        os = LogFileProfiler::mOsDetail;
+            ("get os info part of user agent failed", errno)("use default os info", LoongCollectorMonitor::mOsDetail));
+        os = LoongCollectorMonitor::mOsDetail;
     } else {
         char* pch = strchr(buf->release, '-');
         if (pch) {
@@ -692,10 +692,10 @@ void SLSClientManager::GenerateUserAgent() {
     }
     delete buf;
 #elif defined(_MSC_VER)
-    os = LogFileProfiler::mOsDetail;
+    os = LoongCollectorMonitor::mOsDetail;
 #endif
 
-    mUserAgent = string("ilogtail/") + ILOGTAIL_VERSION + " (" + os + ") ip/" + LogFileProfiler::mIpAddr + " env/"
+    mUserAgent = string("ilogtail/") + ILOGTAIL_VERSION + " (" + os + ") ip/" + LoongCollectorMonitor::mIpAddr + " env/"
         + GetRunningEnvironment();
     if (!STRING_FLAG(custom_user_agent).empty()) {
         mUserAgent += " " + STRING_FLAG(custom_user_agent);
