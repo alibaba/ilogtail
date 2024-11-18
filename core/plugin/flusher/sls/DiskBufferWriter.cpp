@@ -32,7 +32,6 @@
 #include "protobuf/sls/sls_logs.pb.h"
 #include "provider/Provider.h"
 #include "sdk/Exception.h"
-#include "sls_control/SLSControl.h"
 
 DEFINE_FLAG_INT32(write_secondary_wait_timeout, "interval of dump seconary buffer from memory to file, seconds", 2);
 DEFINE_FLAG_INT32(buffer_file_alive_interval, "the max alive time of a bufferfile, 5 minutes", 300);
@@ -723,10 +722,6 @@ SendResult DiskBufferWriter::SendBufferFileData(const sls_logs::LogtailBufferMet
         LOG_DEBUG(sLogger,
                   ("SendBufferFileData",
                    "SEND_NETWORK_ERROR")("region", region)("aliuid", bufferMeta.aliuid())("endpoint", endpoint));
-    } else if (sendRes == SEND_UNAUTHORIZED) {
-        int32_t lastUpdateTime;
-        if (SLSControl::GetInstance()->SetSlsSendClientAuth(bufferMeta.aliuid(), false, sendClient, lastUpdateTime))
-            sendRes = SendToNetSync(sendClient, bufferMeta, logData, errorCode);
     }
     return sendRes;
 }
