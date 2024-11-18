@@ -15,6 +15,10 @@
 cmake_minimum_required(VERSION 3.22)
 project(unittest_base)
 
+if (NOT WITHSPL)
+    add_definitions(-D__EXCLUDE_SPL__)
+endif()
+
 add_definitions(-DAPSARA_UNIT_TEST_MAIN)
 set(NO_TCMALLOC TRUE)
 add_definitions(-DLOGTAIL_NO_TC_MALLOC)

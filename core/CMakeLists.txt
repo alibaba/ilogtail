@@ -41,6 +41,10 @@ else ()
     include(${CMAKE_CURRENT_SOURCE_DIR}/options.cmake)
 endif ()
 
+if (NOT WITHSPL)
+    add_definitions(-D__EXCLUDE_SPL__)
+endif()
+
 # Default C/CXX flags.
 if (UNIX)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -fpic -fPIC -D_LARGEFILE64_SOURCE")
