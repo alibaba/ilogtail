@@ -70,7 +70,8 @@ CURL* CreateCurlHandler(const std::string& method,
                         uint32_t timeout,
                         bool replaceHostWithIp,
                         const std::string& intf,
-                        bool followRedirects) {
+                        bool followRedirects,
+                        CurlTLS* tls) {
     static DnsCache* dnsCache = DnsCache::GetInstance();
 
     CURL* curl = curl_easy_init();
@@ -110,6 +111,19 @@ CURL* CreateCurlHandler(const std::string& method,
     if (httpsFlag) {
         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+    }
+
+    if (tls != nullptr) {
+        if (!tls->mCaFile.empty()) {
+            curl_easy_setopt(curl, CURLOPT_CAINFO, tls->mCaFile.c_str());
+        }
+        if (!tls->mCertFile.empty()) {
+            curl_easy_setopt(curl, CURLOPT_SSLCERT, tls->mCertFile.c_str());
+        }
+        if (!tls->mKeyFile.empty()) {
+            curl_easy_setopt(curl, CURLOPT_SSLKEY, tls->mKeyFile.c_str());
+        }
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, tls->mInsecureSkipVerify ? 0 : 1);
     }
 
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout);

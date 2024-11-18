@@ -21,7 +21,8 @@ PromHttpRequest::PromHttpRequest(const std::string& method,
                                  uint32_t maxTryCnt,
                                  std::shared_ptr<PromFuture<HttpResponse&, uint64_t>> future,
                                  std::shared_ptr<PromFuture<>> isContextValidFuture,
-                                 bool followRedirects)
+                                 bool followRedirects,
+                                 CurlTLS* tls)
     : AsynHttpRequest(method,
                       httpsFlag,
                       host,
@@ -33,7 +34,8 @@ PromHttpRequest::PromHttpRequest(const std::string& method,
                       std::move(response),
                       timeout,
                       maxTryCnt,
-                      followRedirects),
+                      followRedirects,
+                      tls),
       mFuture(std::move(future)),
       mIsContextValidFuture(std::move(isContextValidFuture)) {
 }

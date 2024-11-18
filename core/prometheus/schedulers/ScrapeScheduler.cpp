@@ -221,7 +221,8 @@ std::unique_ptr<TimerEvent> ScrapeScheduler::BuildScrapeTimerEvent(std::chrono::
                                             retry,
                                             this->mFuture,
                                             this->mIsContextValidFuture,
-                                            mScrapeConfigPtr->mFollowRedirects);
+                                            mScrapeConfigPtr->mFollowRedirects,
+                                            mScrapeConfigPtr->mEnableTLS ? &mScrapeConfigPtr->mTLS : nullptr);
     auto timerEvent = std::make_unique<HttpRequestTimerEvent>(execTime, std::move(request));
     return timerEvent;
 }

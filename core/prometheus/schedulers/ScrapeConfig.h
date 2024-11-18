@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include "common/http/HttpResponse.h"
 #include "prometheus/labels/Relabel.h"
 
 
@@ -29,6 +30,8 @@ public:
     std::map<std::string, std::string> mRequestHeaders;
 
     bool mFollowRedirects;
+    bool mEnableTLS;
+    CurlTLS mTLS;
 
     uint64_t mMaxScrapeSizeBytes;
     uint64_t mSampleLimit;
@@ -49,6 +52,7 @@ private:
     bool InitAuthorization(const Json::Value& authorization);
     bool InitScrapeProtocols(const Json::Value& scrapeProtocols);
     void InitEnableCompression(bool enableCompression);
+    bool InitTLSConfig(const Json::Value& tlsConfig);
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ScrapeConfigUnittest;

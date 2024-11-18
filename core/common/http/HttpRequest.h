@@ -44,6 +44,7 @@ struct HttpRequest {
     uint32_t mTimeout = static_cast<uint32_t>(INT32_FLAG(default_http_request_timeout_secs));
     uint32_t mMaxTryCnt = static_cast<uint32_t>(INT32_FLAG(default_http_request_max_try_cnt));
     bool mFollowRedirects = false;
+    CurlTLS* mTls = nullptr;
 
     uint32_t mTryCnt = 1;
     std::chrono::system_clock::time_point mLastSendTime;
@@ -58,7 +59,8 @@ struct HttpRequest {
                 const std::string& body,
                 uint32_t timeout = static_cast<uint32_t>(INT32_FLAG(default_http_request_timeout_secs)),
                 uint32_t maxTryCnt = static_cast<uint32_t>(INT32_FLAG(default_http_request_max_try_cnt)),
-                bool followRedirects = false)
+                bool followRedirects = false,
+                CurlTLS* tls = nullptr)
         : mMethod(method),
           mHTTPSFlag(httpsFlag),
           mUrl(url),
@@ -69,7 +71,8 @@ struct HttpRequest {
           mPort(port),
           mTimeout(timeout),
           mMaxTryCnt(maxTryCnt),
-          mFollowRedirects(followRedirects) {}
+          mFollowRedirects(followRedirects),
+          mTls(tls) {}
     virtual ~HttpRequest() = default;
 };
 
@@ -89,8 +92,10 @@ struct AsynHttpRequest : public HttpRequest {
                     HttpResponse&& response = HttpResponse(),
                     uint32_t timeout = static_cast<uint32_t>(INT32_FLAG(default_http_request_timeout_secs)),
                     uint32_t maxTryCnt = static_cast<uint32_t>(INT32_FLAG(default_http_request_max_try_cnt)),
-                    bool followRedirects = false)
-        : HttpRequest(method, httpsFlag, host, port, url, query, header, body, timeout, maxTryCnt, followRedirects),
+                    bool followRedirects = false,
+                    CurlTLS* tls = nullptr)
+        : HttpRequest(
+              method, httpsFlag, host, port, url, query, header, body, timeout, maxTryCnt, followRedirects, tls),
           mResponse(std::move(response)) {}
 
     virtual bool IsContextValid() const = 0;
