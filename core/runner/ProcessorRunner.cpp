@@ -14,7 +14,6 @@
 
 #include "runner/ProcessorRunner.h"
 
-#include "PrometheusInputRunner.h"
 #include "app_config/AppConfig.h"
 #include "batch/TimeoutFlushManager.h"
 #include "common/Flags.h"
