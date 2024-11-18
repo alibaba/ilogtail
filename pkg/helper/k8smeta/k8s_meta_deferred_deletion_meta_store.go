@@ -111,6 +111,7 @@ func (m *DeferredDeletionMetaStore) RegisterSendFunc(key string, f SendFunc, int
 
 		m.eventCh <- event
 		ticker := time.NewTicker(time.Duration(interval) * time.Second)
+
 		for {
 			select {
 			case <-ticker.C:
@@ -280,6 +281,8 @@ func (m *DeferredDeletionMetaStore) handleTimerEvent(event *K8sMetaEvent) {
 	if f, ok := m.sendFuncs.Load(timerEvent.ConfigName); ok {
 		sendFuncWithStopCh := f.(*SendFuncWithStopCh)
 		allItems := make([]*K8sMetaEvent, 0)
+		m.lock.RLock()
+		defer m.lock.RUnlock()
 		for _, obj := range m.Items {
 			if !obj.Deleted {
 				obj.LastObservedTime = time.Now().Unix()
@@ -291,7 +294,6 @@ func (m *DeferredDeletionMetaStore) handleTimerEvent(event *K8sMetaEvent) {
 		}
 		sendFuncWithStopCh.SendFunc(allItems)
 	}
-
 }
 
 func (m *DeferredDeletionMetaStore) getIdxKeys(obj *ObjectWrapper) []string {
