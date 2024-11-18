@@ -22,7 +22,6 @@
 
 #include "common/Lock.h"
 #include "common/timer/Timer.h"
-#include "monitor/MetricManager.h"
 #include "monitor/MetricTypes.h"
 #include "prometheus/schedulers/TargetSubscriberScheduler.h"
 #include "runner/InputRunner.h"
@@ -42,11 +41,7 @@ public:
         static PrometheusInputRunner sInstance;
         return &sInstance;
     }
-    void CheckGC() {
-        if (mEventPool) {
-            mEventPool->CheckGC();
-        }
-    }
+    void CheckGC();
 
     // input plugin update
     void UpdateScrapeInput(std::shared_ptr<TargetSubscriberScheduler> targetSubscriber,

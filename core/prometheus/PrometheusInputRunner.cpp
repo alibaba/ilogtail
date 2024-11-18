@@ -84,7 +84,7 @@ void PrometheusInputRunner::UpdateScrapeInput(std::shared_ptr<TargetSubscriberSc
     targetSubscriber->InitSelfMonitor(defaultLabels);
 
     targetSubscriber->mUnRegisterMs = mUnRegisterMs.load();
-    targetSubscriber->SetComponent(mTimer,mEventPool);
+    targetSubscriber->SetComponent(mTimer, mEventPool);
     auto randSleepMilliSec = GetRandSleepMilliSec(
         targetSubscriber->GetId(), prometheus::RefeshIntervalSeconds, GetCurrentTimeInMilliSeconds());
     auto firstExecTime = std::chrono::steady_clock::now() + std::chrono::milliseconds(randSleepMilliSec);
@@ -294,5 +294,11 @@ string PrometheusInputRunner::GetAllProjects() {
         }
     }
     return result;
+}
+
+void PrometheusInputRunner::CheckGC() {
+    if (mEventPool != nullptr) {
+        mEventPool->CheckGC();
+    }
 }
 }; // namespace logtail

@@ -22,14 +22,11 @@
 
 #include "BaseScheduler.h"
 #include "common/http/HttpResponse.h"
-#include "common/timer/Timer.h"
 #include "models/PipelineEventGroup.h"
 #include "monitor/MetricTypes.h"
 #include "pipeline/queue/QueueKey.h"
-#include "prometheus/Constants.h"
 #include "prometheus/PromSelfMonitor.h"
 #include "prometheus/Utils.h"
-#include "prometheus/labels/TextParser.h"
 #include "prometheus/schedulers/ScrapeConfig.h"
 
 #ifdef APSARA_UNIT_TEST_MAIN
