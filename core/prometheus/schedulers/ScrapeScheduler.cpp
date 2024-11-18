@@ -98,7 +98,6 @@ void ScrapeScheduler::OnMetricResult(HttpResponse& response, uint64_t timestampM
     mScrapeTimestampMilliSec = timestampMilliSec;
     mScrapeDurationSeconds = 1.0 * (GetCurrentTimeInMilliSeconds() - timestampMilliSec) / 1000;
     mScrapeResponseSizeBytes = responseBody.mRawSize;
-    mScrapeResponseSizeBytes = responseBody.mRawSize;
     mUpState = response.GetStatusCode() == 200;
     if (response.GetStatusCode() != 200) {
         mScrapeResponseSizeBytes = 0;
