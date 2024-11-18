@@ -21,7 +21,7 @@
 #include "go_pipeline/LogtailPlugin.h"
 #include "models/EventPool.h"
 #include "monitor/LogFileProfiler.h"
-#include "monitor/LogtailAlarm.h"
+#include "monitor/AlarmManager.h"
 #include "monitor/metric_constants/MetricConstants.h"
 #include "pipeline/PipelineManager.h"
 #include "queue/ExactlyOnceQueueManager.h"
@@ -90,9 +90,9 @@ void ProcessorRunner::Run(uint32_t threadNo) {
     // thread local metrics should be initialized in each thread
     WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
         sMetricsRecordRef,
+        MetricCategory::METRIC_CATEGORY_RUNNER,
         {{METRIC_LABEL_KEY_RUNNER_NAME, METRIC_LABEL_VALUE_RUNNER_NAME_PROCESSOR},
-         {METRIC_LABEL_KEY_METRIC_CATEGORY, METRIC_LABEL_KEY_METRIC_CATEGORY_RUNNER},
-         {"thread_no", ToString(threadNo)}});
+         {METRIC_LABEL_KEY_THREAD_NO, ToString(threadNo)}});
     sInGroupsCnt = sMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_EVENT_GROUPS_TOTAL);
     sInEventsCnt = sMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_EVENTS_TOTAL);
     sInGroupDataSizeBytes = sMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_SIZE_BYTES);
@@ -139,7 +139,7 @@ void ProcessorRunner::Run(uint32_t threadNo) {
         pipeline->Process(eventGroupList, item->mInputIndex);
 
         if (pipeline->IsFlushingThroughGoPipeline()) {
-            // TODO: 
+            // TODO:
             // 1. allow all event types to be sent to Go pipelines
             // 2. use event group protobuf instead
             if (isLog) {

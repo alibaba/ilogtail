@@ -31,7 +31,7 @@
 #include "json/value.h"
 #include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"
-#include "monitor/LogtailAlarm.h"
+#include "monitor/AlarmManager.h"
 #include "monitor/Monitor.h"
 #ifdef __ENTERPRISE__
 #include "config/provider/EnterpriseConfigProvider.h"
@@ -50,7 +50,7 @@ DEFINE_FLAG_INT32(pub_buffer_file_num, "how many buffer files in default", 25);
 DEFINE_FLAG_INT32(default_local_file_size, "default size of one buffer file", 20 * 1024 * 1024);
 DEFINE_FLAG_INT32(pub_local_file_size, "default size of one buffer file", 20 * 1024 * 1024);
 DEFINE_FLAG_INT32(process_thread_count, "", 1);
-DEFINE_FLAG_INT32(send_request_concurrency, "max count keep in mem when async send", 10);
+DEFINE_FLAG_INT32(send_request_concurrency, "max count keep in mem when async send", 15);
 DEFINE_FLAG_STRING(default_buffer_file_path, "set current execution dir in default", "");
 DEFINE_FLAG_STRING(buffer_file_path, "set buffer dir", "");
 // DEFINE_FLAG_STRING(default_mapping_config_path, "", "mapping_config.json");
@@ -660,10 +660,10 @@ void AppConfig::loadAppConfigLogtailMode(const std::string& ilogtailConfigFile) 
             confJson.clear();
             if (res == CONFIG_NOT_EXIST) {
                 LOG_ERROR(sLogger, ("can not find start config", ilogtailConfigFile));
-                LogtailAlarm::GetInstance()->SendAlarm(LOGTAIL_CONFIG_ALARM, "can not find start config");
+                AlarmManager::GetInstance()->SendAlarm(LOGTAIL_CONFIG_ALARM, "can not find start config");
             } else if (res == CONFIG_INVALID_FORMAT) {
                 LOG_ERROR(sLogger, ("start config is not valid json", ilogtailConfigFile));
-                LogtailAlarm::GetInstance()->SendAlarm(LOGTAIL_CONFIG_ALARM, "start config is not valid json");
+                AlarmManager::GetInstance()->SendAlarm(LOGTAIL_CONFIG_ALARM, "start config is not valid json");
             }
         }
     }
@@ -761,7 +761,7 @@ void AppConfig::LoadEnvResourceLimit() {
     LoadSingleValueEnvConfig("mem_usage_limit", mMemUsageUpLimit, (int64_t)384);
     LoadSingleValueEnvConfig("max_bytes_per_sec", mMaxBytePerSec, (int32_t)(1024 * 1024));
     LoadSingleValueEnvConfig("process_thread_count", mProcessThreadCount, (int32_t)1);
-    LoadSingleValueEnvConfig("send_request_concurrency", mSendRequestConcurrency, (int32_t)2);
+    LoadSingleValueEnvConfig("send_request_concurrency", mSendRequestConcurrency, (int32_t)10);
 }
 
 /**
