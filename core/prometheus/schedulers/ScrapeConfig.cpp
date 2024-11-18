@@ -22,10 +22,12 @@ ScrapeConfig::ScrapeConfig()
       mHonorLabels(false),
       mHonorTimestamps(true),
       mScheme("http"),
+      mFollowRedirects(true),
       mMaxScrapeSizeBytes(0),
       mSampleLimit(0),
       mSeriesLimit(0) {
 }
+
 bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
     if (!InitStaticConfig(scrapeConfig)) {
         return false;
@@ -39,6 +41,10 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
     } else {
         Json::Value nullJson;
         InitScrapeProtocols(nullJson);
+    }
+
+    if (scrapeConfig.isMember(prometheus::FOLLOW_REDIRECTS) && scrapeConfig[prometheus::FOLLOW_REDIRECTS].isBool()) {
+        mFollowRedirects = scrapeConfig[prometheus::FOLLOW_REDIRECTS].asBool();
     }
 
     if (scrapeConfig.isMember(prometheus::ENABLE_COMPRESSION)

@@ -45,7 +45,8 @@ class HttpResponse {
                                    curl_slist*& headers,
                                    uint32_t timeout,
                                    bool replaceHostWithIp,
-                                   const std::string& intf);
+                                   const std::string& intf,
+                                   bool followRedirects);
 
 public:
     HttpResponse()

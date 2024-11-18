@@ -28,6 +28,8 @@ public:
     // enable_compression Accept-Encoding header: gzip, identity
     std::map<std::string, std::string> mRequestHeaders;
 
+    bool mFollowRedirects;
+
     uint64_t mMaxScrapeSizeBytes;
     uint64_t mSampleLimit;
     uint64_t mSeriesLimit;

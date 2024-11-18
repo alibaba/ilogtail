@@ -220,7 +220,8 @@ std::unique_ptr<TimerEvent> ScrapeScheduler::BuildScrapeTimerEvent(std::chrono::
                                             mScrapeConfigPtr->mScrapeTimeoutSeconds,
                                             retry,
                                             this->mFuture,
-                                            this->mIsContextValidFuture);
+                                            this->mIsContextValidFuture,
+                                            mScrapeConfigPtr->mFollowRedirects);
     auto timerEvent = std::make_unique<HttpRequestTimerEvent>(execTime, std::move(request));
     return timerEvent;
 }
@@ -255,7 +256,8 @@ void ScrapeScheduler::InitSelfMonitor(const MetricLabels& defaultLabels) {
 
     mSelfMonitor->InitMetricManager(sScrapeMetricKeys, labels);
 
-    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, MetricCategory::METRIC_CATEGORY_PLUGIN_SOURCE, std::move(labels));
+    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
+        mMetricsRecordRef, MetricCategory::METRIC_CATEGORY_PLUGIN_SOURCE, std::move(labels));
     mPromDelayTotal = mMetricsRecordRef.CreateCounter(METRIC_PLUGIN_PROM_SCRAPE_DELAY_TOTAL);
     mPluginTotalDelayMs = mMetricsRecordRef.CreateCounter(METRIC_PLUGIN_TOTAL_DELAY_MS);
 }

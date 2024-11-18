@@ -69,6 +69,7 @@ const char* const PASSWORD_FILE = "password_file";
 const char* const BASIC_PREFIX = "Basic ";
 const char* const HONOR_LABELS = "honor_labels";
 const char* const HONOR_TIMESTAMPS = "honor_timestamps";
+const char* const FOLLOW_REDIRECTS = "follow_redirects";
 
 // scrape protocols, from https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config
 // text/plain, application/openmetrics-text will be used

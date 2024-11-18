@@ -43,6 +43,7 @@ struct HttpRequest {
     int32_t mPort;
     uint32_t mTimeout = static_cast<uint32_t>(INT32_FLAG(default_http_request_timeout_secs));
     uint32_t mMaxTryCnt = static_cast<uint32_t>(INT32_FLAG(default_http_request_max_try_cnt));
+    bool mFollowRedirects = false;
 
     uint32_t mTryCnt = 1;
     std::chrono::system_clock::time_point mLastSendTime;
@@ -56,7 +57,8 @@ struct HttpRequest {
                 const std::map<std::string, std::string>& header,
                 const std::string& body,
                 uint32_t timeout = static_cast<uint32_t>(INT32_FLAG(default_http_request_timeout_secs)),
-                uint32_t maxTryCnt = static_cast<uint32_t>(INT32_FLAG(default_http_request_max_try_cnt)))
+                uint32_t maxTryCnt = static_cast<uint32_t>(INT32_FLAG(default_http_request_max_try_cnt)),
+                bool followRedirects = false)
         : mMethod(method),
           mHTTPSFlag(httpsFlag),
           mUrl(url),
@@ -66,7 +68,8 @@ struct HttpRequest {
           mHost(host),
           mPort(port),
           mTimeout(timeout),
-          mMaxTryCnt(maxTryCnt) {}
+          mMaxTryCnt(maxTryCnt),
+          mFollowRedirects(followRedirects) {}
     virtual ~HttpRequest() = default;
 };
 
@@ -85,8 +88,9 @@ struct AsynHttpRequest : public HttpRequest {
                     const std::string& body,
                     HttpResponse&& response = HttpResponse(),
                     uint32_t timeout = static_cast<uint32_t>(INT32_FLAG(default_http_request_timeout_secs)),
-                    uint32_t maxTryCnt = static_cast<uint32_t>(INT32_FLAG(default_http_request_max_try_cnt)))
-        : HttpRequest(method, httpsFlag, host, port, url, query, header, body, timeout, maxTryCnt),
+                    uint32_t maxTryCnt = static_cast<uint32_t>(INT32_FLAG(default_http_request_max_try_cnt)),
+                    bool followRedirects = false)
+        : HttpRequest(method, httpsFlag, host, port, url, query, header, body, timeout, maxTryCnt, followRedirects),
           mResponse(std::move(response)) {}
 
     virtual bool IsContextValid() const = 0;

@@ -69,7 +69,8 @@ CURL* CreateCurlHandler(const std::string& method,
                         curl_slist*& headers,
                         uint32_t timeout,
                         bool replaceHostWithIp,
-                        const std::string& intf) {
+                        const std::string& intf,
+                        bool followRedirects) {
     static DnsCache* dnsCache = DnsCache::GetInstance();
 
     CURL* curl = curl_easy_init();
@@ -100,6 +101,10 @@ CURL* CreateCurlHandler(const std::string& method,
     if (!body.empty()) {
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, (void*)body.c_str());
         curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, body.size());
+    }
+
+    if (followRedirects) {
+        curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
     }
 
     if (httpsFlag) {

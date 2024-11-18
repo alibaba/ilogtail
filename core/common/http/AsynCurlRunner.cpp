@@ -88,7 +88,8 @@ bool AsynCurlRunner::AddRequestToClient(unique_ptr<AsynHttpRequest>&& request) {
                                    headers,
                                    request->mTimeout,
                                    AppConfig::GetInstance()->IsHostIPReplacePolicyEnabled(),
-                                   AppConfig::GetInstance()->GetBindInterface());
+                                   AppConfig::GetInstance()->GetBindInterface(),
+                                   request->mFollowRedirects);
     if (curl == nullptr) {
         LOG_ERROR(sLogger, ("failed to send request", "failed to init curl handler")("request address", request.get()));
         request->OnSendDone(request->mResponse);
