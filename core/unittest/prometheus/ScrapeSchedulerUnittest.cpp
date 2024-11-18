@@ -65,9 +65,9 @@ void ScrapeSchedulerUnittest::TestInitscrapeScheduler() {
 }
 
 void ScrapeSchedulerUnittest::TestProcess() {
-    auto eventPool = std::make_shared<EventPool>();
+    EventPool eventPool{true};
     HttpResponse httpResponse = HttpResponse(
-        new PromMetricResponseBody(eventPool),
+        new PromMetricResponseBody(&eventPool),
         [](void* ptr) { delete static_cast<PromMetricResponseBody*>(ptr); },
         PromMetricWriteCallback);
     Labels labels;
@@ -115,9 +115,9 @@ void ScrapeSchedulerUnittest::TestProcess() {
 }
 
 void ScrapeSchedulerUnittest::TestStreamMetricWriteCallback() {
-    auto eventPool = std::make_shared<EventPool>();
+    EventPool eventPool{true};
     HttpResponse httpResponse = HttpResponse(
-        new PromMetricResponseBody(eventPool),
+        new PromMetricResponseBody(&eventPool),
         [](void* ptr) { delete static_cast<PromMetricResponseBody*>(ptr); },
         PromMetricWriteCallback);
     Labels labels;
@@ -203,8 +203,8 @@ void ScrapeSchedulerUnittest::TestScheduler() {
     labels.Set(prometheus::ADDRESS_LABEL_NAME, "localhost:8080");
     ScrapeScheduler event(mScrapeConfig, "localhost", 8080, labels, 0, 0);
     auto timer = make_shared<Timer>();
-    auto eventPool = std::make_shared<EventPool>();
-    event.SetComponent(timer, eventPool);
+    EventPool eventPool{true};
+    event.SetComponent(timer, &eventPool);
     event.ScheduleNext();
 
     APSARA_TEST_TRUE(timer->mQueue.size() == 1);
@@ -222,8 +222,8 @@ void ScrapeSchedulerUnittest::TestQueueIsFull() {
     auto defaultLabels = MetricLabels();
     event.InitSelfMonitor(defaultLabels);
     auto timer = make_shared<Timer>();
-    auto eventPool = std::make_shared<EventPool>();
-    event.SetComponent(timer, eventPool);
+    EventPool eventPool{true};
+    event.SetComponent(timer, &eventPool);
     auto now = std::chrono::steady_clock::now();
     event.SetFirstExecTime(now);
     event.ScheduleNext();

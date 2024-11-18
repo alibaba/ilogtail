@@ -76,7 +76,7 @@ private:
 
     std::unique_ptr<sdk::CurlClient> mClient;
     std::shared_ptr<Timer> mTimer;
-    std::shared_ptr<EventPool> mEventPool;
+    EventPool mEventPool;
 
     mutable ReadWriteLock mSubscriberMapRWLock;
     std::map<std::string, std::shared_ptr<TargetSubscriberScheduler>> mTargetSubscriberSchedulerMap;

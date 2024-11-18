@@ -34,8 +34,8 @@ bool BaseScheduler::IsCancelled() {
     return !mValidState;
 }
 
-void BaseScheduler::SetComponent(shared_ptr<Timer> timer, shared_ptr<EventPool> eventPool) {
+void BaseScheduler::SetComponent(shared_ptr<Timer> timer, EventPool* eventPool) {
     mTimer = std::move(timer);
-    mEventPool = std::move(eventPool);
+    mEventPool = eventPool;
 }
 } // namespace logtail

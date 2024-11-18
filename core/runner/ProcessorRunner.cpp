@@ -174,7 +174,6 @@ void ProcessorRunner::Run(uint32_t threadNo) {
         pipeline->SubInProcessCnt();
 
         gThreadedEventPool.CheckGC();
-        PrometheusInputRunner::GetInstance()->CheckGC();
     }
 }
 

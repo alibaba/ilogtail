@@ -18,7 +18,6 @@
 
 #include <memory>
 #include <string>
-#include <utility>
 
 #include "BaseScheduler.h"
 #include "common/http/HttpResponse.h"
@@ -41,13 +40,13 @@ struct PromMetricResponseBody {
     PipelineEventGroup mEventGroup;
     std::string mCache;
     size_t mRawSize = 0;
-    std::shared_ptr<EventPool> mEventPool;
+    EventPool* mEventPool = nullptr;
 
-    explicit PromMetricResponseBody(std::shared_ptr<EventPool> eventPool)
-        : mEventGroup(std::make_shared<SourceBuffer>()), mEventPool(std::move(eventPool)) {};
+    explicit PromMetricResponseBody(EventPool* eventPool)
+        : mEventGroup(std::make_shared<SourceBuffer>()), mEventPool(eventPool) {};
     void AddEvent(char* line, size_t len) {
         if (IsValidMetric(StringView(line, len))) {
-            auto* e = mEventGroup.AddRawEvent(true, mEventPool.get());
+            auto* e = mEventGroup.AddRawEvent(true, mEventPool);
             auto sb = mEventGroup.GetSourceBuffer()->CopyString(line, len);
             e->SetContentNoCopy(sb);
         }
