@@ -94,10 +94,6 @@ void ScrapeScheduler::OnMetricResult(HttpResponse& response, uint64_t timestampM
     mSelfMonitor->AddCounter(METRIC_PLUGIN_PROM_SCRAPE_TIME_MS,
                              response.GetStatusCode(),
                              GetCurrentTimeInMilliSeconds() - timestampMilliSec);
-    mSelfMonitor->AddCounter(METRIC_PLUGIN_OUT_SIZE_BYTES, response.GetStatusCode(), responseBody.mRawSize);
-    mSelfMonitor->AddCounter(METRIC_PLUGIN_PROM_SCRAPE_TIME_MS,
-                             response.GetStatusCode(),
-                             GetCurrentTimeInMilliSeconds() - timestampMilliSec);
 
     mScrapeTimestampMilliSec = timestampMilliSec;
     mScrapeDurationSeconds = 1.0 * (GetCurrentTimeInMilliSeconds() - timestampMilliSec) / 1000;
@@ -110,9 +106,6 @@ void ScrapeScheduler::OnMetricResult(HttpResponse& response, uint64_t timestampM
         for (const auto& [k, v] : mScrapeConfigPtr->mRequestHeaders) {
             headerStr.append(k).append(":").append(v).append(";");
         }
-        LOG_WARNING(
-            sLogger,
-            ("scrape failed, status code", response.GetStatusCode())("target", mHash)("http header", headerStr));
         LOG_WARNING(
             sLogger,
             ("scrape failed, status code", response.GetStatusCode())("target", mHash)("http header", headerStr));
