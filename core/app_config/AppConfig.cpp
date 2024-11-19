@@ -524,6 +524,14 @@ std::string GetVersionTag() {
     }
 }
 
+std::string GetGoPluginCheckpoint() {
+    if (BOOL_FLAG(logtail_mode)) {
+        return "checkpoint";
+    } else {
+        return "go_plugin_checkpoint";
+    }
+}
+
 AppConfig::AppConfig() {
     LOG_INFO(sLogger, ("AppConfig AppConfig", "success"));
     SetIlogtailConfigJson("");

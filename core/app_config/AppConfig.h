@@ -59,6 +59,7 @@ std::string GetExactlyOnceCheckpoint();
 std::string GetPipelineConfigDir();
 std::string GetPluginLogName();
 std::string GetVersionTag();
+std::string GetGoPluginCheckpoint();
 
 template <class T>
 class DoubleBuffer {
