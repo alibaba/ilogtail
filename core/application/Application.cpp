@@ -264,6 +264,8 @@ void Application::Start() { // GCOVR_EXCL_START
 
     ProcessorRunner::GetInstance()->Init();
 
+    LoongCollectorMonitor::GetInstance()->StartInnerPipeline();
+
     time_t curTime = 0, lastProfilingCheckTime = 0, lastConfigCheckTime = 0, lastUpdateMetricTime = 0,
            lastCheckTagsTime = 0, lastQueueGCTime = 0;
 #ifndef LOGTAIL_NO_TC_MALLOC
@@ -288,7 +290,6 @@ void Application::Start() { // GCOVR_EXCL_START
         }
         if (curTime - lastProfilingCheckTime >= INT32_FLAG(profiling_check_interval)) {
             LogFileProfiler::GetInstance()->SendProfileData();
-            MetricExportor::GetInstance()->PushMetrics(false);
             lastProfilingCheckTime = curTime;
         }
 #ifndef LOGTAIL_NO_TC_MALLOC

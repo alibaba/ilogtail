@@ -23,25 +23,27 @@
 #include <functional>
 
 #include "app_config/AppConfig.h"
-#include "constants/Constants.h"
+#include "application/Application.h"
 #include "common/DevInode.h"
 #include "common/ExceptionBase.h"
+#include "common/JsonUtil.h"
 #include "common/LogtailCommonFlags.h"
 #include "common/MachineInfoUtil.h"
 #include "common/RuntimeUtil.h"
 #include "common/StringTools.h"
 #include "common/TimeUtil.h"
 #include "common/version.h"
+#include "constants/Constants.h"
 #include "file_server/event_handler/LogInput.h"
 #include "go_pipeline/LogtailPlugin.h"
 #include "logger/Logger.h"
-#include "monitor/LogFileProfiler.h"
 #include "monitor/AlarmManager.h"
+#include "monitor/LogFileProfiler.h"
 #include "monitor/MetricExportor.h"
+#include "monitor/SelfMonitorServer.h"
 #include "plugin/flusher/sls/FlusherSLS.h"
 #include "protobuf/sls/sls_logs.pb.h"
 #include "runner/FlusherRunner.h"
-#include "application/Application.h"
 #include "sdk/Common.h"
 #ifdef __ENTERPRISE__
 #include "config/provider/EnterpriseConfigProvider.h"
@@ -685,12 +687,17 @@ bool LogtailMonitor::CalOsCpuStat() {
 }
 #endif
 
+const string INNER_METRIC_PIPELINE_NAME = "self-monitor-metric";
+
 LoongCollectorMonitor* LoongCollectorMonitor::GetInstance() {
     static LoongCollectorMonitor instance;
     return &instance;
 }
 
 void LoongCollectorMonitor::Init() {
+    LOG_INFO(sLogger, ("LoongCollector monitor", "started"));
+    mInnerPipelineStarted.store(false);
+    SelfMonitorServer::GetInstance()->Init();
     // create metric record
     MetricLabels labels;
     labels.emplace_back(METRIC_LABEL_KEY_INSTANCE_ID, Application::GetInstance()->GetInstanceId());
@@ -719,8 +726,112 @@ void LoongCollectorMonitor::Init() {
     mAgentConfigTotal = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_PIPELINE_CONFIG_TOTAL);
 }
 
+void LoongCollectorMonitor::StartInnerPipeline() {
+    mInnerPipelineStarted.store(true);
+    UpdateMetricPipeline();
+}
+
 void LoongCollectorMonitor::Stop() {
-    MetricExportor::GetInstance()->PushMetrics(true);
+    SelfMonitorServer::GetInstance()->Stop();
+    LOG_INFO(sLogger, ("LoongCollector monitor", "stopped successfully"));
+}
+
+shared_ptr<Pipeline>& LoongCollectorMonitor::GetMetricPipeline() {
+    lock_guard<mutex> lock(mMetricPipelineMux);
+    return mMetricPipeline;
+}
+
+void LoongCollectorMonitor::UpdateMetricPipeline() {
+    if (!mInnerPipelineStarted.load()) {
+        return;
+    }
+    auto newPipeline = make_shared<Pipeline>();
+    newPipeline->Init(CreateMetricPipelineConfig());
+
+    lock_guard<mutex> lock(mMetricPipelineMux);
+    if (mMetricPipeline != nullptr) {
+        mMetricPipeline->Stop(true);
+    }
+
+    mMetricPipeline = std::move(newPipeline);
+    mMetricPipeline->Start();
+}
+
+PipelineConfig LoongCollectorMonitor::CreateMetricPipelineConfig() {
+    string pipelineName = INNER_METRIC_PIPELINE_NAME;
+    unique_ptr<Json::Value> detail = make_unique<Json::Value>();
+    *detail = Json::Value(Json::objectValue);
+    (*detail)["enable"] = true;
+    // inputs
+    Json::Value inputs(Json::arrayValue);
+    { // input_self_monitor_metric
+        Json::Value inputSelfMonitorMetric;
+        string errMsg;
+        string inputStr = R"(
+            {
+                "Type": "input_self_monitor_metric",
+                "Rules": {
+                    "Agent": {
+                        "Enable": true,
+                        "Target": "sls_status",
+                        "Interval": 1
+                    },
+                    "Pipeline": {
+                        "Enable": true,
+                        "Target": "sls_shennong",
+                        "Interval": 1
+                    },
+                    "FileCollect": {
+                        "Enable": true,
+                        "Target": "sls_shennong",
+                        "Interval": 10
+                    },
+                    "Plugin": {
+                        "Enable": true,
+                        "Target": "local_file",
+                        "Interval": 10
+                    },
+                    "Component": {
+                        "Enable": true,
+                        "Target": "local_file",
+                        "Interval": 10
+                    }
+                }
+            }
+        )";
+        ParseJsonTable(inputStr, inputSelfMonitorMetric, errMsg);
+        inputs.append(std::move(inputSelfMonitorMetric));
+    }
+    (*detail)["inputs"] = std::move(inputs);
+    // flushers. Todo: add flusher_sls and flusher_local_file
+    Json::Value flushers(Json::arrayValue);
+    { // flusher_stdout
+        Json::Value flusherStdout;
+        flusherStdout["Type"] = "flusher_stdout";
+        flushers.append(std::move(flusherStdout));
+    }
+    (*detail)["flushers"] = std::move(flushers);
+    LOG_INFO(sLogger,
+             ("gen LoongCollector self monitor metrics inner pipeline string success", detail->toStyledString()));
+    PipelineConfig conf(pipelineName, std::move(detail));
+    conf.Parse();
+    return conf;
+}
+
+void LoongCollectorMonitor::IncreaseRegionReference(const string& region) {
+    lock_guard<mutex> lock(mTargetRegionsMux);
+    if (mTargetRegions.find(region) == mTargetRegions.end()) {
+        mTargetRegions.insert(region);
+        UpdateMetricPipeline();
+    }
+}
+
+void LoongCollectorMonitor::DecreaseRegionReference(const string& region) {
+    lock_guard<mutex> lock(mTargetRegionsMux);
+    if (mTargetRegions.find(region) != mTargetRegions.end()) {
+        mTargetRegions.erase(region);
+        UpdateMetricPipeline();
+    }
 }
 
 } // namespace logtail

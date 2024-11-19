@@ -37,16 +37,10 @@ namespace logtail {
 const string METRIC_SLS_LOGSTORE_NAME = "shennong_log_profile";
 const string METRIC_TOPIC_TYPE = "loongcollector_metric";
 
-MetricExportor::MetricExportor() : mSendInterval(60), mLastSendTime(time(NULL) - (rand() % (mSendInterval / 10)) * 10) {
+MetricExportor::MetricExportor() {
 }
 
-void MetricExportor::PushMetrics(bool forceSend) {
-    int32_t curTime = time(NULL);
-    if (!forceSend && (curTime - mLastSendTime < mSendInterval)) {
-        return;
-    }
-    ReadMetrics::GetInstance()->UpdateMetrics();
-
+void MetricExportor::PushMetrics() {
     if ("sls" == STRING_FLAG(metrics_report_method)) {
         std::map<std::string, sls_logs::LogGroup*> logGroupMap;
         ReadMetrics::GetInstance()->ReadAsLogGroup(logGroupMap);

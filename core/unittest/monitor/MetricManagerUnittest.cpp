@@ -63,7 +63,7 @@ void MetricManagerUnittest::TestCreateMetricAutoDelete() {
     fileCounter->Add(111UL);
     APSARA_TEST_EQUAL(fileCounter->GetValue(), 222);
 
-    MetricExportor::GetInstance()->PushMetrics(true);
+    MetricExportor::GetInstance()->PushMetrics();
 
     // assert WriteMetrics count
     MetricsRecord* tmp = WriteMetrics::GetInstance()->GetHead();
@@ -108,7 +108,7 @@ void MetricManagerUnittest::TestCreateMetricAutoDelete() {
         fileCounter3->Add(333UL);
     }
 
-    MetricExportor::GetInstance()->PushMetrics(true);
+    MetricExportor::GetInstance()->PushMetrics();
 
     // assert WriteMetrics count
     tmp = WriteMetrics::GetInstance()->GetHead();
@@ -133,7 +133,7 @@ void MetricManagerUnittest::TestCreateMetricAutoDelete() {
 void PushMetrics() {
     for (int i = 0; i < 10; i++) {
         LOG_INFO(sLogger, ("PushMetricsCount", i));
-        MetricExportor::GetInstance()->PushMetrics(true);
+        MetricExportor::GetInstance()->PushMetrics();
     }
 }
 
@@ -172,7 +172,7 @@ void MetricManagerUnittest::TestCreateMetricAutoDeleteMultiThread() {
     APSARA_TEST_EQUAL(count, 10);
 
     for (int i = 0; i < 10; i++) {
-        MetricExportor::GetInstance()->PushMetrics(true);
+        MetricExportor::GetInstance()->PushMetrics();
     }
 
     // assert WriteMetrics count
@@ -256,7 +256,7 @@ void MetricManagerUnittest::TestCreateAndDeleteMetric() {
     delete fileMetric2;
     delete fileMetric3;
 
-    MetricExportor::GetInstance()->PushMetrics(true);
+    MetricExportor::GetInstance()->PushMetrics();
 
     // assert WriteMetrics count
     tmp = WriteMetrics::GetInstance()->GetHead();
@@ -306,7 +306,7 @@ void MetricManagerUnittest::TestCreateAndDeleteMetric() {
 
     APSARA_TEST_EQUAL(fileCounter->GetValue(), 333);
 
-    MetricExportor::GetInstance()->PushMetrics(true);
+    MetricExportor::GetInstance()->PushMetrics();
     // assert ReadMetrics count
     tmp = ReadMetrics::GetInstance()->GetHead();
     count = 0;

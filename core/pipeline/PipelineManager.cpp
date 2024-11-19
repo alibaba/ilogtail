@@ -19,6 +19,7 @@
 #include "file_server/ConfigManager.h"
 #include "file_server/FileServer.h"
 #include "go_pipeline/LogtailPlugin.h"
+#include "monitor/Monitor.h"
 #include "prometheus/PrometheusInputRunner.h"
 #if defined(__linux__) && !defined(__ANDROID__)
 #include "ebpf/eBPFServer.h"
@@ -159,6 +160,9 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
 }
 
 const shared_ptr<Pipeline>& PipelineManager::FindConfigByName(const string& configName) const {
+    if (configName == INNER_METRIC_PIPELINE_NAME) {
+        return LoongCollectorMonitor::GetInstance()->GetMetricPipeline();
+    }
     auto it = mPipelineNameEntityMap.find(configName);
     if (it != mPipelineNameEntityMap.end()) {
         return it->second;

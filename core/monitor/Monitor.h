@@ -16,14 +16,17 @@
 
 #pragma once
 
+#include <atomic>
 #include <condition_variable>
 #include <future>
 #include <mutex>
+#include <set>
 #include <string>
 
 #include "MetricManager.h"
 #include "MetricConstants.h"
 #include "MetricStore.h"
+#include "Pipeline.h"
 
 #if defined(_MSC_VER)
 #include <Windows.h>
@@ -185,12 +188,19 @@ private:
 #endif
 };
 
+extern const std::string INNER_METRIC_PIPELINE_NAME;
+
 class LoongCollectorMonitor {
 public:
     static LoongCollectorMonitor* GetInstance();
 
     void Init();
     void Stop();
+
+    void StartInnerPipeline();
+    std::shared_ptr<Pipeline>& GetMetricPipeline();
+    void IncreaseRegionReference(const std::string& region);
+    void DecreaseRegionReference(const std::string& region);
 
     void SetAgentCpu(double cpu) { mAgentCpu->Set(cpu); }
     void SetAgentMemory(uint64_t mem) { mAgentMemory->Set(mem); }
@@ -200,6 +210,17 @@ public:
     void SetAgentConfigTotal(uint64_t total) { mAgentConfigTotal->Set(total); }
 
 private:
+    void UpdateMetricPipeline();
+    PipelineConfig CreateMetricPipelineConfig();
+
+    std::atomic_bool mInnerPipelineStarted;
+    std::shared_ptr<Pipeline> mMetricPipeline;
+    std::mutex mMetricPipelineMux;
+    std::shared_ptr<Pipeline> mAlarmPipeline;
+    std::mutex mAlarmPipelineMux;
+    std::set<std::string> mTargetRegions;
+    std::mutex mTargetRegionsMux;
+
     // MetricRecord
     MetricsRecordRef mMetricsRecordRef;
 
