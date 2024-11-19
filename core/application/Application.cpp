@@ -32,8 +32,8 @@
 #include "common/version.h"
 #include "config/ConfigDiff.h"
 #include "config/InstanceConfigManager.h"
-#include "config/watcher/PipelineConfigWatcher.h"
 #include "config/watcher/InstanceConfigWatcher.h"
+#include "config/watcher/PipelineConfigWatcher.h"
 #include "file_server/ConfigManager.h"
 #include "file_server/EventDispatcher.h"
 #include "file_server/FileServer.h"
@@ -51,6 +51,7 @@
 #include "runner/FlusherRunner.h"
 #include "runner/ProcessorRunner.h"
 #include "runner/sink/http/HttpSink.h"
+#include "sls_control/SLSControl.h"
 #include "task_pipeline/TaskPipelineManager.h"
 #ifdef __ENTERPRISE__
 #include "config/provider/EnterpriseConfigProvider.h"
