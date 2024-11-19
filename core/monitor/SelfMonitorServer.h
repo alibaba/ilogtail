@@ -15,30 +15,12 @@
  */
 
 #include <atomic>
-#include <string>
 #include <map>
+#include <string>
 
 #include "Pipeline.h"
 
 namespace logtail {
-
-struct SelfMonitorMetricRule {
-    enum class SelfMonitorMetricRuleTarget {
-        LOCAL_FILE,
-        SLS_STATUS,
-        SLS_SHENNONG
-    };
-    SelfMonitorMetricRuleTarget mTarget;
-    int mInterval;
-};
-
-struct SelfMonitorMetricRules {
-    SelfMonitorMetricRule mAgentMetricsRule;
-    SelfMonitorMetricRule mPipelineMetricsRule;
-    SelfMonitorMetricRule mFileCollectMetricsRule;
-    SelfMonitorMetricRule mPluginMetricsRule;
-    SelfMonitorMetricRule mComponentMetricsRule;
-};
 
 class SelfMonitorServer {
 public:
@@ -57,16 +39,21 @@ private:
     SelfMonitorServer();
     ~SelfMonitorServer() = default;
 
-    void SendMetrics();
-    void SendAlarms();
-
     std::future<void> mThreadRes;
     std::mutex mThreadRunningMux;
     bool mIsThreadRunning = true;
     std::condition_variable mStopCV;
 
+    void SendMetrics();
+    void PushMetricEventIntoMetricEventMap(std::vector<SelfMonitorMetricEvent>& events);
+    void ReadPipelineEventGroupsFromMetricEventMap(std::map<std::string, std::map<std::string, PipelineEventGroup> >& pipelineEventGroupMap);
+
     std::unordered_map<std::string, SelfMonitorMetricRules*> mMetricPipelines;
+    std::unordered_map<std::string, SelfMonitorMetricEventMap> mMetricEventMaps;
     std::mutex mMetricPipelineMux;
+
+    void SendAlarms();
+
     PipelineContext* mAlarmPipelineCtx;
     std::mutex mAlarmPipelineMux;
 };

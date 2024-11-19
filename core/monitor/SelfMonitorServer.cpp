@@ -75,12 +75,120 @@ void SelfMonitorServer::Stop() {
 void SelfMonitorServer::UpdateMetricPipeline(PipelineContext* ctx, SelfMonitorMetricRules& rules) {
     lock_guard<mutex> lock(mMetricPipelineMux);
     mMetricPipelines[ctx->GetConfigName()] = &rules;
+    if (mMetricEventMaps.find(ctx->GetConfigName()) == mMetricEventMaps.end()) {
+        mMetricEventMaps[ctx->GetConfigName()] = SelfMonitorMetricEventMap();
+    }
 }
 
 void SelfMonitorServer::RemoveMetricPipeline(PipelineContext* ctx) {
     lock_guard<mutex> lock(mMetricPipelineMux);
     if (ctx->GetConfigName() != INNER_METRIC_PIPELINE_NAME) {
         mMetricPipelines.erase(ctx->GetConfigName());
+        mMetricEventMaps.erase(ctx->GetConfigName());
+    }
+}
+
+void SelfMonitorServer::SendMetrics() {
+    LOG_INFO(sLogger, ("self-monitor send self-monitor metrics", "start"));
+    ReadMetrics::GetInstance()->UpdateMetrics();
+    // Todo: delete MetricExportor
+    MetricExportor::GetInstance()->PushMetrics();
+    // new pipeline
+    vector<SelfMonitorMetricEvent> metricEventList;
+    ReadMetrics::GetInstance()->ReadAsMetricEvents(metricEventList);
+    PushMetricEventIntoMetricEventMap(metricEventList);
+
+    map<string, map<string, PipelineEventGroup> > pipelineEventGroupMap;
+    ReadPipelineEventGroupsFromMetricEventMap(pipelineEventGroupMap);
+
+    for (auto configPipelineGroup = pipelineEventGroupMap.begin(); configPipelineGroup != pipelineEventGroupMap.end();
+         configPipelineGroup++) {
+        shared_ptr<Pipeline> pipeline = PipelineManager::GetInstance()->FindConfigByName(configPipelineGroup->first);
+        if (pipeline != nullptr) {
+            for (auto pipelineEventGroup = configPipelineGroup->second.begin();
+                 pipelineEventGroup != configPipelineGroup->second.end();
+                 pipelineEventGroup++) {
+                ProcessorRunner::GetInstance()->PushQueue(
+                    pipeline->GetContext().GetProcessQueueKey(), 0, std::move(pipelineEventGroup->second));
+            }
+        }
+    }
+    LOG_INFO(sLogger, ("self-monitor send self-monitor metrics", "success"));
+}
+
+void SelfMonitorServer::PushMetricEventIntoMetricEventMap(std::vector<SelfMonitorMetricEvent>& events) {
+    lock_guard<mutex> lock(mMetricPipelineMux);
+
+    for (auto pipelineRule = mMetricPipelines.begin(); pipelineRule != mMetricPipelines.end(); pipelineRule++) {
+        string pipelineName = pipelineRule->first;
+        auto rules = mMetricPipelines[pipelineName];
+        for (auto event : events) {
+            auto eventCopy = event;
+            if (mMetricEventMaps.find(pipelineName) != mMetricEventMaps.end()) {
+                SelfMonitorMetricEventMap& metricEventMap = mMetricEventMaps[pipelineName];
+                if (eventCopy.mCategory == MetricCategory::METRIC_CATEGORY_AGENT
+                    || eventCopy.mCategory == MetricCategory::METRIC_CATEGORY_RUNNER) {
+                    eventCopy.SetTarget(rules->mAgentMetricsRule.mTarget);
+                    eventCopy.SetInterval(rules->mAgentMetricsRule.mInterval);
+                }
+                if (eventCopy.mCategory == MetricCategory::METRIC_CATEGORY_COMPONENT) {
+                    eventCopy.SetTarget(rules->mComponentMetricsRule.mTarget);
+                    eventCopy.SetInterval(rules->mComponentMetricsRule.mInterval);
+                }
+                if (eventCopy.mCategory == MetricCategory::METRIC_CATEGORY_PIPELINE) {
+                    eventCopy.SetTarget(rules->mPipelineMetricsRule.mTarget);
+                    eventCopy.SetInterval(rules->mPipelineMetricsRule.mInterval);
+                }
+                if (eventCopy.mCategory == MetricCategory::METRIC_CATEGORY_PLUGIN) {
+                    eventCopy.SetTarget(rules->mPluginMetricsRule.mTarget);
+                    eventCopy.SetInterval(rules->mPluginMetricsRule.mInterval);
+                }
+                if (eventCopy.mCategory == MetricCategory::METRIC_CATEGORY_PLUGIN_SOURCE) {
+                    eventCopy.SetTarget(rules->mFileCollectMetricsRule.mTarget);
+                    eventCopy.SetInterval(rules->mFileCollectMetricsRule.mInterval);
+                }
+                if (metricEventMap.find(eventCopy.mKey) != metricEventMap.end()) {
+                    metricEventMap[eventCopy.mKey].Merge(eventCopy);
+                } else {
+                    metricEventMap[eventCopy.mKey] = std::move(eventCopy);
+                }
+            }
+        }
+    }
+}
+
+void SelfMonitorServer::ReadPipelineEventGroupsFromMetricEventMap(
+    map<string, map<string, PipelineEventGroup> >& pipelineEventGroupMap) {
+    lock_guard<mutex> lock(mMetricPipelineMux);
+    for (auto configMetricEventMap = mMetricEventMaps.begin(); configMetricEventMap != mMetricEventMaps.end();
+         configMetricEventMap++) {
+        string pipelineName = configMetricEventMap->first;
+        if (pipelineEventGroupMap.find(pipelineName) == pipelineEventGroupMap.end()) {
+            pipelineEventGroupMap[pipelineName] = map<string, PipelineEventGroup>();
+        }
+        for (auto metricEvent = configMetricEventMap->second.begin(); metricEvent != configMetricEventMap->second.end();
+             metricEvent++) {
+            if (metricEvent->second.ShouldSend()) {
+                metricEvent->second.Collect();
+                const set<string>& targets = metricEvent->second.GetTargets();
+                for (auto target : targets) {
+                    LogEvent* logEventPtr;
+                    map<string, PipelineEventGroup>::iterator iter = pipelineEventGroupMap[pipelineName].find(target);
+                    if (iter != pipelineEventGroupMap[pipelineName].end()) {
+                        logEventPtr = iter->second.AddLogEvent();
+                    } else {
+                        PipelineEventGroup pipelineEventGroup(make_shared<SourceBuffer>());
+                        pipelineEventGroup.SetTag("__target__", target);
+                        pipelineEventGroup.SetTagNoCopy(LOG_RESERVED_KEY_SOURCE, LoongCollectorMonitor::mIpAddr);
+                        pipelineEventGroup.SetTagNoCopy(LOG_RESERVED_KEY_TOPIC, METRIC_TOPIC_TYPE);
+                        logEventPtr = pipelineEventGroup.AddLogEvent();
+                        pipelineEventGroupMap[pipelineName].insert(
+                            pair<string, PipelineEventGroup>(target, move(pipelineEventGroup)));
+                    }
+                    metricEvent->second.ReadAsLogEvent(logEventPtr);
+                }
+            }
+        }
     }
 }
 
@@ -89,33 +197,7 @@ void SelfMonitorServer::UpdateAlarmPipeline(PipelineContext* ctx) {
     mAlarmPipelineCtx = ctx;
 }
 
-void SelfMonitorServer::SendMetrics() {
-    LOG_INFO(sLogger, ("self-monitor send self-monitor metrics", "start"));
-    ReadMetrics::GetInstance()->UpdateMetrics();
-
-    map<string, PipelineEventGroup> pipelineEventGroupMap;
-    // Todo: delete MetricExportor
-    MetricExportor::GetInstance()->PushMetrics();
-    ReadMetrics::GetInstance()->ReadAsPipelineEventGroup(pipelineEventGroupMap);
-
-    lock_guard<mutex> lock(mMetricPipelineMux);
-    for (auto pipelineInfo = mMetricPipelines.begin(); pipelineInfo != mMetricPipelines.end(); pipelineInfo++) {
-        LOG_INFO(sLogger, ("self-monitor send self-monitor metrics", "prepare")("pipeline", pipelineInfo->first));
-        shared_ptr<Pipeline> pipeline = PipelineManager::GetInstance()->FindConfigByName(pipelineInfo->first);
-        if (pipeline != nullptr) {
-            LOG_INFO(sLogger, ("self-monitor send self-monitor metrics", "prepare")("pipeline get success", pipeline->GetContext().GetConfigName()));
-            for (auto it = pipelineEventGroupMap.begin(); it != pipelineEventGroupMap.end(); it++) {
-                LOG_INFO(sLogger, ("self-monitor send self-monitor metrics", "sending")("region", it->first)("pipeline", pipeline->GetContext().GetConfigName()));
-                ProcessorRunner::GetInstance()->PushQueue(
-                    pipeline->GetContext().GetProcessQueueKey(), 0, it->second.Copy());
-            }
-        }
-    }
-    LOG_INFO(sLogger, ("self-monitor send self-monitor metrics", "success"));
-}
-
 void SelfMonitorServer::SendAlarms() {
-    LOG_INFO(sLogger, ("self-monitor", "send self-monitor alarms"));
 }
 
 } // namespace logtail

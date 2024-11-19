@@ -29,6 +29,56 @@
 
 namespace logtail {
 
+extern const std::string METRIC_TOPIC_TYPE;
+
+struct SelfMonitorMetricRule {
+    enum class SelfMonitorMetricRuleTarget { LOCAL_FILE, SLS_STATUS, SLS_SHENNONG };
+    SelfMonitorMetricRuleTarget mTarget;
+    size_t mInterval;
+};
+
+struct SelfMonitorMetricRules {
+    SelfMonitorMetricRule mAgentMetricsRule;
+    SelfMonitorMetricRule mPipelineMetricsRule;
+    SelfMonitorMetricRule mFileCollectMetricsRule;
+    SelfMonitorMetricRule mPluginMetricsRule;
+    SelfMonitorMetricRule mComponentMetricsRule;
+};
+
+using SelfMonitorMetricEventKey = int64_t;
+class SelfMonitorMetricEvent {
+public:
+    SelfMonitorMetricEvent();
+    SelfMonitorMetricEvent(MetricsRecord* metricRecord);
+    SelfMonitorMetricEvent(const std::map<std::string, std::string>& metricRecord);
+
+    void SetInterval(size_t interval);
+    void SetTarget(SelfMonitorMetricRule::SelfMonitorMetricRuleTarget target);
+    void Merge(SelfMonitorMetricEvent& event);
+
+    bool ShouldSend();
+    void Collect();
+    std::set<std::string> GetTargets();
+    void ReadAsLogEvent(LogEvent* logEventPtr);
+
+    SelfMonitorMetricEventKey mKey; // labels + category
+    std::string mCategory; // category
+private:
+    void CreateKey();
+
+    std::unordered_map<std::string, std::string> mLabels;
+    std::unordered_map<std::string, uint64_t> mCounters;
+    std::unordered_map<std::string, double> mGauges;
+    std::set<std::string> mRegions;
+    SelfMonitorMetricRule::SelfMonitorMetricRuleTarget mTarget;
+    int32_t mSendInterval;
+    int32_t mLastSendInterval;
+
+    time_t mTmpCollectTime;
+    std::unordered_map<std::string, std::string> mTmpCollectContents;
+};
+using SelfMonitorMetricEventMap = std::unordered_map<SelfMonitorMetricEventKey, SelfMonitorMetricEvent>;
+
 class WriteMetrics {
 private:
     WriteMetrics() = default;
@@ -79,7 +129,7 @@ public:
         return ptr;
     }
     // for SelfMonitorMetricPipeline
-    void ReadAsPipelineEventGroup(std::map<std::string, PipelineEventGroup>& pipelineEventGroupMap) const;
+    void ReadAsMetricEvents(std::vector<SelfMonitorMetricEvent>& metricEventList) const;
     // for MetricExportor, todo: delete
     void ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup*>& logGroupMap) const;
     void ReadAsFileBuffer(std::string& metricsContent) const;

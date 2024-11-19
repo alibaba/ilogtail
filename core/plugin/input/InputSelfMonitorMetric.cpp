@@ -74,7 +74,9 @@ bool InputSelfMonitorMetric::Start() {
 }
 
 bool InputSelfMonitorMetric::Stop(bool isPipelineRemoving) {
-    SelfMonitorServer::GetInstance()->RemoveMetricPipeline(mContext);
+    if (isPipelineRemoving) {
+        SelfMonitorServer::GetInstance()->RemoveMetricPipeline(mContext);
+    }
     return true;
 }
 
