@@ -25,12 +25,12 @@
 #include "common/FileSystemUtil.h"
 #include "common/JsonUtil.h"
 #include "common/LogtailCommonFlags.h"
+#include "config/InstanceConfigManager.h"
 #include "config/watcher/InstanceConfigWatcher.h"
 #include "file_server/ConfigManager.h"
 #include "file_server/reader/LogFileReader.h"
 #include "json/value.h"
 #include "logger/Logger.h"
-#include "monitor/LogFileProfiler.h"
 #include "monitor/AlarmManager.h"
 #include "monitor/Monitor.h"
 #ifdef __ENTERPRISE__
@@ -50,7 +50,7 @@ DEFINE_FLAG_INT32(pub_buffer_file_num, "how many buffer files in default", 25);
 DEFINE_FLAG_INT32(default_local_file_size, "default size of one buffer file", 20 * 1024 * 1024);
 DEFINE_FLAG_INT32(pub_local_file_size, "default size of one buffer file", 20 * 1024 * 1024);
 DEFINE_FLAG_INT32(process_thread_count, "", 1);
-DEFINE_FLAG_INT32(send_request_concurrency, "max count keep in mem when async send", 10);
+DEFINE_FLAG_INT32(send_request_concurrency, "max count keep in mem when async send", 15);
 DEFINE_FLAG_STRING(default_buffer_file_path, "set current execution dir in default", "");
 DEFINE_FLAG_STRING(buffer_file_path, "set buffer dir", "");
 // DEFINE_FLAG_STRING(default_mapping_config_path, "", "mapping_config.json");
@@ -433,14 +433,6 @@ string GetAgentSnapshotDir() {
     }
 }
 
-string GetAgentProfileLogName() {
-    if (BOOL_FLAG(logtail_mode)) {
-        return "ilogtail_profile.LOG";
-    } else {
-        return "loongcollector_profile.LOG";
-    }
-}
-
 string GetAgentStatusLogName() {
     if (BOOL_FLAG(logtail_mode)) {
         return "ilogtail_status.LOG";
@@ -448,15 +440,6 @@ string GetAgentStatusLogName() {
         return "loongcollector_status.LOG";
     }
 }
-
-string GetProfileSnapshotDumpFileName() {
-    if (BOOL_FLAG(logtail_mode)) {
-        return GetProcessExecutionDir() + STRING_FLAG(logtail_profile_snapshot);
-    } else {
-        return GetAgentLogDir() + "loongcollector_profile_snapshot";
-    }
-}
-
 
 string GetObserverEbpfHostPath() {
     if (BOOL_FLAG(logtail_mode)) {
@@ -801,7 +784,7 @@ void AppConfig::LoadEnvResourceLimit() {
     LoadSingleValueEnvConfig("mem_usage_limit", mMemUsageUpLimit, (int64_t)384);
     LoadSingleValueEnvConfig("max_bytes_per_sec", mMaxBytePerSec, (int32_t)(1024 * 1024));
     LoadSingleValueEnvConfig("process_thread_count", mProcessThreadCount, (int32_t)1);
-    LoadSingleValueEnvConfig("send_request_concurrency", mSendRequestConcurrency, (int32_t)2);
+    LoadSingleValueEnvConfig("send_request_concurrency", mSendRequestConcurrency, (int32_t)10);
 }
 
 /**
@@ -924,14 +907,10 @@ void AppConfig::LoadResourceConf(const Json::Value& confJson) {
                        "reader_close_unused_file_time",
                        "ALIYUN_LOGTAIL_READER_CLOSE_UNUSED_FILE_TIME");
 
-    if (confJson.isMember("log_profile_save_interval") && confJson["log_profile_save_interval"].isInt())
-        LogFileProfiler::GetInstance()->SetProfileInterval(confJson["log_profile_save_interval"].asInt());
-
     LOG_DEBUG(sLogger,
               ("logreader delete interval", INT32_FLAG(logreader_filedeleted_remove_interval))(
                   "check handler interval", INT32_FLAG(check_handler_timeout_interval))(
-                  "reader close interval", INT32_FLAG(reader_close_unused_file_time))(
-                  "profile interval", LogFileProfiler::GetInstance()->GetProfileInterval()));
+                  "reader close interval", INT32_FLAG(reader_close_unused_file_time)));
 
 
     if (confJson.isMember("cpu_usage_limit")) {

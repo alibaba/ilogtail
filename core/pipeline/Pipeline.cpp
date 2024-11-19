@@ -74,6 +74,8 @@ bool Pipeline::Init(PipelineConfig&& config) {
     mContext.SetCreateTime(config.mCreateTime);
     mContext.SetPipeline(*this);
     mContext.SetIsFirstProcessorJsonFlag(config.mIsFirstProcessorJson);
+    mContext.SetHasNativeProcessorsFlag(config.mHasNativeProcessor);
+    mContext.SetIsFlushingThroughGoPipelineFlag(config.IsFlushingThroughGoPipelineExisted());
 
     // for special treatment below
     const InputFile* inputFile = nullptr;
@@ -287,15 +289,12 @@ bool Pipeline::Init(PipelineConfig&& config) {
                                    mContext.GetRegion());
             }
         }
-        uint32_t priority = mContext.GetGlobalConfig().mProcessPriority == 0
-            ? ProcessQueueManager::sMaxPriority
-            : mContext.GetGlobalConfig().mProcessPriority - 1;
         if (isInputSupportAck) {
             ProcessQueueManager::GetInstance()->CreateOrUpdateBoundedQueue(
-                mContext.GetProcessQueueKey(), priority, mContext);
+                mContext.GetProcessQueueKey(), mContext.GetGlobalConfig().mPriority, mContext);
         } else {
             ProcessQueueManager::GetInstance()->CreateOrUpdateCircularQueue(
-                mContext.GetProcessQueueKey(), priority, 1024, mContext);
+                mContext.GetProcessQueueKey(), mContext.GetGlobalConfig().mPriority, 1024, mContext);
         }
 
 

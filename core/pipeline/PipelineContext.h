@@ -23,7 +23,6 @@
 
 #include "logger/Logger.h"
 #include "models/PipelineEventGroup.h"
-#include "monitor/LogFileProfiler.h"
 #include "monitor/AlarmManager.h"
 #include "pipeline/GlobalConfig.h"
 #include "pipeline/queue/QueueKey.h"
@@ -76,17 +75,21 @@ public:
     QueueKey GetLogstoreKey() const;
     const FlusherSLS* GetSLSInfo() const { return mSLSInfo; }
     void SetSLSInfo(const FlusherSLS* flusherSLS) { mSLSInfo = flusherSLS; }
+    
     bool RequiringJsonReader() const { return mRequiringJsonReader; }
     void SetRequiringJsonReaderFlag(bool flag) { mRequiringJsonReader = flag; }
     bool IsFirstProcessorApsara() const { return mIsFirstProcessorApsara; }
     void SetIsFirstProcessorApsaraFlag(bool flag) { mIsFirstProcessorApsara = flag; }
     bool IsFirstProcessorJson() const { return mIsFirstProcessorJson; }
     void SetIsFirstProcessorJsonFlag(bool flag) { mIsFirstProcessorJson = flag; }
-    bool IsExactlyOnceEnabled() const {return mEnableExactlyOnce; }
+    bool IsExactlyOnceEnabled() const { return mEnableExactlyOnce; }
     void SetExactlyOnceFlag(bool flag) { mEnableExactlyOnce = flag; }
+    bool HasNativeProcessors() const { return mHasNativeProcessors; }
+    void SetHasNativeProcessorsFlag(bool flag) { mHasNativeProcessors = flag; }
+    bool IsFlushingThroughGoPipeline() const { return mIsFlushingThroughGoPipeline; }
+    void SetIsFlushingThroughGoPipelineFlag(bool flag) { mIsFlushingThroughGoPipeline = flag; }
 
     ProcessProfile& GetProcessProfile() const { return mProcessProfile; }
-    // LogFileProfiler& GetProfiler() { return *mProfiler; }
     const Logger::logger& GetLogger() const { return mLogger; }
     AlarmManager& GetAlarm() const { return *mAlarm; };
 
@@ -99,15 +102,16 @@ private:
     QueueKey mProcessQueueKey = -1;
     Pipeline* mPipeline = nullptr;
 
-    // special members for compatability
     const FlusherSLS* mSLSInfo = nullptr;
+    // for input_file only
     bool mRequiringJsonReader = false;
     bool mIsFirstProcessorApsara = false;
     bool mIsFirstProcessorJson = false;
     bool mEnableExactlyOnce = false;
+    bool mHasNativeProcessors = false;
+    bool mIsFlushingThroughGoPipeline = false;
 
     mutable ProcessProfile mProcessProfile;
-    // LogFileProfiler* mProfiler = LogFileProfiler::GetInstance();
     Logger::logger mLogger = sLogger;
     AlarmManager* mAlarm = AlarmManager::GetInstance();
 };
