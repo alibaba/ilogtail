@@ -508,6 +508,14 @@ string GetPipelineConfigDir() {
     }
 }
 
+string GetPluginLogName() {
+    if (BOOL_FLAG(logtail_mode)) {
+        return "logtail_plugin.LOG";
+    } else {
+        return "go_plugin.LOG";
+    }
+}
+
 AppConfig::AppConfig() {
     LOG_INFO(sLogger, ("AppConfig AppConfig", "success"));
     SetIlogtailConfigJson("");

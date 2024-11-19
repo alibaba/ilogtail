@@ -65,6 +65,7 @@ LogtailPlugin::LogtailPlugin() {
     mPluginCfg["LoongcollectorConfDir"] = AppConfig::GetInstance()->GetLoongcollectorConfDir();
     mPluginCfg["LoongcollectorLogDir"] = GetAgentLogDir();
     mPluginCfg["LoongcollectorDataDir"] = GetAgentDataDir();
+    mPluginCfg["LoongcollectorPluginLogName"] = GetPluginLogName();
     mPluginCfg["LoongcollectorThirdPartyDir"] = GetAgentThirdPartyDir();
     mPluginCfg["HostIP"] = LogFileProfiler::mIpAddr;
     mPluginCfg["Hostname"] = LogFileProfiler::mHostname;

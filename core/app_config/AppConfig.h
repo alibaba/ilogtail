@@ -57,6 +57,7 @@ std::string GetSendBufferFileNamePrefix();
 std::string GetLegacyUserLocalConfigFilePath();
 std::string GetExactlyOnceCheckpoint();
 std::string GetPipelineConfigDir();
+std::string GetPluginLogName();
 
 template <class T>
 class DoubleBuffer {
