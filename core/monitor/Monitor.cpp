@@ -480,7 +480,7 @@ void LogtailMonitor::DumpToLocal(const sls_logs::LogGroup& logGroup) {
 }
 
 bool LogtailMonitor::DumpMonitorInfo(time_t monitorTime) {
-    string path = GetAgentLogDir() + "loongcollector_monitor_info";
+    string path = GetAgentLogDir() + GetMonitorInfoFileName();
     ofstream outfile(path.c_str(), ofstream::app);
     if (!outfile)
         return false;

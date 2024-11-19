@@ -532,6 +532,22 @@ std::string GetGoPluginCheckpoint() {
     }
 }
 
+std::string GetAgentName() {
+    if (BOOL_FLAG(logtail_mode)) {
+        return "ilogtail";
+    } else {
+        return "loongcollector";
+    } 
+}
+
+std::string GetMonitorInfoFileName() {
+    if (BOOL_FLAG(logtail_mode)) {
+        return "logtail_monitor_info";
+    } else {
+        return "loongcollector_monitor_info";
+    }
+}
+
 AppConfig::AppConfig() {
     LOG_INFO(sLogger, ("AppConfig AppConfig", "success"));
     SetIlogtailConfigJson("");
@@ -1691,7 +1707,7 @@ void AppConfig::SetLoongcollectorConfDir(const std::string& dirPath) {
     //     = AbsolutePath(STRING_FLAG(ilogtail_local_yaml_config_dir), mLogtailSysConfDir) + PATH_SEPARATOR;
     // mUserRemoteYamlConfigDirPath
     //     = AbsolutePath(STRING_FLAG(ilogtail_remote_yaml_config_dir), mLogtailSysConfDir) + PATH_SEPARATOR;
-    LOG_INFO(sLogger, ("set loongcollector conf dir", mLoongcollectorConfDir));
+    LOG_INFO(sLogger, ("set " + GetAgentName() + " conf dir", mLoongcollectorConfDir));
 }
 
 bool AppConfig::IsHostPathMatchBlacklist(const string& dirPath) const {
