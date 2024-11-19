@@ -176,6 +176,7 @@ void Application::Init() {
 #ifdef __ENTERPRISE__
     appInfoJson["host_id"] = Json::Value(FetchHostId());
     appInfoJson[GetVersionTag()] = Json::Value(ILOGTAIL_VERSION);
+    appInfoJson["running_environment"] = Json::Value(SLSControl::GetInstance()->GetRunningEnvironment());
 #else
     appInfoJson[GetVersionTag()] = Json::Value(string(ILOGTAIL_VERSION) + " Community Edition");
     appInfoJson["git_hash"] = Json::Value(ILOGTAIL_GIT_HASH);
