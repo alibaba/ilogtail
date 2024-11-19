@@ -59,6 +59,7 @@ const std::string METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS = "prom_subscribe_targets
 const std::string METRIC_PLUGIN_PROM_SUBSCRIBE_TOTAL = "prom_subscribe_total";
 const std::string METRIC_PLUGIN_PROM_SUBSCRIBE_TIME_MS = "prom_subscribe_time_ms";
 const std::string METRIC_PLUGIN_PROM_SCRAPE_TIME_MS = "prom_scrape_time_ms";
+const std::string METRIC_PLUGIN_PROM_SCRAPE_STATE = "prom_scrape_state";
 const std::string METRIC_PLUGIN_PROM_SCRAPE_DELAY_TOTAL = "prom_scrape_delay_total";
 
 /**********************************************************

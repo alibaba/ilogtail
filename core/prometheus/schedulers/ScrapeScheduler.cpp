@@ -98,6 +98,9 @@ void ScrapeScheduler::OnMetricResult(HttpResponse& response, uint64_t timestampM
     mSelfMonitor->AddCounter(METRIC_PLUGIN_PROM_SCRAPE_TIME_MS,
                              response.GetStatusCode(),
                              GetCurrentTimeInMilliSeconds() - timestampMilliSec);
+    if (!response.GetReason().empty()) {
+        mSelfMonitor->AddCounter(METRIC_PLUGIN_PROM_SCRAPE_STATE, response.GetReason());
+    }
 
     mScrapeTimestampMilliSec = timestampMilliSec;
     mScrapeDurationSeconds = 1.0 * (GetCurrentTimeInMilliSeconds() - timestampMilliSec) / 1000;
@@ -247,15 +250,16 @@ void ScrapeScheduler::InitSelfMonitor(const MetricLabels& defaultLabels) {
     MetricLabels labels = defaultLabels;
     labels.emplace_back(METRIC_LABEL_KEY_INSTANCE, mInstance);
 
-    static const std::unordered_map<std::string, MetricType> sScrapeMetricKeys = {
-        {METRIC_PLUGIN_OUT_EVENTS_TOTAL, MetricType::METRIC_TYPE_COUNTER},
-        {METRIC_PLUGIN_OUT_SIZE_BYTES, MetricType::METRIC_TYPE_COUNTER},
-        {METRIC_PLUGIN_PROM_SCRAPE_TIME_MS, MetricType::METRIC_TYPE_COUNTER},
-    };
+    static const std::unordered_map<std::string, MetricType> sScrapeMetricKeys
+        = {{METRIC_PLUGIN_OUT_EVENTS_TOTAL, MetricType::METRIC_TYPE_COUNTER},
+           {METRIC_PLUGIN_OUT_SIZE_BYTES, MetricType::METRIC_TYPE_COUNTER},
+           {METRIC_PLUGIN_PROM_SCRAPE_TIME_MS, MetricType::METRIC_TYPE_COUNTER},
+           {METRIC_PLUGIN_PROM_SCRAPE_STATE, MetricType::METRIC_TYPE_INT_GAUGE}};
 
     mSelfMonitor->InitMetricManager(sScrapeMetricKeys, labels);
 
-    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, MetricCategory::METRIC_CATEGORY_PLUGIN_SOURCE, std::move(labels));
+    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
+        mMetricsRecordRef, MetricCategory::METRIC_CATEGORY_PLUGIN_SOURCE, std::move(labels));
     mPromDelayTotal = mMetricsRecordRef.CreateCounter(METRIC_PLUGIN_PROM_SCRAPE_DELAY_TOTAL);
     mPluginTotalDelayMs = mMetricsRecordRef.CreateCounter(METRIC_PLUGIN_TOTAL_DELAY_MS);
 }

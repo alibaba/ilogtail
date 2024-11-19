@@ -106,6 +106,7 @@ extern const std::string METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS;
 extern const std::string METRIC_PLUGIN_PROM_SUBSCRIBE_TOTAL;
 extern const std::string METRIC_PLUGIN_PROM_SUBSCRIBE_TIME_MS;
 extern const std::string METRIC_PLUGIN_PROM_SCRAPE_TIME_MS;
+extern const std::string METRIC_PLUGIN_PROM_SCRAPE_STATE;
 extern const std::string METRIC_PLUGIN_PROM_SCRAPE_DELAY_TOTAL;
 
 /**********************************************************

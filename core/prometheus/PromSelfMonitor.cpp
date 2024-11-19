@@ -11,13 +11,18 @@ using namespace std;
 namespace logtail {
 
 void PromSelfMonitorUnsafe::InitMetricManager(const std::unordered_map<std::string, MetricType>& metricKeys,
-                                        const MetricLabels& labels) {
+                                              const MetricLabels& labels) {
     auto metricLabels = std::make_shared<MetricLabels>(labels);
-    mPluginMetricManagerPtr = std::make_shared<PluginMetricManager>(metricLabels, metricKeys, MetricCategory::METRIC_CATEGORY_PLUGIN_SOURCE);
+    mPluginMetricManagerPtr = std::make_shared<PluginMetricManager>(
+        metricLabels, metricKeys, MetricCategory::METRIC_CATEGORY_PLUGIN_SOURCE);
 }
 
 void PromSelfMonitorUnsafe::AddCounter(const std::string& metricName, uint64_t statusCode, uint64_t val) {
     auto& status = StatusToString(statusCode);
+    AddCounter(metricName, status, val);
+}
+
+void PromSelfMonitorUnsafe::AddCounter(const std::string& metricName, const string& status, uint64_t val) {
     if (!mMetricsCounterMap.count(metricName) || !mMetricsCounterMap[metricName].count(status)) {
         mMetricsCounterMap[metricName][status] = GetOrCreateReentrantMetricsRecordRef(status)->GetCounter(metricName);
     }

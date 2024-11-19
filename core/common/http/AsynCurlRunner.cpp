@@ -91,6 +91,7 @@ bool AsynCurlRunner::AddRequestToClient(unique_ptr<AsynHttpRequest>&& request) {
                                    AppConfig::GetInstance()->GetBindInterface());
     if (curl == nullptr) {
         LOG_ERROR(sLogger, ("failed to send request", "failed to init curl handler")("request address", request.get()));
+        request->mResponse.SetReason("failed to init curl handler");
         request->OnSendDone(request->mResponse);
         return false;
     }
@@ -103,6 +104,7 @@ bool AsynCurlRunner::AddRequestToClient(unique_ptr<AsynHttpRequest>&& request) {
         LOG_ERROR(sLogger,
                   ("failed to send request", "failed to add the easy curl handle to multi_handle")(
                       "errMsg", curl_multi_strerror(res))("request address", request.get()));
+        request->mResponse.SetReason("failed to add the easy curl handle to multi_handle");
         request->OnSendDone(request->mResponse);
         curl_easy_cleanup(curl);
         return false;
@@ -213,6 +215,7 @@ void AsynCurlRunner::HandleCompletedRequests(int& runningHandlers) {
                         ++runningHandlers;
                         requestReused = true;
                     } else {
+                        request->mResponse.SetReason(curl_easy_strerror(msg->data.result));
                         request->OnSendDone(request->mResponse);
                         LOG_DEBUG(
                             sLogger,
