@@ -94,7 +94,7 @@ bool LogFileProfiler::GetProfileData(LogGroup& logGroup, LogStoreStatistic* stat
         contentPtr->set_value(statistic->mHostLogPath);
     }
     contentPtr = logPtr->add_contents();
-    contentPtr->set_key("loongcollector_version");
+    contentPtr->set_key(GetVersionTag());
     contentPtr->set_value(ILOGTAIL_VERSION);
     contentPtr = logPtr->add_contents();
     contentPtr->set_key("source_ip");

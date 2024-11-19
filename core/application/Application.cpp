@@ -174,9 +174,9 @@ void Application::Init() {
     appInfoJson["UUID"] = Json::Value(Application::GetInstance()->GetUUID());
     appInfoJson["instance_id"] = Json::Value(Application::GetInstance()->GetInstanceId());
 #ifdef __ENTERPRISE__
-    appInfoJson["loongcollector_version"] = Json::Value(ILOGTAIL_VERSION);
+    appInfoJson[GetVersionTag()] = Json::Value(ILOGTAIL_VERSION);
 #else
-    appInfoJson["loongcollector_version"] = Json::Value(string(ILOGTAIL_VERSION) + " Community Edition");
+    appInfoJson[GetVersionTag()] = Json::Value(string(ILOGTAIL_VERSION) + " Community Edition");
     appInfoJson["git_hash"] = Json::Value(ILOGTAIL_GIT_HASH);
     appInfoJson["build_date"] = Json::Value(ILOGTAIL_BUILD_DATE);
 #endif
