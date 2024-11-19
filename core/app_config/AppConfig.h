@@ -54,7 +54,7 @@ std::string GetObserverEbpfHostPath();
 std::string GetSendBufferFileNamePrefix();
 std::string GetLegacyUserLocalConfigFilePath();
 std::string GetExactlyOnceCheckpoint();
-std::string GetPipelineConfigDir();
+std::string GetContinuousPipelineConfigDir();
 
 template <class T>
 class DoubleBuffer {

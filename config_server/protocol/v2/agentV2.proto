@@ -28,15 +28,6 @@ message ConfigInfo {
     map<string, bytes> extra = 5; // Optional extra info
 }
 
-// Define the Command information carried in the request
-message CommandInfo {
-    string type = 1;         // Command's type
-    string name = 2;         // Required, Command's unique identification
-    ConfigStatus status = 3; // Command's status
-    string message = 4;      // Optional error message
-    map<string, bytes> extra = 5; // Optional extra info
-}
-
 // Define Agent's basic attributes
 message AgentAttributes {
     bytes version = 1;                 // Agent's version
@@ -85,7 +76,7 @@ message HeartbeatRequest {
     int64 startup_time = 9;                     // Required, Agent's startup time
     repeated ConfigInfo pipeline_configs = 10;  // Information about the current PIPELINE_CONFIG held by the Agent
     repeated ConfigInfo instance_configs = 11;  // Information about the current AGENT_CONFIG held by the Agent
-    repeated CommandInfo custom_commands = 12;  // Information about command history
+    repeated ConfigInfo custom_commands = 12;  // Information about command history
     uint64 flags = 13;                          // Predefined command flag
     bytes opaque = 14;                          // Opaque data for extension
     // before 100 (inclusive) are reserved for future official fields
@@ -160,7 +151,7 @@ message FetchConfigRequest {
     bytes instance_id = 2;                     // Agent's unique identification
     repeated ConfigInfo pipeline_configs = 3;  // Information about the current PIPELINE_CONFIG held by the Agent
     repeated ConfigInfo instance_configs = 4;  // Information about the current AGENT_CONFIG held by the Agent
-    repeated CommandInfo custom_commands = 5;  // Information about command history
+    repeated ConfigInfo custom_commands = 5;  // Information about command history
 }
 
 // ConfigServer response to Agent's config fetching request
@@ -180,7 +171,7 @@ message ReportStatusRequest {
     bytes instance_id = 2;                     // Agent's unique identification
     repeated ConfigInfo pipeline_configs = 3;  // status about the current PIPELINE_CONFIG held by the Agent
     repeated ConfigInfo instance_configs = 4;  // status about the current AGENT_CONFIG held by the Agent
-    repeated CommandInfo custom_commands = 5;  // status about command history
+    repeated ConfigInfo custom_commands = 5;  // status about command history
 }
 
 // ConfigServer response to Agent's report status request

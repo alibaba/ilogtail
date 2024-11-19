@@ -211,7 +211,7 @@ void Application::Start() { // GCOVR_EXCL_START
     {
         // add local config dir
         filesystem::path localConfigPath
-            = filesystem::path(AppConfig::GetInstance()->GetLoongcollectorConfDir()) / GetPipelineConfigDir() / "local";
+            = filesystem::path(AppConfig::GetInstance()->GetLoongcollectorConfDir()) / GetContinuousPipelineConfigDir() / "local";
         error_code ec;
         filesystem::create_directories(localConfigPath, ec);
         if (ec) {

@@ -80,7 +80,7 @@ public:
             MockCommonConfigProvider provider;
             provider.Init("common_v2");
             provider.Stop();
-            bfs::remove_all(provider.mPipelineSourceDir.string());
+            bfs::remove_all(provider.mContinuousPipelineConfigDir.string());
             bfs::remove_all(provider.mInstanceSourceDir.string());
         } else {
             CreateAgentDir();
@@ -91,7 +91,7 @@ public:
             MockCommonConfigProvider provider;
             provider.Init("common_v2");
             provider.Stop();
-            bfs::remove_all(provider.mPipelineSourceDir.string());
+            bfs::remove_all(provider.mContinuousPipelineConfigDir.string());
             bfs::remove_all(provider.mInstanceSourceDir.string());
         }
     }
@@ -101,7 +101,7 @@ public:
         MockCommonConfigProvider provider;
         provider.Init("common_v2");
         provider.Stop();
-        bfs::remove_all(provider.mPipelineSourceDir.string());
+        bfs::remove_all(provider.mContinuousPipelineConfigDir.string());
         bfs::remove_all(provider.mInstanceSourceDir.string());
     }
 

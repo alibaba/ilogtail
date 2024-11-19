@@ -133,7 +133,7 @@ void CommonConfigProvider::LoadConfigFile() {
     error_code ec;
     lock_guard<mutex> pipelineInfomaplock(mPipelineInfoMapMux);
     lock_guard<mutex> lockPipeline(mPipelineMux);
-    for (auto const& entry : filesystem::directory_iterator(mPipelineSourceDir, ec)) {
+    for (auto const& entry : filesystem::directory_iterator(mContinuousPipelineConfigDir, ec)) {
         Json::Value detail;
         if (LoadConfigDetailFromFile(entry, detail)) {
             ConfigInfo info;
@@ -422,7 +422,7 @@ bool CommonConfigProvider::DumpConfigFile(const configserver::proto::v2::ConfigD
 void CommonConfigProvider::UpdateRemotePipelineConfig(
     const google::protobuf::RepeatedPtrField<configserver::proto::v2::ConfigDetail>& configs) {
     error_code ec;
-    const std::filesystem::path& sourceDir = mPipelineSourceDir;
+    const std::filesystem::path& sourceDir = mContinuousPipelineConfigDir;
     filesystem::create_directories(sourceDir, ec);
     if (ec) {
         StopUsingConfigServer();
