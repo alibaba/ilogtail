@@ -38,7 +38,7 @@ void ConfigProvider::Init(const string& dir) {
 
     error_code ec;
     filesystem::create_directories(mContinuousPipelineConfigDir, ec);
-    ConfigWatcher::GetInstance()->AddSource(mContinuousPipelineConfigDir, &mPipelineMux);
+    ConfigWatcher::GetInstance()->AddSource(mContinuousPipelineConfigDir, &mContinuousPipelineMux);
 
     ec.clear();
     filesystem::create_directories(mInstanceSourceDir, ec);

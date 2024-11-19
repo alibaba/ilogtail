@@ -132,7 +132,7 @@ void CommonConfigProvider::Stop() {
 void CommonConfigProvider::LoadConfigFile() {
     error_code ec;
     lock_guard<mutex> pipelineInfomaplock(mPipelineInfoMapMux);
-    lock_guard<mutex> lockPipeline(mPipelineMux);
+    lock_guard<mutex> lockPipeline(mContinuousPipelineMux);
     for (auto const& entry : filesystem::directory_iterator(mContinuousPipelineConfigDir, ec)) {
         Json::Value detail;
         if (LoadConfigDetailFromFile(entry, detail)) {
@@ -432,7 +432,7 @@ void CommonConfigProvider::UpdateRemotePipelineConfig(
         return;
     }
 
-    lock_guard<mutex> lock(mPipelineMux);
+    lock_guard<mutex> lock(mContinuousPipelineMux);
     lock_guard<mutex> infomaplock(mPipelineInfoMapMux);
     for (const auto& config : configs) {
         filesystem::path filePath = sourceDir / (config.name() + ".json");
