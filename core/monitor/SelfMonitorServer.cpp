@@ -17,6 +17,7 @@
 #include "SelfMonitorServer.h"
 
 #include "MetricExportor.h"
+#include "PipelineManager.h"
 #include "common/LogtailCommonFlags.h"
 #include "runner/ProcessorRunner.h"
 
@@ -73,8 +74,14 @@ void SelfMonitorServer::Stop() {
 
 void SelfMonitorServer::UpdateMetricPipeline(PipelineContext* ctx, SelfMonitorMetricRules& rules) {
     lock_guard<mutex> lock(mMetricPipelineMux);
-    mMetricPipelineCtx = ctx;
-    mMetricRules = &rules;
+    mMetricPipelines[ctx->GetConfigName()] = &rules;
+}
+
+void SelfMonitorServer::RemoveMetricPipeline(PipelineContext* ctx) {
+    lock_guard<mutex> lock(mMetricPipelineMux);
+    if (ctx->GetConfigName() != INNER_METRIC_PIPELINE_NAME) {
+        mMetricPipelines.erase(ctx->GetConfigName());
+    }
 }
 
 void SelfMonitorServer::UpdateAlarmPipeline(PipelineContext* ctx) {
@@ -84,23 +91,27 @@ void SelfMonitorServer::UpdateAlarmPipeline(PipelineContext* ctx) {
 
 void SelfMonitorServer::SendMetrics() {
     LOG_INFO(sLogger, ("self-monitor send self-monitor metrics", "start"));
-    QueueKey processorQueueKey;
     ReadMetrics::GetInstance()->UpdateMetrics();
 
     map<string, PipelineEventGroup> pipelineEventGroupMap;
     // Todo: delete MetricExportor
     MetricExportor::GetInstance()->PushMetrics();
-    if (mMetricPipelineCtx != nullptr) {
-        ReadMetrics::GetInstance()->ReadAsPipelineEventGroup(pipelineEventGroupMap);
-        {
-            lock_guard<mutex> lock(mMetricPipelineMux);
-            processorQueueKey = mMetricPipelineCtx->GetProcessQueueKey();
+    ReadMetrics::GetInstance()->ReadAsPipelineEventGroup(pipelineEventGroupMap);
+
+    lock_guard<mutex> lock(mMetricPipelineMux);
+    for (auto pipelineInfo = mMetricPipelines.begin(); pipelineInfo != mMetricPipelines.end(); pipelineInfo++) {
+        LOG_INFO(sLogger, ("self-monitor send self-monitor metrics", "prepare")("pipeline", pipelineInfo->first));
+        shared_ptr<Pipeline> pipeline = PipelineManager::GetInstance()->FindConfigByName(pipelineInfo->first);
+        if (pipeline != nullptr) {
+            LOG_INFO(sLogger, ("self-monitor send self-monitor metrics", "prepare")("pipeline get success", pipeline->GetContext().GetConfigName()));
+            for (auto it = pipelineEventGroupMap.begin(); it != pipelineEventGroupMap.end(); it++) {
+                LOG_INFO(sLogger, ("self-monitor send self-monitor metrics", "sending")("region", it->first)("pipeline", pipeline->GetContext().GetConfigName()));
+                ProcessorRunner::GetInstance()->PushQueue(
+                    pipeline->GetContext().GetProcessQueueKey(), 0, it->second.Copy());
+            }
         }
-        for (auto it = pipelineEventGroupMap.begin(); it != pipelineEventGroupMap.end(); it++) {
-            ProcessorRunner::GetInstance()->PushQueue(processorQueueKey, 0, std::move(it->second));
-        }
-        LOG_INFO(sLogger, ("self-monitor send self-monitor metrics", "success"));
     }
+    LOG_INFO(sLogger, ("self-monitor send self-monitor metrics", "success"));
 }
 
 void SelfMonitorServer::SendAlarms() {

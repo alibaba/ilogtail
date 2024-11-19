@@ -16,6 +16,7 @@
 
 #include <atomic>
 #include <string>
+#include <map>
 
 #include "Pipeline.h"
 
@@ -50,6 +51,7 @@ public:
     void Stop();
 
     void UpdateMetricPipeline(PipelineContext* ctx, SelfMonitorMetricRules& rules);
+    void RemoveMetricPipeline(PipelineContext* ctx);
     void UpdateAlarmPipeline(PipelineContext* ctx); // Todo
 private:
     SelfMonitorServer();
@@ -63,8 +65,7 @@ private:
     bool mIsThreadRunning = true;
     std::condition_variable mStopCV;
 
-    PipelineContext* mMetricPipelineCtx;
-    SelfMonitorMetricRules* mMetricRules;
+    std::unordered_map<std::string, SelfMonitorMetricRules*> mMetricPipelines;
     std::mutex mMetricPipelineMux;
     PipelineContext* mAlarmPipelineCtx;
     std::mutex mAlarmPipelineMux;

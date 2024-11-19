@@ -30,6 +30,8 @@ using namespace std;
 
 namespace logtail {
 
+const string METRIC_SLS_LOGSTORE_NAME = "shennong_log_profile";
+const string METRIC_TOPIC_TYPE = "loongcollector_metric";
 const string METRIC_EXPORT_TYPE_GO = "direct";
 const string METRIC_EXPORT_TYPE_CPP = "cpp_provided";
 
@@ -549,6 +551,9 @@ LogEvent* CreateLogEvent(map<string, PipelineEventGroup>& pipelineEventGroupMap,
         logPtr = iter->second.AddLogEvent();
     } else {
         PipelineEventGroup pipelineEventGroup(make_shared<SourceBuffer>());
+        pipelineEventGroup.SetTag("region", region);
+        pipelineEventGroup.SetTagNoCopy(LOG_RESERVED_KEY_SOURCE, LoongCollectorMonitor::mIpAddr);
+        pipelineEventGroup.SetTagNoCopy(LOG_RESERVED_KEY_TOPIC, METRIC_TOPIC_TYPE);
         logPtr = pipelineEventGroup.AddLogEvent();
         pipelineEventGroupMap.insert(pair<string, PipelineEventGroup>(region, move(pipelineEventGroup)));
     }
@@ -563,6 +568,9 @@ Log* CreateLogPtr(map<string, sls_logs::LogGroup*>& logGroupMap, const string& r
         logPtr = logGroup->add_logs();
     } else {
         sls_logs::LogGroup* logGroup = new sls_logs::LogGroup();
+        logGroup->set_category(METRIC_SLS_LOGSTORE_NAME);
+        logGroup->set_source(LoongCollectorMonitor::mIpAddr);
+        logGroup->set_topic(METRIC_TOPIC_TYPE);
         logPtr = logGroup->add_logs();
         logGroupMap.insert(pair<string, sls_logs::LogGroup*>(region, logGroup));
     }

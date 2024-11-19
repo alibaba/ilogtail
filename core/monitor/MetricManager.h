@@ -78,7 +78,9 @@ public:
         static ReadMetrics* ptr = new ReadMetrics();
         return ptr;
     }
+    // for SelfMonitorMetricPipeline
     void ReadAsPipelineEventGroup(std::map<std::string, PipelineEventGroup>& pipelineEventGroupMap) const;
+    // for MetricExportor, todo: delete
     void ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup*>& logGroupMap) const;
     void ReadAsFileBuffer(std::string& metricsContent) const;
     void UpdateMetrics();

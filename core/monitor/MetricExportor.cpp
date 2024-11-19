@@ -33,9 +33,6 @@ DECLARE_FLAG_STRING(metrics_report_method);
 
 namespace logtail {
 
-const string METRIC_SLS_LOGSTORE_NAME = "shennong_log_profile";
-const string METRIC_TOPIC_TYPE = "loongcollector_metric";
-
 MetricExportor::MetricExportor() {
 }
 
@@ -55,9 +52,6 @@ void MetricExportor::SendToSLS(std::map<std::string, sls_logs::LogGroup*>& logGr
     std::map<std::string, sls_logs::LogGroup*>::iterator iter;
     for (iter = logGroupMap.begin(); iter != logGroupMap.end(); iter++) {
         sls_logs::LogGroup* logGroup = iter->second;
-        logGroup->set_category(METRIC_SLS_LOGSTORE_NAME);
-        logGroup->set_source(LoongCollectorMonitor::mIpAddr);
-        logGroup->set_topic(METRIC_TOPIC_TYPE);
         GetProfileSender()->SendToProfileProject(iter->first, *logGroup);
         delete logGroup;
     }
