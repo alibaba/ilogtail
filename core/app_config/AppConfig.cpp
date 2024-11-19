@@ -516,6 +516,14 @@ string GetPluginLogName() {
     }
 }
 
+std::string GetVersionTag() {
+    if (BOOL_FLAG(logtail_mode)) {
+        return "logtail_version";
+    } else {
+        return "loongcollector_version";
+    }
+}
+
 AppConfig::AppConfig() {
     LOG_INFO(sLogger, ("AppConfig AppConfig", "success"));
     SetIlogtailConfigJson("");

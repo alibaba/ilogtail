@@ -40,6 +40,8 @@ type GlobalConfig struct {
 	LoongcollectorThirdPartyDir string
 	// Log name of loongcollector plugin.
 	LoongcollectorPluginLogName string
+	// Tag of loongcollector version.
+	LoongcollectorVersionTag string
 	// Network identification from loongcollector.
 	HostIP       string
 	Hostname     string
@@ -70,6 +72,7 @@ func newGlobalConfig() (cfg GlobalConfig) {
 		LoongcollectorConfDir:       "./conf/",
 		LoongcollectorLogDir:        "./log/",
 		LoongcollectorPluginLogName: "go_plugin.LOG",
+		LoongcollectorVersionTag:    "loongcollector_version",
 		LoongcollectorDataDir:       "./data/",
 		LoongcollectorDebugDir:      "./debug/",
 		LoongcollectorThirdPartyDir: "./thirdparty/",

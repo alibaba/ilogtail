@@ -58,6 +58,7 @@ std::string GetLegacyUserLocalConfigFilePath();
 std::string GetExactlyOnceCheckpoint();
 std::string GetPipelineConfigDir();
 std::string GetPluginLogName();
+std::string GetVersionTag();
 
 template <class T>
 class DoubleBuffer {
