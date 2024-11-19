@@ -158,7 +158,9 @@ bool SendHttpRequest(std::unique_ptr<HttpRequest>&& request, HttpResponse& respo
                                    headers,
                                    request->mTimeout,
                                    AppConfig::GetInstance()->IsHostIPReplacePolicyEnabled(),
-                                   AppConfig::GetInstance()->GetBindInterface());
+                                   AppConfig::GetInstance()->GetBindInterface(),
+                                   request->mFollowRedirects,
+                                   request->mTls);
     if (curl == NULL) {
         LOG_ERROR(sLogger,
                   ("failed to init curl handler", "failed to init curl client")("request address", request.get()));
