@@ -21,7 +21,7 @@
 #include "logger/Logger.h"
 #include "plugin/flusher/sls/SLSClientManager.h"
 #include "app_config/AppConfig.h"
-#include "monitor/LoongCollectorMonitor.h"
+#include "monitor/Monitor.h"
 
 namespace logtail {
 namespace sdk {
