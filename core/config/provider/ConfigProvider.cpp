@@ -32,6 +32,10 @@ void ConfigProvider::Init(const string& dir) {
     mInstanceSourceDir /= "instance_config";
     mInstanceSourceDir /= dir;
 
+    mOnetimePipelineConfigDir.assign(AppConfig::GetInstance()->GetLoongcollectorConfDir());
+    mOnetimePipelineConfigDir /= "onetime_pipeline_config";
+    mOnetimePipelineConfigDir /= dir;
+
     error_code ec;
     filesystem::create_directories(mContinuousPipelineConfigDir, ec);
     ConfigWatcher::GetInstance()->AddSource(mContinuousPipelineConfigDir, &mPipelineMux);
@@ -39,6 +43,10 @@ void ConfigProvider::Init(const string& dir) {
     ec.clear();
     filesystem::create_directories(mInstanceSourceDir, ec);
     InstanceConfigWatcher::GetInstance()->AddSource(mInstanceSourceDir, &mInstanceMux);
+
+    ec.clear();
+    filesystem::create_directories(mOnetimePipelineConfigDir, ec);
+    PipelineConfigWatcher::GetInstance()->AddSource(mOnetimePipelineConfigDir, &mOnetimePipelineMux);
 }
 
 } // namespace logtail
