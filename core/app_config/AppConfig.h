@@ -299,7 +299,7 @@ private:
 
 public:
     AppConfig();
-    ~AppConfig() {};
+    ~AppConfig(){};
 
     void LoadInstanceConfig(const std::map<std::string, std::shared_ptr<InstanceConfig>>&);
 

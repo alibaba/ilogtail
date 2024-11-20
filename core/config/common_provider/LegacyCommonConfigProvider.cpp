@@ -289,9 +289,11 @@ void LegacyCommonConfigProvider::UpdateRemoteConfig(
     filesystem::create_directories(mContinuousPipelineConfigDir, ec);
     if (ec) {
         StopUsingConfigServer();
-        LOG_ERROR(sLogger,
-                  ("failed to create dir for legacy common configs", "stop receiving config from legacy common config server")(
-                      "dir", mContinuousPipelineConfigDir.string())("error code", ec.value())("error msg", ec.message()));
+        LOG_ERROR(
+            sLogger,
+            ("failed to create dir for legacy common configs",
+             "stop receiving config from legacy common config server")("dir", mContinuousPipelineConfigDir.string())(
+                "error code", ec.value())("error msg", ec.message()));
         return;
     }
 

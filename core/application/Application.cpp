@@ -32,8 +32,8 @@
 #include "common/version.h"
 #include "config/ConfigDiff.h"
 #include "config/InstanceConfigManager.h"
-#include "config/watcher/PipelineConfigWatcher.h"
 #include "config/watcher/InstanceConfigWatcher.h"
+#include "config/watcher/PipelineConfigWatcher.h"
 #include "file_server/ConfigManager.h"
 #include "file_server/EventDispatcher.h"
 #include "file_server/FileServer.h"
@@ -210,8 +210,8 @@ void Application::Start() { // GCOVR_EXCL_START
 
     {
         // add local config dir
-        filesystem::path localConfigPath
-            = filesystem::path(AppConfig::GetInstance()->GetLoongcollectorConfDir()) / GetContinuousPipelineConfigDir() / "local";
+        filesystem::path localConfigPath = filesystem::path(AppConfig::GetInstance()->GetLoongcollectorConfDir())
+            / GetContinuousPipelineConfigDir() / "local";
         error_code ec;
         filesystem::create_directories(localConfigPath, ec);
         if (ec) {
