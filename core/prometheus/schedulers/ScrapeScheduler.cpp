@@ -260,7 +260,7 @@ void ScrapeScheduler::InitSelfMonitor(const MetricLabels& defaultLabels) {
         = {{METRIC_PLUGIN_OUT_EVENTS_TOTAL, MetricType::METRIC_TYPE_COUNTER},
            {METRIC_PLUGIN_OUT_SIZE_BYTES, MetricType::METRIC_TYPE_COUNTER},
            {METRIC_PLUGIN_PROM_SCRAPE_TIME_MS, MetricType::METRIC_TYPE_COUNTER},
-           {METRIC_PLUGIN_PROM_SCRAPE_STATE, MetricType::METRIC_TYPE_INT_GAUGE}};
+           {METRIC_PLUGIN_PROM_SCRAPE_STATE, MetricType::METRIC_TYPE_COUNTER}};
 
     mSelfMonitor->InitMetricManager(sScrapeMetricKeys, labels);
 

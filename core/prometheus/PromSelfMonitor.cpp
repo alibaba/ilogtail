@@ -50,7 +50,7 @@ std::string PromSelfMonitorUnsafe::StatusToString(uint64_t status) {
     if (status < 100) {
         // status represents curl error code when it is less than 100, and curl error code is always less than 100
         return CurlCodeToString(status);
-    } else if (status < 500) {
+    } else if (status < 600) {
         return ToString(status);
     } else {
         return sHttpOther;
