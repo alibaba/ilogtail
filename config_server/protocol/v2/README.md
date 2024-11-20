@@ -74,7 +74,7 @@
         // The Agent can accept onetime pipeline configuration from the Server.
         AcceptsOnetimePipelineConfig = 0x00000004;
 
-        // Add new capabilities here, continuing with the least significant unused bit.
+        // bits before 2^16 (inclusive) are reserved for future official fields
     }
 
     enum RequestFlags {
