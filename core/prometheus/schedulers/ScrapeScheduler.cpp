@@ -103,6 +103,9 @@ void ScrapeScheduler::OnMetricResult(HttpResponse& response, uint64_t timestampM
         mSelfMonitor->AddCounter(METRIC_PLUGIN_PROM_SCRAPE_STATE, response.GetCurlCode());
     } else if (response.GetStatusCode() != 200) {
         mSelfMonitor->AddCounter(METRIC_PLUGIN_PROM_SCRAPE_STATE, response.GetStatusCode());
+    } else {
+        // 0 means success
+        mSelfMonitor->AddCounter(METRIC_PLUGIN_PROM_SCRAPE_STATE, 0);
     }
 
     mScrapeTimestampMilliSec = timestampMilliSec;

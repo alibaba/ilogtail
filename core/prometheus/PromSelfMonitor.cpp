@@ -58,7 +58,8 @@ std::string PromSelfMonitorUnsafe::StatusToString(uint64_t status) {
 }
 
 std::string PromSelfMonitorUnsafe::CurlCodeToString(uint64_t code) {
-    static map<uint64_t, string> sCurlCodeMap = {{7, "ERR_CONN_REFUSED"},
+    static map<uint64_t, string> sCurlCodeMap = {{0, "OK"},
+                                                 {7, "ERR_CONN_REFUSED"},
                                                  {9, "ERR_ACCESS_DENIED"},
                                                  {28, "ERR_TIMEOUT"},
                                                  {35, "ERR_SSL_CONN_ERR"},
