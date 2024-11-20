@@ -48,6 +48,7 @@
 #include "pipeline/queue/SenderQueueManager.h"
 #include "plugin/flusher/sls/DiskBufferWriter.h"
 #include "plugin/input/InputFeedbackInterfaceRegistry.h"
+#include "prometheus/PrometheusInputRunner.h"
 #include "runner/FlusherRunner.h"
 #include "runner/ProcessorRunner.h"
 #include "runner/sink/http/HttpSink.h"
@@ -174,9 +175,10 @@ void Application::Init() {
     appInfoJson["UUID"] = Json::Value(Application::GetInstance()->GetUUID());
     appInfoJson["instance_id"] = Json::Value(Application::GetInstance()->GetInstanceId());
 #ifdef __ENTERPRISE__
-    appInfoJson["loongcollector_version"] = Json::Value(ILOGTAIL_VERSION);
+    appInfoJson["host_id"] = Json::Value(FetchHostId());
+    appInfoJson[GetVersionTag()] = Json::Value(ILOGTAIL_VERSION);
 #else
-    appInfoJson["loongcollector_version"] = Json::Value(string(ILOGTAIL_VERSION) + " Community Edition");
+    appInfoJson[GetVersionTag()] = Json::Value(string(ILOGTAIL_VERSION) + " Community Edition");
     appInfoJson["git_hash"] = Json::Value(ILOGTAIL_GIT_HASH);
     appInfoJson["build_date"] = Json::Value(ILOGTAIL_BUILD_DATE);
 #endif
@@ -326,6 +328,7 @@ void Application::Start() { // GCOVR_EXCL_START
 
         // destruct event handlers here so that it will not block file reading task
         ConfigManager::GetInstance()->DeleteHandlers();
+        PrometheusInputRunner::GetInstance()->CheckGC();
 
         this_thread::sleep_for(chrono::seconds(1));
     }
