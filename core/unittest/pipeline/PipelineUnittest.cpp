@@ -2314,7 +2314,7 @@ void PipelineUnittest::TestMultiFlusherAndRouter() const {
             "flushers": [
                 {
                     "Type": "flusher_sls",
-                    "TelemetryType": "arms",
+                    "TelemetryType": "arms_traces",
                     "Project": "test_project",
                     "Region": "test_region",
                     "Endpoint": "test_endpoint",
@@ -2326,7 +2326,7 @@ void PipelineUnittest::TestMultiFlusherAndRouter() const {
                 },
                 {
                     "Type": "flusher_sls",
-                    "TelemetryType": "arms",
+                    "TelemetryType": "arms_metrics",
                     "Project": "test_project",
                     "Region": "test_region",
                     "Endpoint": "test_endpoint",
@@ -2338,7 +2338,7 @@ void PipelineUnittest::TestMultiFlusherAndRouter() const {
                 },
                 {
                     "Type": "flusher_sls",
-                    "TelemetryType": "arms",
+                    "TelemetryType": "arms_agentinfo",
                     "Project": "test_project",
                     "Region": "test_region",
                     "Endpoint": "test_endpoint",
