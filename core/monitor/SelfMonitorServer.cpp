@@ -16,7 +16,7 @@
 
 #include "SelfMonitorServer.h"
 
-#include "MetricExportor.h"
+#include "Monitor.h"
 #include "PipelineManager.h"
 #include "common/LogtailCommonFlags.h"
 #include "runner/ProcessorRunner.h"
@@ -91,8 +91,6 @@ void SelfMonitorServer::RemoveMetricPipeline(PipelineContext* ctx) {
 void SelfMonitorServer::SendMetrics() {
     LOG_INFO(sLogger, ("self-monitor send self-monitor metrics", "start"));
     ReadMetrics::GetInstance()->UpdateMetrics();
-    // Todo: delete MetricExportor
-    MetricExportor::GetInstance()->PushMetrics();
     // new pipeline
     vector<SelfMonitorMetricEvent> metricEventList;
     ReadMetrics::GetInstance()->ReadAsMetricEvents(metricEventList);
@@ -108,8 +106,10 @@ void SelfMonitorServer::SendMetrics() {
             for (auto pipelineEventGroup = configPipelineGroup->second.begin();
                  pipelineEventGroup != configPipelineGroup->second.end();
                  pipelineEventGroup++) {
-                ProcessorRunner::GetInstance()->PushQueue(
-                    pipeline->GetContext().GetProcessQueueKey(), 0, std::move(pipelineEventGroup->second));
+                if (pipelineEventGroup->second.GetEvents().size() > 0) {
+                    ProcessorRunner::GetInstance()->PushQueue(
+                        pipeline->GetContext().GetProcessQueueKey(), 0, std::move(pipelineEventGroup->second));
+                }
             }
         }
     }
@@ -128,22 +128,52 @@ void SelfMonitorServer::PushMetricEventIntoMetricEventMap(std::vector<SelfMonito
                 SelfMonitorMetricEventMap& metricEventMap = mMetricEventMaps[pipelineName];
                 if (eventCopy.mCategory == MetricCategory::METRIC_CATEGORY_AGENT
                     || eventCopy.mCategory == MetricCategory::METRIC_CATEGORY_RUNNER) {
+                    if (!rules->mAgentMetricsRule.mEnable) {
+                        if (metricEventMap.find(eventCopy.mKey) != metricEventMap.end()) {
+                            metricEventMap.erase(eventCopy.mKey);
+                        }
+                        continue;
+                    };
                     eventCopy.SetTarget(rules->mAgentMetricsRule.mTarget);
                     eventCopy.SetInterval(rules->mAgentMetricsRule.mInterval);
                 }
                 if (eventCopy.mCategory == MetricCategory::METRIC_CATEGORY_COMPONENT) {
+                    if (!rules->mComponentMetricsRule.mEnable) {
+                        if (metricEventMap.find(eventCopy.mKey) != metricEventMap.end()) {
+                            metricEventMap.erase(eventCopy.mKey);
+                        }
+                        continue;
+                    };
                     eventCopy.SetTarget(rules->mComponentMetricsRule.mTarget);
                     eventCopy.SetInterval(rules->mComponentMetricsRule.mInterval);
                 }
                 if (eventCopy.mCategory == MetricCategory::METRIC_CATEGORY_PIPELINE) {
+                    if (!rules->mPipelineMetricsRule.mEnable) {
+                        if (metricEventMap.find(eventCopy.mKey) != metricEventMap.end()) {
+                            metricEventMap.erase(eventCopy.mKey);
+                        }
+                        continue;
+                    };
                     eventCopy.SetTarget(rules->mPipelineMetricsRule.mTarget);
                     eventCopy.SetInterval(rules->mPipelineMetricsRule.mInterval);
                 }
                 if (eventCopy.mCategory == MetricCategory::METRIC_CATEGORY_PLUGIN) {
+                    if (!rules->mPluginMetricsRule.mEnable) {
+                        if (metricEventMap.find(eventCopy.mKey) != metricEventMap.end()) {
+                            metricEventMap.erase(eventCopy.mKey);
+                        }
+                        continue;
+                    };
                     eventCopy.SetTarget(rules->mPluginMetricsRule.mTarget);
                     eventCopy.SetInterval(rules->mPluginMetricsRule.mInterval);
                 }
                 if (eventCopy.mCategory == MetricCategory::METRIC_CATEGORY_PLUGIN_SOURCE) {
+                    if (!rules->mFileCollectMetricsRule.mEnable) {
+                        if (metricEventMap.find(eventCopy.mKey) != metricEventMap.end()) {
+                            metricEventMap.erase(eventCopy.mKey);
+                        }
+                        continue;
+                    };
                     eventCopy.SetTarget(rules->mFileCollectMetricsRule.mTarget);
                     eventCopy.SetInterval(rules->mFileCollectMetricsRule.mInterval);
                 }

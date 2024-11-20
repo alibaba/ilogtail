@@ -40,7 +40,6 @@
 #include "file_server/event_handler/LogInput.h"
 #include "go_pipeline/LogtailPlugin.h"
 #include "logger/Logger.h"
-#include "monitor/MetricExportor.h"
 #include "monitor/Monitor.h"
 #include "pipeline/PipelineManager.h"
 #include "pipeline/plugin/PluginRegistry.h"

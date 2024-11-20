@@ -33,6 +33,7 @@ extern const std::string METRIC_TOPIC_TYPE;
 
 struct SelfMonitorMetricRule {
     enum class SelfMonitorMetricRuleTarget { LOCAL_FILE, SLS_STATUS, SLS_SHENNONG };
+    bool mEnable;
     SelfMonitorMetricRuleTarget mTarget;
     size_t mInterval;
 };
@@ -128,11 +129,8 @@ public:
         static ReadMetrics* ptr = new ReadMetrics();
         return ptr;
     }
-    // for SelfMonitorMetricPipeline
+
     void ReadAsMetricEvents(std::vector<SelfMonitorMetricEvent>& metricEventList) const;
-    // for MetricExportor, todo: delete
-    void ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup*>& logGroupMap) const;
-    void ReadAsFileBuffer(std::string& metricsContent) const;
     void UpdateMetrics();
 
 #ifdef APSARA_UNIT_TEST_MAIN

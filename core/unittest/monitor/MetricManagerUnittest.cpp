@@ -19,7 +19,6 @@
 #include <atomic>
 #include <thread>
 #include "MetricManager.h"
-#include "MetricExportor.h"
 #include "MetricConstants.h"
 
 namespace logtail {

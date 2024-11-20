@@ -38,7 +38,6 @@
 #include "go_pipeline/LogtailPlugin.h"
 #include "logger/Logger.h"
 #include "monitor/AlarmManager.h"
-#include "monitor/MetricExportor.h"
 #include "monitor/SelfMonitorServer.h"
 #include "plugin/flusher/sls/FlusherSLS.h"
 #include "protobuf/sls/sls_logs.pb.h"
@@ -835,12 +834,16 @@ PipelineConfig LoongCollectorMonitor::CreateMetricPipelineConfig() {
     Json::Value flushers(Json::arrayValue);
     { // flusher_stdout
         Json::Value flusherStdout;
-        flusherStdout["Type"] = "flusher_stdout";
+        string errMsg;
+        string flusherStr = R"(
+            {
+                "Type": "flusher_stdout"
+            }
+        )";
+        ParseJsonTable(flusherStr, flusherStdout, errMsg);
         flushers.append(std::move(flusherStdout));
     }
     (*detail)["flushers"] = std::move(flushers);
-    LOG_INFO(sLogger,
-             ("gen LoongCollector self monitor metrics inner pipeline string success", detail->toStyledString()));
     PipelineConfig conf(pipelineName, std::move(detail));
     conf.Parse();
     return conf;

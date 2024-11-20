@@ -23,7 +23,7 @@ const std::string InputSelfMonitorMetric::sName = "input_self_monitor_metric";
 bool GetEnabled(Json::Value& rule) {
     if (rule.isMember("Enable") && rule["Enable"].isBool())
         return rule["Enable"].asBool();
-    return false;
+    return true;
 }
 
 SelfMonitorMetricRule::SelfMonitorMetricRuleTarget GetTarget(Json::Value& rule) {
@@ -47,10 +47,9 @@ int GetInterval(Json::Value& rule) {
 
 void ParseSelfMonitorMetricRule(std::string&& ruleKey, Json::Value& ruleJson, SelfMonitorMetricRule& rule) {
     if (ruleJson.isMember(ruleKey) && ruleJson[ruleKey].isObject()) {
-        if (GetEnabled(ruleJson[ruleKey])) {
-            rule.mTarget = GetTarget(ruleJson[ruleKey]);
-            rule.mInterval = GetInterval(ruleJson[ruleKey]);
-        }
+        rule.mEnable = GetEnabled(ruleJson[ruleKey]);
+        rule.mTarget = GetTarget(ruleJson[ruleKey]);
+        rule.mInterval = GetInterval(ruleJson[ruleKey]);
     }
 }
 
