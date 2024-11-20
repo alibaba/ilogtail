@@ -76,7 +76,7 @@ public:
 
 private:
     int32_t mStatusCode = 0; // 0 means no response from server
-    int32_t mCurlCode = 0;
+    int32_t mCurlCode = 0; // 0 means no error
     std::map<std::string, std::string, decltype(compareHeader)*> mHeader;
     std::unique_ptr<void, std::function<void(void*)>> mBody;
     size_t (*mWriteCallback)(char*, size_t, size_t, void*) = nullptr;
