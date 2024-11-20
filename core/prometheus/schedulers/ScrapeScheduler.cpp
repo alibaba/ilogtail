@@ -101,6 +101,8 @@ void ScrapeScheduler::OnMetricResult(HttpResponse& response, uint64_t timestampM
     if (response.GetCurlCode() != 0) {
         // not 0 means curl error
         mSelfMonitor->AddCounter(METRIC_PLUGIN_PROM_SCRAPE_STATE, response.GetCurlCode());
+    } else if (response.GetStatusCode() != 200) {
+        mSelfMonitor->AddCounter(METRIC_PLUGIN_PROM_SCRAPE_STATE, response.GetStatusCode());
     }
 
     mScrapeTimestampMilliSec = timestampMilliSec;

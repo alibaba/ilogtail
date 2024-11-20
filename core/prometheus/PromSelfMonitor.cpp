@@ -4,6 +4,7 @@
 #include <string>
 #include <unordered_map>
 
+#include "common/StringTools.h"
 #include "monitor/MetricTypes.h"
 #include "monitor/metric_constants/MetricConstants.h"
 using namespace std;
@@ -18,7 +19,7 @@ void PromSelfMonitorUnsafe::InitMetricManager(const std::unordered_map<std::stri
 }
 
 void PromSelfMonitorUnsafe::AddCounter(const std::string& metricName, uint64_t statusCode, uint64_t val) {
-    auto& status = StatusToString(statusCode);
+    auto status = StatusToString(statusCode);
     if (!mMetricsCounterMap.count(metricName) || !mMetricsCounterMap[metricName].count(status)) {
         mMetricsCounterMap[metricName][status] = GetOrCreateReentrantMetricsRecordRef(status)->GetCounter(metricName);
     }
@@ -26,7 +27,7 @@ void PromSelfMonitorUnsafe::AddCounter(const std::string& metricName, uint64_t s
 }
 
 void PromSelfMonitorUnsafe::SetIntGauge(const std::string& metricName, uint64_t statusCode, uint64_t value) {
-    auto& status = StatusToString(statusCode);
+    auto status = StatusToString(statusCode);
     if (!mMetricsIntGaugeMap.count(metricName) || !mMetricsIntGaugeMap[metricName].count(status)) {
         mMetricsIntGaugeMap[metricName][status] = GetOrCreateReentrantMetricsRecordRef(status)->GetIntGauge(metricName);
     }
@@ -44,48 +45,45 @@ ReentrantMetricsRecordRef PromSelfMonitorUnsafe::GetOrCreateReentrantMetricsReco
     return mPromStatusMap[status];
 }
 
-std::string& PromSelfMonitorUnsafe::StatusToString(uint64_t status) {
-    static string sHttp1XX = "1XX";
-    static string sHttp2XX = "2XX";
-    static string sHttp3XX = "3XX";
-    static string sHttp4XX = "4XX";
-    static string sHttp5XX = "5XX";
+std::string PromSelfMonitorUnsafe::StatusToString(uint64_t status) {
     static string sHttpOther = "other";
     if (status < 100) {
         // status represents curl error code when it is less than 100, and curl error code is always less than 100
         return CurlCodeToString(status);
-    } else if (status < 200) {
-        return sHttp1XX;
-    } else if (status < 300) {
-        return sHttp2XX;
-    } else if (status < 400) {
-        return sHttp3XX;
     } else if (status < 500) {
-        return sHttp4XX;
-    } else if (status < 500) {
-        return sHttp5XX;
+        return ToString(status);
     } else {
         return sHttpOther;
     }
 }
 
-std::string& PromSelfMonitorUnsafe::CurlCodeToString(uint64_t code) {
-    static map<uint64_t, string> sCurlCodeMap = {{7, "Couldn't connect to server"},
-                                                 {9, "Access denied to remote resource"},
-                                                 {28, "Timeout was reached"},
-                                                 {35, "SSL connect error"},
-                                                 {47, "Number of redirects hit maximum amount"},
-                                                 {51, "SSL peer certificate or SSH remote key was not OK"},
-                                                 {52, "Server returned nothing (no headers, no data)"},
-                                                 {55, "Failed sending data to the peer"},
-                                                 {56, "Failure when receiving data from the peer"}};
-    static string sCurlOther = "Curl unknown error";
+std::string PromSelfMonitorUnsafe::CurlCodeToString(uint64_t code) {
+    static map<uint64_t, string> sCurlCodeMap = {{7, "ERR_CONN_REFUSED"},
+                                                 {9, "ERR_ACCESS_DENIED"},
+                                                 {28, "ERR_TIMEOUT"},
+                                                 {35, "ERR_SSL_CONN_ERR"},
+                                                 {51, "ERR_SSL_CERT_ERR"},
+                                                 {52, "ERR_SERVER_RESPONSE_NONE"},
+                                                 {55, "ERR_SEND_DATA_FAILED"},
+                                                 {56, "ERR_RECV_DATA_FAILED"}};
+    static string sCurlOther = "ERR_UNKNOWN";
     if (sCurlCodeMap.count(code)) {
         return sCurlCodeMap[code];
     }
     return sCurlOther;
 }
 
+// inused curl error code:
+// 7 Couldn't connect to server
+// 9 Access denied to remote resource
+// 28 Timeout was reached
+// 35 SSL connect error
+// 51 SSL peer certificate or SSH remote key was not OK
+// 52 Server returned nothing (no headers, no data)
+// 55 Failed sending data to the peer
+// 56 Failure when receiving data from the peer
+
+// unused
 // 0 No error
 // 1 Unsupported protocol
 // 2 Failed initialization
@@ -129,6 +127,7 @@ std::string& PromSelfMonitorUnsafe::CurlCodeToString(uint64_t code) {
 // 44 Unknown error
 // 45 Failed binding local connection end
 // 46 Unknown error
+// 47 Number of redirects hit maximum amount
 // 48 An unknown option was passed in to libcurl
 // 49 Malformed telnet option
 // 50 Unknown error

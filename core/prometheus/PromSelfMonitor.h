@@ -22,8 +22,8 @@ public:
 
 private:
     ReentrantMetricsRecordRef GetOrCreateReentrantMetricsRecordRef(const std::string& status);
-    std::string& StatusToString(uint64_t status);
-    std::string& CurlCodeToString(uint64_t code);
+    std::string StatusToString(uint64_t status);
+    std::string CurlCodeToString(uint64_t code);
 
     PluginMetricManagerPtr mPluginMetricManagerPtr;
     std::map<std::string, ReentrantMetricsRecordRef> mPromStatusMap;
