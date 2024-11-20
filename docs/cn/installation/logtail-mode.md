@@ -38,7 +38,7 @@
                        │      │                           └── collect_file.json
                        │      └── instance_config/
                        │                        ├── local/
-                       │                        │         ├── loongcollector_config.json（main configuration）
+                       │                        │         ├── loongcollector_config.json（loongcollector配置）
                        │                        │         └── ebpf.json
                        │                        └── remote/
                        │                                  ├── region.json
@@ -65,7 +65,7 @@
 
 ## 兼容模式配置说明
 
-为确保现有 Logtail 用户能够平滑升级到 LoongCollector，我们提供了完整的兼容模式支持：
+为确保现有 Logtail 用户能够平滑升级到 LoongCollector，我们提供了完整的兼容模式支持，在兼容模式下，LoongCollector会按照旧的目录结构进行启动：
 
 ### 主机环境配置
 
