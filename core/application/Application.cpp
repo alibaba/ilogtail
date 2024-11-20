@@ -51,7 +51,6 @@
 #include "runner/FlusherRunner.h"
 #include "runner/ProcessorRunner.h"
 #include "runner/sink/http/HttpSink.h"
-#include "sls_control/SLSControl.h"
 #include "task_pipeline/TaskPipelineManager.h"
 #ifdef __ENTERPRISE__
 #include "config/provider/EnterpriseConfigProvider.h"
@@ -177,7 +176,6 @@ void Application::Init() {
 #ifdef __ENTERPRISE__
     appInfoJson["host_id"] = Json::Value(FetchHostId());
     appInfoJson[GetVersionTag()] = Json::Value(ILOGTAIL_VERSION);
-    appInfoJson["running_environment"] = Json::Value(SLSControl::GetInstance()->GetRunningEnvironment());
 #else
     appInfoJson[GetVersionTag()] = Json::Value(string(ILOGTAIL_VERSION) + " Community Edition");
     appInfoJson["git_hash"] = Json::Value(ILOGTAIL_GIT_HASH);

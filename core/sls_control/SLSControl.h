@@ -31,6 +31,7 @@ protected:
     virtual ~SLSControl() = default;
 
     virtual void GenerateUserAgent();
+    virtual std::string GetRunningEnvironment();
     bool TryCurlEndpoint(const std::string& endpoint);
 
 public:
@@ -43,7 +44,6 @@ public:
     virtual void SetSlsSendClientCommonParam(sdk::Client* sendClient);
     virtual bool
     SetSlsSendClientAuth(const std::string aliuid, const bool init, sdk::Client* sendClient, int32_t& lastUpdateTime);
-    virtual std::string GetRunningEnvironment();
 };
 
 } // namespace logtail
