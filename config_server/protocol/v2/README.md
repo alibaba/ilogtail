@@ -91,7 +91,7 @@
 
     message HeartbeatResponse {
         bytes request_id = 1;
-        CommonResponse commonResponse = 2; // Set common response
+        CommonResponse common_response = 2; // Set common response
         uint64 capabilities = 3;           // Bitmask of flags defined by ServerCapabilities enum
 
         repeated ConfigDetail continuous_pipeline_config_updates = 4; // Agent's continuous pipeline config update status
@@ -169,7 +169,7 @@
 
     message FetchConfigResponse {
         bytes request_id = 1;
-        CommonResponse commonResponse = 2;
+        CommonResponse common_response = 2;
         repeated ConfigDetail continuous_pipeline_config_updates = 3; // Agent's continuous pipeline config with details
         repeated ConfigDetail instance_config_updates = 4;            // Agent's instance config with details
         repeated CommandDetail onetime_pipeline_config_updates = 5;   // Agent's onetime pipeline config details
@@ -191,7 +191,7 @@
 
     message ReportStatusResponse {
         bytes request_id = 1;
-        CommonResponse commonResponse = 2;
+        CommonResponse common_response = 2;
     }
 
 ## 行为规范
