@@ -315,7 +315,7 @@ void CommonConfigProviderUnittest::TestGetConfigUpdateAndConfigWatcher() {
                   configserver::proto::v2::HeartbeatResponse heartbeatRespPb;
                   heartbeatRespPb.set_capabilities(configserver::proto::v2::ResponseFlags::ReportFullState);
                   {
-                      auto pipeline = heartbeatRespPb.mutable_pipeline_config_updates();
+                      auto pipeline = heartbeatRespPb.mutable_continuous_pipeline_config_updates();
                       auto configDetail = pipeline->Add();
                       configDetail->set_name("config1");
                       configDetail->set_version(1);
@@ -510,7 +510,8 @@ void CommonConfigProviderUnittest::TestGetConfigUpdateAndConfigWatcher() {
                   APSARA_TEST_EQUAL(heartbeatReq.sequence_num(), sequence_num);
                   sequence_num++;
                   APSARA_TEST_TRUE(heartbeatReq.capabilities() & configserver::proto::v2::AcceptsInstanceConfig);
-                  APSARA_TEST_TRUE(heartbeatReq.capabilities() & configserver::proto::v2::AcceptsPipelineConfig);
+                  APSARA_TEST_TRUE(heartbeatReq.capabilities()
+                                   & configserver::proto::v2::AcceptsContinuousPipelineConfig);
                   APSARA_TEST_EQUAL(heartbeatReq.instance_id(), provider.GetInstanceId());
                   APSARA_TEST_EQUAL(heartbeatReq.agent_type(), "LoongCollector");
                   APSARA_TEST_EQUAL(heartbeatReq.attributes().ip(), LoongCollectorMonitor::mIpAddr);
@@ -531,7 +532,7 @@ void CommonConfigProviderUnittest::TestGetConfigUpdateAndConfigWatcher() {
                   heartbeatRespPb.set_capabilities(configserver::proto::v2::ResponseFlags::ReportFullState);
                   // pipeline
                   {
-                      auto pipeline = heartbeatRespPb.mutable_pipeline_config_updates();
+                      auto pipeline = heartbeatRespPb.mutable_continuous_pipeline_config_updates();
                       auto configDetail = pipeline->Add();
                       configDetail->set_name("config1");
                       configDetail->set_version(-1);
