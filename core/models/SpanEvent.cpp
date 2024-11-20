@@ -15,6 +15,7 @@
  */
 
 #include "models/SpanEvent.h"
+#include "constants/TagConstants.h"
 
 using namespace std;
 
@@ -75,16 +76,15 @@ size_t SpanEvent::SpanLink::DataSize() const {
     return mTraceId.size() + mSpanId.size() + mTraceState.size() + mTags.DataSize();
 }
 
-#ifdef APSARA_UNIT_TEST_MAIN
 Json::Value SpanEvent::SpanLink::ToJson() const {
     Json::Value root;
-    root["traceId"] = mTraceId.to_string();
-    root["spanId"] = mSpanId.to_string();
+    root[DEFAULT_TRACE_TAG_TRACE_ID] = mTraceId.to_string();
+    root[DEFAULT_TRACE_TAG_SPAN_ID] = mSpanId.to_string();
     if (!mTraceState.empty()) {
-        root["traceState"] = mTraceState.to_string();
+        root[DEFAULT_TRACE_TAG_TRACE_STATE] = mTraceState.to_string();
     }
     if (!mTags.mInner.empty()) {
-        Json::Value& tags = root["tags"];
+        Json::Value& tags = root[DEFAULT_TRACE_TAG_ATTRIBUTES];
         for (const auto& tag : mTags.mInner) {
             tags[tag.first.to_string()] = tag.second.to_string();
         }
@@ -92,17 +92,32 @@ Json::Value SpanEvent::SpanLink::ToJson() const {
     return root;
 }
 
+std::string SpanEvent::SerializeLinksToString() const {
+    if (mLinks.empty()) {
+        return "";
+    }
+    Json::Value root;
+    Json::Value jsonLinks(Json::arrayValue);
+    for (auto& link : mLinks) {
+        jsonLinks.append(link.ToJson());
+    }
+    root[DEFAULT_TRACE_TAG_LINKS] = jsonLinks;
+    Json::StreamWriterBuilder writer;
+    return Json::writeString(writer, root);
+}
+
+#ifdef APSARA_UNIT_TEST_MAIN
 void SpanEvent::SpanLink::FromJson(const Json::Value& value) {
-    SetTraceId(value["traceId"].asString());
-    SetSpanId(value["spanId"].asString());
-    if (value.isMember("traceState")) {
-        string s = value["traceState"].asString();
+    SetTraceId(value[DEFAULT_TRACE_TAG_TRACE_ID].asString());
+    SetSpanId(value[DEFAULT_TRACE_TAG_SPAN_ID].asString());
+    if (value.isMember(DEFAULT_TRACE_TAG_TRACE_STATE)) {
+        string s = value[DEFAULT_TRACE_TAG_TRACE_STATE].asString();
         if (!s.empty()) {
             SetTraceState(s);
         }
     }
-    if (value.isMember("tags")) {
-        Json::Value tags = value["tags"];
+    if (value.isMember(DEFAULT_TRACE_TAG_ATTRIBUTES)) {
+        Json::Value tags = value[DEFAULT_TRACE_TAG_ATTRIBUTES];
         for (const auto& key : tags.getMemberNames()) {
             SetTag(key, tags[key].asString());
         }
@@ -155,13 +170,12 @@ size_t SpanEvent::InnerEvent::DataSize() const {
     return sizeof(decltype(mTimestampNs)) + mName.size() + mTags.DataSize();
 }
 
-#ifdef APSARA_UNIT_TEST_MAIN
 Json::Value SpanEvent::InnerEvent::ToJson() const {
     Json::Value root;
-    root["name"] = mName.to_string();
-    root["timestampNs"] = static_cast<int64_t>(mTimestampNs);
+    root[DEFAULT_TRACE_TAG_SPAN_EVENT_NAME] = mName.to_string();
+    root[DEFAULT_TRACE_TAG_TIMESTAMP] = static_cast<int64_t>(mTimestampNs);
     if (!mTags.mInner.empty()) {
-        Json::Value& tags = root["tags"];
+        Json::Value& tags = root[DEFAULT_TRACE_TAG_ATTRIBUTES];
         for (const auto& tag : mTags.mInner) {
             tags[tag.first.to_string()] = tag.second.to_string();
         }
@@ -169,11 +183,26 @@ Json::Value SpanEvent::InnerEvent::ToJson() const {
     return root;
 }
 
+std::string SpanEvent::SerializeEventsToString() const {
+    if (mEvents.empty()) {
+        return "";
+    }
+    Json::Value root;
+    Json::Value jsonLinks(Json::arrayValue);
+    for (auto& link : mEvents) {
+        jsonLinks.append(link.ToJson());
+    }
+    root[DEFAULT_TRACE_TAG_EVENTS] = jsonLinks;
+    Json::StreamWriterBuilder writer;
+    return Json::writeString(writer, root);
+}
+
+#ifdef APSARA_UNIT_TEST_MAIN
 void SpanEvent::InnerEvent::FromJson(const Json::Value& value) {
-    SetName(value["name"].asString());
-    SetTimestampNs(value["timestampNs"].asUInt64());
-    if (value.isMember("tags")) {
-        Json::Value tags = value["tags"];
+    SetName(value[DEFAULT_TRACE_TAG_SPAN_EVENT_NAME].asString());
+    SetTimestampNs(value[DEFAULT_TRACE_TAG_TIMESTAMP].asUInt64());
+    if (value.isMember(DEFAULT_TRACE_TAG_ATTRIBUTES)) {
+        Json::Value tags = value[DEFAULT_TRACE_TAG_ATTRIBUTES];
         for (const auto& key : tags.getMemberNames()) {
             SetTag(key, tags[key].asString());
         }
@@ -350,19 +379,19 @@ Json::Value SpanEvent::ToJson(bool enableEventMeta) const {
     root["startTimeNs"] = static_cast<int64_t>(mStartTimeNs);
     root["endTimeNs"] = static_cast<int64_t>(mEndTimeNs);
     if (!mTags.mInner.empty()) {
-        Json::Value& tags = root["tags"];
+        Json::Value& tags = root[DEFAULT_TRACE_TAG_ATTRIBUTES];
         for (const auto& tag : mTags.mInner) {
             tags[tag.first.to_string()] = tag.second.to_string();
         }
     }
     if (!mEvents.empty()) {
-        Json::Value& events = root["events"];
+        Json::Value& events = root[DEFAULT_TRACE_TAG_EVENTS];
         for (const auto& event : mEvents) {
             events.append(event.ToJson());
         }
     }
     if (!mLinks.empty()) {
-        Json::Value& links = root["links"];
+        Json::Value& links = root[DEFAULT_TRACE_TAG_LINKS];
         for (const auto& link : mLinks) {
             links.append(link.ToJson());
         }
@@ -405,21 +434,21 @@ bool SpanEvent::FromJson(const Json::Value& root) {
     }
     SetStartTimeNs(root["startTimeNs"].asUInt64());
     SetEndTimeNs(root["endTimeNs"].asUInt64());
-    if (root.isMember("tags")) {
-        Json::Value tags = root["tags"];
+    if (root.isMember(DEFAULT_TRACE_TAG_ATTRIBUTES)) {
+        Json::Value tags = root[DEFAULT_TRACE_TAG_ATTRIBUTES];
         for (const auto& key : tags.getMemberNames()) {
             SetTag(key, tags[key].asString());
         }
     }
-    if (root.isMember("events")) {
-        Json::Value events = root["events"];
+    if (root.isMember(DEFAULT_TRACE_TAG_EVENTS)) {
+        Json::Value events = root[DEFAULT_TRACE_TAG_EVENTS];
         for (const auto& event : events) {
             InnerEvent* e = AddEvent();
             e->FromJson(event);
         }
     }
-    if (root.isMember("links")) {
-        Json::Value links = root["links"];
+    if (root.isMember(DEFAULT_TRACE_TAG_LINKS)) {
+        Json::Value links = root[DEFAULT_TRACE_TAG_LINKS];
         for (const auto& link : links) {
             SpanLink* l = AddLink();
             l->FromJson(link);
