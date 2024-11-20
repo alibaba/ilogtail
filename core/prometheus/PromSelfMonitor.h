@@ -18,13 +18,12 @@ public:
 
     void AddCounter(const std::string& metricName, uint64_t status, uint64_t val = 1);
 
-    void AddCounter(const std::string& metricName, const std::string& status, uint64_t val = 1);
-
     void SetIntGauge(const std::string& metricName, uint64_t status, uint64_t value);
 
 private:
     ReentrantMetricsRecordRef GetOrCreateReentrantMetricsRecordRef(const std::string& status);
     std::string& StatusToString(uint64_t status);
+    std::string& CurlCodeToString(uint64_t code);
 
     PluginMetricManagerPtr mPluginMetricManagerPtr;
     std::map<std::string, ReentrantMetricsRecordRef> mPromStatusMap;

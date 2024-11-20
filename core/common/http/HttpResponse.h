@@ -71,12 +71,12 @@ public:
     }
 
     void SetStatusCode(int32_t code) { mStatusCode = code; }
-    void SetReason(const std::string& reason) { mReason = reason; }
-    std::string& GetReason() { return mReason; }
+    void SetCurlCode(int32_t code) { mCurlCode = code; }
+    int32_t GetCurlCode() { return mCurlCode; }
 
 private:
     int32_t mStatusCode = 0; // 0 means no response from server
-    std::string mReason;
+    int32_t mCurlCode = 0;
     std::map<std::string, std::string, decltype(compareHeader)*> mHeader;
     std::unique_ptr<void, std::function<void(void*)>> mBody;
     size_t (*mWriteCallback)(char*, size_t, size_t, void*) = nullptr;
