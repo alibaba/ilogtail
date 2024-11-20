@@ -383,10 +383,9 @@ void CommonConfigProviderUnittest::TestGetConfigUpdateAndConfigWatcher() {
                         )");
                   }
                   {
-                      auto commandconfig = heartbeatRespPb.mutable_custom_command_updates();
+                      auto commandconfig = heartbeatRespPb.mutable_onetime_pipeline_config_updates();
                       auto configDetail = commandconfig->Add();
                       configDetail->set_name("commandconfig1");
-                      configDetail->set_type("history");
                       configDetail->set_detail(R"(
                         {
                                 "enable": true,
@@ -602,10 +601,9 @@ void CommonConfigProviderUnittest::TestGetConfigUpdateAndConfigWatcher() {
                   }
                   // commandconfig
                   {
-                      auto commandconfig = heartbeatRespPb.mutable_custom_command_updates();
+                      auto commandconfig = heartbeatRespPb.mutable_onetime_pipeline_config_updates();
                       auto configDetail = commandconfig->Add();
                       configDetail->set_name("commandconfig1");
-                      configDetail->set_type("history");
                       configDetail->set_detail(R"(
                         {
                                 "enable": true,
