@@ -128,9 +128,13 @@ inotify日志：`/opt/loongcollector/run/inotify_watcher_dirs`
 LoongCollector 提供以下参数用于自定义各类目录位置：
 
 - `loongcollector_conf_dir`: 配置目录
-- `loongcollector_log_dir`: 日志目录  
+
+- `loongcollector_log_dir`: 日志目录
+
 - `loongcollector_data_dir`: 数据目录
+
 - `loongcollector_run_dir`: 运行时目录
+
 - `loongcollector_third_party_dir`: 第三方依赖目录
 
 ### 配置方式
@@ -168,17 +172,29 @@ export loongcollector_conf_dir=/custom/path/conf
 为简化配置体系，以下原 Logtail 配置项将不再默认支持：
 
 - sls_observer_ebpf_host_path
+
 - logtail_snapshot_dir
+
 - inotify_watcher_dirs_dump_filename
+
 - local_event_data_file_name
+
 - crash_stack_file_name
+
 - check_point_filename
+
 - adhoc_check_point_file_dir
+
 - app_info_file
+
 - ilogtail_config
+
 - ilogtail_config_env_name
+
 - logtail_sys_conf_dir
+
 - ALIYUN_LOGTAIL_SYS_CONF_DIR
+
 - ilogtail_docker_file_path_config
 
 ## 升级建议
@@ -187,8 +203,23 @@ export loongcollector_conf_dir=/custom/path/conf
 
 2. **新版迁移**: 如果选择使用新版目录结构:
    - 建议先备份原有配置和数据
+
    - 按新版目录结构迁移文件
+
    - 更新相关配置引用
+
    - 验证服务正常运行
 
-> **注意**: 迁移过程中请确保数据完整性,建议在非高峰期进行升级操作。
+为确保平稳迁移，我们建议您：
+
+1. 先在测试环境进行充分验证
+
+2. 选择业务低峰期进行升级
+
+3. 做好配置和数据的备份
+
+4. 逐步迁移，避免一次性升级所有实例
+
+5. 密切监控日志采集状态
+
+> **注意**: 迁移过程中请确保数据完整性,建议先在测试环境中进行测试，并非高峰期进行升级操作。
