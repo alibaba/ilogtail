@@ -1,6 +1,6 @@
 # LoongCollector 的 Logtail 兼容模式使用指南
 
-目录结构改造说明请参考 [LoongCollector 的 目录结构说明](../concepts/loongcollector-dir.md)
+目录结构改造说明请参考 [LoongCollector 的 目录结构说明](loongcollector-dir.md)
 
 ## 兼容模式配置说明
 

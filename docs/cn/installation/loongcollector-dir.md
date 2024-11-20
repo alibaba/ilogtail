@@ -183,7 +183,7 @@ export loongcollector_conf_dir=/custom/path/conf
 
 ## 升级建议
 
-1. **兼容模式**: 如需保持与 Logtail 的兼容性,请参考 [LoongCollector 的 Logtail 兼容模式使用指南](../installation/logtail-mode.md)
+1. **兼容模式**: 如需保持与 Logtail 的兼容性,请参考 [LoongCollector 的 Logtail 兼容模式使用指南](logtail-mode.md)
 
 2. **新版迁移**: 如果选择使用新版目录结构:
    - 建议先备份原有配置和数据
