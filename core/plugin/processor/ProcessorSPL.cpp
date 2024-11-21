@@ -120,13 +120,13 @@ void ProcessorSPL::Process(std::vector<PipelineEventGroup>& logGroupList) {
     std::vector<PipelineEventGroup>().swap(logGroupList);
 
     PipelineStats pipelineStats;
-    ExecuteResult result = mSPLPipelinePtr->Execute(std::move(logGroup), logGroupList, pipelineStats, mContext);
+    ResultCode result = mSPLPipelinePtr->Execute(std::move(logGroup), logGroupList, pipelineStats, mContext);
 
-    if (result != ExecuteResult::OK) {
+    if (result != ResultCode::OK) {
         mSplExcuteErrorCount->Add(1);
-        if (result == ExecuteResult::TIMEOUT_ERROR) {
+        if (result == ResultCode::TIMEOUT_ERROR) {
             mSplExcuteTimeoutErrorCount->Add(1);
-        } else if (result == ExecuteResult::MEM_EXCEED) {
+        } else if (result == ResultCode::MEM_EXCEEDED) {
             mSplExcuteMemoryExceedErrorCount->Add(1);
         }
     } else {
