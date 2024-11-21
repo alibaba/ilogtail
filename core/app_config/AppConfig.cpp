@@ -548,6 +548,14 @@ std::string GetPidFileName() {
     }
 }
 
+std::string GetAgentPrefix() {
+    if (BOOL_FLAG(logtail_mode)) {
+        return ILOGTAIL_PREFIX;
+    } else {
+        return LOONGCOLLECTOR_PREFIX;
+    }
+}
+
 AppConfig::AppConfig() {
     LOG_INFO(sLogger, ("AppConfig AppConfig", "success"));
     SetIlogtailConfigJson("");
