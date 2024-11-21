@@ -54,7 +54,7 @@ class HttpResponse {
                                    bool replaceHostWithIp,
                                    const std::string& intf,
                                    bool followRedirects,
-                                   CurlTLS* tls);
+                                   std::optional<CurlTLS> tls);
 
 public:
     HttpResponse()

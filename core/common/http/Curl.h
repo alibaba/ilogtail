@@ -42,7 +42,7 @@ CURL* CreateCurlHandler(const std::string& method,
                         bool replaceHostWithIp = true,
                         const std::string& intf = "",
                         bool followRedirects = false,
-                        CurlTLS* tls = nullptr);
+                        std::optional<CurlTLS> tls = std::nullopt);
 
 bool SendHttpRequest(std::unique_ptr<HttpRequest>&& request, HttpResponse& response);
 

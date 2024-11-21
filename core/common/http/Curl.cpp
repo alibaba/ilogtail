@@ -71,7 +71,7 @@ CURL* CreateCurlHandler(const std::string& method,
                         bool replaceHostWithIp,
                         const std::string& intf,
                         bool followRedirects,
-                        CurlTLS* tls) {
+                        std::optional<CurlTLS> tls) {
     static DnsCache* dnsCache = DnsCache::GetInstance();
 
     CURL* curl = curl_easy_init();
@@ -113,7 +113,7 @@ CURL* CreateCurlHandler(const std::string& method,
         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
     }
 
-    if (tls != nullptr) {
+    if (tls.has_value()) {
         if (!tls->mCaFile.empty()) {
             curl_easy_setopt(curl, CURLOPT_CAINFO, tls->mCaFile.c_str());
         }

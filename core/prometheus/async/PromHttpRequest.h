@@ -25,7 +25,7 @@ public:
                     std::shared_ptr<PromFuture<HttpResponse&, uint64_t>> future,
                     std::shared_ptr<PromFuture<>> isContextValidFuture = nullptr,
                     bool followRedirects = false,
-                    CurlTLS* tls = nullptr);
+                    std::optional<CurlTLS> tls = std::nullopt);
     PromHttpRequest(const PromHttpRequest&) = default;
     ~PromHttpRequest() override = default;
 
