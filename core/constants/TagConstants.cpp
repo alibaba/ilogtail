@@ -69,7 +69,6 @@ namespace logtail {
     const std::string DEFAULT_TRACE_TAG_PARENT_ID = "parentSpanId";
     const std::string DEFAULT_TRACE_TAG_SPAN_NAME = "spanName";
     const std::string DEFAULT_TRACE_TAG_SERVICE_NAME = "serviceName";
-    const std::string DEFAULT_TRACE_TAG_HOST_NAME = "hostName";
     const std::string DEFAULT_TRACE_TAG_START_TIME_NANO = "startTime";
     const std::string DEFAULT_TRACE_TAG_END_TIME_NANO = "endTime";
     const std::string DEFAULT_TRACE_TAG_DURATION = "duration";

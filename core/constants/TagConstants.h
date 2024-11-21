@@ -51,7 +51,6 @@ namespace logtail {
     extern const std::string DEFAULT_TRACE_TAG_PARENT_ID;
     extern const std::string DEFAULT_TRACE_TAG_SPAN_NAME;
     extern const std::string DEFAULT_TRACE_TAG_SERVICE_NAME;
-    extern const std::string DEFAULT_TRACE_TAG_HOST_NAME;
     extern const std::string DEFAULT_TRACE_TAG_START_TIME_NANO;
     extern const std::string DEFAULT_TRACE_TAG_END_TIME_NANO;
     extern const std::string DEFAULT_TRACE_TAG_DURATION;
