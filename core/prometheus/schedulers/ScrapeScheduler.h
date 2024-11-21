@@ -55,32 +55,22 @@ public:
     void Cancel() override;
     void InitSelfMonitor(const MetricLabels&);
 
-    PipelineEventGroup mEventGroup;
     std::string mCache;
     size_t mRawSize = 0;
 
     static size_t PromMetricWriteCallback(char* buffer, size_t size, size_t nmemb, void* data);
-
-    void AddEvent(char* line, size_t len) {
-        if (IsValidMetric(StringView(line, len))) {
-            auto* e = mEventGroup.AddRawEvent();
-            auto sb = mEventGroup.GetSourceBuffer()->CopyString(line, len);
-            e->SetContentNoCopy(sb);
-        }
-    }
-
-    void FlushCache() {
-        if (mCache.empty()) {
-            return;
-        }
-        AddEvent(mCache.data(), mCache.size());
+    PipelineEventGroup FlushCache() {
+        auto eventGroup = PipelineEventGroup(std::make_shared<SourceBuffer>());
+        auto e = eventGroup.CreateRawEvent();
+        e->SetContent(mCache);
         mCache.clear();
+        return eventGroup;
     }
 
 private:
-    void PushEventGroup(PipelineEventGroup&&);
-    void SetAutoMetricMeta(PipelineEventGroup& eGroup);
-    void SetTargetLabels(PipelineEventGroup& eGroup);
+    void PushEventGroup(PipelineEventGroup&&) const;
+    void SetAutoMetricMeta(PipelineEventGroup& eGroup) const;
+    void SetTargetLabels(PipelineEventGroup& eGroup) const;
 
     std::unique_ptr<TimerEvent> BuildScrapeTimerEvent(std::chrono::steady_clock::time_point execTime);
 
@@ -92,6 +82,7 @@ private:
     std::string mInstance;
     Labels mTargetLabels;
 
+    // pipeline
     QueueKey mQueueKey;
     size_t mInputIndex;
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <unordered_map>
 
 #include "models/PipelineEventGroup.h"
 #include "models/PipelineEventPtr.h"
@@ -22,7 +23,15 @@ protected:
 
 private:
     bool ProcessEvent(PipelineEventPtr&, EventsContainer&, PipelineEventGroup&, TextParser& parser);
+    void
+    AddEvent(const char* data, size_t size, EventsContainer& events, PipelineEventGroup& eGroup, TextParser& parser);
     std::unique_ptr<ScrapeConfig> mScrapeConfigPtr;
+
+    std::mutex mRawDataMutex;
+    std::unordered_map<std::string, std::string> mMetricRawCache;
+
+    std::mutex mCountMutex;
+    std::unordered_map<std::string, int64_t> mMetricCountCache;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class InputPrometheusUnittest;

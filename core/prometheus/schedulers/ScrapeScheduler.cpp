@@ -35,7 +35,7 @@
 
 using namespace std;
 
-DEFINE_FLAG_INT64(prom_stream_events_size, "stream size", 5000);
+DEFINE_FLAG_INT64(prom_stream_bytes_size, "stream bytes size", 1024 * 1024);
 
 namespace logtail {
 
@@ -47,40 +47,22 @@ size_t ScrapeScheduler::PromMetricWriteCallback(char* buffer, size_t size, size_
     }
 
     auto* body = static_cast<ScrapeScheduler*>(data);
-
-    size_t begin = 0;
-    for (size_t end = begin; end < sizes; ++end) {
-        if (buffer[end] == '\n') {
-            if (begin == 0 && !body->mCache.empty()) {
-                body->mCache.append(buffer, end);
-                body->AddEvent(body->mCache.data(), body->mCache.size());
-                body->mCache.clear();
-            } else if (begin != end) {
-                body->AddEvent(buffer + begin, end - begin);
-            }
-            begin = end + 1;
-        }
-    }
-    if (begin < sizes) {
-        body->mCache.append(buffer + begin, sizes - begin);
-    }
-
-    if (body->mEventGroup.GetEvents().size() >= (uint64_t)INT64_FLAG(prom_stream_events_size)) {
-        LOG_INFO(sLogger, ("stream before push", "size"));
-        body->mScrapeTimestampMilliSec = GetCurrentTimeInMilliSeconds();
-        body->mScrapeDurationSeconds = 1;
-        body->mScrapeResponseSizeBytes = body->mRawSize;
-        body->mUpState = 1;
-
-        body->SetAutoMetricMeta(body->mEventGroup);
-        body->SetTargetLabels(body->mEventGroup);
-        body->PushEventGroup(std::move(body->mEventGroup));
-        body->mEventGroup = PipelineEventGroup(std::make_shared<SourceBuffer>());
-        LOG_INFO(sLogger, ("stream after push", "size"));
-        body->mEventGroup = PipelineEventGroup(std::make_shared<SourceBuffer>());
-    }
-
+    body->mCache.append(buffer, sizes);
     body->mRawSize += sizes;
+
+    if (body->mCache.size() > (size_t)INT64_FLAG(prom_stream_bytes_size)) {
+        auto eventGroup = PipelineEventGroup(std::make_shared<SourceBuffer>());
+        auto e = eventGroup.CreateRawEvent();
+        e->SetContent(body->mCache);
+        body->mCache.clear();
+        eventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_TIMESTAMP_MILLISEC,
+                               ToString(GetCurrentTimeInMilliSeconds()));
+        eventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_ID, body->GetId());
+
+        body->SetTargetLabels(eventGroup);
+        body->PushEventGroup(std::move(eventGroup));
+    }
+
     return sizes;
 }
 
@@ -90,8 +72,7 @@ ScrapeScheduler::ScrapeScheduler(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
                                  Labels labels,
                                  QueueKey queueKey,
                                  size_t inputIndex)
-    : mEventGroup(std::make_shared<SourceBuffer>()),
-      mScrapeConfigPtr(std::move(scrapeConfigPtr)),
+    : mScrapeConfigPtr(std::move(scrapeConfigPtr)),
       mHost(std::move(host)),
       mPort(port),
       mTargetLabels(std::move(labels)),
@@ -103,19 +84,20 @@ ScrapeScheduler::ScrapeScheduler(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
     mHash = mScrapeConfigPtr->mJobName + tmpTargetURL + ToString(mTargetLabels.Hash());
     mInstance = mHost + ":" + ToString(mPort);
     mInterval = mScrapeConfigPtr->mScrapeIntervalSeconds;
+    mCache.reserve(INT64_FLAG(prom_stream_bytes_size));
 }
 
 void ScrapeScheduler::OnMetricResult(HttpResponse& response, uint64_t timestampMilliSec) {
+    static double sMilliSecRate = 1.0 / 1000.0;
+    auto currTimestampMilliSec = GetCurrentTimeInMilliSeconds();
     auto& responseBody = *response.GetBody<ScrapeScheduler>();
-    responseBody.FlushCache();
     mSelfMonitor->AddCounter(METRIC_PLUGIN_OUT_EVENTS_TOTAL, response.GetStatusCode());
     mSelfMonitor->AddCounter(METRIC_PLUGIN_OUT_SIZE_BYTES, response.GetStatusCode(), responseBody.mRawSize);
-    mSelfMonitor->AddCounter(METRIC_PLUGIN_PROM_SCRAPE_TIME_MS,
-                             response.GetStatusCode(),
-                             GetCurrentTimeInMilliSeconds() - timestampMilliSec);
+    mSelfMonitor->AddCounter(
+        METRIC_PLUGIN_PROM_SCRAPE_TIME_MS, response.GetStatusCode(), currTimestampMilliSec - timestampMilliSec);
 
     mScrapeTimestampMilliSec = timestampMilliSec;
-    mScrapeDurationSeconds = 1.0 * (GetCurrentTimeInMilliSeconds() - timestampMilliSec) / 1000;
+    mScrapeDurationSeconds = (currTimestampMilliSec - timestampMilliSec) * sMilliSecRate;
     mScrapeResponseSizeBytes = responseBody.mRawSize;
     mUpState = response.GetStatusCode() == 200;
     if (response.GetStatusCode() != 200) {
@@ -128,26 +110,28 @@ void ScrapeScheduler::OnMetricResult(HttpResponse& response, uint64_t timestampM
             sLogger,
             ("scrape failed, status code", response.GetStatusCode())("target", mHash)("http header", headerStr));
     }
-    auto& eventGroup = responseBody.mEventGroup;
 
+    auto eventGroup = responseBody.FlushCache();
     SetAutoMetricMeta(eventGroup);
     SetTargetLabels(eventGroup);
     PushEventGroup(std::move(eventGroup));
+
     mPluginTotalDelayMs->Add(GetCurrentTimeInMilliSeconds() - timestampMilliSec);
 }
 
-void ScrapeScheduler::SetAutoMetricMeta(PipelineEventGroup& eGroup) {
+void ScrapeScheduler::SetAutoMetricMeta(PipelineEventGroup& eGroup) const {
     eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_TIMESTAMP_MILLISEC, ToString(mScrapeTimestampMilliSec));
     eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_DURATION, ToString(mScrapeDurationSeconds));
     eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_RESPONSE_SIZE, ToString(mScrapeResponseSizeBytes));
     eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_UP_STATE, ToString(mUpState));
+    eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_ID, GetId());
 }
 
-void ScrapeScheduler::SetTargetLabels(PipelineEventGroup& eGroup) {
+void ScrapeScheduler::SetTargetLabels(PipelineEventGroup& eGroup) const {
     mTargetLabels.Range([&eGroup](const std::string& key, const std::string& value) { eGroup.SetTag(key, value); });
 }
 
-void ScrapeScheduler::PushEventGroup(PipelineEventGroup&& eGroup) {
+void ScrapeScheduler::PushEventGroup(PipelineEventGroup&& eGroup) const {
     auto item = make_unique<ProcessQueueItem>(std::move(eGroup), mInputIndex);
 #ifdef APSARA_UNIT_TEST_MAIN
     mItem.push_back(std::move(item));
