@@ -30,6 +30,13 @@ DECLARE_FLAG_INT32(default_http_request_max_try_cnt);
 
 namespace logtail {
 
+struct CurlTLS {
+    std::string mCaFile;
+    std::string mCertFile;
+    std::string mKeyFile;
+    bool mInsecureSkipVerify = true;
+};
+
 struct HttpRequest {
     std::string mMethod;
     // TODO: upgrade curl to 7.62, and replace the following 4 members

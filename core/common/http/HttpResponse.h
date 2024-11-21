@@ -26,12 +26,7 @@ class curl_slist;
 
 namespace logtail {
 
-struct CurlTLS {
-    std::string mCaFile;
-    std::string mCertFile;
-    std::string mKeyFile;
-    bool mInsecureSkipVerify = true;
-};
+struct CurlTLS;
 
 bool caseInsensitiveComp(const char lhs, const char rhs);
 
