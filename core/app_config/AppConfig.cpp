@@ -40,6 +40,10 @@
 
 using namespace std;
 
+#define ILOGTAIL_PREFIX "ilogtail_"
+#define ILOGTAIL_PIDFILE_SUFFIX ".pid"
+#define LOONGCOLLECTOR_PREFIX "loongcollector_"
+
 DEFINE_FLAG_BOOL(logtail_mode, "logtail mode", false);
 DEFINE_FLAG_INT32(max_buffer_num, "max size", 40);
 DEFINE_FLAG_INT32(pub_max_buffer_num, "max size", 8);
