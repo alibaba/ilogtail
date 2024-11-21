@@ -409,13 +409,10 @@ macro(link_uuid target_name)
     endif ()
 endmacro()
 
-macro(link_spl target_name enterprise)
+macro(link_spl target_name)
     logtail_define(spl_${target_name} "" "")
     
-    if (NOT ${enterprise})
-        target_link_libraries(${target_name} "libloongcollector_spl.a")
-    endif ()
-
+    target_link_libraries(${target_name} "libloongcollector_spl.a")
     target_link_libraries(${target_name} "libx.a")
     target_link_libraries(${target_name} "libpresto_adapters.a")
     target_link_libraries(${target_name} "libpresto_common.a")

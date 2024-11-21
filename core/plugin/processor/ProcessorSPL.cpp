@@ -67,18 +67,18 @@ bool ProcessorSPL::Init(const Json::Value& config) {
                               mContext->GetRegion());
     }
 
-    Error error;
     mSPLPipelinePtr = std::make_shared<LoongCollectorSplPipeline>();
-    error = mSPLPipelinePtr->InitLoongCollectorSPL(mSpl,
-                                            INT32_FLAG(logtail_spl_pipeline_quota),
-                                            INT32_FLAG(logtail_spl_query_max_size),
-                                            mTimeoutMills,
-                                            mMaxMemoryBytes,
-                                            mContext->GetLogger());
-    if (error.code_ != SPLStatusCode::OK) {
+    errorMsg.clear();
+    bool success = mSPLPipelinePtr->InitLoongCollectorSPL(mSpl,
+                                                          INT32_FLAG(logtail_spl_pipeline_quota),
+                                                          INT32_FLAG(logtail_spl_query_max_size),
+                                                          errorMsg,
+                                                          mTimeoutMills,
+                                                          mMaxMemoryBytes);
+    if (!success) {
         PARAM_ERROR_RETURN(mContext->GetLogger(),
                            mContext->GetAlarm(),
-                           "failed to parse spl: " + mSpl + " error: " + error.msg_,
+                           "failed to parse spl: " + mSpl + " error: " + errorMsg,
                            sName,
                            mContext->GetConfigName(),
                            mContext->GetProjectName(),
@@ -120,13 +120,13 @@ void ProcessorSPL::Process(std::vector<PipelineEventGroup>& logGroupList) {
     std::vector<PipelineEventGroup>().swap(logGroupList);
 
     PipelineStats pipelineStats;
-    Error err = mSPLPipelinePtr->Execute(std::move(logGroup), logGroupList, pipelineStats, mContext);
+    ExecuteResult result = mSPLPipelinePtr->Execute(std::move(logGroup), logGroupList, pipelineStats, mContext);
 
-    if (err.code_ != SPLStatusCode::OK) {
+    if (result != ExecuteResult::OK) {
         mSplExcuteErrorCount->Add(1);
-        if (err.code_ == SPLStatusCode::TIMEOUT_ERROR) {
+        if (result == ExecuteResult::TIMEOUT_ERROR) {
             mSplExcuteTimeoutErrorCount->Add(1);
-        } else if (err.code_ == SPLStatusCode::MEM_EXCEEDED) {
+        } else if (result == ExecuteResult::MEM_EXCEED) {
             mSplExcuteMemoryExceedErrorCount->Add(1);
         }
     } else {

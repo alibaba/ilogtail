@@ -27,6 +27,7 @@ endif ()
 option(BUILD_LOGTAIL "Build Logtail executable and tools" ON)
 # Used under the Android environment.
 option(BUILD_LOGTAIL_SHARED_LIBRARY "Build Logtail shared library")
+option(BUILD_LOGTAIL_SPL_LIBRARY "Build Logtail SPL library")
 option(ENABLE_ENTERPRISE "enable enterprise feature")
 cmake_dependent_option(ENABLE_COMPATIBLE_MODE "Build Logtail in compatible mode (for low version Linux)" OFF "LINUX" OFF)
 cmake_dependent_option(ENABLE_STATIC_LINK_CRT "Build Logtail by linking CRT statically" OFF "LINUX" OFF)
@@ -138,11 +139,6 @@ endif()
 
 # Module includes & set files.
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-if (LINUX)
-    if (WITHSPL AND ENABLE_ENTERPRISE)
-        include_directories(${CMAKE_CURRENT_SOURCE_DIR}/spl)
-    endif()
-endif()
 
 foreach (DIR_NAME ${SUB_DIRECTORIES_LIST})
     include_directories(${CMAKE_CURRENT_SOURCE_DIR}/${DIR_NAME})
@@ -180,13 +176,6 @@ elseif(UNIX)
 endif()
 set(SRC_FILES ${SRC_FILES} ${FRAMEWORK_SOURCE_FILES} ${PLUGIN_SOURCE_FILES_CORE})
 
-# Generate SPL library.
-if (LINUX)
-    if (WITHSPL AND ENABLE_ENTERPRISE)
-        add_subdirectory(spl)
-    endif()
-endif()
-
 # Logtail executable or shared library.
 if (BUILD_LOGTAIL)
     if (ENABLE_ENTERPRISE)
@@ -220,6 +209,10 @@ if (BUILD_LOGTAIL_SHARED_LIBRARY)
     endif()
 endif ()
 
+if (BUILD_LOGTAIL_SPL_LIBRARY)
+    add_subdirectory(spl)
+endif ()
+
 # Generate independent libraries.
 add_subdirectory(go_pipeline)
 add_subdirectory(common)
@@ -227,7 +220,7 @@ add_subdirectory(common)
 # Link libraries.
 if(BUILD_LOGTAIL OR BUILD_LOGTAIL_SHARED_LIBRARY)
     input_link(${LOGTAIL_TARGET})
-    processor_link(${LOGTAIL_TARGET} ${WITHSPL} ${ENABLE_ENTERPRISE})
+    processor_link(${LOGTAIL_TARGET} ${WITHSPL})
     flusher_link(${LOGTAIL_TARGET})
     all_link(${LOGTAIL_TARGET})
     common_link(${LOGTAIL_TARGET})
