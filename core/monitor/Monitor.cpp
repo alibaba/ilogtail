@@ -808,7 +808,7 @@ PipelineConfig LoongCollectorMonitor::CreateMetricPipelineConfig() {
                         "Target": "sls_shennong",
                         "Interval": 1
                     },
-                    "FileCollect": {
+                    "PluginSource": {
                         "Enable": true,
                         "Target": "sls_shennong",
                         "Interval": 10

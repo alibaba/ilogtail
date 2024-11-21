@@ -61,7 +61,7 @@ bool InputSelfMonitorMetric::Init(const Json::Value& config, Json::Value& option
     Json::Value rules = config["Rules"];
     ParseSelfMonitorMetricRule("Agent", rules, mSelfMonitorMetricRules.mAgentMetricsRule);
     ParseSelfMonitorMetricRule("Pipeline", rules, mSelfMonitorMetricRules.mPipelineMetricsRule);
-    ParseSelfMonitorMetricRule("FileCollect", rules, mSelfMonitorMetricRules.mFileCollectMetricsRule);
+    ParseSelfMonitorMetricRule("PluginSource", rules, mSelfMonitorMetricRules.mPluginSourceMetricsRule);
     ParseSelfMonitorMetricRule("Plugin", rules, mSelfMonitorMetricRules.mPluginMetricsRule);
     ParseSelfMonitorMetricRule("Component", rules, mSelfMonitorMetricRules.mComponentMetricsRule);
     return true;

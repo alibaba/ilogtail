@@ -89,7 +89,7 @@ void SelfMonitorServer::RemoveMetricPipeline(PipelineContext* ctx) {
 }
 
 void SelfMonitorServer::SendMetrics() {
-    LOG_INFO(sLogger, ("self-monitor send self-monitor metrics", "start"));
+    LOG_INFO(sLogger, ("send self-monitor metrics", "start"));
     ReadMetrics::GetInstance()->UpdateMetrics();
     // new pipeline
     vector<SelfMonitorMetricEvent> metricEventList;
@@ -113,7 +113,6 @@ void SelfMonitorServer::SendMetrics() {
             }
         }
     }
-    LOG_INFO(sLogger, ("self-monitor send self-monitor metrics", "success"));
 }
 
 void SelfMonitorServer::PushMetricEventIntoMetricEventMap(std::vector<SelfMonitorMetricEvent>& events) {
@@ -168,14 +167,14 @@ void SelfMonitorServer::PushMetricEventIntoMetricEventMap(std::vector<SelfMonito
                     eventCopy.SetInterval(rules->mPluginMetricsRule.mInterval);
                 }
                 if (eventCopy.mCategory == MetricCategory::METRIC_CATEGORY_PLUGIN_SOURCE) {
-                    if (!rules->mFileCollectMetricsRule.mEnable) {
+                    if (!rules->mPluginSourceMetricsRule.mEnable) {
                         if (metricEventMap.find(eventCopy.mKey) != metricEventMap.end()) {
                             metricEventMap.erase(eventCopy.mKey);
                         }
                         continue;
                     };
-                    eventCopy.SetTarget(rules->mFileCollectMetricsRule.mTarget);
-                    eventCopy.SetInterval(rules->mFileCollectMetricsRule.mInterval);
+                    eventCopy.SetTarget(rules->mPluginSourceMetricsRule.mTarget);
+                    eventCopy.SetInterval(rules->mPluginSourceMetricsRule.mInterval);
                 }
                 if (metricEventMap.find(eventCopy.mKey) != metricEventMap.end()) {
                     metricEventMap[eventCopy.mKey].Merge(eventCopy);
@@ -193,16 +192,16 @@ void SelfMonitorServer::ReadPipelineEventGroupsFromMetricEventMap(
     for (auto configMetricEventMap = mMetricEventMaps.begin(); configMetricEventMap != mMetricEventMaps.end();
          configMetricEventMap++) {
         string pipelineName = configMetricEventMap->first;
+        SelfMonitorMetricEventMap& selfMonitorMetricEventMap = configMetricEventMap->second;
         if (pipelineEventGroupMap.find(pipelineName) == pipelineEventGroupMap.end()) {
             pipelineEventGroupMap[pipelineName] = map<string, PipelineEventGroup>();
         }
-        for (auto metricEvent = configMetricEventMap->second.begin(); metricEvent != configMetricEventMap->second.end();
-             metricEvent++) {
+        for (auto metricEvent = selfMonitorMetricEventMap.begin(); metricEvent != selfMonitorMetricEventMap.end();) {
             if (metricEvent->second.ShouldSend()) {
                 metricEvent->second.Collect();
                 const set<string>& targets = metricEvent->second.GetTargets();
                 for (auto target : targets) {
-                    LogEvent* logEventPtr;
+                    LogEvent* logEventPtr = nullptr;
                     map<string, PipelineEventGroup>::iterator iter = pipelineEventGroupMap[pipelineName].find(target);
                     if (iter != pipelineEventGroupMap[pipelineName].end()) {
                         logEventPtr = iter->second.AddLogEvent();
@@ -217,6 +216,11 @@ void SelfMonitorServer::ReadPipelineEventGroupsFromMetricEventMap(
                     }
                     metricEvent->second.ReadAsLogEvent(logEventPtr);
                 }
+            }
+            if (metricEvent->second.ShouldDelete()) {
+                metricEvent = selfMonitorMetricEventMap.erase(metricEvent);
+            } else {
+                metricEvent++;
             }
         }
     }

@@ -19,6 +19,7 @@
 #include "Monitor.h"
 #include "app_config/AppConfig.h"
 #include "common/HashUtil.h"
+#include "common/JsonUtil.h"
 #include "common/StringTools.h"
 #include "common/TimeUtil.h"
 #include "go_pipeline/LogtailPlugin.h"
@@ -31,9 +32,14 @@ using namespace std;
 
 namespace logtail {
 
+const string METRIC_KEY_CATEGORY = "category";
+const string METRIC_KEY_LABEL = "label";
 const string METRIC_TOPIC_TYPE = "loongcollector_metric";
 const string METRIC_EXPORT_TYPE_GO = "direct";
 const string METRIC_EXPORT_TYPE_CPP = "cpp_provided";
+const string METRIC_GO_KEY_LABELS = "labels";
+const string METRIC_GO_KEY_COUNTERS = "counters";
+const string METRIC_GO_KEY_GAUGES = "gauges";
 
 set<string> GetRegionsByProjects(string projects);
 string GenJsonString(Json::Value jsonValue);
@@ -82,32 +88,60 @@ SelfMonitorMetricEvent::SelfMonitorMetricEvent(MetricsRecord* metricRecord) {
 }
 
 SelfMonitorMetricEvent::SelfMonitorMetricEvent(const std::map<std::string, std::string>& metricRecord) {
-    Json::Value metricsRecordLabel;
-    for (const auto& metric : metricRecord) {
-        // category
-        if (metric.first.compare("label.metric_category") == 0) {
-            mCategory = metric.second;
-            continue;
+    Json::Value labels, counters, gauges;
+    string errMsg;
+    ParseJsonTable(metricRecord.at(METRIC_GO_KEY_LABELS), labels, errMsg);
+    ParseJsonTable(metricRecord.at(METRIC_GO_KEY_COUNTERS), counters, errMsg);
+    ParseJsonTable(metricRecord.at(METRIC_GO_KEY_GAUGES), gauges, errMsg);
+    // category
+    if (labels.isMember("metric_category")) {
+        mCategory = labels["metric_category"].asString();
+        labels.removeMember("metric_category");
+    } else {
+        mCategory = MetricCategory::METRIC_CATEGORY_UNKNOWN;
+        LOG_ERROR(sLogger, ("parse go metric", "labels")("err", "metric_category not found"));
+    }
+    // regions
+    if (labels.isMember(METRIC_LABEL_KEY_PROJECT)) {
+        mRegions = GetRegionsByProjects(labels[METRIC_LABEL_KEY_PROJECT].asString());
+    } else {
+        mRegions = GetRegionsByProjects("");
+        LOG_ERROR(sLogger, ("parse go metric", "labels")("err", "project not found"));
+    }
+    // labels
+    for (Json::Value::const_iterator itr = labels.begin(); itr != labels.end(); ++itr) {
+        if (itr->isString()) {
+            mLabels[itr.key().asString()] = itr->asString();
         }
-        // label
-        if (metric.first.compare(0, METRIC_KEY_LABEL.length(), METRIC_KEY_LABEL) == 0) {
-            mLabels[metric.first.substr(METRIC_KEY_LABEL.length() + 1)] = metric.second;
-            if (metric.first == METRIC_KEY_LABEL + "." + METRIC_LABEL_KEY_PROJECT) {
-                mRegions = GetRegionsByProjects(metric.second);
-            }
-            continue;
+    }
+    // counters
+    for (Json::Value::const_iterator itr = counters.begin(); itr != counters.end(); ++itr) {
+        if (itr->isUInt64()) {
+            mCounters[itr.key().asString()] = itr->asUInt64();
         }
-        // value
-        // go指标目前无法区分是Counter还是Gauge，这里统计数据无法操作，按gauge来计算，且更新间隔恒为1min
-        if (metric.first.compare(0, METRIC_KEY_VALUE.length(), METRIC_KEY_VALUE) == 0) {
+        if (itr->isDouble()) {
+            mCounters[itr.key().asString()] = static_cast<uint64_t>(itr->asDouble());
+        }
+        if (itr->isString()) {
             try {
-                double value = std::stod(metric.second);
-                mGauges[metric.first.substr(METRIC_KEY_VALUE.length() + 1)] = value;
+                mCounters[itr.key().asString()] = static_cast<uint64_t>(std::stod(itr->asString()));
             } catch (...) {
-                mGauges[metric.first.substr(METRIC_KEY_VALUE.length() + 1)] = 0;
+                mCounters[itr.key().asString()] = 0;
             }
-
-            continue;
+        }
+    }
+    // gauges
+    for (Json::Value::const_iterator itr = gauges.begin(); itr != gauges.end(); ++itr) {
+        if (itr->isDouble()) {
+            mGauges[itr.key().asString()] = itr->asDouble();
+        }
+        if (itr->isString()) {
+            try {
+                double value = std::stod(itr->asString());
+                mGauges[itr.key().asString()] = value;
+            } catch (...) {
+                mGauges[itr.key().asString()] = 0;
+            }
         }
     }
     CreateKey();
@@ -119,6 +153,7 @@ void SelfMonitorMetricEvent::CreateKey() {
         key += (";" + label.first + ":" + label.second);
     }
     mKey = HashString(key);
+    mUpdatedFlag = true;
 }
 
 void SelfMonitorMetricEvent::SetInterval(size_t interval) {
@@ -132,7 +167,10 @@ void SelfMonitorMetricEvent::SetTarget(SelfMonitorMetricRule::SelfMonitorMetricR
 
 void SelfMonitorMetricEvent::Merge(SelfMonitorMetricEvent& event) {
     mTarget = event.mTarget;
-    mSendInterval = event.mSendInterval;
+    if (mSendInterval != event.mSendInterval) {
+        mSendInterval = event.mSendInterval;
+        mLastSendInterval = 0;
+    }
     for (auto counter = event.mCounters.begin(); counter != event.mCounters.end(); counter++) {
         if (mCounters.find(counter->first) != mCounters.end())
             mCounters[counter->first] += counter->second;
@@ -142,11 +180,16 @@ void SelfMonitorMetricEvent::Merge(SelfMonitorMetricEvent& event) {
     for (auto gauge = event.mGauges.begin(); gauge != event.mGauges.end(); gauge++) {
         mGauges[gauge->first] = gauge->second;
     }
+    mUpdatedFlag = true;
 }
 
 bool SelfMonitorMetricEvent::ShouldSend() {
     mLastSendInterval++;
-    return mLastSendInterval >= mSendInterval;
+    return (mLastSendInterval >= mSendInterval) && mUpdatedFlag;
+}
+
+bool SelfMonitorMetricEvent::ShouldDelete() {
+    return (mLastSendInterval >= mSendInterval) && !mUpdatedFlag;
 }
 
 void SelfMonitorMetricEvent::Collect() {
@@ -168,6 +211,7 @@ void SelfMonitorMetricEvent::Collect() {
         mTmpCollectContents[gauge->first] = ToString(gauge->second);
     }
     mLastSendInterval = 0;
+    mUpdatedFlag = false;
 }
 
 std::set<std::string> SelfMonitorMetricEvent::GetTargets() {
@@ -330,8 +374,8 @@ void ReadMetrics::ReadAsMetricEvents(std::vector<SelfMonitorMetricEvent>& metric
         tmp = tmp->GetNext();
     }
     // go metrics
-    for (const auto& metrics : mGoMetrics) {
-        metricEventList.emplace_back(SelfMonitorMetricEvent(metrics));
+    for (auto metrics : mGoMetrics) {
+        metricEventList.emplace_back(SelfMonitorMetricEvent(move(metrics)));
     }
 }
 
@@ -389,10 +433,10 @@ void ReadMetrics::UpdateGoCppProvidedMetrics(vector<map<string, string>>& metric
 
     for (auto metrics : metricsList) {
         for (auto metric : metrics) {
-            if (metric.first == METRIC_KEY_VALUE + "." + METRIC_AGENT_MEMORY_GO) {
+            if (metric.first == METRIC_AGENT_MEMORY_GO) {
                 LoongCollectorMonitor::GetInstance()->SetAgentGoMemory(stoi(metric.second));
             }
-            if (metric.first == METRIC_KEY_VALUE + "." + METRIC_AGENT_GO_ROUTINES_TOTAL) {
+            if (metric.first == METRIC_AGENT_GO_ROUTINES_TOTAL) {
                 LoongCollectorMonitor::GetInstance()->SetAgentGoRoutinesTotal(stoi(metric.second));
             }
             LogtailMonitor::GetInstance()->UpdateMetric(metric.first, metric.second);

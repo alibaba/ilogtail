@@ -41,7 +41,7 @@ struct SelfMonitorMetricRule {
 struct SelfMonitorMetricRules {
     SelfMonitorMetricRule mAgentMetricsRule;
     SelfMonitorMetricRule mPipelineMetricsRule;
-    SelfMonitorMetricRule mFileCollectMetricsRule;
+    SelfMonitorMetricRule mPluginSourceMetricsRule;
     SelfMonitorMetricRule mPluginMetricsRule;
     SelfMonitorMetricRule mComponentMetricsRule;
 };
@@ -58,6 +58,7 @@ public:
     void Merge(SelfMonitorMetricEvent& event);
 
     bool ShouldSend();
+    bool ShouldDelete();
     void Collect();
     std::set<std::string> GetTargets();
     void ReadAsLogEvent(LogEvent* logEventPtr);
@@ -74,6 +75,7 @@ private:
     SelfMonitorMetricRule::SelfMonitorMetricRuleTarget mTarget;
     int32_t mSendInterval;
     int32_t mLastSendInterval;
+    bool mUpdatedFlag;
 
     time_t mTmpCollectTime;
     std::unordered_map<std::string, std::string> mTmpCollectContents;
