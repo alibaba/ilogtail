@@ -189,7 +189,7 @@ func (g *gaugeImp) Export() map[string]string {
 	return g.Series.Export(metricValue.Name, strconv.FormatFloat(metricValue.Value, 'f', 4, 64))
 }
 
-func (c *gaugeImp) Type() pipeline.SelfMetricType {
+func (g *gaugeImp) Type() pipeline.SelfMetricType {
 	return pipeline.GaugeType
 }
 
@@ -246,7 +246,7 @@ func (a *averageImp) Export() map[string]string {
 	return a.Series.Export(metricValue.Name, strconv.FormatFloat(metricValue.Value, 'f', 4, 64))
 }
 
-func (c *averageImp) Type() pipeline.SelfMetricType {
+func (a *averageImp) Type() pipeline.SelfMetricType {
 	return pipeline.GaugeType
 }
 
@@ -286,7 +286,7 @@ func (m *maxImp) Export() map[string]string {
 	return m.Series.Export(metricValue.Name, strconv.FormatFloat(metricValue.Value, 'f', 4, 64))
 }
 
-func (c *maxImp) Type() pipeline.SelfMetricType {
+func (m *maxImp) Type() pipeline.SelfMetricType {
 	return pipeline.GaugeType
 }
 
@@ -344,7 +344,7 @@ func (l *latencyImp) Export() map[string]string {
 	return l.Series.Export(metricValue.Name, strconv.FormatFloat(metricValue.Value/1000, 'f', 4, 64)) // ns to us
 }
 
-func (c *latencyImp) Type() pipeline.SelfMetricType {
+func (l *latencyImp) Type() pipeline.SelfMetricType {
 	return pipeline.GaugeType
 }
 
@@ -390,7 +390,7 @@ func (s *strMetricImp) Export() map[string]string {
 	return s.Series.Export(metricValue.Name, metricValue.Value)
 }
 
-func (c *strMetricImp) Type() pipeline.SelfMetricType {
+func (s *strMetricImp) Type() pipeline.SelfMetricType {
 	return pipeline.GaugeType
 }
 
