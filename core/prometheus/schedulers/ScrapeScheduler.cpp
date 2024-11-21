@@ -35,16 +35,18 @@
 
 using namespace std;
 
+DEFINE_FLAG_INT64(prom_stream_events_size, "stream size", 5000);
+
 namespace logtail {
 
-size_t PromMetricWriteCallback(char* buffer, size_t size, size_t nmemb, void* data) {
+size_t ScrapeScheduler::PromMetricWriteCallback(char* buffer, size_t size, size_t nmemb, void* data) {
     uint64_t sizes = size * nmemb;
 
     if (buffer == nullptr || data == nullptr) {
         return 0;
     }
 
-    auto* body = static_cast<PromMetricResponseBody*>(data);
+    auto* body = static_cast<ScrapeScheduler*>(data);
 
     size_t begin = 0;
     for (size_t end = begin; end < sizes; ++end) {
@@ -62,6 +64,22 @@ size_t PromMetricWriteCallback(char* buffer, size_t size, size_t nmemb, void* da
     if (begin < sizes) {
         body->mCache.append(buffer + begin, sizes - begin);
     }
+
+    if (body->mEventGroup.GetEvents().size() >= (uint64_t)INT64_FLAG(prom_stream_events_size)) {
+        LOG_INFO(sLogger, ("stream before push", "size"));
+        body->mScrapeTimestampMilliSec = GetCurrentTimeInMilliSeconds();
+        body->mScrapeDurationSeconds = 1;
+        body->mScrapeResponseSizeBytes = body->mRawSize;
+        body->mUpState = 1;
+
+        body->SetAutoMetricMeta(body->mEventGroup);
+        body->SetTargetLabels(body->mEventGroup);
+        body->PushEventGroup(std::move(body->mEventGroup));
+        body->mEventGroup = PipelineEventGroup(std::make_shared<SourceBuffer>());
+        LOG_INFO(sLogger, ("stream after push", "size"));
+        body->mEventGroup = PipelineEventGroup(std::make_shared<SourceBuffer>());
+    }
+
     body->mRawSize += sizes;
     return sizes;
 }
@@ -72,7 +90,8 @@ ScrapeScheduler::ScrapeScheduler(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
                                  Labels labels,
                                  QueueKey queueKey,
                                  size_t inputIndex)
-    : mScrapeConfigPtr(std::move(scrapeConfigPtr)),
+    : mEventGroup(std::make_shared<SourceBuffer>()),
+      mScrapeConfigPtr(std::move(scrapeConfigPtr)),
       mHost(std::move(host)),
       mPort(port),
       mTargetLabels(std::move(labels)),
@@ -87,7 +106,7 @@ ScrapeScheduler::ScrapeScheduler(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
 }
 
 void ScrapeScheduler::OnMetricResult(HttpResponse& response, uint64_t timestampMilliSec) {
-    auto& responseBody = *response.GetBody<PromMetricResponseBody>();
+    auto& responseBody = *response.GetBody<ScrapeScheduler>();
     responseBody.FlushCache();
     mSelfMonitor->AddCounter(METRIC_PLUGIN_OUT_EVENTS_TOTAL, response.GetStatusCode());
     mSelfMonitor->AddCounter(METRIC_PLUGIN_OUT_SIZE_BYTES, response.GetStatusCode(), responseBody.mRawSize);
@@ -200,23 +219,20 @@ std::unique_ptr<TimerEvent> ScrapeScheduler::BuildScrapeTimerEvent(std::chrono::
     if (retry > 0) {
         retry -= 1;
     }
-    auto request
-        = std::make_unique<PromHttpRequest>(sdk::HTTP_GET,
-                                            mScrapeConfigPtr->mScheme == prometheus::HTTPS,
-                                            mHost,
-                                            mPort,
-                                            mScrapeConfigPtr->mMetricsPath,
-                                            mScrapeConfigPtr->mQueryString,
-                                            mScrapeConfigPtr->mRequestHeaders,
-                                            "",
-                                            HttpResponse(
-                                                new PromMetricResponseBody(mEventPool),
-                                                [](void* ptr) { delete static_cast<PromMetricResponseBody*>(ptr); },
-                                                PromMetricWriteCallback),
-                                            mScrapeConfigPtr->mScrapeTimeoutSeconds,
-                                            retry,
-                                            this->mFuture,
-                                            this->mIsContextValidFuture);
+    auto request = std::make_unique<PromHttpRequest>(sdk::HTTP_GET,
+                                                     mScrapeConfigPtr->mScheme == prometheus::HTTPS,
+                                                     mHost,
+                                                     mPort,
+                                                     mScrapeConfigPtr->mMetricsPath,
+                                                     mScrapeConfigPtr->mQueryString,
+                                                     mScrapeConfigPtr->mRequestHeaders,
+                                                     "",
+                                                     HttpResponse(
+                                                         this, [](void*) {}, PromMetricWriteCallback),
+                                                     mScrapeConfigPtr->mScrapeTimeoutSeconds,
+                                                     retry,
+                                                     this->mFuture,
+                                                     this->mIsContextValidFuture);
     auto timerEvent = std::make_unique<HttpRequestTimerEvent>(execTime, std::move(request));
     return timerEvent;
 }
@@ -247,7 +263,8 @@ void ScrapeScheduler::InitSelfMonitor(const MetricLabels& defaultLabels) {
 
     mSelfMonitor->InitMetricManager(sScrapeMetricKeys, labels);
 
-    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, MetricCategory::METRIC_CATEGORY_PLUGIN_SOURCE, std::move(labels));
+    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
+        mMetricsRecordRef, MetricCategory::METRIC_CATEGORY_PLUGIN_SOURCE, std::move(labels));
     mPromDelayTotal = mMetricsRecordRef.CreateCounter(METRIC_PLUGIN_PROM_SCRAPE_DELAY_TOTAL);
     mPluginTotalDelayMs = mMetricsRecordRef.CreateCounter(METRIC_PLUGIN_TOTAL_DELAY_MS);
 }

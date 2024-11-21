@@ -34,28 +34,6 @@
 
 namespace logtail {
 
-size_t PromMetricWriteCallback(char* buffer, size_t size, size_t nmemb, void* data);
-
-struct PromMetricResponseBody {
-    PipelineEventGroup mEventGroup;
-    std::string mCache;
-    size_t mRawSize = 0;
-    EventPool* mEventPool = nullptr;
-
-    explicit PromMetricResponseBody(EventPool* eventPool)
-        : mEventGroup(std::make_shared<SourceBuffer>()), mEventPool(eventPool) {};
-    void AddEvent(char* line, size_t len) {
-        if (IsValidMetric(StringView(line, len))) {
-            auto* e = mEventGroup.AddRawEvent(true, mEventPool);
-            auto sb = mEventGroup.GetSourceBuffer()->CopyString(line, len);
-            e->SetContentNoCopy(sb);
-        }
-    }
-    void FlushCache() {
-        AddEvent(mCache.data(), mCache.size());
-        mCache.clear();
-    }
-};
 
 class ScrapeScheduler : public BaseScheduler {
 public:
@@ -76,6 +54,28 @@ public:
     void ScrapeOnce(std::chrono::steady_clock::time_point execTime);
     void Cancel() override;
     void InitSelfMonitor(const MetricLabels&);
+
+    PipelineEventGroup mEventGroup;
+    std::string mCache;
+    size_t mRawSize = 0;
+
+    static size_t PromMetricWriteCallback(char* buffer, size_t size, size_t nmemb, void* data);
+
+    void AddEvent(char* line, size_t len) {
+        if (IsValidMetric(StringView(line, len))) {
+            auto* e = mEventGroup.AddRawEvent();
+            auto sb = mEventGroup.GetSourceBuffer()->CopyString(line, len);
+            e->SetContentNoCopy(sb);
+        }
+    }
+
+    void FlushCache() {
+        if (mCache.empty()) {
+            return;
+        }
+        AddEvent(mCache.data(), mCache.size());
+        mCache.clear();
+    }
 
 private:
     void PushEventGroup(PipelineEventGroup&&);
