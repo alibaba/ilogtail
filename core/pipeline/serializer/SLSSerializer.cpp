@@ -15,7 +15,7 @@
 #include "pipeline/serializer/SLSSerializer.h"
 
 #include "common/Flags.h"
-#include "constants/TagConstants.h"
+#include "constants/SpanConstants.h"
 #include "common/compression/CompressType.h"
 #include "plugin/flusher/sls/FlusherSLS.h"
 #include "protobuf/sls/LogGroupSerializer.h"

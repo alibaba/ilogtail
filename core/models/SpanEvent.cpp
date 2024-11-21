@@ -15,7 +15,7 @@
  */
 
 #include "models/SpanEvent.h"
-#include "constants/TagConstants.h"
+#include "constants/SpanConstants.h"
 
 using namespace std;
 
