@@ -24,5 +24,6 @@ extern const char* const ILOGTAIL_BUILD_DATE;
 
 #define ILOGTAIL_PREFIX "ilogtail_"
 #define ILOGTAIL_PIDFILE_SUFFIX ".pid"
+#define LOONGCOLLECTOR_PREFIX "loongcollector_"
 
 #endif

@@ -25,6 +25,7 @@
 #include "common/FileSystemUtil.h"
 #include "common/JsonUtil.h"
 #include "common/LogtailCommonFlags.h"
+#include "common/version.h"
 #include "config/InstanceConfigManager.h"
 #include "config/watcher/InstanceConfigWatcher.h"
 #include "file_server/ConfigManager.h"
@@ -520,7 +521,7 @@ std::string GetAgentName() {
         return "ilogtail";
     } else {
         return "loongcollector";
-    } 
+    }
 }
 
 std::string GetMonitorInfoFileName() {
@@ -528,6 +529,22 @@ std::string GetMonitorInfoFileName() {
         return "logtail_monitor_info";
     } else {
         return "loongcollector_monitor_info";
+    }
+}
+
+std::string GetSymLinkName() {
+    if (BOOL_FLAG(logtail_mode)) {
+        return GetProcessExecutionDir() + "ilogtail";
+    } else {
+        return GetProcessExecutionDir() + "loongcollector";
+    }
+}
+
+std::string GetPidFileName() {
+    if (BOOL_FLAG(logtail_mode)) {
+        return GetProcessExecutionDir() + ILOGTAIL_PREFIX + ILOGTAIL_VERSION + ILOGTAIL_PIDFILE_SUFFIX;
+    } else {
+        return GetAgentRunDir() + "loongcollector.pid";
     }
 }
 

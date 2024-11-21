@@ -60,6 +60,8 @@ std::string GetVersionTag();
 std::string GetGoPluginCheckpoint();
 std::string GetAgentName();
 std::string GetMonitorInfoFileName();
+std::string GetSymLinkName();
+std::string GetPidFileName();
 
 template <class T>
 class DoubleBuffer {
@@ -304,7 +306,7 @@ private:
 
 public:
     AppConfig();
-    ~AppConfig() {};
+    ~AppConfig(){};
 
     void LoadInstanceConfig(const std::map<std::string, std::shared_ptr<InstanceConfig>>&);
 
