@@ -28,6 +28,29 @@ using namespace std;
 
 namespace logtail {
 
+std::string SerializeSpanLinksToString(const SpanEvent& event) {
+    if (event.GetLinks().empty()) {
+        return "";
+    }
+    Json::Value jsonLinks(Json::arrayValue);
+    for (const auto& link : event.GetLinks()) {
+        jsonLinks.append(link.ToJson());
+    }
+    Json::StreamWriterBuilder writer;
+    return Json::writeString(writer, jsonLinks);
+}
+std::string SerializeSpanEventsToString(const SpanEvent& event) {
+    if (event.GetEvents().empty()) {
+        return "";
+    }
+    Json::Value jsonEvents(Json::arrayValue);
+    for (const auto& event : event.GetEvents()) {
+        jsonEvents.append(event.ToJson());
+    }
+    Json::StreamWriterBuilder writer;
+    return Json::writeString(writer, jsonEvents);
+}
+
 template <>
 bool Serializer<vector<CompressedLogGroup>>::DoSerialize(vector<CompressedLogGroup>&& p,
                                                          std::string& output,
@@ -121,8 +144,9 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, stri
                 contentSZ += GetLogContentSize(DEFAULT_TRACE_TAG_SPAN_ID.size(), e.GetSpanId().size());
                 contentSZ += GetLogContentSize(DEFAULT_TRACE_TAG_PARENT_ID.size(), e.GetParentSpanId().size());
                 contentSZ += GetLogContentSize(DEFAULT_TRACE_TAG_SPAN_NAME.size(), e.GetName().size());
-                contentSZ += GetLogContentSize(DEFAULT_TRACE_TAG_SPAN_KIND.size(), e.GetKindString().size());
-                contentSZ += GetLogContentSize(DEFAULT_TRACE_TAG_STATUS_CODE.size(), e.GetStatusString().size());
+                contentSZ += GetLogContentSize(DEFAULT_TRACE_TAG_SPAN_KIND.size(), GetKindString(e.GetKind()).size());
+                contentSZ += GetLogContentSize(DEFAULT_TRACE_TAG_STATUS_CODE.size(), GetStatusString(e.GetStatus()).size());
+                contentSZ += GetLogContentSize(DEFAULT_TRACE_TAG_TRACE_STATE.size(), e.GetTraceState().size());
                 // 
                 // set tags and scope tags
                 Json::Value jsonVal;
@@ -137,10 +161,10 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, stri
                 contentSZ += GetLogContentSize(DEFAULT_TRACE_TAG_ATTRIBUTES.size(), attrString.size());
                 spanEventContentCache[i][0] = std::move(attrString);
 
-                auto linkString = e.SerializeLinksToString();
+                auto linkString = SerializeSpanLinksToString(e);
                 contentSZ += GetLogContentSize(DEFAULT_TRACE_TAG_LINKS.size(), linkString.size());
                 spanEventContentCache[i][1] = std::move(linkString);
-                auto eventString = e.SerializeEventsToString();
+                auto eventString = SerializeSpanEventsToString(e);
                 contentSZ += GetLogContentSize(DEFAULT_TRACE_TAG_EVENTS.size(), eventString.size());
                 spanEventContentCache[i][2] = std::move(eventString);
 
@@ -226,6 +250,7 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, stri
                 const auto& spanEvent = group.mEvents[i].Cast<SpanEvent>();
 
                 serializer.StartToAddLog(logSZ[i]);
+                serializer.AddLogTime(spanEvent.GetTimestamp());
                 // set trace_id span_id span_kind status etc
                 serializer.AddLogContent(DEFAULT_TRACE_TAG_TRACE_ID, spanEvent.GetTraceId());
                 serializer.AddLogContent(DEFAULT_TRACE_TAG_SPAN_ID, spanEvent.GetSpanId());
@@ -233,13 +258,14 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, stri
                 // span_name
                 serializer.AddLogContent(DEFAULT_TRACE_TAG_SPAN_NAME, spanEvent.GetName());
                 // span_kind
-                serializer.AddLogContent(DEFAULT_TRACE_TAG_SPAN_KIND, spanEvent.GetKindString());
+                serializer.AddLogContent(DEFAULT_TRACE_TAG_SPAN_KIND, GetKindString(spanEvent.GetKind()));
                 // status_code
-                serializer.AddLogContent(DEFAULT_TRACE_TAG_STATUS_CODE, spanEvent.GetStatusString());
+                serializer.AddLogContent(DEFAULT_TRACE_TAG_STATUS_CODE, GetStatusString(spanEvent.GetStatus()));
+                // trace state
+                serializer.AddLogContent(DEFAULT_TRACE_TAG_TRACE_STATE, spanEvent.GetTraceState());
 
                 serializer.AddLogContent(DEFAULT_TRACE_TAG_ATTRIBUTES, spanEventContentCache[i][0]);
                 
-                serializer.AddLogTime(spanEvent.GetTimestamp());
                 serializer.AddLogContent(DEFAULT_TRACE_TAG_LINKS, spanEventContentCache[i][1]);
                 serializer.AddLogContent(DEFAULT_TRACE_TAG_EVENTS, spanEventContentCache[i][2]);
 

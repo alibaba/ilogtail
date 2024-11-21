@@ -92,20 +92,6 @@ Json::Value SpanEvent::SpanLink::ToJson() const {
     return root;
 }
 
-std::string SpanEvent::SerializeLinksToString() const {
-    if (mLinks.empty()) {
-        return "";
-    }
-    Json::Value root;
-    Json::Value jsonLinks(Json::arrayValue);
-    for (auto& link : mLinks) {
-        jsonLinks.append(link.ToJson());
-    }
-    root[DEFAULT_TRACE_TAG_LINKS] = jsonLinks;
-    Json::StreamWriterBuilder writer;
-    return Json::writeString(writer, root);
-}
-
 #ifdef APSARA_UNIT_TEST_MAIN
 void SpanEvent::SpanLink::FromJson(const Json::Value& value) {
     SetTraceId(value[DEFAULT_TRACE_TAG_TRACE_ID].asString());
@@ -181,20 +167,6 @@ Json::Value SpanEvent::InnerEvent::ToJson() const {
         }
     }
     return root;
-}
-
-std::string SpanEvent::SerializeEventsToString() const {
-    if (mEvents.empty()) {
-        return "";
-    }
-    Json::Value root;
-    Json::Value jsonLinks(Json::arrayValue);
-    for (auto& link : mEvents) {
-        jsonLinks.append(link.ToJson());
-    }
-    root[DEFAULT_TRACE_TAG_EVENTS] = jsonLinks;
-    Json::StreamWriterBuilder writer;
-    return Json::writeString(writer, root);
 }
 
 #ifdef APSARA_UNIT_TEST_MAIN
@@ -466,5 +438,38 @@ bool SpanEvent::FromJson(const Json::Value& root) {
     return true;
 }
 #endif
+
+const static std::string sSpanStatusCodeUnSet = "UNSET";
+const static std::string sSpanStatusCodeOk = "OK";
+const static std::string sSpanStatusCodeError = "ERROR";
+
+const std::string& GetStatusString(SpanEvent::StatusCode status) {
+    switch (status) {
+        case SpanEvent::StatusCode::Unset: return sSpanStatusCodeUnSet;
+        case SpanEvent::StatusCode::Ok:   return sSpanStatusCodeOk;
+        case SpanEvent::StatusCode::Error:     return sSpanStatusCodeError;
+        default:               return sSpanStatusCodeUnSet;
+    }
+}
+
+const static std::string sSpanKindUnspecified = "unspecified";
+const static std::string sSpanKindInternal = "internal";
+const static std::string sSpanKindServer = "server";
+const static std::string sSpanKindClient = "client";
+const static std::string sSpanKindProducer = "producer";
+const static std::string sSpanKindConsumer = "consumer";
+const static std::string sSpanKindUnknown = "unknown";
+
+const std::string& GetKindString(SpanEvent::Kind kind) {
+    switch (kind) {
+        case SpanEvent::Kind::Unspecified: return sSpanKindUnspecified;
+        case SpanEvent::Kind::Internal:   return sSpanKindInternal;
+        case SpanEvent::Kind::Server:     return sSpanKindServer;
+        case SpanEvent::Kind::Client:     return sSpanKindClient;
+        case SpanEvent::Kind::Producer:   return sSpanKindProducer;
+        case SpanEvent::Kind::Consumer:   return sSpanKindConsumer;
+        default:               return sSpanKindUnknown;
+    }
+}
 
 } // namespace logtail
