@@ -57,6 +57,12 @@ void ProcessorPromParseMetricNative::Process(PipelineEventGroup& eGroup) {
             mMetricCountCache.erase(streamID);
         }
     }
+
+    if (!eGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_UP_STATE).empty()) {
+        // erase the cache
+        std::lock_guard<std::mutex> lock(mRawDataMutex);
+        mMetricRawCache.erase(streamID);
+    }
 }
 
 bool ProcessorPromParseMetricNative::IsSupportedEvent(const PipelineEventPtr& e) const {
@@ -88,7 +94,6 @@ bool ProcessorPromParseMetricNative::ProcessEvent(PipelineEventPtr& e,
                 auto sb = eGroup.GetSourceBuffer()->CopyString(cache.data(), cache.size());
                 AddEvent(sb.data, sb.size, events, eGroup, parser);
             } else if (begin != end) {
-                LOG_INFO(sLogger, ("no cache data", ""));
                 AddEvent(data.data() + begin, end - begin, events, eGroup, parser);
             }
             begin = end + 1;
@@ -99,11 +104,6 @@ bool ProcessorPromParseMetricNative::ProcessEvent(PipelineEventPtr& e,
         mMetricRawCache[streamID].append(data.data() + begin, data.size() - begin);
     }
 
-    if (!eGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_UP_STATE).empty()) {
-        // erase the cache
-        std::lock_guard<std::mutex> lock(mRawDataMutex);
-        mMetricRawCache.erase(streamID);
-    }
     return true;
 }
 
