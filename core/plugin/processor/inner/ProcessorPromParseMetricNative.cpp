@@ -8,6 +8,7 @@
 #include "models/PipelineEventPtr.h"
 #include "models/RawEvent.h"
 #include "prometheus/Constants.h"
+#include "prometheus/Utils.h"
 
 using namespace std;
 namespace logtail {
@@ -109,7 +110,8 @@ bool ProcessorPromParseMetricNative::ProcessEvent(PipelineEventPtr& e,
 void ProcessorPromParseMetricNative::AddEvent(
     const char* data, size_t size, EventsContainer& events, PipelineEventGroup& eGroup, TextParser& parser) {
     auto metricEvent = eGroup.CreateMetricEvent(true);
-    if (parser.ParseLine(StringView(data, size), *metricEvent)) {
+    auto line = StringView(data, size);
+    if (IsValidMetric(line) && parser.ParseLine(line, *metricEvent)) {
         metricEvent->SetTag(string(prometheus::NAME), metricEvent->GetName());
         events.emplace_back(std::move(metricEvent), true, nullptr);
     }

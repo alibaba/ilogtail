@@ -61,7 +61,7 @@ public:
     static size_t PromMetricWriteCallback(char* buffer, size_t size, size_t nmemb, void* data);
     PipelineEventGroup FlushCache() {
         auto eventGroup = PipelineEventGroup(std::make_shared<SourceBuffer>());
-        auto e = eventGroup.CreateRawEvent();
+        auto *e = eventGroup.AddRawEvent();
         e->SetContent(mCache);
         mCache.clear();
         return eventGroup;

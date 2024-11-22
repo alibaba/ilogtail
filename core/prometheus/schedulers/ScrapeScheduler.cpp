@@ -52,7 +52,7 @@ size_t ScrapeScheduler::PromMetricWriteCallback(char* buffer, size_t size, size_
 
     if (body->mCache.size() > (size_t)INT64_FLAG(prom_stream_bytes_size)) {
         auto eventGroup = PipelineEventGroup(std::make_shared<SourceBuffer>());
-        auto e = eventGroup.CreateRawEvent();
+        auto *e = eventGroup.AddRawEvent();
         e->SetContent(body->mCache);
         body->mCache.clear();
         eventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_TIMESTAMP_MILLISEC,
