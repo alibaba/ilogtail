@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include "common/http/HttpResponse.h"
+#include "common/http/HttpRequest.h"
 #include "prometheus/labels/Relabel.h"
 
 
