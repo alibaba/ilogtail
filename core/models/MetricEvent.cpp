@@ -43,6 +43,50 @@ void MetricEvent::SetNameNoCopy(StringView name) {
     mName = name;
 }
 
+double MetricEvent::GetMultiKeyValue(StringView key) {
+    if (UntypedMultiValues* multiValues = std::get_if<UntypedMultiValues>(&mValue)) {
+        if (multiValues->mValues.find(key) != multiValues->mValues.end()) {
+            return multiValues->mValues.at(key);
+        }
+    }
+    return 0;
+}
+
+bool MetricEvent::HasMultiKeyValue(StringView key) {
+    if (UntypedMultiValues* multiValues = std::get_if<UntypedMultiValues>(&mValue)) {
+        if (multiValues->mValues.find(key) != multiValues->mValues.end()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void MetricEvent::SetMultiKeyValue(const std::string& key, double val) {
+    SetMultiKeyValueNoCopy(GetSourceBuffer()->CopyString(key), val);
+}
+
+void MetricEvent::SetMultiKeyValue(StringView key, double val) {
+    SetMultiKeyValueNoCopy(GetSourceBuffer()->CopyString(key), val);
+}
+
+void MetricEvent::SetMultiKeyValueNoCopy(const StringBuffer& key, double val) {
+    SetMultiKeyValueNoCopy(StringView(key.data, key.size), val);
+}
+
+void MetricEvent::SetMultiKeyValueNoCopy(StringView key, double val) {
+    if (UntypedMultiValues* multiValues = std::get_if<UntypedMultiValues>(&mValue)) {
+        multiValues->mValues[key] = val;
+    } else if (Is<monostate>()) {
+        mValue = UntypedMultiValues{{{key, val}}};
+    }
+}
+
+void MetricEvent::DelMultiKeyValue(StringView key) {
+    if (UntypedMultiValues* multiValues = std::get_if<UntypedMultiValues>(&mValue)) {
+        multiValues->mValues.erase(key);
+    }
+}
+
 StringView MetricEvent::GetTag(StringView key) const {
     auto it = mTags.mInner.find(key);
     if (it != mTags.mInner.end()) {

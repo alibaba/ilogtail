@@ -17,12 +17,17 @@
 #pragma once
 
 #include <variant>
+#include <map>
 
 #ifdef APSARA_UNIT_TEST_MAIN
 #include <json/json.h>
 
 #include <string>
+
+#include "common/memory/SourceBuffer.h"
 #endif
+
+#include "models/StringView.h"
 
 namespace logtail {
 
@@ -37,7 +42,19 @@ struct UntypedSingleValue {
 #endif
 };
 
-using MetricValue = std::variant<std::monostate, UntypedSingleValue>;
+struct UntypedMultiValues {
+    std::map<StringView, double> mValues;
+
+    size_t DataSize() const;
+
+#ifdef APSARA_UNIT_TEST_MAIN
+    std::shared_ptr<SourceBuffer> mSourceBuffer;
+    Json::Value ToJson() const;
+    void FromJson(const Json::Value& value);
+#endif
+};
+
+using MetricValue = std::variant<std::monostate, UntypedSingleValue, UntypedMultiValues>;
 
 size_t DataSize(const MetricValue& value);
 

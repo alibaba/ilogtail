@@ -76,6 +76,38 @@ void UntypedSingleValueUnittest::TestFromJson() {
 UNIT_TEST_CASE(UntypedSingleValueUnittest, TestToJson)
 UNIT_TEST_CASE(UntypedSingleValueUnittest, TestFromJson)
 
+class UntypedMultiValuesUnittest : public ::testing::Test {
+public:
+    void TestToJson();
+    void TestFromJson();
+};
+
+void UntypedMultiValuesUnittest::TestToJson() {
+    UntypedMultiValues value{{{"test-1", 10.0}, {"test-2", 2.0}}};
+    Json::Value res = value.ToJson();
+
+    Json::Value valueJson;
+    valueJson["test-1"] = 10.0;
+    valueJson["test-2"] = 2.0;
+
+    APSARA_TEST_TRUE(valueJson == res);
+}
+
+void UntypedMultiValuesUnittest::TestFromJson() {
+    UntypedMultiValues value;
+    value.mSourceBuffer = std::make_shared<SourceBuffer>();
+    Json::Value valueJson;
+    valueJson["test-1"] = 10.0;
+    valueJson["test-2"] = 2.0;
+    value.FromJson(valueJson);
+
+    APSARA_TEST_EQUAL(10.0, value.mValues["test-1"]);
+    APSARA_TEST_EQUAL(2.0, value.mValues["test-2"]);
+}
+
+UNIT_TEST_CASE(UntypedMultiValuesUnittest, TestToJson)
+UNIT_TEST_CASE(UntypedMultiValuesUnittest, TestFromJson)
+
 } // namespace logtail
 
 UNIT_TEST_MAIN

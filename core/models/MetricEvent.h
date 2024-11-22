@@ -58,6 +58,14 @@ public:
         mValue = T{std::forward<Args>(args)...};
     }
 
+    double GetMultiKeyValue(StringView key);
+    bool HasMultiKeyValue(StringView key);
+    void SetMultiKeyValue(const std::string& key, double val);
+    void SetMultiKeyValue(StringView key, double val);
+    void SetMultiKeyValueNoCopy(const StringBuffer& key, double val);
+    void SetMultiKeyValueNoCopy(StringView key, double val);
+    void DelMultiKeyValue(StringView key);
+
     StringView GetTag(StringView key) const;
     bool HasTag(StringView key) const;
     void SetTag(StringView key, StringView val);
