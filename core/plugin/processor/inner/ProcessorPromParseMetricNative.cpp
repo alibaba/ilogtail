@@ -46,9 +46,20 @@ void ProcessorPromParseMetricNative::Process(PipelineEventGroup& eGroup) {
 
     auto streamID = eGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_ID).to_string();
 
+    if (!eGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_UP_STATE).empty()) {
+        // erase the cache
+        std::lock_guard<std::mutex> lock(mRawDataMutex);
+        auto cache = std::move(mMetricRawCache[streamID]);
+        mMetricRawCache.erase(streamID);
+        if (cache.size() > 0) {
+            auto sb = eGroup.GetSourceBuffer()->CopyString(cache.data(), cache.size());
+            AddEvent(sb.data, sb.size, events, eGroup, parser);
+        }
+    }
+
     // cache the metrics count
     {
-        auto lock = std::lock_guard<std::mutex>(mCountMutex);
+        std::lock_guard<std::mutex> lock(mCountMutex);
         mMetricCountCache[streamID] += events.size();
         // if up is set, then add self monitor metrics
         if (!eGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_UP_STATE).empty()) {
@@ -56,12 +67,6 @@ void ProcessorPromParseMetricNative::Process(PipelineEventGroup& eGroup) {
             // erase the cache
             mMetricCountCache.erase(streamID);
         }
-    }
-
-    if (!eGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_UP_STATE).empty()) {
-        // erase the cache
-        std::lock_guard<std::mutex> lock(mRawDataMutex);
-        mMetricRawCache.erase(streamID);
     }
 }
 
@@ -82,8 +87,7 @@ bool ProcessorPromParseMetricNative::ProcessEvent(PipelineEventPtr& e,
     string cache;
     {
         std::lock_guard<std::mutex> lock(mRawDataMutex);
-        cache = mMetricRawCache[streamID];
-        mMetricRawCache[streamID] = "";
+        cache = std::move(mMetricRawCache[streamID]);
     }
 
     size_t begin = 0;
@@ -93,6 +97,7 @@ bool ProcessorPromParseMetricNative::ProcessEvent(PipelineEventPtr& e,
                 cache.append(data.data(), end);
                 auto sb = eGroup.GetSourceBuffer()->CopyString(cache.data(), cache.size());
                 AddEvent(sb.data, sb.size, events, eGroup, parser);
+                cache.clear();
             } else if (begin != end) {
                 AddEvent(data.data() + begin, end - begin, events, eGroup, parser);
             }
@@ -100,8 +105,9 @@ bool ProcessorPromParseMetricNative::ProcessEvent(PipelineEventPtr& e,
         }
     }
     if (begin < data.size()) {
+        cache.append(data.data() + begin, data.size() - begin);
         std::lock_guard<std::mutex> lock(mRawDataMutex);
-        mMetricRawCache[streamID].append(data.data() + begin, data.size() - begin);
+        mMetricRawCache[streamID].append(cache.data(), cache.size());
     }
 
     return true;
@@ -111,9 +117,14 @@ void ProcessorPromParseMetricNative::AddEvent(
     const char* data, size_t size, EventsContainer& events, PipelineEventGroup& eGroup, TextParser& parser) {
     auto metricEvent = eGroup.CreateMetricEvent(true);
     auto line = StringView(data, size);
-    if (IsValidMetric(line) && parser.ParseLine(line, *metricEvent)) {
-        metricEvent->SetTag(string(prometheus::NAME), metricEvent->GetName());
-        events.emplace_back(std::move(metricEvent), true, nullptr);
+    if (IsValidMetric(line)) {
+        auto res = parser.ParseLine(line, *metricEvent);
+        if (res) {
+            metricEvent->SetTagNoCopy(prometheus::NAME, metricEvent->GetName());
+            events.emplace_back(std::move(metricEvent), true, nullptr);
+        } else {
+            LOG_WARNING(sLogger, (eGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_ID).to_string(), line));
+        }
     }
 }
 
