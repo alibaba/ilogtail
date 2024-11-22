@@ -10,8 +10,12 @@ import (
 	"github.com/alibaba/ilogtail/test/engine/cleanup"
 	"github.com/alibaba/ilogtail/test/engine/control"
 	"github.com/alibaba/ilogtail/test/engine/setup"
+	"github.com/alibaba/ilogtail/test/engine/setup/chaos"
+	"github.com/alibaba/ilogtail/test/engine/setup/monitor"
 	"github.com/alibaba/ilogtail/test/engine/setup/subscriber"
 	"github.com/alibaba/ilogtail/test/engine/trigger"
+	"github.com/alibaba/ilogtail/test/engine/trigger/ebpf"
+	"github.com/alibaba/ilogtail/test/engine/trigger/log"
 	"github.com/alibaba/ilogtail/test/engine/verify"
 )
 
@@ -27,6 +31,12 @@ func ScenarioInitializer(ctx *godog.ScenarioContext) {
 	ctx.Given(`^remove http config \{(.*)\}`, control.RemoveHTTPConfig)
 	ctx.Given(`^subcribe data from \{(\S+)\} with config`, subscriber.InitSubscriber)
 	ctx.Given(`^mkdir \{(.*)\}`, setup.Mkdir)
+	ctx.Given(`^docker-compose boot type \{(\S+)\}$`, setup.SetDockerComposeBootType)
+
+	// chaos
+	ctx.Given(`^network delay package \{(\d+)\}ms for ip \{(.*)\}`, chaos.NetworkDelay)
+	ctx.Given(`^network lost package \{(\d+)\}% for ip \{(.*)\}`, chaos.NetworkLoss)
+	ctx.Given(`^clean all chaos$`, cleanup.DestoryAllChaos)
 	// ------------------------------------------
 
 	// When
@@ -38,21 +48,30 @@ func ScenarioInitializer(ctx *godog.ScenarioContext) {
 	ctx.When(`^query through \{(.*)\}`, control.SetQuery)
 	ctx.When(`^apply yaml \{(.*)\} to k8s`, control.ApplyYaml)
 	ctx.When(`^delete yaml \{(.*)\} from k8s`, control.DeleteYaml)
+	ctx.When(`^restart agent`, control.RestartAgent)
+	ctx.When(`^force restart agent`, control.ForceRestartAgent)
 
 	// generate
 	ctx.When(`^begin trigger`, trigger.BeginTrigger)
-	ctx.When(`^generate \{(\d+)\} regex logs to file \{(.*)\}, with interval \{(\d+)\}ms$`, trigger.RegexSingle)
-	ctx.When(`^generate \{(\d+)\} multiline regex logs to file \{(.*)\}, with interval \{(\d+)\}ms$`, trigger.RegexMultiline)
-	ctx.When(`^generate \{(\d+)\} regex gbk logs to file \{(.*)\}, with interval \{(\d+)\}ms$`, trigger.RegexSingleGBK)
-	ctx.When(`^generate \{(\d+)\} http logs, with interval \{(\d+)\}ms, url: \{(.*)\}, method: \{(.*)\}, body:`, trigger.HTTP)
-	ctx.When(`^generate \{(\d+)\} apsara logs to file \{(.*)\}, with interval \{(\d+)\}ms$`, trigger.Apsara)
-	ctx.When(`^generate \{(\d+)\} delimiter logs to file \{(.*)\}, with interval \{(\d+)\}ms, with delimiter \{(.*)\} and quote \{(.*)\}$`, trigger.DelimiterSingle)
-	ctx.When(`^generate \{(\d+)\} multiline delimiter logs to file \{(.*)\}, with interval \{(\d+)\}ms, with delimiter \{(.*)\} and quote \{(.*)\}$`, trigger.DelimiterMultiline)
-	ctx.When(`^generate \{(\d+)\} json logs to file \{(.*)\}, with interval \{(\d+)\}ms$`, trigger.JSONSingle)
-	ctx.When(`^generate \{(\d+)\} multiline json logs to file \{(.*)\}, with interval \{(\d+)\}ms$`, trigger.JSONMultiline)
-	ctx.When(`^execute \{(\d+)\} commands to generate process security events`, trigger.TrigerProcessSecurityEvents)
-	ctx.When(`^execute \{(\d+)\} commands to generate network security events on url \{(.*)\}$`, trigger.TrigerNetworksSecurityEvents)
-	ctx.When(`^execute \{(\d+)\} commands to generate file security events on files \{(.*)\}$`, trigger.TrigerFileSecurityEvents)
+	// log
+	ctx.When(`^generate \{(\d+)\} regex logs to file \{(.*)\}, with interval \{(\d+)\}ms$`, log.RegexSingle)
+	ctx.When(`^generate \{(\d+)\} multiline regex logs to file \{(.*)\}, with interval \{(\d+)\}ms$`, log.RegexMultiline)
+	ctx.When(`^generate \{(\d+)\} regex gbk logs to file \{(.*)\}, with interval \{(\d+)\}ms$`, log.RegexSingleGBK)
+	ctx.When(`^generate \{(\d+)\} http logs, with interval \{(\d+)\}ms, url: \{(.*)\}, method: \{(.*)\}, body:`, log.HTTP)
+	ctx.When(`^generate \{(\d+)\} apsara logs to file \{(.*)\}, with interval \{(\d+)\}ms$`, log.Apsara)
+	ctx.When(`^generate \{(\d+)\} delimiter logs to file \{(.*)\}, with interval \{(\d+)\}ms, with delimiter \{(.*)\} and quote \{(.*)\}$`, log.DelimiterSingle)
+	ctx.When(`^generate \{(\d+)\} multiline delimiter logs to file \{(.*)\}, with interval \{(\d+)\}ms, with delimiter \{(.*)\} and quote \{(.*)\}$`, log.DelimiterMultiline)
+	ctx.When(`^generate \{(\d+)\} json logs to file \{(.*)\}, with interval \{(\d+)\}ms$`, log.JSONSingle)
+	ctx.When(`^generate \{(\d+)\} multiline json logs to file \{(.*)\}, with interval \{(\d+)\}ms$`, log.JSONMultiline)
+	ctx.When(`^generate random nginx logs to file, speed \{(\d+)\}MB/s, total \{(\d+)\}min, to file \{(.*)\}`, log.Nginx)
+	ctx.When(`^start monitor \{(\S+)\}`, monitor.StartMonitor)
+	ctx.When(`^wait monitor until log processing finished$`, monitor.WaitMonitorUntilProcessingFinished)
+
+	// ebpf
+	ctx.When(`^execute \{(\d+)\} commands to generate process security events`, ebpf.ProcessSecurityEvents)
+	ctx.When(`^execute \{(\d+)\} commands to generate network security events on url \{(.*)\}$`, ebpf.NetworksSecurityEvents)
+	ctx.When(`^execute \{(\d+)\} commands to generate file security events on files \{(.*)\}$`, ebpf.FileSecurityEvents)
+	ctx.When(`^generate \{(\d+)\} HTTP requests, with interval \{(\d+)\}ms, url: \{(.*)\}`, ebpf.HTTP)
 	// ------------------------------------------
 
 	// Then

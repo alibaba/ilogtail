@@ -19,26 +19,19 @@
 #include "common/Flags.h"
 #include "go_pipeline/LogtailPlugin.h"
 #include "models/EventPool.h"
-#include "monitor/LogFileProfiler.h"
-#include "monitor/LogtailAlarm.h"
+#include "monitor/AlarmManager.h"
 #include "monitor/metric_constants/MetricConstants.h"
 #include "pipeline/PipelineManager.h"
 #include "queue/ExactlyOnceQueueManager.h"
 #include "queue/ProcessQueueManager.h"
 #include "queue/QueueKeyManager.h"
 
+DEFINE_FLAG_INT32(default_flush_merged_buffer_interval, "default flush merged buffer, seconds", 1);
+DEFINE_FLAG_INT32(processor_runner_exit_timeout_secs, "", 60);
+
 DECLARE_FLAG_INT32(max_send_log_group_size);
 
 using namespace std;
-
-#if defined(_MSC_VER)
-// On Windows, if Chinese config base path is used, the log path will be converted to GBK,
-// so the __tag__.__path__ have to be converted back to UTF8 to avoid bad display.
-// Note: enable this will spend CPU to do transformation.
-DEFINE_FLAG_BOOL(enable_chinese_tag_path, "Enable Chinese __tag__.__path__", true);
-#endif
-DEFINE_FLAG_INT32(default_flush_merged_buffer_interval, "default flush merged buffer, seconds", 1);
-DEFINE_FLAG_INT32(processor_runner_exit_timeout_secs, "", 60);
 
 namespace logtail {
 
@@ -90,25 +83,25 @@ bool ProcessorRunner::PushQueue(QueueKey key, size_t inputIndex, PipelineEventGr
 }
 
 void ProcessorRunner::Run(uint32_t threadNo) {
-    LOG_INFO(sLogger, ("processor runner", "started")("threadNo", threadNo));
+    LOG_INFO(sLogger, ("processor runner", "started")("thread no", threadNo));
 
     // thread local metrics should be initialized in each thread
     WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
         sMetricsRecordRef,
+        MetricCategory::METRIC_CATEGORY_RUNNER,
         {{METRIC_LABEL_KEY_RUNNER_NAME, METRIC_LABEL_VALUE_RUNNER_NAME_PROCESSOR},
-         {METRIC_LABEL_KEY_METRIC_CATEGORY, METRIC_LABEL_KEY_METRIC_CATEGORY_RUNNER},
-         {"thread_no", ToString(threadNo)}});
+         {METRIC_LABEL_KEY_THREAD_NO, ToString(threadNo)}});
     sInGroupsCnt = sMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_EVENT_GROUPS_TOTAL);
     sInEventsCnt = sMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_EVENTS_TOTAL);
     sInGroupDataSizeBytes = sMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_SIZE_BYTES);
     sLastRunTime = sMetricsRecordRef.CreateIntGauge(METRIC_RUNNER_LAST_RUN_TIME);
 
-    static int32_t lastMergeTime = 0;
+    static int32_t lastFlushBatchTime = 0;
     while (true) {
-        int32_t curTime = time(NULL);
-        if (threadNo == 0 && curTime - lastMergeTime >= INT32_FLAG(default_flush_merged_buffer_interval)) {
+        int32_t curTime = time(nullptr);
+        if (threadNo == 0 && curTime - lastFlushBatchTime >= INT32_FLAG(default_flush_merged_buffer_interval)) {
             TimeoutFlushManager::GetInstance()->FlushTimeoutBatch();
-            lastMergeTime = curTime;
+            lastFlushBatchTime = curTime;
         }
 
         sLastRunTime->Set(curTime);
@@ -144,6 +137,9 @@ void ProcessorRunner::Run(uint32_t threadNo) {
         pipeline->Process(eventGroupList, item->mInputIndex);
 
         if (pipeline->IsFlushingThroughGoPipeline()) {
+            // TODO:
+            // 1. allow all event types to be sent to Go pipelines
+            // 2. use event group protobuf instead
             if (isLog) {
                 for (auto& group : eventGroupList) {
                     string res, errorMsg;

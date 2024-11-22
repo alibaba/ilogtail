@@ -47,13 +47,13 @@ PrometheusInputRunner::PrometheusInputRunner()
     : mServiceHost(STRING_FLAG(loong_collector_operator_service)),
       mServicePort(INT32_FLAG(loong_collector_operator_service_port)),
       mPodName(STRING_FLAG(_pod_name_)),
+      mEventPool(true),
       mUnRegisterMs(0) {
     mClient = std::make_unique<sdk::CurlClient>();
     mTimer = std::make_shared<Timer>();
 
     // self monitor
     MetricLabels labels;
-    labels.emplace_back(METRIC_LABEL_KEY_METRIC_CATEGORY, METRIC_LABEL_KEY_METRIC_CATEGORY_RUNNER);
     labels.emplace_back(METRIC_LABEL_KEY_RUNNER_NAME, METRIC_LABEL_VALUE_RUNNER_NAME_PROMETHEUS);
     labels.emplace_back(METRIC_LABEL_KEY_INSTANCE_ID, Application::GetInstance()->GetInstanceId());
     labels.emplace_back(METRIC_LABEL_KEY_POD_NAME, mPodName);
@@ -64,7 +64,7 @@ PrometheusInputRunner::PrometheusInputRunner()
     dynamicLabels.emplace_back(METRIC_LABEL_KEY_PROJECT, [this]() -> std::string { return this->GetAllProjects(); });
 
     WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
-        mMetricsRecordRef, std::move(labels), std::move(dynamicLabels));
+        mMetricsRecordRef, MetricCategory::METRIC_CATEGORY_RUNNER, std::move(labels), std::move(dynamicLabels));
 
     mPromRegisterState = mMetricsRecordRef.CreateIntGauge(METRIC_RUNNER_CLIENT_REGISTER_STATE);
     mPromJobNum = mMetricsRecordRef.CreateIntGauge(METRIC_RUNNER_JOBS_TOTAL);
@@ -84,7 +84,7 @@ void PrometheusInputRunner::UpdateScrapeInput(std::shared_ptr<TargetSubscriberSc
     targetSubscriber->InitSelfMonitor(defaultLabels);
 
     targetSubscriber->mUnRegisterMs = mUnRegisterMs.load();
-    targetSubscriber->SetTimer(mTimer);
+    targetSubscriber->SetComponent(mTimer, &mEventPool);
     auto randSleepMilliSec = GetRandSleepMilliSec(
         targetSubscriber->GetId(), prometheus::RefeshIntervalSeconds, GetCurrentTimeInMilliSeconds());
     auto firstExecTime = std::chrono::steady_clock::now() + std::chrono::milliseconds(randSleepMilliSec);
@@ -294,5 +294,9 @@ string PrometheusInputRunner::GetAllProjects() {
         }
     }
     return result;
+}
+
+void PrometheusInputRunner::CheckGC() {
+    mEventPool.CheckGC();
 }
 }; // namespace logtail

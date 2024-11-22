@@ -17,7 +17,7 @@
 #include <string>
 
 #include "spl/LoongCollectorSplPipeline.h"
-#include "monitor/LogtailMetric.h"
+#include "monitor/MetricManager.h"
 #include "pipeline/plugin/interface/Processor.h"
 
 namespace logtail {

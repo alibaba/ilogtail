@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <utility>
 
+#include "app_config/AppConfig.h"
 #include "common/Flags.h"
 #include "common/ParamExtractor.h"
 #include "go_pipeline/LogtailPlugin.h"
@@ -73,6 +74,8 @@ bool Pipeline::Init(PipelineConfig&& config) {
     mContext.SetCreateTime(config.mCreateTime);
     mContext.SetPipeline(*this);
     mContext.SetIsFirstProcessorJsonFlag(config.mIsFirstProcessorJson);
+    mContext.SetHasNativeProcessorsFlag(config.mHasNativeProcessor);
+    mContext.SetIsFlushingThroughGoPipelineFlag(config.IsFlushingThroughGoPipelineExisted());
 
     // for special treatment below
     const InputFile* inputFile = nullptr;
@@ -286,15 +289,12 @@ bool Pipeline::Init(PipelineConfig&& config) {
                                    mContext.GetRegion());
             }
         }
-        uint32_t priority = mContext.GetGlobalConfig().mProcessPriority == 0
-            ? ProcessQueueManager::sMaxPriority
-            : mContext.GetGlobalConfig().mProcessPriority - 1;
         if (isInputSupportAck) {
             ProcessQueueManager::GetInstance()->CreateOrUpdateBoundedQueue(
-                mContext.GetProcessQueueKey(), priority, mContext);
+                mContext.GetProcessQueueKey(), mContext.GetGlobalConfig().mPriority, mContext);
         } else {
             ProcessQueueManager::GetInstance()->CreateOrUpdateCircularQueue(
-                mContext.GetProcessQueueKey(), priority, 1024, mContext);
+                mContext.GetProcessQueueKey(), mContext.GetGlobalConfig().mPriority, 1024, mContext);
         }
 
 
@@ -318,9 +318,8 @@ bool Pipeline::Init(PipelineConfig&& config) {
 
     WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
         mMetricsRecordRef,
-        {{METRIC_LABEL_KEY_PROJECT, mContext.GetProjectName()},
-         {METRIC_LABEL_KEY_PIPELINE_NAME, mName},
-         {METRIC_LABEL_KEY_METRIC_CATEGORY, METRIC_LABEL_KEY_METRIC_CATEGORY_PIPELINE}});
+        MetricCategory::METRIC_CATEGORY_PIPELINE,
+        {{METRIC_LABEL_KEY_PROJECT, mContext.GetProjectName()}, {METRIC_LABEL_KEY_PIPELINE_NAME, mName}});
     mStartTime = mMetricsRecordRef.CreateIntGauge(METRIC_PIPELINE_START_TIME);
     mProcessorsInEventsTotal = mMetricsRecordRef.CreateCounter(METRIC_PIPELINE_PROCESSORS_IN_EVENTS_TOTAL);
     mProcessorsInGroupsTotal = mMetricsRecordRef.CreateCounter(METRIC_PIPELINE_PROCESSORS_IN_EVENT_GROUPS_TOTAL);
@@ -431,9 +430,7 @@ void Pipeline::Stop(bool isRemoving) {
     ProcessQueueManager::GetInstance()->DisablePop(mName, isRemoving);
     WaitAllItemsInProcessFinished();
 
-    if (!isRemoving) {
-        FlushBatch();
-    }
+    FlushBatch();
 
     if (!mGoPipelineWithoutInput.isNull()) {
         // Go pipeline `Stop` will stop and delete
@@ -501,9 +498,9 @@ bool Pipeline::LoadGoPipelines() const {
                                                         mContext.GetRegion(),
                                                         mContext.GetLogstoreKey())) {
             LOG_ERROR(mContext.GetLogger(),
-                      ("failed to init pipeline", "Go pipeline is invalid, see go_plugin.LOG for detail")(
+                      ("failed to init pipeline", "Go pipeline is invalid, see " + GetPluginLogName() + " for detail")(
                           "Go pipeline num", "2")("Go pipeline content", content)("config", mName));
-            LogtailAlarm::GetInstance()->SendAlarm(CATEGORY_CONFIG_ALARM,
+            AlarmManager::GetInstance()->SendAlarm(CATEGORY_CONFIG_ALARM,
                                                    "Go pipeline is invalid, content: " + content + ", config: " + mName,
                                                    mContext.GetProjectName(),
                                                    mContext.GetLogstoreName(),
@@ -520,9 +517,9 @@ bool Pipeline::LoadGoPipelines() const {
                                                         mContext.GetRegion(),
                                                         mContext.GetLogstoreKey())) {
             LOG_ERROR(mContext.GetLogger(),
-                      ("failed to init pipeline", "Go pipeline is invalid, see go_plugin.LOG for detail")(
+                      ("failed to init pipeline", "Go pipeline is invalid, see " + GetPluginLogName() + " for detail")(
                           "Go pipeline num", "1")("Go pipeline content", content)("config", mName));
-            LogtailAlarm::GetInstance()->SendAlarm(CATEGORY_CONFIG_ALARM,
+            AlarmManager::GetInstance()->SendAlarm(CATEGORY_CONFIG_ALARM,
                                                    "Go pipeline is invalid, content: " + content + ", config: " + mName,
                                                    mContext.GetProjectName(),
                                                    mContext.GetLogstoreName(),
@@ -553,7 +550,7 @@ void Pipeline::WaitAllItemsInProcessFinished() {
         uint64_t duration = GetCurrentTimeInMilliSeconds() - startTime;
         if (!alarmOnce && duration > 10000) { // 10s
             LOG_ERROR(sLogger, ("pipeline stop", "too slow")("config", mName)("cost", duration));
-            LogtailAlarm::GetInstance()->SendAlarm(CONFIG_UPDATE_ALARM,
+            AlarmManager::GetInstance()->SendAlarm(CONFIG_UPDATE_ALARM,
                                                    string("pipeline stop too slow, config: ") + mName
                                                        + "; cost:" + std::to_string(duration),
                                                    mContext.GetProjectName(),

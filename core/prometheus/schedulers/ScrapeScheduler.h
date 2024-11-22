@@ -21,12 +21,11 @@
 
 #include "BaseScheduler.h"
 #include "common/http/HttpResponse.h"
-#include "common/timer/Timer.h"
 #include "models/PipelineEventGroup.h"
-#include "monitor/LoongCollectorMetricTypes.h"
+#include "monitor/MetricTypes.h"
 #include "pipeline/queue/QueueKey.h"
 #include "prometheus/PromSelfMonitor.h"
-#include "prometheus/labels/TextParser.h"
+#include "prometheus/Utils.h"
 #include "prometheus/schedulers/ScrapeConfig.h"
 
 #ifdef APSARA_UNIT_TEST_MAIN
@@ -34,6 +33,29 @@
 #endif
 
 namespace logtail {
+
+size_t PromMetricWriteCallback(char* buffer, size_t size, size_t nmemb, void* data);
+
+struct PromMetricResponseBody {
+    PipelineEventGroup mEventGroup;
+    std::string mCache;
+    size_t mRawSize = 0;
+    EventPool* mEventPool = nullptr;
+
+    explicit PromMetricResponseBody(EventPool* eventPool)
+        : mEventGroup(std::make_shared<SourceBuffer>()), mEventPool(eventPool) {};
+    void AddEvent(char* line, size_t len) {
+        if (IsValidMetric(StringView(line, len))) {
+            auto* e = mEventGroup.AddRawEvent(true, mEventPool);
+            auto sb = mEventGroup.GetSourceBuffer()->CopyString(line, len);
+            e->SetContentNoCopy(sb);
+        }
+    }
+    void FlushCache() {
+        AddEvent(mCache.data(), mCache.size());
+        mCache.clear();
+    }
+};
 
 class ScrapeScheduler : public BaseScheduler {
 public:
@@ -47,7 +69,6 @@ public:
     ~ScrapeScheduler() override = default;
 
     void OnMetricResult(HttpResponse&, uint64_t timestampMilliSec);
-    void SetTimer(std::shared_ptr<Timer> timer);
 
     std::string GetId() const;
 
@@ -61,8 +82,6 @@ private:
     void SetAutoMetricMeta(PipelineEventGroup& eGroup);
     void SetTargetLabels(PipelineEventGroup& eGroup);
 
-    PipelineEventGroup BuildPipelineEventGroup(const std::string& content);
-
     std::unique_ptr<TimerEvent> BuildScrapeTimerEvent(std::chrono::steady_clock::time_point execTime);
 
     std::shared_ptr<ScrapeConfig> mScrapeConfigPtr;
@@ -73,11 +92,8 @@ private:
     std::string mInstance;
     Labels mTargetLabels;
 
-    std::unique_ptr<TextParser> mParser;
-
     QueueKey mQueueKey;
     size_t mInputIndex;
-    std::shared_ptr<Timer> mTimer;
 
     // auto metrics
     uint64_t mScrapeTimestampMilliSec = 0;

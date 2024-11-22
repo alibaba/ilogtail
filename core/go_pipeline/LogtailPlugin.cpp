@@ -26,8 +26,8 @@
 #include "container_manager/ConfigContainerInfoUpdateCmd.h"
 #include "file_server/ConfigManager.h"
 #include "logger/Logger.h"
-#include "monitor/LogFileProfiler.h"
-#include "monitor/LogtailAlarm.h"
+#include "monitor/AlarmManager.h"
+#include "monitor/Monitor.h"
 #include "pipeline/PipelineManager.h"
 #include "pipeline/queue/SenderQueueManager.h"
 #include "provider/Provider.h"
@@ -65,9 +65,12 @@ LogtailPlugin::LogtailPlugin() {
     mPluginCfg["LoongcollectorConfDir"] = AppConfig::GetInstance()->GetLoongcollectorConfDir();
     mPluginCfg["LoongcollectorLogDir"] = GetAgentLogDir();
     mPluginCfg["LoongcollectorDataDir"] = GetAgentDataDir();
+    mPluginCfg["LoongcollectorPluginLogName"] = GetPluginLogName();
+    mPluginCfg["LoongcollectorVersionTag"] = GetVersionTag();
+    mPluginCfg["LoongcollectorCheckPointFile"] = GetGoPluginCheckpoint();
     mPluginCfg["LoongcollectorThirdPartyDir"] = GetAgentThirdPartyDir();
-    mPluginCfg["HostIP"] = LogFileProfiler::mIpAddr;
-    mPluginCfg["Hostname"] = LogFileProfiler::mHostname;
+    mPluginCfg["HostIP"] = LoongCollectorMonitor::mIpAddr;
+    mPluginCfg["Hostname"] = LoongCollectorMonitor::mHostname;
     mPluginCfg["EnableContainerdUpperDirDetect"] = BOOL_FLAG(enable_containerd_upper_dir_detect);
     mPluginCfg["EnableSlsMetricsFormat"] = BOOL_FLAG(enable_sls_metrics_format);
 }
@@ -135,7 +138,7 @@ void LogtailPlugin::StopAllPipelines(bool withInputFlag) {
         auto stopAllCost = GetCurrentTimeInMilliSeconds() - stopAllStart;
         LOG_INFO(sLogger, ("Go pipelines stop all", "succeeded")("cost", ToString(stopAllCost) + "ms"));
         if (stopAllCost >= 10 * 1000) {
-            LogtailAlarm::GetInstance()->SendAlarm(HOLD_ON_TOO_SLOW_ALARM,
+            AlarmManager::GetInstance()->SendAlarm(HOLD_ON_TOO_SLOW_ALARM,
                                                    "Stopping all Go pipelines took " + ToString(stopAllCost) + "ms");
         }
     }
@@ -152,7 +155,7 @@ void LogtailPlugin::Stop(const std::string& configName, bool removedFlag) {
         auto stopCost = GetCurrentTimeInMilliSeconds() - stopStart;
         LOG_INFO(sLogger, ("Go pipelines stop", "succeeded")("config", configName)("cost", ToString(stopCost) + "ms"));
         if (stopCost >= 10 * 1000) {
-            LogtailAlarm::GetInstance()->SendAlarm(
+            AlarmManager::GetInstance()->SendAlarm(
                 HOLD_ON_TOO_SLOW_ALARM, "Stopping Go pipeline " + configName + " took " + ToString(stopCost) + "ms");
         }
     }
@@ -616,4 +619,3 @@ K8sContainerMeta LogtailPlugin::GetContainerMeta(const string& containerID) {
     }
     return K8sContainerMeta();
 }
-

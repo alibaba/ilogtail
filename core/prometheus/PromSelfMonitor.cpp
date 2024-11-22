@@ -4,7 +4,7 @@
 #include <string>
 #include <unordered_map>
 
-#include "monitor/LoongCollectorMetricTypes.h"
+#include "monitor/MetricTypes.h"
 #include "monitor/metric_constants/MetricConstants.h"
 using namespace std;
 
@@ -13,7 +13,7 @@ namespace logtail {
 void PromSelfMonitorUnsafe::InitMetricManager(const std::unordered_map<std::string, MetricType>& metricKeys,
                                         const MetricLabels& labels) {
     auto metricLabels = std::make_shared<MetricLabels>(labels);
-    mPluginMetricManagerPtr = std::make_shared<PluginMetricManager>(metricLabels, metricKeys);
+    mPluginMetricManagerPtr = std::make_shared<PluginMetricManager>(metricLabels, metricKeys, MetricCategory::METRIC_CATEGORY_PLUGIN_SOURCE);
 }
 
 void PromSelfMonitorUnsafe::AddCounter(const std::string& metricName, uint64_t statusCode, uint64_t val) {

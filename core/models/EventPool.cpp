@@ -41,9 +41,8 @@ EventPool::~EventPool() {
 }
 
 LogEvent* EventPool::AcquireLogEvent(PipelineEventGroup* ptr) {
-    TransferPoolIfEmpty(mLogEventPool, mLogEventPoolBak);
-
     if (mEnableLock) {
+        TransferPoolIfEmpty(mLogEventPool, mLogEventPoolBak);
         lock_guard<mutex> lock(mPoolMux);
         return AcquireEventNoLock(ptr, mLogEventPool, mMinUnusedLogEventsCnt);
     }
@@ -51,9 +50,8 @@ LogEvent* EventPool::AcquireLogEvent(PipelineEventGroup* ptr) {
 }
 
 MetricEvent* EventPool::AcquireMetricEvent(PipelineEventGroup* ptr) {
-    TransferPoolIfEmpty(mMetricEventPool, mMetricEventPoolBak);
-
     if (mEnableLock) {
+        TransferPoolIfEmpty(mMetricEventPool, mMetricEventPoolBak);
         lock_guard<mutex> lock(mPoolMux);
         return AcquireEventNoLock(ptr, mMetricEventPool, mMinUnusedMetricEventsCnt);
     }
@@ -61,13 +59,21 @@ MetricEvent* EventPool::AcquireMetricEvent(PipelineEventGroup* ptr) {
 }
 
 SpanEvent* EventPool::AcquireSpanEvent(PipelineEventGroup* ptr) {
-    TransferPoolIfEmpty(mSpanEventPool, mSpanEventPoolBak);
-
     if (mEnableLock) {
+        TransferPoolIfEmpty(mSpanEventPool, mSpanEventPoolBak);
         lock_guard<mutex> lock(mPoolMux);
         return AcquireEventNoLock(ptr, mSpanEventPool, mMinUnusedSpanEventsCnt);
     }
     return AcquireEventNoLock(ptr, mSpanEventPool, mMinUnusedSpanEventsCnt);
+}
+
+RawEvent* EventPool::AcquireRawEvent(PipelineEventGroup* ptr) {
+    if (mEnableLock) {
+        TransferPoolIfEmpty(mRawEventPool, mRawEventPoolBak);
+        lock_guard<mutex> lock(mPoolMux);
+        return AcquireEventNoLock(ptr, mRawEventPool, mMinUnusedRawEventsCnt);
+    }
+    return AcquireEventNoLock(ptr, mRawEventPool, mMinUnusedRawEventsCnt);
 }
 
 void EventPool::Release(vector<LogEvent*>&& obj) {
@@ -97,20 +103,36 @@ void EventPool::Release(vector<SpanEvent*>&& obj) {
     }
 }
 
+void EventPool::Release(vector<RawEvent*>&& obj) {
+    if (mEnableLock) {
+        lock_guard<mutex> lock(mPoolBakMux);
+        mRawEventPoolBak.insert(mRawEventPoolBak.end(), obj.begin(), obj.end());
+    } else {
+        mRawEventPool.insert(mRawEventPool.end(), obj.begin(), obj.end());
+    }
+}
+
 template <class T>
-void DoGC(vector<T*>& pool, vector<T*>& poolBak, size_t& minUnusedCnt, mutex* mux) {
+void DoGC(vector<T*>& pool, vector<T*>& poolBak, size_t& minUnusedCnt, mutex* mux, const string& type) {
     if (minUnusedCnt <= pool.size() || minUnusedCnt == numeric_limits<size_t>::max()) {
         auto sz = minUnusedCnt == numeric_limits<size_t>::max() ? pool.size() : minUnusedCnt;
         for (size_t i = 0; i < sz; ++i) {
             delete pool.back();
             pool.pop_back();
         }
+        size_t bakSZ = 0;
         if (mux) {
             lock_guard<mutex> lock(*mux);
+            bakSZ = poolBak.size();
             for (auto& item : poolBak) {
                 delete item;
             }
             poolBak.clear();
+        }
+        if (sz != 0 || bakSZ != 0) {
+            LOG_INFO(
+                sLogger,
+                ("event pool gc", "done")("event type", type)("gc event cnt", sz + bakSZ)("pool size", pool.size()));
         }
     } else {
         LOG_ERROR(sLogger,
@@ -124,13 +146,15 @@ void EventPool::CheckGC() {
     if (time(nullptr) - mLastGCTime > INT32_FLAG(event_pool_gc_interval_secs)) {
         if (mEnableLock) {
             lock_guard<mutex> lock(mPoolMux);
-            DoGC(mLogEventPool, mLogEventPoolBak, mMinUnusedLogEventsCnt, &mPoolBakMux);
-            DoGC(mMetricEventPool, mMetricEventPoolBak, mMinUnusedMetricEventsCnt, &mPoolBakMux);
-            DoGC(mSpanEventPool, mSpanEventPoolBak, mMinUnusedSpanEventsCnt, &mPoolBakMux);
+            DoGC(mLogEventPool, mLogEventPoolBak, mMinUnusedLogEventsCnt, &mPoolBakMux, "log");
+            DoGC(mMetricEventPool, mMetricEventPoolBak, mMinUnusedMetricEventsCnt, &mPoolBakMux, "metric");
+            DoGC(mSpanEventPool, mSpanEventPoolBak, mMinUnusedSpanEventsCnt, &mPoolBakMux, "span");
+            DoGC(mRawEventPool, mRawEventPoolBak, mMinUnusedRawEventsCnt, &mPoolBakMux, "raw");
         } else {
-            DoGC(mLogEventPool, mLogEventPoolBak, mMinUnusedLogEventsCnt, nullptr);
-            DoGC(mMetricEventPool, mMetricEventPoolBak, mMinUnusedMetricEventsCnt, nullptr);
-            DoGC(mSpanEventPool, mSpanEventPoolBak, mMinUnusedSpanEventsCnt, nullptr);
+            DoGC(mLogEventPool, mLogEventPoolBak, mMinUnusedLogEventsCnt, nullptr, "log");
+            DoGC(mMetricEventPool, mMetricEventPoolBak, mMinUnusedMetricEventsCnt, nullptr, "metric");
+            DoGC(mSpanEventPool, mSpanEventPoolBak, mMinUnusedSpanEventsCnt, nullptr, "span");
+            DoGC(mRawEventPool, mRawEventPoolBak, mMinUnusedRawEventsCnt, nullptr, "raw");
         }
         mLastGCTime = time(nullptr);
     }
@@ -146,6 +170,9 @@ void EventPool::DestroyAllEventPool() {
     for (auto& item : mSpanEventPool) {
         delete item;
     }
+    for (auto& item : mRawEventPool) {
+        delete item;
+    }
 }
 
 void EventPool::DestroyAllEventPoolBak() {
@@ -158,6 +185,9 @@ void EventPool::DestroyAllEventPoolBak() {
     for (auto& item : mSpanEventPoolBak) {
         delete item;
     }
+    for (auto& item : mRawEventPoolBak) {
+        delete item;
+    }
 }
 
 #ifdef APSARA_UNIT_TEST_MAIN
@@ -168,9 +198,11 @@ void EventPool::Clear() {
         mLogEventPool.clear();
         mMetricEventPool.clear();
         mSpanEventPool.clear();
+        mRawEventPool.clear();
         mMinUnusedLogEventsCnt = numeric_limits<size_t>::max();
         mMinUnusedMetricEventsCnt = numeric_limits<size_t>::max();
         mMinUnusedSpanEventsCnt = numeric_limits<size_t>::max();
+        mMinUnusedRawEventsCnt = numeric_limits<size_t>::max();
     }
     {
         lock_guard<mutex> lock(mPoolBakMux);
@@ -178,6 +210,7 @@ void EventPool::Clear() {
         mLogEventPoolBak.clear();
         mMetricEventPoolBak.clear();
         mSpanEventPoolBak.clear();
+        mRawEventPoolBak.clear();
     }
     mLastGCTime = 0;
 }

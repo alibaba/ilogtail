@@ -69,13 +69,13 @@ bool ProcessorSPL::Init(const Json::Value& config) {
 
     mSPLPipelinePtr = std::make_shared<LoongCollectorSplPipeline>();
     errorMsg.clear();
-    bool success = mSPLPipelinePtr->InitLoongCollectorSPL(mSpl,
-                                                          INT32_FLAG(logtail_spl_pipeline_quota),
-                                                          INT32_FLAG(logtail_spl_query_max_size),
-                                                          errorMsg,
-                                                          mTimeoutMills,
-                                                          mMaxMemoryBytes);
-    if (!success) {
+    ResultCode success = mSPLPipelinePtr->InitLoongCollectorSPL(mSpl,
+                                                                INT32_FLAG(logtail_spl_pipeline_quota),
+                                                                INT32_FLAG(logtail_spl_query_max_size),
+                                                                errorMsg,
+                                                                mTimeoutMills,
+                                                                mMaxMemoryBytes);
+    if (success != ResultCode::OK) {
         PARAM_ERROR_RETURN(mContext->GetLogger(),
                            mContext->GetAlarm(),
                            "failed to parse spl: " + mSpl + " error: " + errorMsg,

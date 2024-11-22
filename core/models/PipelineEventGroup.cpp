@@ -34,10 +34,24 @@ namespace logtail {
 template <class T>
 void DestroyEvents(vector<PipelineEventPtr>&& events) {
     unordered_map<EventPool*, vector<T*>> eventsPoolMap;
+    // for most cases, all events have the same origin. So we cache the pool pointer and iterator for efficiency
+    EventPool* cachedPoolPtr = nullptr;
+    typename unordered_map<EventPool*, vector<T*>>::iterator cachedIt;
+    bool firstEvent = true;
     for (auto& item : events) {
         if (item && item.IsFromEventPool()) {
             item->Reset();
-            eventsPoolMap[item.GetEventPool()].emplace_back(static_cast<T*>(item.Release()));
+            if (firstEvent || item.GetEventPool() != cachedPoolPtr) {
+                cachedPoolPtr = item.GetEventPool();
+                cachedIt = eventsPoolMap.find(cachedPoolPtr);
+                if (cachedIt == eventsPoolMap.end()) {
+                    eventsPoolMap.emplace(cachedPoolPtr, vector<T*>());
+                    cachedIt = eventsPoolMap.find(cachedPoolPtr);
+                    cachedIt->second.reserve(events.size());
+                }
+                firstEvent = false;
+            }
+            cachedIt->second.emplace_back(static_cast<T*>(item.Release()));
         }
     }
     for (auto& item : eventsPoolMap) {
@@ -72,6 +86,9 @@ PipelineEventGroup::~PipelineEventGroup() {
             break;
         case PipelineEvent::Type::SPAN:
             DestroyEvents<SpanEvent>(std::move(mEvents));
+            break;
+        case PipelineEvent::Type::RAW:
+            DestroyEvents<RawEvent>(std::move(mEvents));
             break;
         default:
             break;
@@ -145,6 +162,20 @@ unique_ptr<SpanEvent> PipelineEventGroup::CreateSpanEvent(bool fromPool, EventPo
     return unique_ptr<SpanEvent>(e);
 }
 
+unique_ptr<RawEvent> PipelineEventGroup::CreateRawEvent(bool fromPool, EventPool* pool) {
+    RawEvent* e = nullptr;
+    if (fromPool) {
+        if (pool) {
+            e = pool->AcquireRawEvent(this);
+        } else {
+            e = gThreadedEventPool.AcquireRawEvent(this);
+        }
+    } else {
+        e = new RawEvent(this);
+    }
+    return unique_ptr<RawEvent>(e);
+}
+
 LogEvent* PipelineEventGroup::AddLogEvent(bool fromPool, EventPool* pool) {
     LogEvent* e = nullptr;
     if (fromPool) {
@@ -185,6 +216,21 @@ SpanEvent* PipelineEventGroup::AddSpanEvent(bool fromPool, EventPool* pool) {
         }
     } else {
         e = new SpanEvent(this);
+    }
+    mEvents.emplace_back(e, fromPool, pool);
+    return e;
+}
+
+RawEvent* PipelineEventGroup::AddRawEvent(bool fromPool, EventPool* pool) {
+    RawEvent* e = nullptr;
+    if (fromPool) {
+        if (pool) {
+            e = pool->AcquireRawEvent(this);
+        } else {
+            e = gThreadedEventPool.AcquireRawEvent(this);
+        }
+    } else {
+        e = new RawEvent(this);
     }
     mEvents.emplace_back(e, fromPool, pool);
     return e;
@@ -390,8 +436,10 @@ bool PipelineEventGroup::FromJson(const Json::Value& root) {
                 AddLogEvent()->FromJson(event);
             } else if (event["type"].asInt() == static_cast<int>(PipelineEvent::Type::METRIC)) {
                 AddMetricEvent()->FromJson(event);
-            } else {
+            } else if (event["type"].asInt() == static_cast<int>(PipelineEvent::Type::SPAN)) {
                 AddSpanEvent()->FromJson(event);
+            } else {
+                AddRawEvent()->FromJson(event);
             }
         }
     }
