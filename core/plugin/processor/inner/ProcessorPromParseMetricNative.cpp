@@ -25,21 +25,13 @@ bool ProcessorPromParseMetricNative::Init(const Json::Value& config) {
 }
 
 void ProcessorPromParseMetricNative::Process(PipelineEventGroup& eGroup) {
-    EventsContainer& events = eGroup.MutableEvents();
-    if (events.size() != 1) {
-        LOG_WARNING(sLogger, ("unexpected event size", events.size()));
-        return;
-    }
-    PipelineEventPtr e = std::move(events.front());
-    events.pop_back();
-    if (!e.Is<RawEvent>()) {
-        LOG_WARNING(sLogger, ("unexpected event type", "need raw event"));
-        return;
-    }
     if (eGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_ID).empty()) {
         LOG_WARNING(sLogger, ("unexpected event", "need prom stream id"));
         return;
     }
+
+    EventsContainer& events = eGroup.MutableEvents();
+    auto rawEvents = std::move(events);
 
     StringView scrapeTimestampMilliSecStr = eGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_TIMESTAMP_MILLISEC);
     auto timestampMilliSec = StringTo<uint64_t>(scrapeTimestampMilliSecStr.to_string());
@@ -48,8 +40,9 @@ void ProcessorPromParseMetricNative::Process(PipelineEventGroup& eGroup) {
     TextParser parser(mScrapeConfigPtr->mHonorTimestamps);
     parser.SetDefaultTimestamp(timestamp, nanoSec);
 
-    ProcessEvent(e, events, eGroup, parser);
-
+    for (auto& rawEvent : rawEvents) {
+        ProcessEvent(rawEvent, events, eGroup, parser);
+    }
 
     auto streamID = eGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_ID).to_string();
 
@@ -74,12 +67,17 @@ bool ProcessorPromParseMetricNative::ProcessEvent(PipelineEventPtr& e,
                                                   EventsContainer& events,
                                                   PipelineEventGroup& eGroup,
                                                   TextParser& parser) {
+    if (!e.Is<RawEvent>()) {
+        LOG_WARNING(sLogger, ("unexpected event type", "need raw event"));
+        return false;
+    }
     auto streamID = eGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_ID).to_string();
     auto data = e.Cast<RawEvent>().GetContent();
     string cache;
     {
         std::lock_guard<std::mutex> lock(mRawDataMutex);
-        cache = std::move(mMetricRawCache[streamID]);
+        cache = mMetricRawCache[streamID];
+        mMetricRawCache[streamID] = "";
     }
 
     size_t begin = 0;
@@ -87,9 +85,10 @@ bool ProcessorPromParseMetricNative::ProcessEvent(PipelineEventPtr& e,
         if (data[end] == '\n') {
             if (begin == 0 && !cache.empty()) {
                 cache.append(data.data(), end);
-                AddEvent(cache.data(), cache.size(), events, eGroup, parser);
-                cache.clear();
+                auto sb = eGroup.GetSourceBuffer()->CopyString(cache.data(), cache.size());
+                AddEvent(sb.data, sb.size, events, eGroup, parser);
             } else if (begin != end) {
+                LOG_INFO(sLogger, ("no cache data", ""));
                 AddEvent(data.data() + begin, end - begin, events, eGroup, parser);
             }
             begin = end + 1;
@@ -99,6 +98,7 @@ bool ProcessorPromParseMetricNative::ProcessEvent(PipelineEventPtr& e,
         std::lock_guard<std::mutex> lock(mRawDataMutex);
         mMetricRawCache[streamID].append(data.data() + begin, data.size() - begin);
     }
+
     if (!eGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_UP_STATE).empty()) {
         // erase the cache
         std::lock_guard<std::mutex> lock(mRawDataMutex);

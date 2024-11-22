@@ -55,17 +55,10 @@ public:
     void Cancel() override;
     void InitSelfMonitor(const MetricLabels&);
 
-    std::string mCache;
     size_t mRawSize = 0;
+    PipelineEventGroup mEventGroup;
 
     static size_t PromMetricWriteCallback(char* buffer, size_t size, size_t nmemb, void* data);
-    PipelineEventGroup FlushCache() {
-        auto eventGroup = PipelineEventGroup(std::make_shared<SourceBuffer>());
-        auto *e = eventGroup.AddRawEvent();
-        e->SetContent(mCache);
-        mCache.clear();
-        return eventGroup;
-    }
 
 private:
     void PushEventGroup(PipelineEventGroup&&) const;

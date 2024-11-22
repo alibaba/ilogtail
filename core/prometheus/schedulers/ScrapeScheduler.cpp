@@ -47,20 +47,20 @@ size_t ScrapeScheduler::PromMetricWriteCallback(char* buffer, size_t size, size_
     }
 
     auto* body = static_cast<ScrapeScheduler*>(data);
-    body->mCache.append(buffer, sizes);
     body->mRawSize += sizes;
 
-    if (body->mCache.size() > (size_t)INT64_FLAG(prom_stream_bytes_size)) {
-        auto eventGroup = PipelineEventGroup(std::make_shared<SourceBuffer>());
-        auto *e = eventGroup.AddRawEvent();
-        e->SetContent(body->mCache);
-        body->mCache.clear();
-        eventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_TIMESTAMP_MILLISEC,
-                               ToString(GetCurrentTimeInMilliSeconds()));
-        eventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_ID, body->GetId());
+    auto e = body->mEventGroup.AddRawEvent();
+    auto sb = e->GetSourceBuffer()->CopyString(buffer, sizes);
+    e->SetContentNoCopy(sb);
 
-        body->SetTargetLabels(eventGroup);
-        body->PushEventGroup(std::move(eventGroup));
+    if (body->mEventGroup.DataSize() >= (size_t)INT64_FLAG(prom_stream_bytes_size)) {
+        body->mEventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_TIMESTAMP_MILLISEC,
+                                      ToString(GetCurrentTimeInMilliSeconds()));
+        body->mEventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_ID, body->GetId());
+
+        body->SetTargetLabels(body->mEventGroup);
+        body->PushEventGroup(std::move(body->mEventGroup));
+        body->mEventGroup = PipelineEventGroup(std::make_shared<SourceBuffer>());
     }
 
     return sizes;
@@ -72,7 +72,8 @@ ScrapeScheduler::ScrapeScheduler(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
                                  Labels labels,
                                  QueueKey queueKey,
                                  size_t inputIndex)
-    : mScrapeConfigPtr(std::move(scrapeConfigPtr)),
+    : mEventGroup(std::make_shared<SourceBuffer>()),
+      mScrapeConfigPtr(std::move(scrapeConfigPtr)),
       mHost(std::move(host)),
       mPort(port),
       mTargetLabels(std::move(labels)),
@@ -84,7 +85,6 @@ ScrapeScheduler::ScrapeScheduler(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
     mHash = mScrapeConfigPtr->mJobName + tmpTargetURL + ToString(mTargetLabels.Hash());
     mInstance = mHost + ":" + ToString(mPort);
     mInterval = mScrapeConfigPtr->mScrapeIntervalSeconds;
-    mCache.reserve(INT64_FLAG(prom_stream_bytes_size));
 }
 
 void ScrapeScheduler::OnMetricResult(HttpResponse& response, uint64_t timestampMilliSec) {
@@ -111,10 +111,11 @@ void ScrapeScheduler::OnMetricResult(HttpResponse& response, uint64_t timestampM
             ("scrape failed, status code", response.GetStatusCode())("target", mHash)("http header", headerStr));
     }
 
-    auto eventGroup = responseBody.FlushCache();
-    SetAutoMetricMeta(eventGroup);
-    SetTargetLabels(eventGroup);
-    PushEventGroup(std::move(eventGroup));
+    SetAutoMetricMeta(responseBody.mEventGroup);
+    SetTargetLabels(responseBody.mEventGroup);
+    PushEventGroup(std::move(responseBody.mEventGroup));
+    responseBody.mEventGroup = PipelineEventGroup(std::make_shared<SourceBuffer>());
+    responseBody.mRawSize = 0;
 
     mPluginTotalDelayMs->Add(GetCurrentTimeInMilliSeconds() - timestampMilliSec);
 }
