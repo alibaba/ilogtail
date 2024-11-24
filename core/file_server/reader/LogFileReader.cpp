@@ -27,6 +27,9 @@
 #include <limits>
 #include <numeric>
 #include <random>
+#ifdef USE_SIMD_AVX2
+#include <immintrin.h>
+#endif
 
 #include "app_config/AppConfig.h"
 #include "checkpoint/CheckPointManager.h"
@@ -2196,7 +2199,27 @@ LineInfo RawTextParser::GetLastLine(StringView buffer,
     if (protocolFunctionIndex != 0) {
         return {.data = StringView(), .lineBegin = 0, .lineEnd = 0, .rollbackLineFeedCount = 0, .fullLine = false};
     }
+#ifdef USE_SIMD_AVX2
+    const char * data = buffer.data();
+    const int vecSize = 32;
+    __m256i newlineVec = _mm256_set1_epi8('\n');
 
+    for (int32_t pos = end - vecSize; pos >= 0; pos -= vecSize) {
+        __m256i chunk = _mm256_loadu_si256(reinterpret_cast<const __m256i *>(data + pos));
+        __m256i cmp = _mm256_cmpeq_epi8(chunk, newlineVec);
+        int mask = _mm256_movemask_epi8(cmp);
+
+        if (mask != 0) {
+            int offset = __builtin_ctz(mask);
+            int32_t begin = pos + offset + 1;
+            return {.data = StringView(data + begin, end - begin),
+                    .lineBegin = begin,
+                    .lineEnd = end,
+                    .rollbackLineFeedCount = 1,
+                    .fullLine = true};
+        }
+    }
+#else
     for (int32_t begin = end; begin > 0; --begin) {
         if (begin == 0 || buffer[begin - 1] == '\n') {
             return {.data = StringView(buffer.data() + begin, end - begin),
@@ -2206,6 +2229,7 @@ LineInfo RawTextParser::GetLastLine(StringView buffer,
                     .fullLine = true};
         }
     }
+#endif
     return {.data = StringView(buffer.data(), end),
             .lineBegin = 0,
             .lineEnd = end,
