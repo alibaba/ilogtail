@@ -16,17 +16,17 @@
 
 #pragma once
 
-#include <variant>
 #include <map>
+#include <variant>
 
 #ifdef APSARA_UNIT_TEST_MAIN
 #include <json/json.h>
 
 #include <string>
-
-#include "common/memory/SourceBuffer.h"
 #endif
 
+#include "common/memory/SourceBuffer.h"
+#include "models/PipelineEvent.h"
 #include "models/StringView.h"
 
 namespace logtail {
@@ -42,25 +42,40 @@ struct UntypedSingleValue {
 #endif
 };
 
-struct UntypedMultiValues {
-    std::map<StringView, double> mValues;
+struct UntypedMultiFloatValues {
+    mutable std::map<StringView, double> mValues;
+    PipelineEvent* mMetricEventPtr;
+
+    UntypedMultiFloatValues(PipelineEvent* ptr): mMetricEventPtr(ptr) {}
+    UntypedMultiFloatValues(std::map<StringView, double> values, PipelineEvent* ptr): mValues(values), mMetricEventPtr(ptr) {}
+
+    double GetMultiKeyValue(StringView key) const;
+    bool HasMultiKeyValue(StringView key) const;
+    void SetMultiKeyValue(const std::string& key, double val) const;
+    void SetMultiKeyValue(StringView key, double val) const;
+    void SetMultiKeyValueNoCopy(const StringBuffer& key, double val) const;
+    void SetMultiKeyValueNoCopy(StringView key, double val) const;
+    void DelMultiKeyValue(StringView key) const;
+
+    std::map<StringView, double>::const_iterator MultiKeyValusBegin() const;
+    std::map<StringView, double>::const_iterator MultiKeyValusEnd() const;
+    size_t MultiKeyValusSize() const;
 
     size_t DataSize() const;
 
 #ifdef APSARA_UNIT_TEST_MAIN
-    std::shared_ptr<SourceBuffer> mSourceBuffer;
     Json::Value ToJson() const;
     void FromJson(const Json::Value& value);
 #endif
 };
 
-using MetricValue = std::variant<std::monostate, UntypedSingleValue, UntypedMultiValues>;
+using MetricValue = std::variant<std::monostate, UntypedSingleValue, UntypedMultiFloatValues>;
 
 size_t DataSize(const MetricValue& value);
 
 #ifdef APSARA_UNIT_TEST_MAIN
 Json::Value MetricValueToJson(const MetricValue& value);
-MetricValue JsonToMetricValue(const std::string& type, const Json::Value& detail);
+MetricValue JsonToMetricValue(const std::string& type, const Json::Value& detail, PipelineEvent* mMetricEventPtr);
 #endif
 
 } // namespace logtail

@@ -23,6 +23,18 @@ class MetricValueUnittest : public ::testing::Test {
 public:
     void TestToJson();
     void TestFromJson();
+
+protected:
+    void SetUp() override {
+        mSourceBuffer.reset(new SourceBuffer);
+        mEventGroup.reset(new PipelineEventGroup(mSourceBuffer));
+        mMetricEvent = mEventGroup->CreateMetricEvent();
+    }
+
+private:
+    shared_ptr<SourceBuffer> mSourceBuffer;
+    unique_ptr<PipelineEventGroup> mEventGroup;
+    unique_ptr<MetricEvent> mMetricEvent;
 };
 
 void MetricValueUnittest::TestToJson() {
@@ -42,7 +54,7 @@ void MetricValueUnittest::TestToJson() {
 
 void MetricValueUnittest::TestFromJson() {
     Json::Value detail(10.0);
-    MetricValue value = JsonToMetricValue("untyped_single_value", detail);
+    MetricValue value = JsonToMetricValue("untyped_single_value", detail, mMetricEvent.get());
 
     APSARA_TEST_TRUE(std::holds_alternative<UntypedSingleValue>(value));
     APSARA_TEST_EQUAL(10.0, std::get<UntypedSingleValue>(value).mValue);
@@ -76,14 +88,28 @@ void UntypedSingleValueUnittest::TestFromJson() {
 UNIT_TEST_CASE(UntypedSingleValueUnittest, TestToJson)
 UNIT_TEST_CASE(UntypedSingleValueUnittest, TestFromJson)
 
-class UntypedMultiValuesUnittest : public ::testing::Test {
+class UntypedMultiFloatValuesUnittest : public ::testing::Test {
 public:
     void TestToJson();
     void TestFromJson();
+
+protected:
+    void SetUp() override {
+        mSourceBuffer.reset(new SourceBuffer);
+        mEventGroup.reset(new PipelineEventGroup(mSourceBuffer));
+        mMetricEvent = mEventGroup->CreateMetricEvent();
+    }
+
+private:
+    shared_ptr<SourceBuffer> mSourceBuffer;
+    unique_ptr<PipelineEventGroup> mEventGroup;
+    unique_ptr<MetricEvent> mMetricEvent;
 };
 
-void UntypedMultiValuesUnittest::TestToJson() {
-    UntypedMultiValues value{{{"test-1", 10.0}, {"test-2", 2.0}}};
+void UntypedMultiFloatValuesUnittest::TestToJson() {
+    UntypedMultiFloatValues value(mMetricEvent.get());
+    value.SetMultiKeyValue(string("test-1"), 10.0);
+    value.SetMultiKeyValue(string("test-2"), 2.0);
     Json::Value res = value.ToJson();
 
     Json::Value valueJson;
@@ -93,20 +119,19 @@ void UntypedMultiValuesUnittest::TestToJson() {
     APSARA_TEST_TRUE(valueJson == res);
 }
 
-void UntypedMultiValuesUnittest::TestFromJson() {
-    UntypedMultiValues value;
-    value.mSourceBuffer = std::make_shared<SourceBuffer>();
+void UntypedMultiFloatValuesUnittest::TestFromJson() {
+    UntypedMultiFloatValues value(mMetricEvent.get());
     Json::Value valueJson;
     valueJson["test-1"] = 10.0;
     valueJson["test-2"] = 2.0;
     value.FromJson(valueJson);
 
-    APSARA_TEST_EQUAL(10.0, value.mValues["test-1"]);
-    APSARA_TEST_EQUAL(2.0, value.mValues["test-2"]);
+    APSARA_TEST_EQUAL(10.0, value.GetMultiKeyValue("test-1"));
+    APSARA_TEST_EQUAL(2.0, value.GetMultiKeyValue("test-2"));
 }
 
-UNIT_TEST_CASE(UntypedMultiValuesUnittest, TestToJson)
-UNIT_TEST_CASE(UntypedMultiValuesUnittest, TestFromJson)
+UNIT_TEST_CASE(UntypedMultiFloatValuesUnittest, TestToJson)
+UNIT_TEST_CASE(UntypedMultiFloatValuesUnittest, TestFromJson)
 
 } // namespace logtail
 

@@ -20,8 +20,55 @@ using namespace std;
 
 namespace logtail {
 
-size_t UntypedMultiValues::DataSize() const {
-    size_t totalSize = sizeof(UntypedMultiValues);
+double UntypedMultiFloatValues::GetMultiKeyValue(StringView key) const {
+    if (mValues.find(key) != mValues.end()) {
+        return mValues.at(key);
+    }
+    return 0;
+}
+
+bool UntypedMultiFloatValues::HasMultiKeyValue(StringView key) const {
+    return mValues.find(key) != mValues.end();
+}
+
+void UntypedMultiFloatValues::SetMultiKeyValue(const std::string& key, double val) const {
+    if (mMetricEventPtr) {
+        SetMultiKeyValueNoCopy(mMetricEventPtr->GetSourceBuffer()->CopyString(key), val);
+    }
+}
+
+void UntypedMultiFloatValues::SetMultiKeyValue(StringView key, double val) const {
+    if (mMetricEventPtr) {
+        SetMultiKeyValueNoCopy(mMetricEventPtr->GetSourceBuffer()->CopyString(key), val);
+    }
+}
+
+void UntypedMultiFloatValues::SetMultiKeyValueNoCopy(const StringBuffer& key, double val) const {
+    SetMultiKeyValueNoCopy(StringView(key.data, key.size), val);
+}
+
+void UntypedMultiFloatValues::SetMultiKeyValueNoCopy(StringView key, double val) const {
+    mValues[key] = val;
+}
+
+void UntypedMultiFloatValues::DelMultiKeyValue(StringView key) const {
+    mValues.erase(key);
+}
+
+std::map<StringView, double>::const_iterator UntypedMultiFloatValues::MultiKeyValusBegin() const {
+    return mValues.begin();
+}
+
+std::map<StringView, double>::const_iterator UntypedMultiFloatValues::MultiKeyValusEnd() const {
+    return mValues.end();
+}
+
+size_t UntypedMultiFloatValues::MultiKeyValusSize() const {
+    return mValues.size();
+}
+
+size_t UntypedMultiFloatValues::DataSize() const {
+    size_t totalSize = sizeof(UntypedMultiFloatValues);
     for (const auto& pair : mValues) {
         totalSize += pair.first.size() + sizeof(pair.second);
     }
@@ -50,7 +97,7 @@ void UntypedSingleValue::FromJson(const Json::Value& value) {
     mValue = value.asFloat();
 }
 
-Json::Value UntypedMultiValues::ToJson() const {
+Json::Value UntypedMultiFloatValues::ToJson() const {
     Json::Value res;
     for (auto metric : mValues) {
         res[metric.first.to_string()] = metric.second;
@@ -58,12 +105,11 @@ Json::Value UntypedMultiValues::ToJson() const {
     return res;
 }
 
-void UntypedMultiValues::FromJson(const Json::Value& value) {
+void UntypedMultiFloatValues::FromJson(const Json::Value& value) {
     mValues.clear();
     for (Json::Value::const_iterator itr = value.begin(); itr != value.end(); ++itr) {
         if (itr->asDouble()) {
-            StringBuffer s = mSourceBuffer->CopyString(itr.key().asString());
-            mValues[StringView(s.data, s.size)] = itr->asDouble();
+            SetMultiKeyValue(itr.key().asString(), itr->asDouble());
         }
     }
 }
@@ -76,9 +122,9 @@ Json::Value MetricValueToJson(const MetricValue& value) {
             if constexpr (is_same_v<T, UntypedSingleValue>) {
                 res["type"] = "untyped_single_value";
                 res["detail"] = get<UntypedSingleValue>(value).ToJson();
-            } else if constexpr (is_same_v<T, UntypedMultiValues>) {
+            } else if constexpr (is_same_v<T, UntypedMultiFloatValues>) {
                 res["type"] = "untyped_multi_values";
-                res["detail"] = get<UntypedMultiValues>(value).ToJson();
+                res["detail"] = get<UntypedMultiFloatValues>(value).ToJson();
             } else if constexpr (is_same_v<T, monostate>) {
                 res["type"] = "unknown";
             }
@@ -87,14 +133,13 @@ Json::Value MetricValueToJson(const MetricValue& value) {
     return res;
 }
 
-MetricValue JsonToMetricValue(const string& type, const Json::Value& detail) {
+MetricValue JsonToMetricValue(const string& type, const Json::Value& detail, PipelineEvent* mMetricEventPtr) {
     if (type == "untyped_single_value") {
         UntypedSingleValue v;
         v.FromJson(detail);
         return v;
     } else if (type == "untyped_multi_values") {
-        UntypedMultiValues v;
-        v.mSourceBuffer = std::make_shared<SourceBuffer>();
+        UntypedMultiFloatValues v(mMetricEventPtr);
         v.FromJson(detail);
         return v;
     } else {

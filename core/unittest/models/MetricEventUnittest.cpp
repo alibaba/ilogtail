@@ -26,16 +26,15 @@ class MetricEventUnittest : public ::testing::Test {
 public:
     void TestName();
     void TestUntypedSingleValue();
-    void TestUntypedMultiValues();
+    void TestUntypedMultiFloatValues();
     void TestTag();
     void TestUntypedSingleValueSize();
-    void TestUntypedMultiValuesSize();
+    void TestUntypedMultiFloatValuesSize();
     void TestReset();
-    void TestTypeConflict();
     void TestUntypedSingleValueToJson();
-    void TestUntypedMultiValuesToJson();
+    void TestUntypedMultiFloatValuesToJson();
     void TestUntypedSingleValueFromJson();
-    void TestUntypedMultiValuesFromJson();
+    void TestUntypedMultiFloatValuesFromJson();
     void TestTagsIterator();
 
 protected:
@@ -66,23 +65,23 @@ void MetricEventUnittest::TestUntypedSingleValue() {
     APSARA_TEST_EQUAL(100.0, mMetricEvent->GetValue<UntypedSingleValue>()->mValue);
 }
 
-void MetricEventUnittest::TestUntypedMultiValues() {
-    mMetricEvent->SetValue(UntypedMultiValues{{{"test-1", 10.0}, {"test-2", 2.0}}});
-    APSARA_TEST_TRUE(mMetricEvent->Is<UntypedMultiValues>());
-    APSARA_TEST_EQUAL(10.0, mMetricEvent->GetValue<UntypedMultiValues>()->mValues.at("test-1"));
-    APSARA_TEST_EQUAL(2.0, mMetricEvent->GetValue<UntypedMultiValues>()->mValues.at("test-2"));
+void MetricEventUnittest::TestUntypedMultiFloatValues() {
+    mMetricEvent->SetValue(UntypedMultiFloatValues{{{"test-1", 10.0}, {"test-2", 2.0}}, mMetricEvent.get()});
+    APSARA_TEST_TRUE(mMetricEvent->Is<UntypedMultiFloatValues>());
+    APSARA_TEST_EQUAL(10.0, mMetricEvent->GetValue<UntypedMultiFloatValues>()->GetMultiKeyValue("test-1"));
+    APSARA_TEST_EQUAL(2.0, mMetricEvent->GetValue<UntypedMultiFloatValues>()->GetMultiKeyValue("test-2"));
 
     map<StringView, double> metrics({{"test-3", 15.0}, {"test-4", 24.0}});
-    mMetricEvent->SetValue<UntypedMultiValues>(metrics);
-    APSARA_TEST_TRUE(mMetricEvent->Is<UntypedMultiValues>());
-    APSARA_TEST_EQUAL(15.0, mMetricEvent->GetValue<UntypedMultiValues>()->mValues.at("test-3"));
-    APSARA_TEST_EQUAL(24.0, mMetricEvent->GetValue<UntypedMultiValues>()->mValues.at("test-4"));
+    mMetricEvent->SetValue<UntypedMultiFloatValues>(metrics, mMetricEvent.get());
+    APSARA_TEST_TRUE(mMetricEvent->Is<UntypedMultiFloatValues>());
+    APSARA_TEST_EQUAL(15.0, mMetricEvent->GetValue<UntypedMultiFloatValues>()->GetMultiKeyValue("test-3"));
+    APSARA_TEST_EQUAL(24.0, mMetricEvent->GetValue<UntypedMultiFloatValues>()->GetMultiKeyValue("test-4"));
 
-    mMetricEvent->SetMultiKeyValue(string("test-1"), 6.0);
-    APSARA_TEST_EQUAL(6.0, mMetricEvent->GetMultiKeyValue("test-1"));
+    mMetricEvent->GetValue<UntypedMultiFloatValues>()->SetMultiKeyValue(string("test-1"), 6.0);
+    APSARA_TEST_EQUAL(6.0, mMetricEvent->GetValue<UntypedMultiFloatValues>()->GetMultiKeyValue("test-1"));
 
-    mMetricEvent->DelMultiKeyValue("test-4");
-    APSARA_TEST_EQUAL(0, mMetricEvent->GetMultiKeyValue("test-4"));
+    mMetricEvent->GetValue<UntypedMultiFloatValues>()->DelMultiKeyValue("test-4");
+    APSARA_TEST_EQUAL(0, mMetricEvent->GetValue<UntypedMultiFloatValues>()->GetMultiKeyValue("test-4"));
 }
 
 void MetricEventUnittest::TestTag() {
@@ -150,10 +149,10 @@ void MetricEventUnittest::TestUntypedSingleValueSize() {
     APSARA_TEST_EQUAL(basicSize, mMetricEvent->DataSize());
 }
 
-void MetricEventUnittest::TestUntypedMultiValuesSize() {
+void MetricEventUnittest::TestUntypedMultiFloatValuesSize() {
     mMetricEvent->SetName("test");
-    mMetricEvent->SetValue(UntypedMultiValues{});
-    size_t basicSize = sizeof(time_t) + sizeof(long) + sizeof(UntypedMultiValues) + sizeof(map<StringView, StringView>);
+    mMetricEvent->SetValue(UntypedMultiFloatValues{{}, mMetricEvent.get()});
+    size_t basicSize = sizeof(time_t) + sizeof(long) + sizeof(UntypedMultiFloatValues) + sizeof(map<StringView, StringView>);
     basicSize += 4;
 
     // add tag, and key not existed
@@ -169,16 +168,16 @@ void MetricEventUnittest::TestUntypedMultiValuesSize() {
     APSARA_TEST_EQUAL(basicSize, mMetricEvent->DataSize());
 
     // add multi values, and key not existed
-    mMetricEvent->SetMultiKeyValue(string("test-1"), 5.0);
+    mMetricEvent->GetValue<UntypedMultiFloatValues>()->SetMultiKeyValue(string("test-1"), 5.0);
     basicSize += 14;
     APSARA_TEST_EQUAL(basicSize, mMetricEvent->DataSize());
 
     // add multi values, and key existed
-    mMetricEvent->SetMultiKeyValue(string("test-1"), 99.0);
+    mMetricEvent->GetValue<UntypedMultiFloatValues>()->SetMultiKeyValue(string("test-1"), 99.0);
     APSARA_TEST_EQUAL(basicSize, mMetricEvent->DataSize());
 
     // delete multi values
-    mMetricEvent->DelMultiKeyValue("test-1");
+    mMetricEvent->GetValue<UntypedMultiFloatValues>()->DelMultiKeyValue("test-1");
     basicSize -= 14;
     APSARA_TEST_EQUAL(basicSize, mMetricEvent->DataSize());
 }
@@ -194,20 +193,6 @@ void MetricEventUnittest::TestReset() {
     APSARA_TEST_EQUAL("", mMetricEvent->GetName());
     APSARA_TEST_TRUE(mMetricEvent->Is<monostate>());
     APSARA_TEST_EQUAL(mMetricEvent->TagsEnd(), mMetricEvent->TagsBegin());
-}
-
-void MetricEventUnittest::TestTypeConflict() {
-    mMetricEvent->SetTimestamp(12345678901);
-    mMetricEvent->SetName("test");
-    mMetricEvent->SetTag(string("key1"), string("value1"));
-
-    mMetricEvent->SetMultiKeyValue(string("test-1"), 6.0);
-    APSARA_TEST_EQUAL(6.0, mMetricEvent->GetMultiKeyValue("test-1"));
-
-    mMetricEvent->SetValue(UntypedSingleValue{10.0});
-
-    mMetricEvent->SetMultiKeyValue(string("test-1"), 6.0);
-    APSARA_TEST_EQUAL(0, mMetricEvent->GetMultiKeyValue("test-1"));
 }
 
 void MetricEventUnittest::TestUntypedSingleValueToJson() {
@@ -237,10 +222,10 @@ void MetricEventUnittest::TestUntypedSingleValueToJson() {
     APSARA_TEST_TRUE(eventJson == res);
 }
 
-void MetricEventUnittest::TestUntypedMultiValuesToJson() {
+void MetricEventUnittest::TestUntypedMultiFloatValuesToJson() {
     mMetricEvent->SetTimestamp(12345678901, 0);
     mMetricEvent->SetName("test");
-    mMetricEvent->SetValue(UntypedMultiValues{{{"test-1", 10.0}, {"test-2", 2.0}}});
+    mMetricEvent->SetValue(UntypedMultiFloatValues{{{"test-1", 10.0}, {"test-2", 2.0}}, mMetricEvent.get()});
     mMetricEvent->SetTag(string("key1"), string("value1"));
     Json::Value res = mMetricEvent->ToJson();
 
@@ -293,7 +278,7 @@ void MetricEventUnittest::TestUntypedSingleValueFromJson() {
     APSARA_TEST_EQUAL("value1", mMetricEvent->GetTag("key1").to_string());
 }
 
-void MetricEventUnittest::TestUntypedMultiValuesFromJson() {
+void MetricEventUnittest::TestUntypedMultiFloatValuesFromJson() {
     Json::Value eventJson;
     string eventStr = R"({
         "name": "test",
@@ -317,11 +302,11 @@ void MetricEventUnittest::TestUntypedMultiValuesFromJson() {
     APSARA_TEST_EQUAL(12345678901, mMetricEvent->GetTimestamp());
     APSARA_TEST_EQUAL(0L, mMetricEvent->GetTimestampNanosecond().value());
     APSARA_TEST_EQUAL("test", mMetricEvent->GetName());
-    APSARA_TEST_TRUE(mMetricEvent->Is<UntypedMultiValues>());
-    APSARA_TEST_EQUAL(10.0, mMetricEvent->GetValue<UntypedMultiValues>()->mValues.at("test-1"));
-    APSARA_TEST_EQUAL(2.0, mMetricEvent->GetValue<UntypedMultiValues>()->mValues.at("test-2"));
-    APSARA_TEST_EQUAL(10.0, mMetricEvent->GetMultiKeyValue("test-1"));
-    APSARA_TEST_EQUAL(2.0, mMetricEvent->GetMultiKeyValue("test-2"));
+    APSARA_TEST_TRUE(mMetricEvent->Is<UntypedMultiFloatValues>());
+    APSARA_TEST_EQUAL(10.0, mMetricEvent->GetValue<UntypedMultiFloatValues>()->GetMultiKeyValue("test-1"));
+    APSARA_TEST_EQUAL(2.0, mMetricEvent->GetValue<UntypedMultiFloatValues>()->GetMultiKeyValue("test-2"));
+    APSARA_TEST_EQUAL(10.0, mMetricEvent->GetValue<UntypedMultiFloatValues>()->GetMultiKeyValue("test-1"));
+    APSARA_TEST_EQUAL(2.0, mMetricEvent->GetValue<UntypedMultiFloatValues>()->GetMultiKeyValue("test-2"));
     APSARA_TEST_EQUAL("value1", mMetricEvent->GetTag("key1").to_string());
 }
 
@@ -350,16 +335,15 @@ void MetricEventUnittest::TestTagsIterator() {
 
 UNIT_TEST_CASE(MetricEventUnittest, TestName)
 UNIT_TEST_CASE(MetricEventUnittest, TestUntypedSingleValue)
-UNIT_TEST_CASE(MetricEventUnittest, TestUntypedMultiValues)
+UNIT_TEST_CASE(MetricEventUnittest, TestUntypedMultiFloatValues)
 UNIT_TEST_CASE(MetricEventUnittest, TestTag)
 UNIT_TEST_CASE(MetricEventUnittest, TestUntypedSingleValueSize)
-UNIT_TEST_CASE(MetricEventUnittest, TestUntypedMultiValuesSize)
+UNIT_TEST_CASE(MetricEventUnittest, TestUntypedMultiFloatValuesSize)
 UNIT_TEST_CASE(MetricEventUnittest, TestReset)
-UNIT_TEST_CASE(MetricEventUnittest, TestTypeConflict)
 UNIT_TEST_CASE(MetricEventUnittest, TestUntypedSingleValueToJson)
-UNIT_TEST_CASE(MetricEventUnittest, TestUntypedMultiValuesToJson)
+UNIT_TEST_CASE(MetricEventUnittest, TestUntypedMultiFloatValuesToJson)
 UNIT_TEST_CASE(MetricEventUnittest, TestUntypedSingleValueFromJson)
-UNIT_TEST_CASE(MetricEventUnittest, TestUntypedMultiValuesFromJson)
+UNIT_TEST_CASE(MetricEventUnittest, TestUntypedMultiFloatValuesFromJson)
 UNIT_TEST_CASE(MetricEventUnittest, TestTagsIterator)
 
 } // namespace logtail
