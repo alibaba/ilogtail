@@ -95,9 +95,9 @@ Json::Value MetricEvent::ToJson(bool enableEventMeta) const {
             if constexpr (is_same_v<T, UntypedSingleValue>) {
                 root["value"]["type"] = "untyped_single_value";
                 root["value"]["detail"] = get<UntypedSingleValue>(mValue).ToJson();
-            } else if constexpr (is_same_v<T, UntypedMultiFloatValues>) {
+            } else if constexpr (is_same_v<T, UntypedMultiValues>) {
                 root["value"]["type"] = "untyped_multi_values";
-                root["value"]["detail"] = get<UntypedMultiFloatValues>(mValue).ToJson();
+                root["value"]["detail"] = get<UntypedMultiValues>(mValue).ToJson();
             } else if constexpr (is_same_v<T, monostate>) {
                 root["value"]["type"] = "unknown";
             }
@@ -125,7 +125,7 @@ bool MetricEvent::FromJson(const Json::Value& root) {
         v.FromJson(value["detail"]);
         SetValue(v);
     } else if (value["type"].asString() == "untyped_multi_values") {
-        UntypedMultiFloatValues v(this);
+        UntypedMultiValues v(this);
         v.FromJson(value["detail"]);
         SetValue(v);
     }

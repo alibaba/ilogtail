@@ -44,7 +44,7 @@ void UntypedSingleValueUnittest::TestFromJson() {
 UNIT_TEST_CASE(UntypedSingleValueUnittest, TestToJson)
 UNIT_TEST_CASE(UntypedSingleValueUnittest, TestFromJson)
 
-class UntypedMultiFloatValuesUnittest : public ::testing::Test {
+class UntypedMultiValuesUnittest : public ::testing::Test {
 public:
     void TestToJson();
     void TestFromJson();
@@ -62,10 +62,10 @@ private:
     unique_ptr<MetricEvent> mMetricEvent;
 };
 
-void UntypedMultiFloatValuesUnittest::TestToJson() {
-    UntypedMultiFloatValues value(mMetricEvent.get());
-    value.SetMultiKeyValue(string("test-1"), 10.0);
-    value.SetMultiKeyValue(string("test-2"), 2.0);
+void UntypedMultiValuesUnittest::TestToJson() {
+    UntypedMultiValues value(mMetricEvent.get());
+    value.Set(string("test-1"), 10.0);
+    value.Set(string("test-2"), 2.0);
     Json::Value res = value.ToJson();
 
     Json::Value valueJson;
@@ -75,19 +75,19 @@ void UntypedMultiFloatValuesUnittest::TestToJson() {
     APSARA_TEST_TRUE(valueJson == res);
 }
 
-void UntypedMultiFloatValuesUnittest::TestFromJson() {
-    UntypedMultiFloatValues value(mMetricEvent.get());
+void UntypedMultiValuesUnittest::TestFromJson() {
+    UntypedMultiValues value(mMetricEvent.get());
     Json::Value valueJson;
     valueJson["test-1"] = 10.0;
     valueJson["test-2"] = 2.0;
     value.FromJson(valueJson);
 
-    APSARA_TEST_EQUAL(10.0, value.GetMultiKeyValue("test-1"));
-    APSARA_TEST_EQUAL(2.0, value.GetMultiKeyValue("test-2"));
+    APSARA_TEST_EQUAL(10.0, value.Get("test-1"));
+    APSARA_TEST_EQUAL(2.0, value.Get("test-2"));
 }
 
-UNIT_TEST_CASE(UntypedMultiFloatValuesUnittest, TestToJson)
-UNIT_TEST_CASE(UntypedMultiFloatValuesUnittest, TestFromJson)
+UNIT_TEST_CASE(UntypedMultiValuesUnittest, TestToJson)
+UNIT_TEST_CASE(UntypedMultiValuesUnittest, TestFromJson)
 
 } // namespace logtail
 

@@ -20,55 +20,55 @@ using namespace std;
 
 namespace logtail {
 
-double UntypedMultiFloatValues::GetMultiKeyValue(StringView key) const {
+double UntypedMultiValues::Get(StringView key) const {
     if (mValues.find(key) != mValues.end()) {
         return mValues.at(key);
     }
     return 0;
 }
 
-bool UntypedMultiFloatValues::HasMultiKeyValue(StringView key) const {
+bool UntypedMultiValues::Has(StringView key) const {
     return mValues.find(key) != mValues.end();
 }
 
-void UntypedMultiFloatValues::SetMultiKeyValue(const std::string& key, double val) const {
+void UntypedMultiValues::Set(const std::string& key, double val) const {
     if (mMetricEventPtr) {
-        SetMultiKeyValueNoCopy(mMetricEventPtr->GetSourceBuffer()->CopyString(key), val);
+        SetNoCopy(mMetricEventPtr->GetSourceBuffer()->CopyString(key), val);
     }
 }
 
-void UntypedMultiFloatValues::SetMultiKeyValue(StringView key, double val) const {
+void UntypedMultiValues::Set(StringView key, double val) const {
     if (mMetricEventPtr) {
-        SetMultiKeyValueNoCopy(mMetricEventPtr->GetSourceBuffer()->CopyString(key), val);
+        SetNoCopy(mMetricEventPtr->GetSourceBuffer()->CopyString(key), val);
     }
 }
 
-void UntypedMultiFloatValues::SetMultiKeyValueNoCopy(const StringBuffer& key, double val) const {
-    SetMultiKeyValueNoCopy(StringView(key.data, key.size), val);
+void UntypedMultiValues::SetNoCopy(const StringBuffer& key, double val) const {
+    SetNoCopy(StringView(key.data, key.size), val);
 }
 
-void UntypedMultiFloatValues::SetMultiKeyValueNoCopy(StringView key, double val) const {
+void UntypedMultiValues::SetNoCopy(StringView key, double val) const {
     mValues[key] = val;
 }
 
-void UntypedMultiFloatValues::DelMultiKeyValue(StringView key) const {
+void UntypedMultiValues::Del(StringView key) const {
     mValues.erase(key);
 }
 
-std::map<StringView, double>::const_iterator UntypedMultiFloatValues::MultiKeyValusBegin() const {
+std::map<StringView, double>::const_iterator UntypedMultiValues::MultiKeyValusBegin() const {
     return mValues.begin();
 }
 
-std::map<StringView, double>::const_iterator UntypedMultiFloatValues::MultiKeyValusEnd() const {
+std::map<StringView, double>::const_iterator UntypedMultiValues::MultiKeyValusEnd() const {
     return mValues.end();
 }
 
-size_t UntypedMultiFloatValues::MultiKeyValusSize() const {
+size_t UntypedMultiValues::MultiKeyValusSize() const {
     return mValues.size();
 }
 
-size_t UntypedMultiFloatValues::DataSize() const {
-    size_t totalSize = sizeof(UntypedMultiFloatValues);
+size_t UntypedMultiValues::DataSize() const {
+    size_t totalSize = sizeof(UntypedMultiValues);
     for (const auto& pair : mValues) {
         totalSize += pair.first.size() + sizeof(pair.second);
     }
@@ -97,7 +97,7 @@ void UntypedSingleValue::FromJson(const Json::Value& value) {
     mValue = value.asFloat();
 }
 
-Json::Value UntypedMultiFloatValues::ToJson() const {
+Json::Value UntypedMultiValues::ToJson() const {
     Json::Value res;
     for (auto metric : mValues) {
         res[metric.first.to_string()] = metric.second;
@@ -105,11 +105,11 @@ Json::Value UntypedMultiFloatValues::ToJson() const {
     return res;
 }
 
-void UntypedMultiFloatValues::FromJson(const Json::Value& value) {
+void UntypedMultiValues::FromJson(const Json::Value& value) {
     mValues.clear();
     for (Json::Value::const_iterator itr = value.begin(); itr != value.end(); ++itr) {
         if (itr->asDouble()) {
-            SetMultiKeyValue(itr.key().asString(), itr->asDouble());
+            Set(itr.key().asString(), itr->asDouble());
         }
     }
 }
