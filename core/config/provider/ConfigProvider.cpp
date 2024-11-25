@@ -14,9 +14,9 @@
 
 #include "config/provider/ConfigProvider.h"
 
-#include "InstanceConfigWatcher.h"
 #include "app_config/AppConfig.h"
-#include "config/watcher/ConfigWatcher.h"
+#include "config/watcher/InstanceConfigWatcher.h"
+#include "config/watcher/PipelineConfigWatcher.h"
 
 using namespace std;
 
@@ -24,17 +24,17 @@ namespace logtail {
 
 void ConfigProvider::Init(const string& dir) {
     // default path: /etc/ilogtail/config/${dir}
-    mPipelineSourceDir.assign(AppConfig::GetInstance()->GetLoongcollectorConfDir());
-    mPipelineSourceDir /= GetPipelineConfigDir();
-    mPipelineSourceDir /= dir;
+    mContinuousPipelineConfigDir.assign(AppConfig::GetInstance()->GetLoongcollectorConfDir());
+    mContinuousPipelineConfigDir /= GetContinuousPipelineConfigDir();
+    mContinuousPipelineConfigDir /= dir;
 
     mInstanceSourceDir.assign(AppConfig::GetInstance()->GetLoongcollectorConfDir());
     mInstanceSourceDir /= "instance_config";
     mInstanceSourceDir /= dir;
 
     error_code ec;
-    filesystem::create_directories(mPipelineSourceDir, ec);
-    ConfigWatcher::GetInstance()->AddSource(mPipelineSourceDir, &mPipelineMux);
+    filesystem::create_directories(mContinuousPipelineConfigDir, ec);
+    PipelineConfigWatcher::GetInstance()->AddSource(mContinuousPipelineConfigDir, &mContinuousPipelineMux);
 
     ec.clear();
     filesystem::create_directories(mInstanceSourceDir, ec);

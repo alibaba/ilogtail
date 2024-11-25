@@ -30,6 +30,8 @@
   * [Docker镜像](installation/sources/docker-image.md)
   * [编译依赖](installation/sources/dependencies.md)
 * [镜像站](installation/mirrors.md)
+* [LoongCollector 的 目录结构说明](installation/loongcollector-dir.md)
+* [LoongCollector 的 Logtail 兼容模式使用指南](installation/logtail-mode.md)
 
 ## 概念 <a href="#concepts" id="concepts"></a>
 
@@ -148,10 +150,12 @@
   * [Checkpoint接口](developer-guide/plugin-development/checkpoint-api.md)
   * [Logger接口](developer-guide/plugin-development/logger-api.md)
   * [自监控指标接口](developer-guide/plugin-development/plugin-self-monitor-guide.md)
-  * [如何开发Input插件](developer-guide/plugin-development/how-to-write-input-plugins.md)
-  * [如何开发Processor插件](developer-guide/plugin-development/how-to-write-processor-plugins.md)
-  * [如何开发Aggregator插件](developer-guide/plugin-development/how-to-write-aggregator-plugins.md)
-  * [如何开发Flusher插件](developer-guide/plugin-development/how-to-write-flusher-plugins.md)
+  * [如何开发原生Input插件](developer-guide/plugin-development/how-to-write-native-input-plugins.md)
+  * [如何开发原生Flusher插件](developer-guide/plugin-development/how-to-write-native-flusher-plugins.md)
+  * [如何开发扩展Input插件](developer-guide/plugin-development/how-to-write-input-plugins.md)
+  * [如何开发扩展Processor插件](developer-guide/plugin-development/how-to-write-processor-plugins.md)
+  * [如何开发扩展Aggregator插件](developer-guide/plugin-development/how-to-write-aggregator-plugins.md)
+  * [如何开发扩展Flusher插件](developer-guide/plugin-development/how-to-write-flusher-plugins.md)
   * [如何生成插件文档](developer-guide/plugin-development/how-to-genernate-plugin-docs.md)
   * [插件文档规范](docs/cn/developer-guide/plugin-development/plugin-doc-templete.md)
   * [纯插件模式启动](developer-guide/plugin-development/pure-plugin-start.md)

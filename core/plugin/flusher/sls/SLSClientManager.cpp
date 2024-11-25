@@ -21,7 +21,7 @@
 #include "common/StringTools.h"
 #include "common/TimeUtil.h"
 #include "logger/Logger.h"
-#include "monitor/LogFileProfiler.h"
+#include "monitor/Monitor.h"
 #include "plugin/flusher/sls/FlusherSLS.h"
 #include "plugin/flusher/sls/SendResult.h"
 #include "sdk/Exception.h"
@@ -122,7 +122,7 @@ void SLSClientManager::Init() {
                                                   STRING_FLAG(default_access_key_id),
                                                   STRING_FLAG(default_access_key),
                                                   INT32_FLAG(sls_client_send_timeout),
-                                                  LogFileProfiler::mIpAddr,
+                                                  LoongCollectorMonitor::mIpAddr,
                                                   AppConfig::GetInstance()->GetBindInterface()));
         SLSControl::GetInstance()->SetSlsSendClientCommonParam(mProbeNetworkClient.get());
         mProbeNetworkThreadRes = async(launch::async, &SLSClientManager::ProbeNetworkThread, this);
@@ -132,7 +132,7 @@ void SLSClientManager::Init() {
                                                   STRING_FLAG(default_access_key_id),
                                                   STRING_FLAG(default_access_key),
                                                   INT32_FLAG(sls_client_send_timeout),
-                                                  LogFileProfiler::mIpAddr,
+                                                  LoongCollectorMonitor::mIpAddr,
                                                   AppConfig::GetInstance()->GetBindInterface()));
         SLSControl::GetInstance()->SetSlsSendClientCommonParam(mUpdateRealIpClient.get());
         mUpdateRealIpThreadRes = async(launch::async, &SLSClientManager::UpdateRealIpThread, this);
@@ -149,7 +149,7 @@ void SLSClientManager::Stop() {
         mIsUpdateRealIpThreadRunning = false;
     }
     mStopCV.notify_all();
-    if (mDataServerSwitchPolicy == EndpointSwitchPolicy::DESIGNATED_FIRST) {
+    if (mDataServerSwitchPolicy == EndpointSwitchPolicy::DESIGNATED_FIRST && mProbeNetworkThreadRes.valid()) {
         future_status s = mProbeNetworkThreadRes.wait_for(chrono::seconds(1));
         if (s == future_status::ready) {
             LOG_INFO(sLogger, ("sls endpoint probe", "stopped successfully"));
@@ -157,7 +157,7 @@ void SLSClientManager::Stop() {
             LOG_WARNING(sLogger, ("sls endpoint probe", "forced to stopped"));
         }
     }
-    if (BOOL_FLAG(send_prefer_real_ip)) {
+    if (BOOL_FLAG(send_prefer_real_ip) && mUpdateRealIpThreadRes.valid()) {
         future_status s = mUpdateRealIpThreadRes.wait_for(chrono::seconds(1));
         if (s == future_status::ready) {
             LOG_INFO(sLogger, ("sls real ip update", "stopped successfully"));
@@ -232,7 +232,7 @@ sdk::Client* SLSClientManager::GetClient(const string& region, const string& ali
                                                               "",
                                                               "",
                                                               INT32_FLAG(sls_client_send_timeout),
-                                                              LogFileProfiler::mIpAddr,
+                                                              LoongCollectorMonitor::mIpAddr,
                                                               AppConfig::GetInstance()->GetBindInterface());
     SLSControl::GetInstance()->SetSlsSendClientCommonParam(client.get());
     ResetClientPort(region, client.get());

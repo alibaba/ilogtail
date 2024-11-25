@@ -19,7 +19,6 @@
 #include "common/Flags.h"
 #include "go_pipeline/LogtailPlugin.h"
 #include "models/EventPool.h"
-#include "monitor/LogFileProfiler.h"
 #include "monitor/AlarmManager.h"
 #include "monitor/metric_constants/MetricConstants.h"
 #include "pipeline/PipelineManager.h"
@@ -56,6 +55,9 @@ void ProcessorRunner::Stop() {
     mIsFlush = true;
     ProcessQueueManager::GetInstance()->Trigger();
     for (uint32_t threadNo = 0; threadNo < mThreadCount; ++threadNo) {
+        if (!mThreadRes[threadNo].valid()) {
+            continue;
+        }
         future_status s
             = mThreadRes[threadNo].wait_for(chrono::seconds(INT32_FLAG(processor_runner_exit_timeout_secs)));
         if (s == future_status::ready) {
