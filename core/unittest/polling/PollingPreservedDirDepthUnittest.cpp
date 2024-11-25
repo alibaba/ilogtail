@@ -84,7 +84,6 @@ public:
         if (bfs::exists(AppConfig::GetInstance()->mCheckPointFilePath)) {
             bfs::remove_all(AppConfig::GetInstance()->mCheckPointFilePath);
         }
-        LogFileProfiler::GetInstance();
         LoongCollectorMonitor::GetInstance()->Init();
         FlusherRunner::GetInstance()->Init(); // reference: Application::Start
         PluginRegistry::GetInstance()->LoadPlugins();
