@@ -94,6 +94,9 @@ void FlusherRunner::UpdateSendFlowControl() {
 void FlusherRunner::Stop() {
     mIsFlush = true;
     SenderQueueManager::GetInstance()->Trigger();
+    if (!mThreadRes.valid()) {
+        return;
+    }
     future_status s = mThreadRes.wait_for(chrono::seconds(INT32_FLAG(flusher_runner_exit_timeout_secs)));
     if (s == future_status::ready) {
         LOG_INFO(sLogger, ("flusher runner", "stopped successfully"));
@@ -186,13 +189,13 @@ void FlusherRunner::Dispatch(SenderQueueItem* item) {
             if (!BOOL_FLAG(enable_full_drain_mode) && Application::GetInstance()->IsExiting()
                 && item->mFlusher->Name() == "flusher_sls") {
                 DiskBufferWriter::GetInstance()->PushToDiskBuffer(item, 3);
-                SenderQueueManager::GetInstance()->RemoveItem(item->mFlusher->GetQueueKey(), item);
+                SenderQueueManager::GetInstance()->RemoveItem(item->mQueueKey, item);
             } else {
                 PushToHttpSink(item);
             }
             break;
         default:
-            SenderQueueManager::GetInstance()->RemoveItem(item->mFlusher->GetQueueKey(), item);
+            SenderQueueManager::GetInstance()->RemoveItem(item->mQueueKey, item);
             break;
     }
 }

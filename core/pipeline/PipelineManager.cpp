@@ -41,7 +41,7 @@ PipelineManager::PipelineManager()
     : mInputRunners({
           PrometheusInputRunner::GetInstance(),
 #if defined(__linux__) && !defined(__ANDROID__)
-          ebpf::eBPFServer::GetInstance(),
+              ebpf::eBPFServer::GetInstance(),
 #endif
       }) {
 }
@@ -79,7 +79,8 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
         DecreasePluginUsageCnt(iter->second->GetPluginStatistics());
         iter->second->RemoveProcessQueue();
         mPipelineNameEntityMap.erase(iter);
-        ConfigFeedbackReceiver::GetInstance().FeedbackPipelineConfigStatus(name, ConfigFeedbackStatus::DELETED);
+        ConfigFeedbackReceiver::GetInstance().FeedbackContinuousPipelineConfigStatus(name,
+                                                                                     ConfigFeedbackStatus::DELETED);
     }
     for (auto& config : diff.mModified) {
         auto p = BuildPipeline(std::move(config)); // auto reuse old pipeline's process queue and sender queue
@@ -93,8 +94,8 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
                 config.mProject,
                 config.mLogstore,
                 config.mRegion);
-            ConfigFeedbackReceiver::GetInstance().FeedbackPipelineConfigStatus(config.mName,
-                                                                               ConfigFeedbackStatus::FAILED);
+            ConfigFeedbackReceiver::GetInstance().FeedbackContinuousPipelineConfigStatus(config.mName,
+                                                                                         ConfigFeedbackStatus::FAILED);
             continue;
         }
         LOG_INFO(sLogger,
@@ -107,7 +108,8 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
         mPipelineNameEntityMap[config.mName] = p;
         IncreasePluginUsageCnt(p->GetPluginStatistics());
         p->Start();
-        ConfigFeedbackReceiver::GetInstance().FeedbackPipelineConfigStatus(config.mName, ConfigFeedbackStatus::APPLIED);
+        ConfigFeedbackReceiver::GetInstance().FeedbackContinuousPipelineConfigStatus(config.mName,
+                                                                                     ConfigFeedbackStatus::APPLIED);
     }
     for (auto& config : diff.mAdded) {
         auto p = BuildPipeline(std::move(config));
@@ -120,8 +122,8 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
                 config.mProject,
                 config.mLogstore,
                 config.mRegion);
-            ConfigFeedbackReceiver::GetInstance().FeedbackPipelineConfigStatus(config.mName,
-                                                                               ConfigFeedbackStatus::FAILED);
+            ConfigFeedbackReceiver::GetInstance().FeedbackContinuousPipelineConfigStatus(config.mName,
+                                                                                         ConfigFeedbackStatus::FAILED);
             continue;
         }
         LOG_INFO(sLogger,
@@ -129,7 +131,8 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
         mPipelineNameEntityMap[config.mName] = p;
         IncreasePluginUsageCnt(p->GetPluginStatistics());
         p->Start();
-        ConfigFeedbackReceiver::GetInstance().FeedbackPipelineConfigStatus(config.mName, ConfigFeedbackStatus::APPLIED);
+        ConfigFeedbackReceiver::GetInstance().FeedbackContinuousPipelineConfigStatus(config.mName,
+                                                                                     ConfigFeedbackStatus::APPLIED);
     }
 
 #ifndef APSARA_UNIT_TEST_MAIN
