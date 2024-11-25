@@ -42,21 +42,21 @@ struct UntypedSingleValue {
 #endif
 };
 
-struct UntypedMultiValues {
+struct UntypedMultiDoubleValues {
     std::map<StringView, double> mValues;
     PipelineEvent* mMetricEventPtr;
 
-    UntypedMultiValues(PipelineEvent* ptr) : mMetricEventPtr(ptr) {}
-    UntypedMultiValues(std::map<StringView, double> values, PipelineEvent* ptr)
+    UntypedMultiDoubleValues(PipelineEvent* ptr) : mMetricEventPtr(ptr) {}
+    UntypedMultiDoubleValues(std::map<StringView, double> values, PipelineEvent* ptr)
         : mValues(values), mMetricEventPtr(ptr) {}
 
-    bool Get(StringView key, double& val) const;
-    bool Has(StringView key) const;
-    void Set(const std::string& key, double val);
-    void Set(StringView key, double val);
-    void SetNoCopy(const StringBuffer& key, double val);
-    void SetNoCopy(StringView key, double val);
-    void Del(StringView key);
+    bool GetValue(StringView key, double& val) const;
+    bool HasValue(StringView key) const;
+    void SetValue(const std::string& key, double val);
+    void SetValue(StringView key, double val);
+    void SetValueNoCopy(const StringBuffer& key, double val);
+    void SetValueNoCopy(StringView key, double val);
+    void DelValue(StringView key);
 
     std::map<StringView, double>::const_iterator MultiKeyValusBegin() const;
     std::map<StringView, double>::const_iterator MultiKeyValusEnd() const;
@@ -71,7 +71,7 @@ struct UntypedMultiValues {
 #endif
 };
 
-using MetricValue = std::variant<std::monostate, UntypedSingleValue, UntypedMultiValues>;
+using MetricValue = std::variant<std::monostate, UntypedSingleValue, UntypedMultiDoubleValues>;
 
 size_t DataSize(const MetricValue& value);
 

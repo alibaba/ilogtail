@@ -25,8 +25,8 @@ MetricEvent::MetricEvent(PipelineEventGroup* ptr) : PipelineEvent(Type::METRIC, 
 
 unique_ptr<PipelineEvent> MetricEvent::Copy() const {
     unique_ptr<MetricEvent> newPtr = make_unique<MetricEvent>(*this);
-    if (newPtr->Is<UntypedMultiValues>()) {
-        newPtr->GetMutableValue<UntypedMultiValues>()->ResetPipelineEvent(newPtr.get());
+    if (newPtr->Is<UntypedMultiDoubleValues>()) {
+        newPtr->MutableValue<UntypedMultiDoubleValues>()->ResetPipelineEvent(newPtr.get());
     }
     return newPtr;
 }
@@ -99,9 +99,9 @@ Json::Value MetricEvent::ToJson(bool enableEventMeta) const {
             if constexpr (is_same_v<T, UntypedSingleValue>) {
                 root["value"]["type"] = "untyped_single_value";
                 root["value"]["detail"] = get<UntypedSingleValue>(mValue).ToJson();
-            } else if constexpr (is_same_v<T, UntypedMultiValues>) {
-                root["value"]["type"] = "untyped_multi_values";
-                root["value"]["detail"] = get<UntypedMultiValues>(mValue).ToJson();
+            } else if constexpr (is_same_v<T, UntypedMultiDoubleValues>) {
+                root["value"]["type"] = "untyped_multi_double_values";
+                root["value"]["detail"] = get<UntypedMultiDoubleValues>(mValue).ToJson();
             } else if constexpr (is_same_v<T, monostate>) {
                 root["value"]["type"] = "unknown";
             }
@@ -128,8 +128,8 @@ bool MetricEvent::FromJson(const Json::Value& root) {
         UntypedSingleValue v;
         v.FromJson(value["detail"]);
         SetValue(v);
-    } else if (value["type"].asString() == "untyped_multi_values") {
-        UntypedMultiValues v(this);
+    } else if (value["type"].asString() == "untyped_multi_double_values") {
+        UntypedMultiDoubleValues v(this);
         v.FromJson(value["detail"]);
         SetValue(v);
     }

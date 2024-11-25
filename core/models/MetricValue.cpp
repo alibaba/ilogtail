@@ -20,7 +20,7 @@ using namespace std;
 
 namespace logtail {
 
-bool UntypedMultiValues::Get(StringView key, double& val) const {
+bool UntypedMultiDoubleValues::GetValue(StringView key, double& val) const {
     if (mValues.find(key) != mValues.end()) {
         val = mValues.at(key);
         return true;
@@ -28,48 +28,48 @@ bool UntypedMultiValues::Get(StringView key, double& val) const {
     return false;
 }
 
-bool UntypedMultiValues::Has(StringView key) const {
+bool UntypedMultiDoubleValues::HasValue(StringView key) const {
     return mValues.find(key) != mValues.end();
 }
 
-void UntypedMultiValues::Set(const std::string& key, double val) {
+void UntypedMultiDoubleValues::SetValue(const std::string& key, double val) {
     if (mMetricEventPtr) {
-        SetNoCopy(mMetricEventPtr->GetSourceBuffer()->CopyString(key), val);
+        SetValueNoCopy(mMetricEventPtr->GetSourceBuffer()->CopyString(key), val);
     }
 }
 
-void UntypedMultiValues::Set(StringView key, double val) {
+void UntypedMultiDoubleValues::SetValue(StringView key, double val) {
     if (mMetricEventPtr) {
-        SetNoCopy(mMetricEventPtr->GetSourceBuffer()->CopyString(key), val);
+        SetValueNoCopy(mMetricEventPtr->GetSourceBuffer()->CopyString(key), val);
     }
 }
 
-void UntypedMultiValues::SetNoCopy(const StringBuffer& key, double val) {
-    SetNoCopy(StringView(key.data, key.size), val);
+void UntypedMultiDoubleValues::SetValueNoCopy(const StringBuffer& key, double val) {
+    SetValueNoCopy(StringView(key.data, key.size), val);
 }
 
-void UntypedMultiValues::SetNoCopy(StringView key, double val) {
+void UntypedMultiDoubleValues::SetValueNoCopy(StringView key, double val) {
     mValues[key] = val;
 }
 
-void UntypedMultiValues::Del(StringView key) {
+void UntypedMultiDoubleValues::DelValue(StringView key) {
     mValues.erase(key);
 }
 
-std::map<StringView, double>::const_iterator UntypedMultiValues::MultiKeyValusBegin() const {
+std::map<StringView, double>::const_iterator UntypedMultiDoubleValues::MultiKeyValusBegin() const {
     return mValues.begin();
 }
 
-std::map<StringView, double>::const_iterator UntypedMultiValues::MultiKeyValusEnd() const {
+std::map<StringView, double>::const_iterator UntypedMultiDoubleValues::MultiKeyValusEnd() const {
     return mValues.end();
 }
 
-size_t UntypedMultiValues::MultiKeyValusSize() const {
+size_t UntypedMultiDoubleValues::MultiKeyValusSize() const {
     return mValues.size();
 }
 
-size_t UntypedMultiValues::DataSize() const {
-    size_t totalSize = sizeof(UntypedMultiValues);
+size_t UntypedMultiDoubleValues::DataSize() const {
+    size_t totalSize = sizeof(UntypedMultiDoubleValues);
     for (const auto& pair : mValues) {
         totalSize += pair.first.size() + sizeof(pair.second);
     }
@@ -98,7 +98,7 @@ void UntypedSingleValue::FromJson(const Json::Value& value) {
     mValue = value.asFloat();
 }
 
-Json::Value UntypedMultiValues::ToJson() const {
+Json::Value UntypedMultiDoubleValues::ToJson() const {
     Json::Value res;
     for (auto metric : mValues) {
         res[metric.first.to_string()] = metric.second;
@@ -106,11 +106,11 @@ Json::Value UntypedMultiValues::ToJson() const {
     return res;
 }
 
-void UntypedMultiValues::FromJson(const Json::Value& value) {
+void UntypedMultiDoubleValues::FromJson(const Json::Value& value) {
     mValues.clear();
     for (Json::Value::const_iterator itr = value.begin(); itr != value.end(); ++itr) {
         if (itr->asDouble()) {
-            Set(itr.key().asString(), itr->asDouble());
+            SetValue(itr.key().asString(), itr->asDouble());
         }
     }
 }
