@@ -73,9 +73,4 @@ using MetricValue = std::variant<std::monostate, UntypedSingleValue, UntypedMult
 
 size_t DataSize(const MetricValue& value);
 
-#ifdef APSARA_UNIT_TEST_MAIN
-Json::Value MetricValueToJson(const MetricValue& value);
-MetricValue JsonToMetricValue(const std::string& type, const Json::Value& detail, PipelineEvent* mMetricEventPtr);
-#endif
-
 } // namespace logtail

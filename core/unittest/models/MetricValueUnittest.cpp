@@ -19,50 +19,6 @@ using namespace std;
 
 namespace logtail {
 
-class MetricValueUnittest : public ::testing::Test {
-public:
-    void TestToJson();
-    void TestFromJson();
-
-protected:
-    void SetUp() override {
-        mSourceBuffer.reset(new SourceBuffer);
-        mEventGroup.reset(new PipelineEventGroup(mSourceBuffer));
-        mMetricEvent = mEventGroup->CreateMetricEvent();
-    }
-
-private:
-    shared_ptr<SourceBuffer> mSourceBuffer;
-    unique_ptr<PipelineEventGroup> mEventGroup;
-    unique_ptr<MetricEvent> mMetricEvent;
-};
-
-void MetricValueUnittest::TestToJson() {
-    MetricValue value = UntypedSingleValue{10.0};
-    Json::Value res = MetricValueToJson(value);
-
-    Json::Value valueJson;
-    string valueStr = R"({
-        "type": "untyped_single_value",
-        "detail": 10.0
-    })";
-    string errorMsg;
-    ParseJsonTable(valueStr, valueJson, errorMsg);
-
-    APSARA_TEST_TRUE(valueJson == res);
-}
-
-void MetricValueUnittest::TestFromJson() {
-    Json::Value detail(10.0);
-    MetricValue value = JsonToMetricValue("untyped_single_value", detail, mMetricEvent.get());
-
-    APSARA_TEST_TRUE(std::holds_alternative<UntypedSingleValue>(value));
-    APSARA_TEST_EQUAL(10.0, std::get<UntypedSingleValue>(value).mValue);
-}
-
-UNIT_TEST_CASE(MetricValueUnittest, TestToJson)
-UNIT_TEST_CASE(MetricValueUnittest, TestFromJson)
-
 class UntypedSingleValueUnittest : public ::testing::Test {
 public:
     void TestToJson();
