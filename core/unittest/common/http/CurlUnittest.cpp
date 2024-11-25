@@ -51,7 +51,7 @@ void CurlUnittest::TestCurlTLS() {
     tls.mKeyFile = "client.key";
 
     request = std::make_unique<HttpRequest>(
-        "GET", true, "example.com", 443, "/path", "", map<string, string>(), "", 10, 3, false, &tls);
+        "GET", true, "example.com", 443, "/path", "", map<string, string>(), "", 10, 3, false, tls);
     bool success = SendHttpRequest(std::move(request), res);
     APSARA_TEST_FALSE(success);
     APSARA_TEST_EQUAL(0, res.GetStatusCode());
