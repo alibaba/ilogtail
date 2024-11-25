@@ -15,6 +15,8 @@
 cmake_minimum_required(VERSION 3.22)
 project(unittest_base)
 
+# Unittest should be able to visit private members
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-access-control")
 if (NOT WITHSPL)
     add_definitions(-D__EXCLUDE_SPL__)
 endif()
