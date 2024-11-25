@@ -26,7 +26,7 @@
 #include "common/StringTools.h"
 #include "common/version.h"
 #include "logger/Logger.h"
-#include "monitor/LogFileProfiler.h"
+#include "monitor/Monitor.h"
 #include "sdk/Common.h"
 #include "sdk/CurlImp.h"
 #include "sdk/Exception.h"
@@ -112,7 +112,8 @@ void LegacyCommonConfigProvider::CheckUpdateThread() {
     }
 }
 
-LegacyCommonConfigProvider::ConfigServerAddress LegacyCommonConfigProvider::GetOneConfigServerAddress(bool changeConfigServer) {
+LegacyCommonConfigProvider::ConfigServerAddress
+LegacyCommonConfigProvider::GetOneConfigServerAddress(bool changeConfigServer) {
     if (0 == mConfigServerAddresses.size()) {
         return ConfigServerAddress("", -1); // No address available
     }
@@ -158,7 +159,7 @@ LegacyCommonConfigProvider::SendHeartbeat(const ConfigServerAddress& configServe
     heartBeatReq.set_agent_id(Application::GetInstance()->GetInstanceId());
     heartBeatReq.set_agent_type("iLogtail");
     attributes.set_version(ILOGTAIL_VERSION);
-    attributes.set_ip(LogFileProfiler::mIpAddr);
+    attributes.set_ip(LoongCollectorMonitor::mIpAddr);
     heartBeatReq.mutable_attributes()->MergeFrom(attributes);
     heartBeatReq.mutable_tags()->MergeFrom({GetConfigServerTags().begin(), GetConfigServerTags().end()});
     heartBeatReq.set_running_status("");
@@ -285,19 +286,21 @@ void LegacyCommonConfigProvider::UpdateRemoteConfig(
     const google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult>& checkResults,
     const google::protobuf::RepeatedPtrField<configserver::proto::ConfigDetail>& configDetails) {
     error_code ec;
-    filesystem::create_directories(mPipelineSourceDir, ec);
+    filesystem::create_directories(mContinuousPipelineConfigDir, ec);
     if (ec) {
         StopUsingConfigServer();
-        LOG_ERROR(sLogger,
-                  ("failed to create dir for legacy common configs", "stop receiving config from legacy common config server")(
-                      "dir", mPipelineSourceDir.string())("error code", ec.value())("error msg", ec.message()));
+        LOG_ERROR(
+            sLogger,
+            ("failed to create dir for legacy common configs",
+             "stop receiving config from legacy common config server")("dir", mContinuousPipelineConfigDir.string())(
+                "error code", ec.value())("error msg", ec.message()));
         return;
     }
 
-    lock_guard<mutex> lock(mPipelineMux);
+    lock_guard<mutex> lock(mContinuousPipelineMux);
     for (const auto& checkResult : checkResults) {
-        filesystem::path filePath = mPipelineSourceDir / (checkResult.name() + ".yaml");
-        filesystem::path tmpFilePath = mPipelineSourceDir / (checkResult.name() + ".yaml.new");
+        filesystem::path filePath = mContinuousPipelineConfigDir / (checkResult.name() + ".yaml");
+        filesystem::path tmpFilePath = mContinuousPipelineConfigDir / (checkResult.name() + ".yaml.new");
         switch (checkResult.check_status()) {
             case configserver::proto::DELETED:
                 mConfigNameVersionMap.erase(checkResult.name());

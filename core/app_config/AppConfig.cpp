@@ -25,12 +25,12 @@
 #include "common/FileSystemUtil.h"
 #include "common/JsonUtil.h"
 #include "common/LogtailCommonFlags.h"
+#include "config/InstanceConfigManager.h"
 #include "config/watcher/InstanceConfigWatcher.h"
 #include "file_server/ConfigManager.h"
 #include "file_server/reader/LogFileReader.h"
 #include "json/value.h"
 #include "logger/Logger.h"
-#include "monitor/LogFileProfiler.h"
 #include "monitor/AlarmManager.h"
 #include "monitor/Monitor.h"
 #ifdef __ENTERPRISE__
@@ -433,14 +433,6 @@ string GetAgentSnapshotDir() {
     }
 }
 
-string GetAgentProfileLogName() {
-    if (BOOL_FLAG(logtail_mode)) {
-        return "ilogtail_profile.LOG";
-    } else {
-        return "loongcollector_profile.LOG";
-    }
-}
-
 string GetAgentStatusLogName() {
     if (BOOL_FLAG(logtail_mode)) {
         return "ilogtail_status.LOG";
@@ -448,15 +440,6 @@ string GetAgentStatusLogName() {
         return "loongcollector_status.LOG";
     }
 }
-
-string GetProfileSnapshotDumpFileName() {
-    if (BOOL_FLAG(logtail_mode)) {
-        return GetProcessExecutionDir() + STRING_FLAG(logtail_profile_snapshot);
-    } else {
-        return GetAgentLogDir() + "loongcollector_profile_snapshot";
-    }
-}
-
 
 string GetObserverEbpfHostPath() {
     if (BOOL_FLAG(logtail_mode)) {
@@ -500,11 +483,51 @@ string GetFileTagsDir() {
     }
 }
 
-string GetPipelineConfigDir() {
+string GetContinuousPipelineConfigDir() {
     if (BOOL_FLAG(logtail_mode)) {
         return "config";
     } else {
-        return "pipeline_config";
+        return "continuous_pipeline_config";
+    }
+}
+
+string GetPluginLogName() {
+    if (BOOL_FLAG(logtail_mode)) {
+        return "logtail_plugin.LOG";
+    } else {
+        return "go_plugin.LOG";
+    }
+}
+
+std::string GetVersionTag() {
+    if (BOOL_FLAG(logtail_mode)) {
+        return "logtail_version";
+    } else {
+        return "loongcollector_version";
+    }
+}
+
+std::string GetGoPluginCheckpoint() {
+    if (BOOL_FLAG(logtail_mode)) {
+        return "checkpoint";
+    } else {
+        return "go_plugin_checkpoint";
+    }
+}
+
+std::string GetAgentName() {
+    if (BOOL_FLAG(logtail_mode)) {
+        return "ilogtail";
+    } else {
+        return "loongcollector";
+    } 
+}
+
+std::string GetMonitorInfoFileName() {
+    if (BOOL_FLAG(logtail_mode)) {
+        return "logtail_monitor_info";
+    } else {
+        return "loongcollector_monitor_info";
     }
 }
 
@@ -884,14 +907,10 @@ void AppConfig::LoadResourceConf(const Json::Value& confJson) {
                        "reader_close_unused_file_time",
                        "ALIYUN_LOGTAIL_READER_CLOSE_UNUSED_FILE_TIME");
 
-    if (confJson.isMember("log_profile_save_interval") && confJson["log_profile_save_interval"].isInt())
-        LogFileProfiler::GetInstance()->SetProfileInterval(confJson["log_profile_save_interval"].asInt());
-
     LOG_DEBUG(sLogger,
               ("logreader delete interval", INT32_FLAG(logreader_filedeleted_remove_interval))(
                   "check handler interval", INT32_FLAG(check_handler_timeout_interval))(
-                  "reader close interval", INT32_FLAG(reader_close_unused_file_time))(
-                  "profile interval", LogFileProfiler::GetInstance()->GetProfileInterval()));
+                  "reader close interval", INT32_FLAG(reader_close_unused_file_time)));
 
 
     if (confJson.isMember("cpu_usage_limit")) {
@@ -1667,7 +1686,7 @@ void AppConfig::SetLoongcollectorConfDir(const std::string& dirPath) {
     //     = AbsolutePath(STRING_FLAG(ilogtail_local_yaml_config_dir), mLogtailSysConfDir) + PATH_SEPARATOR;
     // mUserRemoteYamlConfigDirPath
     //     = AbsolutePath(STRING_FLAG(ilogtail_remote_yaml_config_dir), mLogtailSysConfDir) + PATH_SEPARATOR;
-    LOG_INFO(sLogger, ("set loongcollector conf dir", mLoongcollectorConfDir));
+    LOG_INFO(sLogger, ("set " + GetAgentName() + " conf dir", mLoongcollectorConfDir));
 }
 
 bool AppConfig::IsHostPathMatchBlacklist(const string& dirPath) const {
