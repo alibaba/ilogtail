@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "monitor/AlarmManager.h"
+#include "AlarmManager.h"
 
-#include "LogFileProfiler.h"
+#include "Monitor.h"
 #include "app_config/AppConfig.h"
 #include "common/LogtailCommonFlags.h"
 #include "common/StringTools.h"
@@ -220,7 +220,7 @@ void AlarmManager::SendAllRegionAlarm() {
 
             // LOG_DEBUG(sLogger, ("4Send Alarm", region)("region", sendRegionIndex)("alarm index",
             // mMessageType[sendAlarmTypeIndex]));
-            logGroup.set_source(LogFileProfiler::mIpAddr);
+            logGroup.set_source(LoongCollectorMonitor::mIpAddr);
             logGroup.set_category(ALARM_SLS_LOGSTORE_NAME);
             auto now = GetCurrentLogtailTime();
             for (map<string, unique_ptr<AlarmMessage>>::iterator mapIter = alarmMap.begin();
@@ -249,7 +249,7 @@ void AlarmManager::SendAllRegionAlarm() {
 
                 contentPtr = logPtr->add_contents();
                 contentPtr->set_key("ip");
-                contentPtr->set_value(LogFileProfiler::mIpAddr);
+                contentPtr->set_value(LoongCollectorMonitor::mIpAddr);
 
                 contentPtr = logPtr->add_contents();
                 contentPtr->set_key("os");

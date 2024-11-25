@@ -25,12 +25,13 @@
 #include "common/FileSystemUtil.h"
 #include "common/JsonUtil.h"
 #include "common/LogtailCommonFlags.h"
+#include "common/version.h"
+#include "config/InstanceConfigManager.h"
 #include "config/watcher/InstanceConfigWatcher.h"
 #include "file_server/ConfigManager.h"
 #include "file_server/reader/LogFileReader.h"
 #include "json/value.h"
 #include "logger/Logger.h"
-#include "monitor/LogFileProfiler.h"
 #include "monitor/AlarmManager.h"
 #include "monitor/Monitor.h"
 #ifdef __ENTERPRISE__
@@ -38,6 +39,10 @@
 #endif
 
 using namespace std;
+
+#define ILOGTAIL_PREFIX "ilogtail_"
+#define ILOGTAIL_PIDFILE_SUFFIX ".pid"
+#define LOONGCOLLECTOR_PREFIX "loongcollector_"
 
 DEFINE_FLAG_BOOL(logtail_mode, "logtail mode", false);
 DEFINE_FLAG_INT32(max_buffer_num, "max size", 40);
@@ -50,7 +55,7 @@ DEFINE_FLAG_INT32(pub_buffer_file_num, "how many buffer files in default", 25);
 DEFINE_FLAG_INT32(default_local_file_size, "default size of one buffer file", 20 * 1024 * 1024);
 DEFINE_FLAG_INT32(pub_local_file_size, "default size of one buffer file", 20 * 1024 * 1024);
 DEFINE_FLAG_INT32(process_thread_count, "", 1);
-DEFINE_FLAG_INT32(send_request_concurrency, "max count keep in mem when async send", 10);
+DEFINE_FLAG_INT32(send_request_concurrency, "max count keep in mem when async send", 15);
 DEFINE_FLAG_STRING(default_buffer_file_path, "set current execution dir in default", "");
 DEFINE_FLAG_STRING(buffer_file_path, "set buffer dir", "");
 // DEFINE_FLAG_STRING(default_mapping_config_path, "", "mapping_config.json");
@@ -433,14 +438,6 @@ string GetAgentSnapshotDir() {
     }
 }
 
-string GetAgentProfileLogName() {
-    if (BOOL_FLAG(logtail_mode)) {
-        return "ilogtail_profile.LOG";
-    } else {
-        return "loongcollector_profile.LOG";
-    }
-}
-
 string GetAgentStatusLogName() {
     if (BOOL_FLAG(logtail_mode)) {
         return "ilogtail_status.LOG";
@@ -448,15 +445,6 @@ string GetAgentStatusLogName() {
         return "loongcollector_status.LOG";
     }
 }
-
-string GetProfileSnapshotDumpFileName() {
-    if (BOOL_FLAG(logtail_mode)) {
-        return GetProcessExecutionDir() + STRING_FLAG(logtail_profile_snapshot);
-    } else {
-        return GetAgentLogDir() + "loongcollector_profile_snapshot";
-    }
-}
-
 
 string GetObserverEbpfHostPath() {
     if (BOOL_FLAG(logtail_mode)) {
@@ -500,11 +488,75 @@ string GetFileTagsDir() {
     }
 }
 
-string GetPipelineConfigDir() {
+string GetContinuousPipelineConfigDir() {
     if (BOOL_FLAG(logtail_mode)) {
         return "config";
     } else {
-        return "pipeline_config";
+        return "continuous_pipeline_config";
+    }
+}
+
+string GetPluginLogName() {
+    if (BOOL_FLAG(logtail_mode)) {
+        return "logtail_plugin.LOG";
+    } else {
+        return "go_plugin.LOG";
+    }
+}
+
+std::string GetVersionTag() {
+    if (BOOL_FLAG(logtail_mode)) {
+        return "logtail_version";
+    } else {
+        return "loongcollector_version";
+    }
+}
+
+std::string GetGoPluginCheckpoint() {
+    if (BOOL_FLAG(logtail_mode)) {
+        return "checkpoint";
+    } else {
+        return "go_plugin_checkpoint";
+    }
+}
+
+std::string GetAgentName() {
+    if (BOOL_FLAG(logtail_mode)) {
+        return "ilogtail";
+    } else {
+        return "loongcollector";
+    }
+}
+
+std::string GetMonitorInfoFileName() {
+    if (BOOL_FLAG(logtail_mode)) {
+        return "logtail_monitor_info";
+    } else {
+        return "loongcollector_monitor_info";
+    }
+}
+
+std::string GetSymLinkName() {
+    if (BOOL_FLAG(logtail_mode)) {
+        return GetProcessExecutionDir() + "ilogtail";
+    } else {
+        return GetProcessExecutionDir() + "loongcollector";
+    }
+}
+
+std::string GetPidFileName() {
+    if (BOOL_FLAG(logtail_mode)) {
+        return GetProcessExecutionDir() + ILOGTAIL_PREFIX + ILOGTAIL_VERSION + ILOGTAIL_PIDFILE_SUFFIX;
+    } else {
+        return GetAgentRunDir() + "loongcollector.pid";
+    }
+}
+
+std::string GetAgentPrefix() {
+    if (BOOL_FLAG(logtail_mode)) {
+        return ILOGTAIL_PREFIX;
+    } else {
+        return LOONGCOLLECTOR_PREFIX;
     }
 }
 
@@ -761,7 +813,7 @@ void AppConfig::LoadEnvResourceLimit() {
     LoadSingleValueEnvConfig("mem_usage_limit", mMemUsageUpLimit, (int64_t)384);
     LoadSingleValueEnvConfig("max_bytes_per_sec", mMaxBytePerSec, (int32_t)(1024 * 1024));
     LoadSingleValueEnvConfig("process_thread_count", mProcessThreadCount, (int32_t)1);
-    LoadSingleValueEnvConfig("send_request_concurrency", mSendRequestConcurrency, (int32_t)2);
+    LoadSingleValueEnvConfig("send_request_concurrency", mSendRequestConcurrency, (int32_t)10);
 }
 
 /**
@@ -884,14 +936,10 @@ void AppConfig::LoadResourceConf(const Json::Value& confJson) {
                        "reader_close_unused_file_time",
                        "ALIYUN_LOGTAIL_READER_CLOSE_UNUSED_FILE_TIME");
 
-    if (confJson.isMember("log_profile_save_interval") && confJson["log_profile_save_interval"].isInt())
-        LogFileProfiler::GetInstance()->SetProfileInterval(confJson["log_profile_save_interval"].asInt());
-
     LOG_DEBUG(sLogger,
               ("logreader delete interval", INT32_FLAG(logreader_filedeleted_remove_interval))(
                   "check handler interval", INT32_FLAG(check_handler_timeout_interval))(
-                  "reader close interval", INT32_FLAG(reader_close_unused_file_time))(
-                  "profile interval", LogFileProfiler::GetInstance()->GetProfileInterval()));
+                  "reader close interval", INT32_FLAG(reader_close_unused_file_time)));
 
 
     if (confJson.isMember("cpu_usage_limit")) {
@@ -1490,8 +1538,8 @@ void AppConfig::ReadFlagsFromMap(const std::unordered_map<std::string, std::stri
  *    - 记录无法转换的值
  */
 void AppConfig::RecurseParseJsonToFlags(const Json::Value& confJson, std::string prefix) {
-    const static unordered_set<string> sIgnoreKeySet = {"data_server_list", "legacy_data_server_list"};
-    const static unordered_set<string> sForceKeySet = {"config_server_address_list", "config_server_list"};
+    const static unordered_set<string> sIgnoreKeySet = {"data_server_list", "data_servers"};
+    const static unordered_set<string> sForceKeySet = {"config_server_address_list", "config_servers"};
     for (auto name : confJson.getMemberNames()) {
         auto jsonvalue = confJson[name];
         string fullName;
@@ -1667,7 +1715,7 @@ void AppConfig::SetLoongcollectorConfDir(const std::string& dirPath) {
     //     = AbsolutePath(STRING_FLAG(ilogtail_local_yaml_config_dir), mLogtailSysConfDir) + PATH_SEPARATOR;
     // mUserRemoteYamlConfigDirPath
     //     = AbsolutePath(STRING_FLAG(ilogtail_remote_yaml_config_dir), mLogtailSysConfDir) + PATH_SEPARATOR;
-    LOG_INFO(sLogger, ("set loongcollector conf dir", mLoongcollectorConfDir));
+    LOG_INFO(sLogger, ("set " + GetAgentName() + " conf dir", mLoongcollectorConfDir));
 }
 
 bool AppConfig::IsHostPathMatchBlacklist(const string& dirPath) const {

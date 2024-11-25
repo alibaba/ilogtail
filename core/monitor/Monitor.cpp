@@ -36,7 +36,6 @@
 #include "file_server/event_handler/LogInput.h"
 #include "go_pipeline/LogtailPlugin.h"
 #include "logger/Logger.h"
-#include "monitor/LogFileProfiler.h"
 #include "monitor/AlarmManager.h"
 #include "monitor/MetricExportor.h"
 #include "plugin/flusher/sls/FlusherSLS.h"
@@ -57,6 +56,16 @@ DECLARE_FLAG_BOOL(send_prefer_real_ip);
 DECLARE_FLAG_BOOL(check_profile_region);
 
 namespace logtail {
+
+string LoongCollectorMonitor::mHostname;
+string LoongCollectorMonitor::mIpAddr;
+string LoongCollectorMonitor::mOsDetail;
+string LoongCollectorMonitor::mUsername;
+int32_t LoongCollectorMonitor::mSystemBootTime = -1;
+string LoongCollectorMonitor::mECSInstanceID;
+string LoongCollectorMonitor::mECSUserID;
+string LoongCollectorMonitor::mECSRegionID;
+string LoongCollectorMonitor::mStartTime;
 
 inline void CpuStat::Reset() {
 #if defined(__linux__)
@@ -251,13 +260,13 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
     }
 
     // the unique id of current instance
-    std::string id = sdk::Base64Enconde(LogFileProfiler::mHostname + LogFileProfiler::mIpAddr + ILOGTAIL_VERSION
-                                        + GetProcessExecutionDir());
+    std::string id = sdk::Base64Enconde(LoongCollectorMonitor::mHostname + LoongCollectorMonitor::mIpAddr
+                                        + ILOGTAIL_VERSION + GetProcessExecutionDir());
 
     // Collect status information to send.
     LogGroup logGroup;
     logGroup.set_category(category);
-    logGroup.set_source(LogFileProfiler::mIpAddr);
+    logGroup.set_source(LoongCollectorMonitor::mIpAddr);
     Log* logPtr = logGroup.add_logs();
     SetLogTime(logPtr, AppConfig::GetInstance()->EnableLogTimeAutoAdjust() ? now.tv_sec + GetTimeDelta() : now.tv_sec);
     // CPU usage of Logtail process.
@@ -281,11 +290,11 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
     AddLogContent(logPtr, "instance_id", Application::GetInstance()->GetInstanceId());
     AddLogContent(logPtr, "instance_key", id);
     // Host informations.
-    AddLogContent(logPtr, "ip", LogFileProfiler::mIpAddr);
-    AddLogContent(logPtr, "hostname", LogFileProfiler::mHostname);
+    AddLogContent(logPtr, "ip", LoongCollectorMonitor::mIpAddr);
+    AddLogContent(logPtr, "hostname", LoongCollectorMonitor::mHostname);
     AddLogContent(logPtr, "os", OS_NAME);
-    AddLogContent(logPtr, "os_detail", LogFileProfiler::mOsDetail);
-    AddLogContent(logPtr, "user", LogFileProfiler::mUsername);
+    AddLogContent(logPtr, "os_detail", LoongCollectorMonitor::mOsDetail);
+    AddLogContent(logPtr, "user", LoongCollectorMonitor::mUsername);
 #if defined(__linux__)
     AddLogContent(logPtr, "load", GetLoadAvg());
 #endif
@@ -313,9 +322,9 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
 
     AddLogContent(logPtr, "metric_json", MetricToString());
     AddLogContent(logPtr, "status", CheckLogtailStatus());
-    AddLogContent(logPtr, "ecs_instance_id", LogFileProfiler::mECSInstanceID);
-    AddLogContent(logPtr, "ecs_user_id", LogFileProfiler::mECSUserID);
-    AddLogContent(logPtr, "ecs_regioon_id", LogFileProfiler::mECSRegionID);
+    AddLogContent(logPtr, "ecs_instance_id", LoongCollectorMonitor::mECSInstanceID);
+    AddLogContent(logPtr, "ecs_user_id", LoongCollectorMonitor::mECSUserID);
+    AddLogContent(logPtr, "ecs_regioon_id", LoongCollectorMonitor::mECSRegionID);
     ClearMetric();
 
     if (!mIsThreadRunning)
@@ -483,7 +492,7 @@ void LogtailMonitor::DumpToLocal(const sls_logs::LogGroup& logGroup) {
 }
 
 bool LogtailMonitor::DumpMonitorInfo(time_t monitorTime) {
-    string path = GetAgentLogDir() + "loongcollector_monitor_info";
+    string path = GetAgentLogDir() + GetMonitorInfoFileName();
     ofstream outfile(path.c_str(), ofstream::app);
     if (!outfile)
         return false;
@@ -503,10 +512,10 @@ bool LogtailMonitor::IsHostIpChanged() {
         if (ip.empty()) {
             ip = GetAnyAvailableIP();
         }
-        if (ip != LogFileProfiler::mIpAddr) {
+        if (ip != LoongCollectorMonitor::mIpAddr) {
             LOG_ERROR(sLogger,
                       ("error", "host ip changed during running, prepare to restart Logtail")(
-                          "original ip", LogFileProfiler::mIpAddr)("current ip", ip));
+                          "original ip", LoongCollectorMonitor::mIpAddr)("current ip", ip));
             return true;
         }
         return false;
@@ -689,17 +698,36 @@ bool LogtailMonitor::CalOsCpuStat() {
 #endif
 
 LoongCollectorMonitor* LoongCollectorMonitor::GetInstance() {
-    static LoongCollectorMonitor instance;
-    return &instance;
+    static LoongCollectorMonitor* instance = new LoongCollectorMonitor();
+    return instance;
+}
+
+LoongCollectorMonitor::LoongCollectorMonitor() {
+    mHostname = GetHostName();
+#if defined(_MSC_VER)
+    mHostname = EncodingConverter::GetInstance()->FromACPToUTF8(mHostname);
+#endif
+    mIpAddr = GetHostIp();
+    mOsDetail = GetOsDetail();
+    mUsername = GetUsername();
+    // TODO: This may take up to 3s to construct the object. This is bad.
+    ECSMeta ecsMeta = FetchECSMeta();
+    mECSInstanceID = ecsMeta.instanceID;
+    mECSUserID = ecsMeta.userID;
+    mECSRegionID = ecsMeta.regionID;
+}
+
+LoongCollectorMonitor::~LoongCollectorMonitor() {
 }
 
 void LoongCollectorMonitor::Init() {
     // create metric record
     MetricLabels labels;
     labels.emplace_back(METRIC_LABEL_KEY_INSTANCE_ID, Application::GetInstance()->GetInstanceId());
-    labels.emplace_back(METRIC_LABEL_KEY_START_TIME, LogFileProfiler::mStartTime);
+    labels.emplace_back(METRIC_LABEL_KEY_START_TIME, mStartTime);
+    labels.emplace_back(METRIC_LABEL_KEY_HOSTNAME, mHostname);
     labels.emplace_back(METRIC_LABEL_KEY_OS, OS_NAME);
-    labels.emplace_back(METRIC_LABEL_KEY_OS_DETAIL, LogFileProfiler::mOsDetail);
+    labels.emplace_back(METRIC_LABEL_KEY_OS_DETAIL, mOsDetail);
     labels.emplace_back(METRIC_LABEL_KEY_UUID, Application::GetInstance()->GetUUID());
     labels.emplace_back(METRIC_LABEL_KEY_VERSION, ILOGTAIL_VERSION);
     DynamicMetricLabels dynamicLabels;

@@ -49,7 +49,6 @@
 #include "file_server/EventDispatcher.h"
 #include "file_server/FileServer.h"
 #include "file_server/event_handler/EventHandler.h"
-#include "monitor/LogFileProfiler.h"
 #include "monitor/AlarmManager.h"
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineManager.h"
@@ -205,7 +204,7 @@ ConfigManager::ConfigManager() {
     // CorrectionLogtailSysConfDir(); // first create dir then rewrite system-uuid file in GetSystemUUID
     // use a thread to get uuid, work around for CalculateDmiUUID hang
     // mUUID = CalculateDmiUUID();
-    // mInstanceId = CalculateRandomUUID() + "_" + LogFileProfiler::mIpAddr + "_" + ToString(time(NULL));
+    // mInstanceId = CalculateRandomUUID() + "_" + LoongCollectorMonitor::mIpAddr + "_" + ToString(time(NULL));
     // ReloadMappingConfig();
 }
 
