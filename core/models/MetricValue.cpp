@@ -20,38 +20,39 @@ using namespace std;
 
 namespace logtail {
 
-double UntypedMultiValues::Get(StringView key) const {
+bool UntypedMultiValues::Get(StringView key, double& val) const {
     if (mValues.find(key) != mValues.end()) {
-        return mValues.at(key);
+        val = mValues.at(key);
+        return true;
     }
-    return 0;
+    return false;
 }
 
 bool UntypedMultiValues::Has(StringView key) const {
     return mValues.find(key) != mValues.end();
 }
 
-void UntypedMultiValues::Set(const std::string& key, double val) const {
+void UntypedMultiValues::Set(const std::string& key, double val) {
     if (mMetricEventPtr) {
         SetNoCopy(mMetricEventPtr->GetSourceBuffer()->CopyString(key), val);
     }
 }
 
-void UntypedMultiValues::Set(StringView key, double val) const {
+void UntypedMultiValues::Set(StringView key, double val) {
     if (mMetricEventPtr) {
         SetNoCopy(mMetricEventPtr->GetSourceBuffer()->CopyString(key), val);
     }
 }
 
-void UntypedMultiValues::SetNoCopy(const StringBuffer& key, double val) const {
+void UntypedMultiValues::SetNoCopy(const StringBuffer& key, double val) {
     SetNoCopy(StringView(key.data, key.size), val);
 }
 
-void UntypedMultiValues::SetNoCopy(StringView key, double val) const {
+void UntypedMultiValues::SetNoCopy(StringView key, double val) {
     mValues[key] = val;
 }
 
-void UntypedMultiValues::Del(StringView key) const {
+void UntypedMultiValues::Del(StringView key) {
     mValues.erase(key);
 }
 

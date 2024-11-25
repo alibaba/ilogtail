@@ -49,6 +49,11 @@ public:
     }
 
     template <typename T>
+    constexpr std::add_pointer_t<T> GetMutableValue() noexcept {
+        return std::get_if<T>(&mValue);
+    }
+
+    template <typename T>
     void SetValue(const T& value) {
         mValue = value;
     }

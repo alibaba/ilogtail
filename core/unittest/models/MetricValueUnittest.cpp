@@ -81,9 +81,12 @@ void UntypedMultiValuesUnittest::TestFromJson() {
     valueJson["test-1"] = 10.0;
     valueJson["test-2"] = 2.0;
     value.FromJson(valueJson);
+    double val;
 
-    APSARA_TEST_EQUAL(10.0, value.Get("test-1"));
-    APSARA_TEST_EQUAL(2.0, value.Get("test-2"));
+    APSARA_TEST_EQUAL(true, value.Get("test-1", val));
+    APSARA_TEST_EQUAL(10.0, val);
+    APSARA_TEST_EQUAL(true, value.Get("test-2", val));
+    APSARA_TEST_EQUAL(2.0, val);
 }
 
 UNIT_TEST_CASE(UntypedMultiValuesUnittest, TestToJson)

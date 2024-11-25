@@ -24,7 +24,11 @@ MetricEvent::MetricEvent(PipelineEventGroup* ptr) : PipelineEvent(Type::METRIC, 
 }
 
 unique_ptr<PipelineEvent> MetricEvent::Copy() const {
-    return make_unique<MetricEvent>(*this);
+    unique_ptr<MetricEvent> newPtr = make_unique<MetricEvent>(*this);
+    if (newPtr->Is<UntypedMultiValues>()) {
+        newPtr->GetMutableValue<UntypedMultiValues>()->ResetPipelineEvent(newPtr.get());
+    }
+    return newPtr;
 }
 
 void MetricEvent::Reset() {

@@ -43,25 +43,27 @@ struct UntypedSingleValue {
 };
 
 struct UntypedMultiValues {
-    mutable std::map<StringView, double> mValues;
+    std::map<StringView, double> mValues;
     PipelineEvent* mMetricEventPtr;
 
-    UntypedMultiValues(PipelineEvent* ptr): mMetricEventPtr(ptr) {}
-    UntypedMultiValues(std::map<StringView, double> values, PipelineEvent* ptr): mValues(values), mMetricEventPtr(ptr) {}
+    UntypedMultiValues(PipelineEvent* ptr) : mMetricEventPtr(ptr) {}
+    UntypedMultiValues(std::map<StringView, double> values, PipelineEvent* ptr)
+        : mValues(values), mMetricEventPtr(ptr) {}
 
-    double Get(StringView key) const;
+    bool Get(StringView key, double& val) const;
     bool Has(StringView key) const;
-    void Set(const std::string& key, double val) const;
-    void Set(StringView key, double val) const;
-    void SetNoCopy(const StringBuffer& key, double val) const;
-    void SetNoCopy(StringView key, double val) const;
-    void Del(StringView key) const;
+    void Set(const std::string& key, double val);
+    void Set(StringView key, double val);
+    void SetNoCopy(const StringBuffer& key, double val);
+    void SetNoCopy(StringView key, double val);
+    void Del(StringView key);
 
     std::map<StringView, double>::const_iterator MultiKeyValusBegin() const;
     std::map<StringView, double>::const_iterator MultiKeyValusEnd() const;
     size_t MultiKeyValusSize() const;
 
     size_t DataSize() const;
+    void ResetPipelineEvent(PipelineEvent* ptr) { mMetricEventPtr = ptr; }
 
 #ifdef APSARA_UNIT_TEST_MAIN
     Json::Value ToJson() const;
