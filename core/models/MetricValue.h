@@ -58,9 +58,9 @@ struct UntypedMultiDoubleValues {
     void SetValueNoCopy(StringView key, double val);
     void DelValue(StringView key);
 
-    std::map<StringView, double>::const_iterator MultiKeyValusBegin() const;
-    std::map<StringView, double>::const_iterator MultiKeyValusEnd() const;
-    size_t MultiKeyValusSize() const;
+    std::map<StringView, double>::const_iterator ValusBegin() const;
+    std::map<StringView, double>::const_iterator ValusEnd() const;
+    size_t ValusSize() const;
 
     size_t DataSize() const;
     void ResetPipelineEvent(PipelineEvent* ptr) { mMetricEventPtr = ptr; }

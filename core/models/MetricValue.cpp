@@ -56,15 +56,15 @@ void UntypedMultiDoubleValues::DelValue(StringView key) {
     mValues.erase(key);
 }
 
-std::map<StringView, double>::const_iterator UntypedMultiDoubleValues::MultiKeyValusBegin() const {
+std::map<StringView, double>::const_iterator UntypedMultiDoubleValues::ValusBegin() const {
     return mValues.begin();
 }
 
-std::map<StringView, double>::const_iterator UntypedMultiDoubleValues::MultiKeyValusEnd() const {
+std::map<StringView, double>::const_iterator UntypedMultiDoubleValues::ValusEnd() const {
     return mValues.end();
 }
 
-size_t UntypedMultiDoubleValues::MultiKeyValusSize() const {
+size_t UntypedMultiDoubleValues::ValusSize() const {
     return mValues.size();
 }
 
