@@ -190,9 +190,9 @@ func getIdxRules(resourceType string) []IdxFunc {
 	case NODE:
 		return []IdxFunc{generateNodeKey}
 	case POD:
-		return []IdxFunc{generateCommonKey, generatePodIPKey, generateContainerIDKey, generateHostIPKey}
+		return []IdxFunc{generateCommonKey, generatePodIPPortKey, generateContainerIDKey, generateHostIPKey}
 	case SERVICE:
-		return []IdxFunc{generateCommonKey, generateServiceIPKey}
+		return []IdxFunc{generateCommonKey, generateServiceIPPortKey}
 	default:
 		return []IdxFunc{generateCommonKey}
 	}
@@ -266,12 +266,18 @@ func generateNameWithNamespaceKey(namespace, name string) string {
 	return fmt.Sprintf("%s/%s", namespace, name)
 }
 
-func generatePodIPKey(obj interface{}) ([]string, error) {
+func generatePodIPPortKey(obj interface{}) ([]string, error) {
 	pod, ok := obj.(*v1.Pod)
 	if !ok {
 		return []string{}, fmt.Errorf("object is not a pod")
 	}
-	return []string{pod.Status.PodIP}, nil
+	result := make([]string, 0)
+	for _, container := range pod.Spec.Containers {
+		for _, port := range container.Ports {
+			result = append(result, fmt.Sprintf("%s:%d", pod.Status.PodIP, port.ContainerPort))
+		}
+	}
+	return result, nil
 }
 
 func generateContainerIDKey(obj interface{}) ([]string, error) {
@@ -294,7 +300,7 @@ func generateHostIPKey(obj interface{}) ([]string, error) {
 	return []string{pod.Status.HostIP}, nil
 }
 
-func generateServiceIPKey(obj interface{}) ([]string, error) {
+func generateServiceIPPortKey(obj interface{}) ([]string, error) {
 	svc, ok := obj.(*v1.Service)
 	if !ok {
 		return []string{}, fmt.Errorf("object is not a service")
@@ -302,16 +308,23 @@ func generateServiceIPKey(obj interface{}) ([]string, error) {
 	results := make([]string, 0)
 	for _, ip := range svc.Spec.ClusterIPs {
 		if ip != "" {
-			results = append(results, ip)
+			for _, port := range svc.Spec.Ports {
+				results = append(results, fmt.Sprintf("%s:%d", ip, port.Port))
+			}
 		}
 	}
 	for _, ip := range svc.Spec.ExternalIPs {
 		if ip != "" {
-			results = append(results, ip)
+			for _, port := range svc.Spec.Ports {
+				results = append(results, fmt.Sprintf("%s:%d", ip, port.Port))
+			}
 		}
 	}
 	if svc.Spec.LoadBalancerIP != "" {
 		results = append(results, svc.Spec.LoadBalancerIP)
+		for _, port := range svc.Spec.Ports {
+			results = append(results, fmt.Sprintf("%s:%d", svc.Spec.LoadBalancerIP, port.Port))
+		}
 	}
 	return results, nil
 }

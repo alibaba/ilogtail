@@ -3,6 +3,7 @@ package k8smeta
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -18,6 +19,15 @@ import (
 
 type requestBody struct {
 	Keys []string `json:"keys"`
+}
+
+type ipPort struct {
+	IP   string `json:"ip"`
+	Port int    `json:"port"`
+}
+
+type ipPortRequestBody struct {
+	Keys []ipPort `json:"keys"`
 }
 
 type metadataHandler struct {
@@ -46,8 +56,7 @@ func (m *metadataHandler) K8sServerRun(stopCh <-chan struct{}) error {
 	}
 	mux := http.NewServeMux()
 
-	// TODO: add port in ip endpoint
-	mux.HandleFunc("/metadata/ip", m.handler(m.handlePodMetaByPodIP))
+	mux.HandleFunc("/metadata/ipport", m.handler(m.handlePodMetaByIPPort))
 	mux.HandleFunc("/metadata/containerid", m.handler(m.handlePodMetaByContainerID))
 	mux.HandleFunc("/metadata/host", m.handler(m.handlePodMetaByHostIP))
 	server.Handler = mux
@@ -75,9 +84,9 @@ func (m *metadataHandler) handler(handleFunc func(w http.ResponseWriter, r *http
 	}
 }
 
-func (m *metadataHandler) handlePodMetaByPodIP(w http.ResponseWriter, r *http.Request) {
+func (m *metadataHandler) handlePodMetaByIPPort(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	var rBody requestBody
+	var rBody ipPortRequestBody
 	// Decode the JSON data into the struct
 	err := json.NewDecoder(r.Body).Decode(&rBody)
 	if err != nil {
@@ -88,10 +97,10 @@ func (m *metadataHandler) handlePodMetaByPodIP(w http.ResponseWriter, r *http.Re
 	// Get the metadata
 	metadata := make(map[string]*PodMetadata)
 	for _, key := range rBody.Keys {
-		objs := m.metaManager.cacheMap[POD].Get([]string{key})
+		objs := m.metaManager.cacheMap[POD].Get([]string{fmt.Sprintf("%s:%d", key.IP, key.Port)})
 		if len(objs) == 0 {
 			// try service IP
-			svcObjs := m.metaManager.cacheMap[SERVICE].Get([]string{key})
+			svcObjs := m.metaManager.cacheMap[SERVICE].Get([]string{fmt.Sprintf("%s:%d", key.IP, key.Port)})
 			for key, svcObj := range svcObjs {
 				service, ok := svcObj[0].Raw.(*v1.Service)
 				if !ok {
