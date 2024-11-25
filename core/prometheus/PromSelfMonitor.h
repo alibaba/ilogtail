@@ -4,7 +4,6 @@
 #include <string>
 #include <unordered_map>
 
-#include "monitor/MetricManager.h"
 #include "monitor/PluginMetricManager.h"
 
 namespace logtail {
@@ -16,14 +15,16 @@ public:
 
     void InitMetricManager(const std::unordered_map<std::string, MetricType>& metricKeys, const MetricLabels& labels);
 
-    void AddCounter(const std::string& metricName, uint64_t status, uint64_t val = 1);
+    void AddCounter(const std::string& metricName, const std::string& status, uint64_t val = 1);
 
-    void SetIntGauge(const std::string& metricName, uint64_t status, uint64_t value);
+    void SetIntGauge(const std::string& metricName, const std::string& status, uint64_t value);
+
+    static std::string StatusToString(uint64_t status);
+    static std::string CurlCodeToString(uint64_t code);
 
 private:
     ReentrantMetricsRecordRef GetOrCreateReentrantMetricsRecordRef(const std::string& status);
-    std::string StatusToString(uint64_t status);
-    std::string CurlCodeToString(uint64_t code);
+
 
     PluginMetricManagerPtr mPluginMetricManagerPtr;
     std::map<std::string, ReentrantMetricsRecordRef> mPromStatusMap;

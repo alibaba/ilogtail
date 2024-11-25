@@ -18,16 +18,14 @@ void PromSelfMonitorUnsafe::InitMetricManager(const std::unordered_map<std::stri
         metricLabels, metricKeys, MetricCategory::METRIC_CATEGORY_PLUGIN_SOURCE);
 }
 
-void PromSelfMonitorUnsafe::AddCounter(const std::string& metricName, uint64_t statusCode, uint64_t val) {
-    auto status = StatusToString(statusCode);
+void PromSelfMonitorUnsafe::AddCounter(const std::string& metricName, const string& status, uint64_t val) {
     if (!mMetricsCounterMap.count(metricName) || !mMetricsCounterMap[metricName].count(status)) {
         mMetricsCounterMap[metricName][status] = GetOrCreateReentrantMetricsRecordRef(status)->GetCounter(metricName);
     }
     mMetricsCounterMap[metricName][status]->Add(val);
 }
 
-void PromSelfMonitorUnsafe::SetIntGauge(const std::string& metricName, uint64_t statusCode, uint64_t value) {
-    auto status = StatusToString(statusCode);
+void PromSelfMonitorUnsafe::SetIntGauge(const std::string& metricName, const string& status, uint64_t value) {
     if (!mMetricsIntGaugeMap.count(metricName) || !mMetricsIntGaugeMap[metricName].count(status)) {
         mMetricsIntGaugeMap[metricName][status] = GetOrCreateReentrantMetricsRecordRef(status)->GetIntGauge(metricName);
     }
@@ -47,14 +45,10 @@ ReentrantMetricsRecordRef PromSelfMonitorUnsafe::GetOrCreateReentrantMetricsReco
 
 std::string PromSelfMonitorUnsafe::StatusToString(uint64_t status) {
     static string sHttpOther = "other";
-    if (status < 100) {
-        // status represents curl error code when it is less than 100, and curl error code is always less than 100
-        return CurlCodeToString(status);
-    } else if (status < 600) {
+    if (status < 600) {
         return ToString(status);
-    } else {
-        return sHttpOther;
     }
+    return sHttpOther;
 }
 
 std::string PromSelfMonitorUnsafe::CurlCodeToString(uint64_t code) {

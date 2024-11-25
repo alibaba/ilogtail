@@ -189,6 +189,7 @@ void AsynCurlRunner::HandleCompletedRequests(int& runningHandlers) {
                 case CURLE_OK: {
                     long statusCode = 0;
                     curl_easy_getinfo(handler, CURLINFO_RESPONSE_CODE, &statusCode);
+                    request->mResponse.SetCurlCode(CURLE_OK);
                     request->mResponse.SetStatusCode(statusCode);
                     request->OnSendDone(request->mResponse);
                     LOG_DEBUG(sLogger,

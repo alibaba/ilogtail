@@ -20,13 +20,13 @@ void PromSelfMonitorUnittest::TestCounterAdd() {
     };
     selfMonitor->InitMetricManager(testMetricKeys, MetricLabels{});
 
-    selfMonitor->AddCounter(METRIC_PLUGIN_PROM_SUBSCRIBE_TOTAL, 200, 999);
+    selfMonitor->AddCounter(METRIC_PLUGIN_PROM_SUBSCRIBE_TOTAL, "200", 999);
 
     // check result
     auto metric = selfMonitor->mPromStatusMap["200"]->GetCounter(METRIC_PLUGIN_PROM_SUBSCRIBE_TOTAL);
     APSARA_TEST_EQUAL("prom_subscribe_total", metric->GetName());
     APSARA_TEST_EQUAL(999ULL, metric->GetValue());
-    selfMonitor->AddCounter(METRIC_PLUGIN_PROM_SUBSCRIBE_TOTAL, 200);
+    selfMonitor->AddCounter(METRIC_PLUGIN_PROM_SUBSCRIBE_TOTAL, "200");
     APSARA_TEST_EQUAL(1000ULL, metric->GetValue());
 }
 
@@ -38,13 +38,13 @@ void PromSelfMonitorUnittest::TestIntGaugeSet() {
     selfMonitor->InitMetricManager(testMetricKeys, MetricLabels{});
 
     auto metricLabels = std::map<std::string, std::string>({{"test-label", "test-value"}});
-    selfMonitor->SetIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS, 200, 999);
+    selfMonitor->SetIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS, "200", 999);
 
     // check result
     auto metric = selfMonitor->mPromStatusMap["200"]->GetIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS);
     APSARA_TEST_EQUAL("prom_subscribe_targets", metric->GetName());
     APSARA_TEST_EQUAL(999ULL, metric->GetValue());
-    selfMonitor->SetIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS, 200, 0);
+    selfMonitor->SetIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS, "200", 0);
     APSARA_TEST_EQUAL(0ULL, metric->GetValue());
 }
 
@@ -57,57 +57,57 @@ void PromSelfMonitorUnittest::TestCurlCode() {
 
     // 200
     auto metricLabels = std::map<std::string, std::string>({{"test-label", "test-value"}});
-    selfMonitor->SetIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS, 200, 999);
+    selfMonitor->SetIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS, "200", 999);
     // check result
     auto metric = selfMonitor->mPromStatusMap["200"]->GetIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS);
     APSARA_TEST_EQUAL("prom_subscribe_targets", metric->GetName());
     APSARA_TEST_EQUAL(999ULL, metric->GetValue());
-    selfMonitor->SetIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS, 200, 0);
+    selfMonitor->SetIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS, "200", 0);
     APSARA_TEST_EQUAL(0ULL, metric->GetValue());
 
     // 301
-    selfMonitor->SetIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS, 301, 999);
+    selfMonitor->SetIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS, "301", 999);
     // check result
     metric = selfMonitor->mPromStatusMap["301"]->GetIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS);
     APSARA_TEST_EQUAL("prom_subscribe_targets", metric->GetName());
     APSARA_TEST_EQUAL(999ULL, metric->GetValue());
-    selfMonitor->SetIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS, 301, 0);
+    selfMonitor->SetIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS, "301", 0);
     APSARA_TEST_EQUAL(0ULL, metric->GetValue());
 
     // 678
-    selfMonitor->SetIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS, 678, 999);
+    selfMonitor->SetIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS, PromSelfMonitorUnsafe::StatusToString(678), 999);
     // check result
     metric = selfMonitor->mPromStatusMap["other"]->GetIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS);
     APSARA_TEST_EQUAL("prom_subscribe_targets", metric->GetName());
     APSARA_TEST_EQUAL(999ULL, metric->GetValue());
-    selfMonitor->SetIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS, 678, 0);
+    selfMonitor->SetIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS, PromSelfMonitorUnsafe::StatusToString(678), 0);
     APSARA_TEST_EQUAL(0ULL, metric->GetValue());
 
     // 0
-    selfMonitor->SetIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS, 0, 999);
+    selfMonitor->SetIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS, PromSelfMonitorUnsafe::CurlCodeToString(0), 999);
     // check result
     metric = selfMonitor->mPromStatusMap["OK"]->GetIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS);
     APSARA_TEST_EQUAL("prom_subscribe_targets", metric->GetName());
     APSARA_TEST_EQUAL(999ULL, metric->GetValue());
-    selfMonitor->SetIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS, 0, 0);
+    selfMonitor->SetIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS, PromSelfMonitorUnsafe::CurlCodeToString(0), 0);
     APSARA_TEST_EQUAL(0ULL, metric->GetValue());
 
     // 35
-    selfMonitor->SetIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS, 35, 999);
+    selfMonitor->SetIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS, PromSelfMonitorUnsafe::CurlCodeToString(35), 999);
     // check result
     metric = selfMonitor->mPromStatusMap["ERR_SSL_CONN_ERR"]->GetIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS);
     APSARA_TEST_EQUAL("prom_subscribe_targets", metric->GetName());
     APSARA_TEST_EQUAL(999ULL, metric->GetValue());
-    selfMonitor->SetIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS, 35, 0);
+    selfMonitor->SetIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS, PromSelfMonitorUnsafe::CurlCodeToString(35), 0);
     APSARA_TEST_EQUAL(0ULL, metric->GetValue());
 
     // 88
-    selfMonitor->SetIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS, 88, 999);
+    selfMonitor->SetIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS, PromSelfMonitorUnsafe::CurlCodeToString(88), 999);
     // check result
     metric = selfMonitor->mPromStatusMap["ERR_UNKNOWN"]->GetIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS);
     APSARA_TEST_EQUAL("prom_subscribe_targets", metric->GetName());
     APSARA_TEST_EQUAL(999ULL, metric->GetValue());
-    selfMonitor->SetIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS, 88, 0);
+    selfMonitor->SetIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS, PromSelfMonitorUnsafe::CurlCodeToString(88), 0);
     APSARA_TEST_EQUAL(0ULL, metric->GetValue());
 }
 
