@@ -37,7 +37,7 @@
 #include "go_pipeline/LogtailPlugin.h"
 #include "logger/Logger.h"
 #include "monitor/AlarmManager.h"
-#include "monitor/MetricExportor.h"
+#include "monitor/SelfMonitorServer.h"
 #include "plugin/flusher/sls/FlusherSLS.h"
 #include "protobuf/sls/sls_logs.pb.h"
 #include "runner/FlusherRunner.h"
@@ -721,6 +721,9 @@ LoongCollectorMonitor::~LoongCollectorMonitor() {
 }
 
 void LoongCollectorMonitor::Init() {
+    LOG_INFO(sLogger, ("LoongCollector monitor", "started"));
+    SelfMonitorServer::GetInstance()->Init();
+
     // create metric record
     MetricLabels labels;
     labels.emplace_back(METRIC_LABEL_KEY_INSTANCE_ID, Application::GetInstance()->GetInstanceId());
@@ -751,7 +754,9 @@ void LoongCollectorMonitor::Init() {
 }
 
 void LoongCollectorMonitor::Stop() {
-    MetricExportor::GetInstance()->PushMetrics(true);
+    SelfMonitorServer::GetInstance()->Stop();
+    LOG_INFO(sLogger, ("LoongCollector monitor", "stopped successfully"));
+
 }
 
 } // namespace logtail
