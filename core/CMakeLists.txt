@@ -27,7 +27,6 @@ endif ()
 option(BUILD_LOGTAIL "Build Logtail executable and tools" ON)
 # Used under the Android environment.
 option(BUILD_LOGTAIL_SHARED_LIBRARY "Build Logtail shared library")
-option(BUILD_LOGTAIL_SPL_LIBRARY "Build Logtail SPL library")
 option(ENABLE_ENTERPRISE "enable enterprise feature")
 cmake_dependent_option(ENABLE_COMPATIBLE_MODE "Build Logtail in compatible mode (for low version Linux)" OFF "LINUX" OFF)
 cmake_dependent_option(ENABLE_STATIC_LINK_CRT "Build Logtail by linking CRT statically" OFF "LINUX" OFF)
@@ -208,10 +207,6 @@ if (BUILD_LOGTAIL_SHARED_LIBRARY)
             add_library(${LOGTAIL_TARGET} SHARED logtail_windows.cpp ${SRC_FILES})
         endif ()
     endif()
-endif ()
-
-if (BUILD_LOGTAIL_SPL_LIBRARY)
-    add_subdirectory(spl)
 endif ()
 
 # Generate independent libraries.

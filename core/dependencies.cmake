@@ -409,11 +409,11 @@ macro(link_uuid target_name)
     endif ()
 endmacro()
 
-macro(link_spl target_name build_spl)
+macro(link_spl target_name)
     logtail_define(spl_${target_name} "" "")
 
     find_library(LIB_FOUND "libloongcollector_spl.a")
-    if (NOT LIB_FOUND AND NOT ${build_spl})
+    if (NOT LIB_FOUND)
         message(FATAL_ERROR "Please upgrade your development image to compile SPL feature!")
     endif()
     
