@@ -63,6 +63,14 @@ public:
         mValue = T{std::forward<Args>(args)...};
     }
 
+    void SetValue(const std::map<StringView, double>& multiDoubleValues) {
+        mValue = UntypedMultiDoubleValues{multiDoubleValues, this};
+    }
+
+    void SetValue(const UntypedMultiDoubleValues& multiDoubleValues) {
+        mValue = UntypedMultiDoubleValues{multiDoubleValues.mValues, this};
+    }
+
     StringView GetTag(StringView key) const;
     bool HasTag(StringView key) const;
     void SetTag(StringView key, StringView val);

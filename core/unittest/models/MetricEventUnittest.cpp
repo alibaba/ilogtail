@@ -67,7 +67,8 @@ void MetricEventUnittest::TestUntypedSingleValue() {
 }
 
 void MetricEventUnittest::TestUntypedMultiDoubleValues() {
-    mMetricEvent->SetValue(UntypedMultiDoubleValues{{{"test-1", 10.0}, {"test-2", 2.0}}, mMetricEvent.get()});
+    UntypedMultiDoubleValues v({{"test-1", 10.0}, {"test-2", 2.0}}, nullptr);
+    mMetricEvent->SetValue(v);
     APSARA_TEST_TRUE(mMetricEvent->Is<UntypedMultiDoubleValues>());
     double val;
     APSARA_TEST_EQUAL(true, mMetricEvent->GetValue<UntypedMultiDoubleValues>()->GetValue("test-1", val));
@@ -76,7 +77,7 @@ void MetricEventUnittest::TestUntypedMultiDoubleValues() {
     APSARA_TEST_EQUAL(2.0, val);
 
     map<StringView, double> metrics({{"test-3", 15.0}, {"test-4", 24.0}});
-    mMetricEvent->SetValue<UntypedMultiDoubleValues>(metrics, mMetricEvent.get());
+    mMetricEvent->SetValue(metrics);
     APSARA_TEST_TRUE(mMetricEvent->Is<UntypedMultiDoubleValues>());
     APSARA_TEST_EQUAL(true, mMetricEvent->GetValue<UntypedMultiDoubleValues>()->GetValue("test-3", val));
     APSARA_TEST_EQUAL(15.0, val);
@@ -159,7 +160,7 @@ void MetricEventUnittest::TestUntypedSingleValueSize() {
 
 void MetricEventUnittest::TestUntypedMultiDoubleValuesSize() {
     mMetricEvent->SetName("test");
-    mMetricEvent->SetValue(UntypedMultiDoubleValues{{}, mMetricEvent.get()});
+    mMetricEvent->SetValue(map<StringView, double>{});
     size_t basicSize = sizeof(time_t) + sizeof(long) + sizeof(UntypedMultiDoubleValues) + sizeof(map<StringView, StringView>);
     basicSize += 4;
 
@@ -233,7 +234,7 @@ void MetricEventUnittest::TestUntypedSingleValueToJson() {
 void MetricEventUnittest::TestUntypedMultiDoubleValuesToJson() {
     mMetricEvent->SetTimestamp(12345678901, 0);
     mMetricEvent->SetName("test");
-    mMetricEvent->SetValue(UntypedMultiDoubleValues{{{"test-1", 10.0}, {"test-2", 2.0}}, mMetricEvent.get()});
+    mMetricEvent->SetValue(map<StringView, double>{{"test-1", 10.0}, {"test-2", 2.0}});
     mMetricEvent->SetTag(string("key1"), string("value1"));
     Json::Value res = mMetricEvent->ToJson();
 
@@ -344,7 +345,7 @@ void MetricEventUnittest::TestTagsIterator() {
 
 void MetricEventUnittest::TestCopy() {
     MetricEvent* oldMetricEvent = mEventGroup->AddMetricEvent();
-    oldMetricEvent->SetValue(UntypedMultiDoubleValues{{{"test-1", 10.0}, {"test-2", 2.0}}, oldMetricEvent});
+    oldMetricEvent->SetValue(map<StringView, double>{{"test-1", 10.0}, {"test-2", 2.0}});
     APSARA_TEST_EQUAL(1, mEventGroup->GetEvents().size());
 
     PipelineEventGroup newGroup = mEventGroup->Copy();
