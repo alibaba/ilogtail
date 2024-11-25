@@ -91,7 +91,7 @@ bool AsynCurlRunner::AddRequestToClient(unique_ptr<AsynHttpRequest>&& request) {
                                    AppConfig::GetInstance()->GetBindInterface());
     if (curl == nullptr) {
         LOG_ERROR(sLogger, ("failed to send request", "failed to init curl handler")("request address", request.get()));
-        request->mResponse.SetCurlCode(CURL_LAST);
+        request->mResponse.SetCurlCode(CURLE_FAILED_INIT);
         request->OnSendDone(request->mResponse);
         return false;
     }
@@ -104,7 +104,7 @@ bool AsynCurlRunner::AddRequestToClient(unique_ptr<AsynHttpRequest>&& request) {
         LOG_ERROR(sLogger,
                   ("failed to send request", "failed to add the easy curl handle to multi_handle")(
                       "errMsg", curl_multi_strerror(res))("request address", request.get()));
-        request->mResponse.SetCurlCode(CURL_LAST);
+        request->mResponse.SetCurlCode(CURLE_FAILED_INIT);
         request->OnSendDone(request->mResponse);
         curl_easy_cleanup(curl);
         return false;
@@ -137,9 +137,7 @@ void AsynCurlRunner::DoRun() {
             }
         }
 
-        struct timeval timeout {
-            1, 0
-        };
+        struct timeval timeout{1, 0};
         long curlTimeout = -1;
         if ((mc = curl_multi_timeout(mClient, &curlTimeout)) != CURLM_OK) {
             LOG_WARNING(
