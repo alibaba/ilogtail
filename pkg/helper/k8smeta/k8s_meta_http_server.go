@@ -3,7 +3,6 @@ package k8smeta
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -19,15 +18,6 @@ import (
 
 type requestBody struct {
 	Keys []string `json:"keys"`
-}
-
-type ipPort struct {
-	IP   string `json:"ip"`
-	Port int    `json:"port"`
-}
-
-type ipPortRequestBody struct {
-	Keys []ipPort `json:"keys"`
 }
 
 type metadataHandler struct {
@@ -86,7 +76,7 @@ func (m *metadataHandler) handler(handleFunc func(w http.ResponseWriter, r *http
 
 func (m *metadataHandler) handlePodMetaByIPPort(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	var rBody ipPortRequestBody
+	var rBody requestBody
 	// Decode the JSON data into the struct
 	err := json.NewDecoder(r.Body).Decode(&rBody)
 	if err != nil {
@@ -97,37 +87,117 @@ func (m *metadataHandler) handlePodMetaByIPPort(w http.ResponseWriter, r *http.R
 	// Get the metadata
 	metadata := make(map[string]*PodMetadata)
 	for _, key := range rBody.Keys {
-		objs := m.metaManager.cacheMap[POD].Get([]string{fmt.Sprintf("%s:%d", key.IP, key.Port)})
+		ipPort := strings.Split(key, ":")
+		if len(ipPort) == 0 {
+			continue
+		}
+		ip := ipPort[0]
+		objs := m.metaManager.cacheMap[POD].Get([]string{ip})
 		if len(objs) == 0 {
-			// try service IP
-			svcObjs := m.metaManager.cacheMap[SERVICE].Get([]string{fmt.Sprintf("%s:%d", key.IP, key.Port)})
-			for key, svcObj := range svcObjs {
-				service, ok := svcObj[0].Raw.(*v1.Service)
-				if !ok {
-					continue
-				}
-				lm := newLabelMatcher(service, labels.SelectorFromSet(service.Spec.Selector))
-				podObjs := m.metaManager.cacheMap[POD].Filter(func(ow *ObjectWrapper) bool {
-					pod := ow.Raw.(*v1.Pod)
-					if pod.Namespace != service.Namespace {
-						return false
-					}
-					return lm.selector.Matches(labels.Set(pod.Labels))
-				}, 1)
-				if len(podObjs) != 0 {
-					podMetadata := m.convertObj2PodResponse(podObjs[0])
-					podMetadata.ServiceName = service.Name
-					metadata[key] = podMetadata
-				}
+			podMetadata := m.findPodByServiceIPPort(ipPort)
+			if podMetadata != nil {
+				metadata[key] = podMetadata
 			}
 		} else {
-			for key, obj := range objs {
-				podMetadata := m.convertObj2PodResponse(obj[0])
+			podMetadata := m.findPodByPodIPPort(ipPort, objs)
+			if podMetadata != nil {
 				metadata[key] = podMetadata
 			}
 		}
 	}
 	wrapperResponse(w, metadata)
+}
+
+func (m *metadataHandler) findPodByServiceIPPort(ipPort []string) *PodMetadata {
+	ip := ipPort[0]
+	// try service IP
+	svcObjs := m.metaManager.cacheMap[SERVICE].Get([]string{ip})
+	if len(svcObjs) == 0 {
+		return nil
+	}
+	var service *v1.Service
+	if len(ipPort) == 2 {
+		expectedPort, err := strconv.Atoi(ipPort[1])
+		if err != nil {
+			return nil
+		}
+		for _, obj := range svcObjs[ip] {
+			svc, ok := obj.Raw.(*v1.Service)
+			if !ok {
+				continue
+			}
+			portMatch := false
+			for _, port := range svc.Spec.Ports {
+				if port.Port == int32(expectedPort) {
+					portMatch = true
+					break
+				}
+			}
+			if !portMatch {
+				continue
+			}
+			service = svc
+			break
+		}
+	} else {
+		for _, obj := range svcObjs[ip] {
+			// if no port specified, use the first service
+			svc, ok := obj.Raw.(*v1.Service)
+			if !ok {
+				continue
+			}
+			service = svc
+			break
+		}
+	}
+
+	// find pod by service
+	lm := newLabelMatcher(service, labels.SelectorFromSet(service.Spec.Selector))
+	podObjs := m.metaManager.cacheMap[POD].Filter(func(ow *ObjectWrapper) bool {
+		pod := ow.Raw.(*v1.Pod)
+		if pod.Namespace != service.Namespace {
+			return false
+		}
+		return lm.selector.Matches(labels.Set(pod.Labels))
+	}, 1)
+	if len(podObjs) != 0 {
+		podMetadata := m.convertObj2PodResponse(podObjs[0])
+		podMetadata.ServiceName = service.Name
+		return podMetadata
+	}
+	return nil
+}
+
+func (m *metadataHandler) findPodByPodIPPort(ipPort []string, objs map[string][]*ObjectWrapper) *PodMetadata {
+	ip := ipPort[0]
+	if len(ipPort) == 2 {
+		expectedPort, err := strconv.Atoi(ipPort[1])
+		if err != nil {
+			return nil
+		}
+		for _, obj := range objs[ip] {
+			pod := obj.Raw.(*v1.Pod)
+			for _, container := range pod.Spec.Containers {
+				portMatch := false
+				for _, port := range container.Ports {
+					if port.ContainerPort == int32(expectedPort) {
+						portMatch = true
+						break
+					}
+				}
+				if !portMatch {
+					continue
+				}
+				podMetadata := m.convertObj2PodResponse(obj)
+				return podMetadata
+			}
+		}
+	} else {
+		// without port
+		podMetadata := m.convertObj2PodResponse(objs[ip][0])
+		return podMetadata
+	}
+	return nil
 }
 
 func (m *metadataHandler) convertObj2PodResponse(obj *ObjectWrapper) *PodMetadata {
