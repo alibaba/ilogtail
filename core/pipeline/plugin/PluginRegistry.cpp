@@ -35,6 +35,7 @@
 #include "plugin/input/InputNetworkObserver.h"
 #include "plugin/input/InputNetworkSecurity.h"
 #include "plugin/input/InputProcessSecurity.h"
+#include "plugin/input/InputSelfMonitorMetric.h"
 #endif
 #include "logger/Logger.h"
 #include "pipeline/plugin/creator/CProcessor.h"
@@ -125,6 +126,7 @@ bool PluginRegistry::IsValidNativeFlusherPlugin(const string& name) const {
 void PluginRegistry::LoadStaticPlugins() {
     RegisterInputCreator(new StaticInputCreator<InputFile>());
     RegisterInputCreator(new StaticInputCreator<InputPrometheus>());
+    RegisterInputCreator(new StaticInputCreator<InputSelfMonitorMetric>());
 #if defined(__linux__) && !defined(__ANDROID__)
     RegisterInputCreator(new StaticInputCreator<InputContainerStdio>());
     RegisterInputCreator(new StaticInputCreator<InputFileSecurity>());

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 iLogtail Authors
+ * Copyright 2024 iLogtail Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,25 +16,22 @@
 
 #pragma once
 
-#include "Monitor.h"
-#include "provider/Provider.h"
-
+#include "monitor/SelfMonitorServer.h"
+#include "pipeline/plugin/interface/Input.h"
 
 namespace logtail {
 
-class MetricExportor {
+class InputSelfMonitorMetric : public Input {
 public:
-    static MetricExportor* GetInstance() {
-        static MetricExportor* ptr = new MetricExportor();
-        return ptr;
-    }
-    void PushMetrics(bool forceSend);
+    static const std::string sName;
 
+    const std::string& Name() const override { return sName; }
+    bool Init(const Json::Value& config, Json::Value& optionalGoPipeline) override;
+    bool Start() override;
+    bool Stop(bool isPipelineRemoving) override;
+    bool SupportAck() const override { return true; }
 private:
-    MetricExportor();
-
-    int32_t mSendInterval;
-    int32_t mLastSendTime;
+    SelfMonitorMetricRules mSelfMonitorMetricRules;
 };
 
 } // namespace logtail
