@@ -118,15 +118,6 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, stri
                 const auto& e = group.mEvents[i].Cast<MetricEvent>();
                 if (e.Is<UntypedSingleValue>()) {
                     metricEventContentCache[i].first = to_string(e.GetValue<UntypedSingleValue>()->mValue);
-                } else if (e.Is<UntypedMultiDoubleValues>()) {
-                    Json::Value metricValues;
-                    for (auto value = e.GetValue<UntypedMultiDoubleValues>()->ValusBegin();
-                         value != e.GetValue<UntypedMultiDoubleValues>()->ValusEnd();
-                         value++) {
-                        metricValues[value->first.to_string()] = value->second;
-                    }
-                    Json::StreamWriterBuilder writer;
-                    metricEventContentCache[i].first = Json::writeString(writer, metricValues);
                 } else {
                     // should not happen
                     LOG_ERROR(sLogger,

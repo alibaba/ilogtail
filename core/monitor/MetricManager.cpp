@@ -48,22 +48,15 @@ SelfMonitorMetricEvent::SelfMonitorMetricEvent(MetricsRecord* metricRecord) {
     // category
     mCategory = metricRecord->GetCategory();
     // labels
-    string projects;
     for (auto item = metricRecord->GetLabels()->begin(); item != metricRecord->GetLabels()->end(); ++item) {
         pair<string, string> pair = *item;
         mLabels[pair.first] = pair.second;
-        if (pair.first == METRIC_LABEL_KEY_PROJECT) {
-            projects = pair.second;
-        }
     }
     for (auto item = metricRecord->GetDynamicLabels()->begin(); item != metricRecord->GetDynamicLabels()->end();
          ++item) {
         pair<string, function<string()>> pair = *item;
         string value = pair.second();
         mLabels[pair.first] = value;
-        if (pair.first == METRIC_LABEL_KEY_PROJECT) {
-            projects = value;
-        }
     }
     // counters
     for (auto& item : metricRecord->GetCounters()) {

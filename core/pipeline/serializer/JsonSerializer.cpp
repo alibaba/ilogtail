@@ -22,7 +22,6 @@ using namespace std;
 namespace logtail {
 
 const string JSON_KEY_TIME = "__time__";
-const string JSON_KEY_TIME_NANO = "__time_nano__";
 
 bool JsonEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, string& errorMsg) {
     if (group.mEvents.empty()) {
