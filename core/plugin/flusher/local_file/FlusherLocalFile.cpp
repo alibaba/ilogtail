@@ -27,6 +27,10 @@ namespace logtail {
 const string FlusherLocalFile::sName = "flusher_local_file";
 
 bool FlusherLocalFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
+    static uint32_t cnt = 0;
+    GenerateQueueKey(to_string(++cnt));
+    SenderQueueManager::GetInstance()->CreateQueue(mQueueKey, mPluginID, *mContext);
+
     string errorMsg;
     // FileName
     if (!GetMandatoryStringParam(config, "FileName", mFileName, errorMsg)) {
@@ -39,6 +43,8 @@ bool FlusherLocalFile::Init(const Json::Value& config, Json::Value& optionalGoPi
                            mContext->GetLogstoreName(),
                            mContext->GetRegion());
     }
+    // Pattern
+    GetMandatoryStringParam(config, "Pattern", mPattern, errorMsg);
     // MaxFileSize
     GetMandatoryUIntParam(config, "MaxFileSize", mMaxFileSize, errorMsg);
     // MaxFiles
@@ -48,8 +54,9 @@ bool FlusherLocalFile::Init(const Json::Value& config, Json::Value& optionalGoPi
     auto file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(mFileName, mMaxFileSize, mMaxFiles, true);
     mFileWriter = std::make_shared<spdlog::async_logger>(
         sName, file_sink, spdlog::thread_pool(), spdlog::async_overflow_policy::block);
-    mFileWriter->set_pattern("[%Y-%m-%d %H:%M:%S.%f] %v");
+    mFileWriter->set_pattern(mPattern);
 
+    mBatcher.Init(Json::Value(), this, DefaultFlushStrategyOptions{});
     mGroupSerializer = make_unique<JsonEventGroupSerializer>(this);
     mSendCnt = GetMetricsRecordRef().CreateCounter(METRIC_PLUGIN_FLUSHER_OUT_EVENT_GROUPS_TOTAL);
     return true;
@@ -90,6 +97,7 @@ bool FlusherLocalFile::SerializeAndPush(PipelineEventGroup&& group) {
     } else {
         LOG_ERROR(sLogger, ("serialize pipeline event group error", errorMsg));
     }
+    mFileWriter->flush();
     return true;
 }
 
@@ -104,6 +112,7 @@ bool FlusherLocalFile::SerializeAndPush(BatchedEventsList&& groupList) {
             LOG_ERROR(sLogger, ("serialize pipeline event group error", errorMsg));
         }
     }
+    mFileWriter->flush();
     return true;
 }
 

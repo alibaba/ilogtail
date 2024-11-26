@@ -43,6 +43,7 @@ private:
 
     std::shared_ptr<spdlog::logger> mFileWriter;
     std::string mFileName;
+    std::string mPattern = "[%Y-%m-%d %H:%M:%S.%f] %v";
     uint32_t mMaxFileSize = 1024 * 1024 * 10;
     uint32_t mMaxFiles = 10;
     Batcher<EventBatchStatus> mBatcher;
