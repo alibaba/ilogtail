@@ -75,7 +75,7 @@ jobs:
           ENABLE_STATIC_LINK_CRT: ON
           WITHOUTGDB: ON
           MAKE_JOBS: 16
-          # BUILD_TYPE: Debug # TODO: Uncomment when memory management is refined
+          BUILD_TYPE: Debug
         run: CURRENT_DIR=$(pwd) && sed -i "s|/src|$CURRENT_DIR|g" docker/Dockerfile_build && make core PATH_IN_DOCKER=$(pwd)
 
       - name: Unit Test
