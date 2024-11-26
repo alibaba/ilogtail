@@ -86,7 +86,6 @@ void SelfMonitorServer::SendMetrics() {
     if (mMetricPipelineCtx == nullptr || mSelfMonitorMetricRules == nullptr) {
         return;
     }
-    LOG_INFO(sLogger, ("send self-monitor metrics", "start"));
     // new pipeline
     vector<SelfMonitorMetricEvent> metricEventList;
     ReadMetrics::GetInstance()->ReadAsSelfMonitorMetricEvents(metricEventList);
