@@ -170,9 +170,7 @@ bool SelfMonitorMetricEvent::ShouldDelete() {
 
 void SelfMonitorMetricEvent::ReadAsMetricEvent(MetricEvent* metricEventPtr) {
     // time
-    auto now = GetCurrentLogtailTime();
-    metricEventPtr->SetTimestamp(AppConfig::GetInstance()->EnableLogTimeAutoAdjust() ? now.tv_sec + GetTimeDelta()
-                                                                                     : now.tv_sec);
+    metricEventPtr->SetTimestamp(GetCurrentLogtailTime().tv_sec);
     // __tag__
     for (auto label = mLabels.begin(); label != mLabels.end(); label++) {
         metricEventPtr->SetTag(label->first, label->second);

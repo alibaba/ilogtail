@@ -107,7 +107,8 @@ void SelfMonitorServer::SendMetrics() {
     }
 }
 
-bool SelfMonitorServer::ProcessSelfMonitorMetricEvent(SelfMonitorMetricEvent& event, const SelfMonitorMetricRule& rule) {
+bool SelfMonitorServer::ProcessSelfMonitorMetricEvent(SelfMonitorMetricEvent& event,
+                                                      const SelfMonitorMetricRule& rule) {
     if (!rule.mEnable) {
         if (mSelfMonitorMetricEventMap.find(event.mKey) != mSelfMonitorMetricEventMap.end()) {
             mSelfMonitorMetricEventMap.erase(event.mKey);
@@ -123,23 +124,19 @@ void SelfMonitorServer::PushSelfMonitorMetricEvents(std::vector<SelfMonitorMetri
         bool shouldSkip = false;
         if (event.mCategory == MetricCategory::METRIC_CATEGORY_AGENT) {
             shouldSkip = !ProcessSelfMonitorMetricEvent(event, mSelfMonitorMetricRules->mAgentMetricsRule);
-        }
-        if (event.mCategory == MetricCategory::METRIC_CATEGORY_RUNNER) {
+        } else if (event.mCategory == MetricCategory::METRIC_CATEGORY_RUNNER) {
             shouldSkip = !ProcessSelfMonitorMetricEvent(event, mSelfMonitorMetricRules->mRunnerMetricsRule);
-        }
-        if (event.mCategory == MetricCategory::METRIC_CATEGORY_COMPONENT) {
+        } else if (event.mCategory == MetricCategory::METRIC_CATEGORY_COMPONENT) {
             shouldSkip = !ProcessSelfMonitorMetricEvent(event, mSelfMonitorMetricRules->mComponentMetricsRule);
-        }
-        if (event.mCategory == MetricCategory::METRIC_CATEGORY_PIPELINE) {
+        } else if (event.mCategory == MetricCategory::METRIC_CATEGORY_PIPELINE) {
             shouldSkip = !ProcessSelfMonitorMetricEvent(event, mSelfMonitorMetricRules->mPipelineMetricsRule);
-        }
-        if (event.mCategory == MetricCategory::METRIC_CATEGORY_PLUGIN) {
+        } else if (event.mCategory == MetricCategory::METRIC_CATEGORY_PLUGIN) {
             shouldSkip = !ProcessSelfMonitorMetricEvent(event, mSelfMonitorMetricRules->mPluginMetricsRule);
-        }
-        if (event.mCategory == MetricCategory::METRIC_CATEGORY_PLUGIN_SOURCE) {
+        } else if (event.mCategory == MetricCategory::METRIC_CATEGORY_PLUGIN_SOURCE) {
             shouldSkip = !ProcessSelfMonitorMetricEvent(event, mSelfMonitorMetricRules->mPluginSourceMetricsRule);
         }
-        if (shouldSkip) continue;
+        if (shouldSkip)
+            continue;
 
         if (mSelfMonitorMetricEventMap.find(event.mKey) != mSelfMonitorMetricEventMap.end()) {
             mSelfMonitorMetricEventMap[event.mKey].Merge(event);
