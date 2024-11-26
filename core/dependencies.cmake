@@ -414,7 +414,7 @@ macro(link_spl target_name)
 
     find_library(LIB_FOUND "libloongcollector_spl.a")
     if (NOT LIB_FOUND)
-        message(FATAL_ERROR "Please upgrade your development image to compile SPL feature!")
+        message(FATAL_ERROR "Please upgrade your development image to compile!")
     endif()
     
     target_link_libraries(${target_name} "libloongcollector_spl.a")
