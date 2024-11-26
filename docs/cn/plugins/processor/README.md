@@ -44,23 +44,47 @@
 | 扩展插件 | Golang | 性能适中<br>资源开销较低 | 丰富算子<br>支持复杂处理 | 较低<br>Golang开发门槛低 |
 | SPL引擎 | C++ | 性能优异<br>向量化执行 | 算子全面<br>管道式处理<br>配置驱动 | 极低<br>仅需编写SPL语句 |
 
-## 使用限制
+## 使用约束与限制
 
-1. 原生插件仅支持处理:
-   - 文本日志
-   - 容器标准输出
+### 原生处理插件支持的输入插件
 
-2. 插件组合规则:
-   - 支持原生插件与扩展插件级联
-   - 原生插件必须在扩展插件之前使用
-   - 支持的使用模式:
-     - 仅使用原生插件
-     - 仅使用扩展插件
-     - 原生插件后接扩展插件
+下表列出了可以与原生处理插件组合使用的输入插件：
+
+| 输入插件 | 说明 |
+|---------|------|
+| [`input_file`](../input/input-file.md) | 文本日志输入插件 |
+| [`input_container_stdio`](../input/input-container-stdio.md) | 容器标准输出插件 |
+| [`input_observer_network`](../input/metric-observer.md) | eBPF网络观测插件 |
+| [`input_file_security`](../input/input-file-security.md) | 文件安全监控插件 |
+| [`input_network_observer`](../input/input-network-observer.md) | 网络观测插件 |
+| [`input_network_security`](../input/input-network-security.md) | 网络安全监控插件 |
+| [`input_process_security`](../input/input-process-security.md) | 进程安全监控插件 |
+
+更多输入插件说明请参考[输入插件文档](../input/README.md)。
+
+### 插件组合规则
+
+LoongCollector支持以下两种处理插件组合方式：
+
+#### 1. 单一插件模式
+
+- **原生插件模式**：
+  - 组合方式：仅使用原生处理插件
+  - 限制： 仅支持原生输入插件
+- **扩展插件模式**：
+  - 组合方式：仅使用扩展处理插件
+  - 支持所有类型输入插件
+
+#### 2. 级联模式
+
+- **组合方式**： 原生处理插件后接扩展处理插件
+- **限制条件**：
+  - 仅支持原生输入插件
+  - 原生处理插件必须位于扩展处理插件之前
 
 ## 选型建议
 
-- 追求性能: 优先使用原生插件
-- 处理复杂数据: 选择SPL引擎
-- 需要定制开发: 使用扩展插件
-- 混合处理场景: 采用级联模式
+- 追求性能： 优先使用原生插件
+- 处理复杂数据： 选择SPL引擎
+- 需要定制开发： 使用扩展插件
+- 混合处理场景： 采用级联模式
