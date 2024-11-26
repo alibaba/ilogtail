@@ -31,6 +31,7 @@ public:
     void Stop();
 
     void UpdateMetricPipeline(PipelineContext* ctx, SelfMonitorMetricRules* rules);
+    void RemoveMetricPipeline();
     void UpdateAlarmPipeline(PipelineContext* ctx); // Todo
 private:
     SelfMonitorServer();

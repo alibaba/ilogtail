@@ -79,6 +79,13 @@ void SelfMonitorServer::UpdateMetricPipeline(PipelineContext* ctx, SelfMonitorMe
     LOG_INFO(sLogger, ("self-monitor metrics pipeline", "updated"));
 }
 
+void SelfMonitorServer::RemoveMetricPipeline() {
+    WriteLock lock(mMetricPipelineLock);
+    mMetricPipelineCtx = nullptr;
+    mSelfMonitorMetricRules = nullptr;
+    LOG_INFO(sLogger, ("self-monitor metrics pipeline", "removed"));
+}
+
 void SelfMonitorServer::SendMetrics() {
     ReadMetrics::GetInstance()->UpdateMetrics();
 
@@ -98,7 +105,7 @@ void SelfMonitorServer::SendMetrics() {
 
     shared_ptr<Pipeline> pipeline
         = PipelineManager::GetInstance()->FindConfigByName(mMetricPipelineCtx->GetConfigName());
-    if (pipeline != nullptr) {
+    if (pipeline.get() != nullptr) {
         if (pipelineEventGroup.GetEvents().size() > 0) {
             ProcessorRunner::GetInstance()->PushQueue(
                 pipeline->GetContext().GetProcessQueueKey(), 0, std::move(pipelineEventGroup));
