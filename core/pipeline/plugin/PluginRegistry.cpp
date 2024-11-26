@@ -26,6 +26,7 @@
 #include "app_config/AppConfig.h"
 #include "common/Flags.h"
 #include "plugin/flusher/blackhole/FlusherBlackHole.h"
+#include "plugin/flusher/local_file/FlusherLocalFile.h"
 #include "plugin/flusher/sls/FlusherSLS.h"
 #include "plugin/input/InputContainerStdio.h"
 #include "plugin/input/InputFile.h"
@@ -50,9 +51,9 @@
 #include "plugin/processor/ProcessorParseJsonNative.h"
 #include "plugin/processor/ProcessorParseRegexNative.h"
 #include "plugin/processor/ProcessorParseTimestampNative.h"
-#include "plugin/processor/inner/ProcessorPromParseMetricNative.h"
 #include "plugin/processor/inner/ProcessorMergeMultilineLogNative.h"
 #include "plugin/processor/inner/ProcessorParseContainerLogNative.h"
+#include "plugin/processor/inner/ProcessorPromParseMetricNative.h"
 #include "plugin/processor/inner/ProcessorPromRelabelMetricNative.h"
 #include "plugin/processor/inner/ProcessorSplitLogStringNative.h"
 #include "plugin/processor/inner/ProcessorSplitMultilineLogStringNative.h"
@@ -158,6 +159,7 @@ void PluginRegistry::LoadStaticPlugins() {
 
     RegisterFlusherCreator(new StaticFlusherCreator<FlusherSLS>());
     RegisterFlusherCreator(new StaticFlusherCreator<FlusherBlackHole>());
+    RegisterFlusherCreator(new StaticFlusherCreator<FlusherLocalFile>());
 }
 
 void PluginRegistry::LoadDynamicPlugins(const set<string>& plugins) {
@@ -222,7 +224,8 @@ void PluginRegistry::RegisterCreator(PluginCat cat, PluginCreator* creator) {
     mPluginDict.emplace(PluginKey(cat, creator->Name()), shared_ptr<PluginCreator>(creator));
 }
 
-unique_ptr<PluginInstance> PluginRegistry::Create(PluginCat cat, const string& name, const PluginInstance::PluginMeta& pluginMeta) {
+unique_ptr<PluginInstance>
+PluginRegistry::Create(PluginCat cat, const string& name, const PluginInstance::PluginMeta& pluginMeta) {
     unique_ptr<PluginInstance> ins;
     auto creatorEntry = mPluginDict.find(PluginKey(cat, name));
     if (creatorEntry != mPluginDict.end()) {

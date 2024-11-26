@@ -20,19 +20,19 @@ namespace logtail {
 
 const std::string InputSelfMonitorMetric::sName = "input_self_monitor_metric";
 
-bool GetEnabled(Json::Value& rule) {
+bool GetEnabled(const Json::Value& rule) {
     if (rule.isMember("Enable") && rule["Enable"].isBool())
         return rule["Enable"].asBool();
     return true;
 }
 
-int GetInterval(Json::Value& rule) {
+int GetInterval(const Json::Value& rule) {
     if (rule.isMember("Interval") && rule["Interval"].isInt())
         return rule["Interval"].asInt();
     return 10;
 }
 
-void ParseSelfMonitorMetricRule(std::string&& ruleKey, Json::Value& ruleJson, SelfMonitorMetricRule& rule) {
+void ParseSelfMonitorMetricRule(std::string&& ruleKey, const Json::Value& ruleJson, SelfMonitorMetricRule& rule) {
     if (ruleJson.isMember(ruleKey) && ruleJson[ruleKey].isObject()) {
         rule.mEnable = GetEnabled(ruleJson[ruleKey]);
         rule.mInterval = GetInterval(ruleJson[ruleKey]);
@@ -40,17 +40,12 @@ void ParseSelfMonitorMetricRule(std::string&& ruleKey, Json::Value& ruleJson, Se
 }
 
 bool InputSelfMonitorMetric::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
-    if (!config.isMember("Rules") && !config["Rules"].isObject()) {
-        LOG_ERROR(sLogger, ("init self-monitor metric input failed", "no rules found"));
-        return false;
-    }
-    Json::Value rules = config["Rules"];
-    ParseSelfMonitorMetricRule("Agent", rules, mSelfMonitorMetricRules.mAgentMetricsRule);
-    ParseSelfMonitorMetricRule("Runner", rules, mSelfMonitorMetricRules.mRunnerMetricsRule);
-    ParseSelfMonitorMetricRule("Pipeline", rules, mSelfMonitorMetricRules.mPipelineMetricsRule);
-    ParseSelfMonitorMetricRule("PluginSource", rules, mSelfMonitorMetricRules.mPluginSourceMetricsRule);
-    ParseSelfMonitorMetricRule("Plugin", rules, mSelfMonitorMetricRules.mPluginMetricsRule);
-    ParseSelfMonitorMetricRule("Component", rules, mSelfMonitorMetricRules.mComponentMetricsRule);
+    ParseSelfMonitorMetricRule("Agent", config, mSelfMonitorMetricRules.mAgentMetricsRule);
+    ParseSelfMonitorMetricRule("Runner", config, mSelfMonitorMetricRules.mRunnerMetricsRule);
+    ParseSelfMonitorMetricRule("Pipeline", config, mSelfMonitorMetricRules.mPipelineMetricsRule);
+    ParseSelfMonitorMetricRule("PluginSource", config, mSelfMonitorMetricRules.mPluginSourceMetricsRule);
+    ParseSelfMonitorMetricRule("Plugin", config, mSelfMonitorMetricRules.mPluginMetricsRule);
+    ParseSelfMonitorMetricRule("Component", config, mSelfMonitorMetricRules.mComponentMetricsRule);
     return true;
 }
 
