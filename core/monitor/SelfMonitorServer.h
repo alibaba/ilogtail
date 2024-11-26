@@ -45,8 +45,8 @@ private:
     void PushSelfMonitorMetricEvents(std::vector<SelfMonitorMetricEvent>& events);
     void ReadAsPipelineEventGroup(PipelineEventGroup& pipelineEventGroup);
 
-    PipelineContext* mMetricPipelineCtx;
-    SelfMonitorMetricRules* mSelfMonitorMetricRules;
+    PipelineContext* mMetricPipelineCtx = nullptr;
+    SelfMonitorMetricRules* mSelfMonitorMetricRules = nullptr;
     SelfMonitorMetricEventMap mSelfMonitorMetricEventMap;
     mutable ReadWriteLock mMetricPipelineLock;
 

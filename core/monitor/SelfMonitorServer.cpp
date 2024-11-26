@@ -76,15 +76,17 @@ void SelfMonitorServer::UpdateMetricPipeline(PipelineContext* ctx, SelfMonitorMe
     WriteLock lock(mMetricPipelineLock);
     mMetricPipelineCtx = ctx;
     mSelfMonitorMetricRules = rules;
+    LOG_INFO(sLogger, ("self-monitor metrics pipeline", "updated"));
 }
 
 void SelfMonitorServer::SendMetrics() {
+    ReadMetrics::GetInstance()->UpdateMetrics();
+
     ReadLock lock(mMetricPipelineLock);
     if (mMetricPipelineCtx == nullptr || mSelfMonitorMetricRules == nullptr) {
         return;
     }
     LOG_INFO(sLogger, ("send self-monitor metrics", "start"));
-    ReadMetrics::GetInstance()->UpdateMetrics();
     // new pipeline
     vector<SelfMonitorMetricEvent> metricEventList;
     ReadMetrics::GetInstance()->ReadAsSelfMonitorMetricEvents(metricEventList);
