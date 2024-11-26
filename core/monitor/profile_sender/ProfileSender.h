@@ -31,6 +31,8 @@ public:
     ProfileSender(const ProfileSender&) = delete;
     ProfileSender& operator=(const ProfileSender&) = delete;
 
+    virtual ~ProfileSender() = default;
+
     static ProfileSender* GetInstance();
 
     void SetDefaultProfileRegion(const std::string& profileRegion);
@@ -46,10 +48,10 @@ public:
     bool IsProfileData(const std::string& region, const std::string& project, const std::string& logstore);
 
     virtual void SendToProfileProject(const std::string& region, sls_logs::LogGroup& logGroup);
-
+    
+    virtual void SendMetricContent(const std::string& content) {}
 protected:
-    ProfileSender();
-    ~ProfileSender() = default;
+    ProfileSender();   
 
     FlusherSLS* GetFlusher(const std::string& region);
 

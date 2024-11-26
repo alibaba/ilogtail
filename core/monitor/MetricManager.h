@@ -62,7 +62,7 @@ public:
 };
 
 class ReadMetrics {
-private:
+protected:
     ReadMetrics() = default;
     mutable ReadWriteLock mReadWriteLock;
     MetricsRecord* mHead = nullptr;
@@ -70,7 +70,7 @@ private:
     MetricsRecord* GetHead();
 
 public:
-    ~ReadMetrics();
+    virtual ~ReadMetrics();
     static ReadMetrics* GetInstance() {
         static ReadMetrics* ptr = new ReadMetrics();
         return ptr;
@@ -78,9 +78,18 @@ public:
     void ReadAsLogGroup(const std::string& regionFieldName,
                         const std::string& defaultRegion,
                         std::map<std::string, sls_logs::LogGroup*>& logGroupMap) const;
+    
     void ReadAsFileBuffer(std::string& metricsContent) const;
-    void UpdateMetrics();
+    
 
+    // serialize input metrics to metricsContent
+    virtual void SerializeMetricsToString(std::vector<std::map<std::string, std::string>>& metricsList,
+                                          std::string& metricsContent) const {}
+
+    // iterate through the metrics list to serialize into metricsContent
+    virtual void ReadAsCustomizedProtocol(std::string& metricsContent) const {}
+    
+    void UpdateMetrics();
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class MetricManagerUnittest;
 #endif

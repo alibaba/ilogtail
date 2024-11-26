@@ -34,6 +34,10 @@ void InitRemoteConfigProviders() {
     LegacyCommonConfigProvider::GetInstance()->Init("common");
 }
 
+ReadMetrics* GetReadMetrics() {
+    return ReadMetrics::GetInstance();
+}
+
 ProfileSender* GetProfileSender() {
     return ProfileSender::GetInstance();
 }

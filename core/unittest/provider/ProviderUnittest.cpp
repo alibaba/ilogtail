@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "monitor/MetricManager.h"
 #include "unittest/Unittest.h"
 #include "provider/Provider.h"
 
@@ -22,11 +23,19 @@ class ProviderUnittest : public testing::Test {
 public:
     void TestGetRemoteConfigProvider();
     void TestGetProfileSender();
+    void TestGetReadMetrics();
 
 };
 void ProviderUnittest::TestGetRemoteConfigProvider() {
     auto remoteConfigProviders = GetRemoteConfigProviders();
     APSARA_TEST_GT(remoteConfigProviders.size(), 0U);
+}
+
+void ProviderUnittest::TestGetReadMetrics() {
+    auto readMetrics = GetReadMetrics();
+    auto expected = ReadMetrics::GetInstance();
+    APSARA_TEST_NOT_EQUAL(nullptr, readMetrics);
+    APSARA_TEST_EQUAL(expected, readMetrics);
 }
 
 void ProviderUnittest::TestGetProfileSender() {
@@ -37,6 +46,7 @@ void ProviderUnittest::TestGetProfileSender() {
 
 UNIT_TEST_CASE(ProviderUnittest, TestGetRemoteConfigProvider)
 UNIT_TEST_CASE(ProviderUnittest, TestGetProfileSender)
+UNIT_TEST_CASE(ProviderUnittest, TestGetReadMetrics)
 } // namespace logtail
 
 UNIT_TEST_MAIN

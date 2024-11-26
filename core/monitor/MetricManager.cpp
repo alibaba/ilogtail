@@ -309,6 +309,7 @@ void ReadMetrics::UpdateMetrics() {
     }
 }
 
+
 MetricsRecord* ReadMetrics::GetHead() {
     WriteLock lock(mReadWriteLock);
     return mHead;
