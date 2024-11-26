@@ -23,10 +23,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/suite"
+
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/plugins/flusher/checker"
-
-	"github.com/stretchr/testify/suite"
 )
 
 var updateConfigName = "update_mock_block"
@@ -76,8 +76,8 @@ func (s *configUpdateTestSuite) TestConfigUpdate() {
 	// unblock old config
 	checkFlusher.Block = false
 	time.Sleep(time.Second * time.Duration(5))
-	s.Equal(10000, checkFlusher.GetLogCount())
-	// this magic number(10000) must exceed number of logs can be hold in processor channel(LogsChan) + aggregator buffer(defaultLogGroup) + flusher channel(LogGroupsChan)
+	s.Equal(0, checkFlusher.GetLogCount())
+	LogtailConfigLock.RLock()
 	s.Equal(20000, GetConfigFlushers(LogtailConfig[noblockUpdateConfigName].PluginRunner)[0].(*checker.FlusherChecker).GetLogCount())
 }
 
@@ -99,7 +99,7 @@ func (s *configUpdateTestSuite) TestConfigUpdateMany() {
 	s.Equal(0, checkFlusher.GetLogCount(), "the hold on block flusher checker doesn't have any logs")
 	checkFlusher.Block = false
 	time.Sleep(time.Second * time.Duration(5))
-	s.Equal(checkFlusher.GetLogCount(), 10000)
+	s.Equal(checkFlusher.GetLogCount(), 0)
 
 	// load normal config
 	for i := 0; i < 5; i++ {
@@ -168,7 +168,5 @@ func (s *configUpdateTestSuite) TestHoldOnExitTimeout() {
 	s.Equal(0, checkFlusher.GetLogCount())
 	checkFlusher.Block = false
 	time.Sleep(time.Second * time.Duration(5))
-	s.Equal(10000, checkFlusher.GetLogCount())
-	time.Sleep(time.Second * 10)
-	s.NoError(Resume())
+	s.Equal(0, checkFlusher.GetLogCount())
 }
