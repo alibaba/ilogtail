@@ -56,7 +56,8 @@ bool JsonEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, str
                     eventJson[kv.first.to_string()] = kv.second.to_string();
                 }
                 Json::StreamWriterBuilder writer;
-                oss << Json::writeString(writer, eventJson) << "\n";
+                writer["indentation"] = "";
+                oss << Json::writeString(writer, eventJson);
             }
             break;
         case PipelineEvent::Type::METRIC:
@@ -89,7 +90,8 @@ bool JsonEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, str
                     }
                 }
                 Json::StreamWriterBuilder writer;
-                oss << Json::writeString(writer, eventJson) << "\n";
+                writer["indentation"] = "";
+                oss << Json::writeString(writer, eventJson);
             }
             break;
         case PipelineEvent::Type::SPAN:
