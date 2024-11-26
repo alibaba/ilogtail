@@ -759,4 +759,51 @@ void LoongCollectorMonitor::Stop() {
 
 }
 
+const string LoongCollectorMonitor::GetInnerSelfMonitorMetricPipeline() {
+#ifdef __ENTERPRISE__
+    static string pipeline = "";
+#else
+    static string pipeline = R"(
+        {
+            "inputs": [
+                {
+                    "Type": "input_self_monitor_metric",
+                    "Agent": {
+                        "Enable": false,
+                        "Interval": 1
+                    },
+                    "Runner": {
+                        "Enable": false,
+                        "Interval": 1
+                    },
+                    "Pipeline": {
+                        "Enable": true,
+                        "Interval": 1
+                    },
+                    "PluginSource": {
+                        "Enable": true,
+                        "Interval": 10
+                    },
+                    "Plugin": {
+                        "Enable": false,
+                        "Interval": 10
+                    },
+                    "Component": {
+                        "Enable": false,
+                        "Interval": 10
+                    }
+                }
+            ],
+            "flushers": [
+                {
+                    "Type": "flusher_local_file",
+                    "FileName": "./log/self_metrics.log"
+                }
+            ]
+        }
+    )";
+#endif
+    return pipeline;
+}
+
 } // namespace logtail
