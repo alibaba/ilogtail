@@ -35,8 +35,10 @@ RUN if getent passwd $USERNAME; then userdel -f $USERNAME; fi && \
     if getent group $GROUPNAME; then groupdel $GROUPNAME; fi && \
     groupadd --gid $GROUP_GID $USERNAME && \
     useradd --uid $USER_UID --gid $GROUP_GID -m $USERNAME && \
-    echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME && \
-    chmod 0440 /etc/sudoers.d/$USERNAME && \
+    # the filename should not have the . or ~ symbol in its name
+    USER_SUDOER_FILE=$(echo $USERNAME | sed 's/\./-/g'); \
+    echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USER_SUDOER_FILE && \
+    chmod 0440 /etc/sudoers.d/$USER_SUDOER_FILE && \
     chown -R $USERNAME:$GROUPNAME $(eval echo ~$USERNAME) && \
     chmod 755 $(eval echo ~$USERNAME)
 
