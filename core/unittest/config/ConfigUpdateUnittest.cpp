@@ -35,6 +35,11 @@ class PipelineMock : public Pipeline {
 public:
     bool Init(PipelineConfig&& config) {
         mConfig = std::move(config.mDetail);
+        WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
+            mMetricsRecordRef,
+            MetricCategory::METRIC_CATEGORY_PIPELINE,
+            {{METRIC_LABEL_KEY_PROJECT, mContext.GetProjectName()}, {METRIC_LABEL_KEY_PIPELINE_NAME, mName}});
+        mStartTime = mMetricsRecordRef.CreateIntGauge(METRIC_PIPELINE_START_TIME);
         return (*mConfig)["valid"].asBool();
     }
 };
@@ -101,7 +106,7 @@ private:
     void PrepareInitialSettings() const;
     void GenerateInitialConfigs() const;
 
-    filesystem::path configDir = "./pipeline_config";
+    filesystem::path configDir = "./continuous_pipeline_config";
     vector<filesystem::path> pipelineConfigPaths = {configDir / "pipeline_invalid_format.json",
                                                     configDir / "pipeline_invalid_detail.json",
                                                     configDir / "pipeline_enabled_valid.json",
