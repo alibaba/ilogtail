@@ -108,9 +108,4 @@ using EventSerializer = Serializer<PipelineEventPtr>;
 using EventGroupSerializer = Serializer<BatchedEvents>;
 using EventGroupListSerializer = Serializer<BatchedEventsList>;
 
-std::string JsonToString(Json::Value& value);
-std::string SerializeSpanTagsToString(const SpanEvent& event);
-std::string SerializeSpanLinksToString(const SpanEvent& event);
-std::string SerializeSpanEventsToString(const SpanEvent& event);
-
 } // namespace logtail

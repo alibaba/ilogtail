@@ -108,11 +108,11 @@ void SelfMonitorServer::SendMetrics() {
 }
 
 void UpdateSelfMonitorMetricEventByRule(SelfMonitorMetricEvent& event,
-                                        SelfMonitorMetricEventMap& map,
+                                        SelfMonitorMetricEventMap& eventMap,
                                         SelfMonitorMetricRule& rule) {
     if (!rule.mEnable) {
-        if (map.find(event.mKey) != map.end()) {
-            map.erase(event.mKey);
+        if (eventMap.find(event.mKey) != eventMap.end()) {
+            eventMap.erase(event.mKey);
         }
         return;
     };

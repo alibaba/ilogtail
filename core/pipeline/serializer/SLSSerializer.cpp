@@ -30,6 +30,29 @@ using namespace std;
 
 namespace logtail {
 
+std::string SerializeSpanLinksToString(const SpanEvent& event) {
+    if (event.GetLinks().empty()) {
+        return "";
+    }
+    Json::Value jsonLinks(Json::arrayValue);
+    for (const auto& link : event.GetLinks()) {
+        jsonLinks.append(link.ToJson());
+    }
+    Json::StreamWriterBuilder writer;
+    return Json::writeString(writer, jsonLinks);
+}
+std::string SerializeSpanEventsToString(const SpanEvent& event) {
+    if (event.GetEvents().empty()) {
+        return "";
+    }
+    Json::Value jsonEvents(Json::arrayValue);
+    for (const auto& event : event.GetEvents()) {
+        jsonEvents.append(event.ToJson());
+    }
+    Json::StreamWriterBuilder writer;
+    return Json::writeString(writer, jsonEvents);
+}
+
 template <>
 bool Serializer<vector<CompressedLogGroup>>::DoSerialize(vector<CompressedLogGroup>&& p,
                                                          std::string& output,
@@ -102,7 +125,8 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, stri
                          value++) {
                         metricValues[value->first.to_string()] = value->second;
                     }
-                    metricEventContentCache[i].first = JsonToString(metricValues);
+                    Json::StreamWriterBuilder writer;
+                    metricEventContentCache[i].first = Json::writeString(writer, metricValues);
                 } else {
                     // should not happen
                     LOG_ERROR(sLogger,
@@ -137,7 +161,15 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, stri
                 contentSZ += GetLogContentSize(DEFAULT_TRACE_TAG_TRACE_STATE.size(), e.GetTraceState().size());
 
                 // set tags and scope tags
-                auto attrString = SerializeSpanTagsToString(e);
+                Json::Value jsonVal;
+                for (auto it = e.TagsBegin(); it != e.TagsEnd(); ++it) {
+                    jsonVal[it->first.to_string()] = it->second.to_string();
+                }
+                for (auto it = e.ScopeTagsBegin(); it != e.ScopeTagsEnd(); ++it) {
+                    jsonVal[it->first.to_string()] = it->second.to_string();
+                }
+                Json::StreamWriterBuilder writer;
+                std::string attrString = Json::writeString(writer, jsonVal);
                 contentSZ += GetLogContentSize(DEFAULT_TRACE_TAG_ATTRIBUTES.size(), attrString.size());
                 spanEventContentCache[i][0] = std::move(attrString);
                 auto linkString = SerializeSpanLinksToString(e);
