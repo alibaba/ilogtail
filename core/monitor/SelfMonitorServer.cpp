@@ -107,44 +107,40 @@ void SelfMonitorServer::SendMetrics() {
     }
 }
 
-void UpdateSelfMonitorMetricEventByRule(SelfMonitorMetricEvent& event,
-                                        SelfMonitorMetricEventMap& eventMap,
-                                        SelfMonitorMetricRule& rule) {
+bool SelfMonitorServer::ProcessSelfMonitorMetricEvent(SelfMonitorMetricEvent& event, const SelfMonitorMetricRule& rule) {
     if (!rule.mEnable) {
-        if (eventMap.find(event.mKey) != eventMap.end()) {
-            eventMap.erase(event.mKey);
+        if (mSelfMonitorMetricEventMap.find(event.mKey) != mSelfMonitorMetricEventMap.end()) {
+            mSelfMonitorMetricEventMap.erase(event.mKey);
         }
-        return;
-    };
+        return false;
+    }
     event.SetInterval(rule.mInterval);
+    return true;
 }
 
 void SelfMonitorServer::PushSelfMonitorMetricEvents(std::vector<SelfMonitorMetricEvent>& events) {
     for (auto event : events) {
+        bool shouldSkip = false;
         if (event.mCategory == MetricCategory::METRIC_CATEGORY_AGENT) {
-            UpdateSelfMonitorMetricEventByRule(
-                event, mSelfMonitorMetricEventMap, mSelfMonitorMetricRules->mAgentMetricsRule);
+            shouldSkip = !ProcessSelfMonitorMetricEvent(event, mSelfMonitorMetricRules->mAgentMetricsRule);
         }
         if (event.mCategory == MetricCategory::METRIC_CATEGORY_RUNNER) {
-            UpdateSelfMonitorMetricEventByRule(
-                event, mSelfMonitorMetricEventMap, mSelfMonitorMetricRules->mRunnerMetricsRule);
+            shouldSkip = !ProcessSelfMonitorMetricEvent(event, mSelfMonitorMetricRules->mRunnerMetricsRule);
         }
         if (event.mCategory == MetricCategory::METRIC_CATEGORY_COMPONENT) {
-            UpdateSelfMonitorMetricEventByRule(
-                event, mSelfMonitorMetricEventMap, mSelfMonitorMetricRules->mComponentMetricsRule);
+            shouldSkip = !ProcessSelfMonitorMetricEvent(event, mSelfMonitorMetricRules->mComponentMetricsRule);
         }
         if (event.mCategory == MetricCategory::METRIC_CATEGORY_PIPELINE) {
-            UpdateSelfMonitorMetricEventByRule(
-                event, mSelfMonitorMetricEventMap, mSelfMonitorMetricRules->mPipelineMetricsRule);
+            shouldSkip = !ProcessSelfMonitorMetricEvent(event, mSelfMonitorMetricRules->mPipelineMetricsRule);
         }
         if (event.mCategory == MetricCategory::METRIC_CATEGORY_PLUGIN) {
-            UpdateSelfMonitorMetricEventByRule(
-                event, mSelfMonitorMetricEventMap, mSelfMonitorMetricRules->mPluginMetricsRule);
+            shouldSkip = !ProcessSelfMonitorMetricEvent(event, mSelfMonitorMetricRules->mPluginMetricsRule);
         }
         if (event.mCategory == MetricCategory::METRIC_CATEGORY_PLUGIN_SOURCE) {
-            UpdateSelfMonitorMetricEventByRule(
-                event, mSelfMonitorMetricEventMap, mSelfMonitorMetricRules->mPluginSourceMetricsRule);
+            shouldSkip = !ProcessSelfMonitorMetricEvent(event, mSelfMonitorMetricRules->mPluginSourceMetricsRule);
         }
+        if (shouldSkip) continue;
+
         if (mSelfMonitorMetricEventMap.find(event.mKey) != mSelfMonitorMetricEventMap.end()) {
             mSelfMonitorMetricEventMap[event.mKey].Merge(event);
         } else {

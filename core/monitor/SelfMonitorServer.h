@@ -42,6 +42,7 @@ private:
     std::condition_variable mStopCV;
 
     void SendMetrics();
+    bool ProcessSelfMonitorMetricEvent(SelfMonitorMetricEvent& event, const SelfMonitorMetricRule& rule);
     void PushSelfMonitorMetricEvents(std::vector<SelfMonitorMetricEvent>& events);
     void ReadAsPipelineEventGroup(PipelineEventGroup& pipelineEventGroup);
 
