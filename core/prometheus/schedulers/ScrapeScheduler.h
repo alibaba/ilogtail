@@ -25,7 +25,6 @@
 #include "monitor/MetricTypes.h"
 #include "pipeline/queue/QueueKey.h"
 #include "prometheus/PromSelfMonitor.h"
-#include "prometheus/Utils.h"
 #include "prometheus/schedulers/ScrapeConfig.h"
 
 #ifdef APSARA_UNIT_TEST_MAIN
@@ -43,10 +42,17 @@ public:
                     Labels labels,
                     QueueKey queueKey,
                     size_t inputIndex);
-    ScrapeScheduler(const ScrapeScheduler&) = default;
+    ScrapeScheduler(const ScrapeScheduler&) = delete;
     ~ScrapeScheduler() override = default;
 
     void OnMetricResult(HttpResponse&, uint64_t timestampMilliSec);
+    static size_t PromMetricWriteCallback(char* buffer, size_t size, size_t nmemb, void* data);
+    void AddEventNoCopy(const char* data, size_t size);
+    void FlushCache();
+    size_t mRawSize = 0;
+    std::string mCache;
+    PipelineEventGroup mEventGroup;
+    uint64_t mStreamIndex = 0;
 
     std::string GetId() const;
 
@@ -54,11 +60,6 @@ public:
     void ScrapeOnce(std::chrono::steady_clock::time_point execTime);
     void Cancel() override;
     void InitSelfMonitor(const MetricLabels&);
-
-    size_t mRawSize = 0;
-    PipelineEventGroup mEventGroup;
-
-    static size_t PromMetricWriteCallback(char* buffer, size_t size, size_t nmemb, void* data);
 
 private:
     void PushEventGroup(PipelineEventGroup&&) const;

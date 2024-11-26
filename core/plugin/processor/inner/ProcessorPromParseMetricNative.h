@@ -27,11 +27,10 @@ private:
     AddEvent(const char* data, size_t size, EventsContainer& events, PipelineEventGroup& eGroup, TextParser& parser);
     std::unique_ptr<ScrapeConfig> mScrapeConfigPtr;
 
-    std::mutex mRawDataMutex;
-    std::unordered_map<std::string, std::string> mMetricRawCache;
-
     std::mutex mCountMutex;
     std::unordered_map<std::string, int64_t> mMetricCountCache;
+    std::unordered_map<std::string, int64_t> mMetricTotalCache;
+    std::unordered_map<std::string, int64_t> mStreamCountCache;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class InputPrometheusUnittest;
