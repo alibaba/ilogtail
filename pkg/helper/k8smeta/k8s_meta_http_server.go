@@ -92,14 +92,19 @@ func (m *metadataHandler) handlePodMetaByIPPort(w http.ResponseWriter, r *http.R
 			continue
 		}
 		ip := ipPort[0]
+		port := int32(0)
+		if len(ipPort) > 1 {
+			tmp, _ := strconv.ParseInt(ipPort[1], 10, 32)
+			port = int32(tmp)
+		}
 		objs := m.metaManager.cacheMap[POD].Get([]string{ip})
 		if len(objs) == 0 {
-			podMetadata := m.findPodByServiceIPPort(ipPort)
+			podMetadata := m.findPodByServiceIPPort(ip, port)
 			if podMetadata != nil {
 				metadata[key] = podMetadata
 			}
 		} else {
-			podMetadata := m.findPodByPodIPPort(ipPort, objs)
+			podMetadata := m.findPodByPodIPPort(ip, port, objs)
 			if podMetadata != nil {
 				metadata[key] = podMetadata
 			}
@@ -108,27 +113,22 @@ func (m *metadataHandler) handlePodMetaByIPPort(w http.ResponseWriter, r *http.R
 	wrapperResponse(w, metadata)
 }
 
-func (m *metadataHandler) findPodByServiceIPPort(ipPort []string) *PodMetadata {
-	ip := ipPort[0]
+func (m *metadataHandler) findPodByServiceIPPort(ip string, port int32) *PodMetadata {
 	// try service IP
 	svcObjs := m.metaManager.cacheMap[SERVICE].Get([]string{ip})
 	if len(svcObjs) == 0 {
 		return nil
 	}
 	var service *v1.Service
-	if len(ipPort) == 2 {
-		expectedPort, err := strconv.Atoi(ipPort[1])
-		if err != nil {
-			return nil
-		}
+	if port != 0 {
 		for _, obj := range svcObjs[ip] {
 			svc, ok := obj.Raw.(*v1.Service)
 			if !ok {
 				continue
 			}
 			portMatch := false
-			for _, port := range svc.Spec.Ports {
-				if port.Port == int32(expectedPort) {
+			for _, realPort := range svc.Spec.Ports {
+				if realPort.Port == port {
 					portMatch = true
 					break
 				}
@@ -138,6 +138,9 @@ func (m *metadataHandler) findPodByServiceIPPort(ipPort []string) *PodMetadata {
 			}
 			service = svc
 			break
+		}
+		if service == nil {
+			return nil
 		}
 	} else {
 		for _, obj := range svcObjs[ip] {
@@ -168,19 +171,14 @@ func (m *metadataHandler) findPodByServiceIPPort(ipPort []string) *PodMetadata {
 	return nil
 }
 
-func (m *metadataHandler) findPodByPodIPPort(ipPort []string, objs map[string][]*ObjectWrapper) *PodMetadata {
-	ip := ipPort[0]
-	if len(ipPort) == 2 {
-		expectedPort, err := strconv.Atoi(ipPort[1])
-		if err != nil {
-			return nil
-		}
+func (m *metadataHandler) findPodByPodIPPort(ip string, port int32, objs map[string][]*ObjectWrapper) *PodMetadata {
+	if port != 0 {
 		for _, obj := range objs[ip] {
 			pod := obj.Raw.(*v1.Pod)
 			for _, container := range pod.Spec.Containers {
 				portMatch := false
-				for _, port := range container.Ports {
-					if port.ContainerPort == int32(expectedPort) {
+				for _, realPort := range container.Ports {
+					if realPort.ContainerPort == port {
 						portMatch = true
 						break
 					}
@@ -194,6 +192,9 @@ func (m *metadataHandler) findPodByPodIPPort(ipPort []string, objs map[string][]
 		}
 	} else {
 		// without port
+		if objs[ip] == nil || len(objs[ip]) == 0 {
+			return nil
+		}
 		podMetadata := m.convertObj2PodResponse(objs[ip][0])
 		return podMetadata
 	}
@@ -309,8 +310,9 @@ func (m *metadataHandler) getCommonPodMetadata(pod *v1.Pod) *PodMetadata {
 		podMetadata.WorkloadKind = ""
 		logger.Warning(context.Background(), "Pod has no owner", pod.Name)
 	} else {
-		podMetadata.WorkloadName = pod.GetOwnerReferences()[0].Name
-		podMetadata.WorkloadKind = strings.ToLower(pod.GetOwnerReferences()[0].Kind)
+		reference := pod.GetOwnerReferences()[0]
+		podMetadata.WorkloadName = reference.Name
+		podMetadata.WorkloadKind = strings.ToLower(reference.Kind)
 		if podMetadata.WorkloadKind == REPLICASET {
 			// replicaset -> deployment
 			replicasetKey := generateNameWithNamespaceKey(pod.Namespace, podMetadata.WorkloadName)
