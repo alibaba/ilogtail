@@ -47,9 +47,10 @@ public:
 
     void OnMetricResult(HttpResponse&, uint64_t timestampMilliSec);
     static size_t PromMetricWriteCallback(char* buffer, size_t size, size_t nmemb, void* data);
-    void AddEventNoCopy(const char* data, size_t size);
+    void AddEvent(const char* line, size_t len);
     void FlushCache();
     size_t mRawSize = 0;
+    size_t mCurrStreamSize = 0;
     std::string mCache;
     PipelineEventGroup mEventGroup;
     uint64_t mStreamIndex = 0;
