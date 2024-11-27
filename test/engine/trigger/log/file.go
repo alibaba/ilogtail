@@ -99,6 +99,5 @@ func generateBenchmark(ctx context.Context, mode, path string, rate, duration in
 }
 
 func wrapperCustomArgs(customArgs string) string {
-	customArgs = strings.ReplaceAll(customArgs, "\\", "\\\\")
 	return "\"" + strings.ReplaceAll(customArgs, "\"", "\\\"") + "\""
 }
