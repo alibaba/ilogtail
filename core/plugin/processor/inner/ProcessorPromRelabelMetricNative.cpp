@@ -72,7 +72,7 @@ void ProcessorPromRelabelMetricNative::Process(PipelineEventGroup& eGroup) {
     auto streamID = eGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_ID).to_string();
     // cache the metrics count
     {
-        std::lock_guard<std::mutex> lock(mStreamMutex);
+        Lock();
         mStreamCountCache[streamID]++;
         mPostRelabelCache[streamID] += eGroup.GetEvents().size();
 
@@ -92,6 +92,7 @@ void ProcessorPromRelabelMetricNative::Process(PipelineEventGroup& eGroup) {
             mPostRelabelCache.erase(streamID);
             mAutoMetricCache.erase(streamID);
         }
+        UnLock();
     }
 
     // delete all tags

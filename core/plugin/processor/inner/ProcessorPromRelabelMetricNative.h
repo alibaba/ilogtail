@@ -23,6 +23,8 @@
 #include "pipeline/plugin/interface/Processor.h"
 #include "prometheus/schedulers/ScrapeConfig.h"
 
+DECLARE_FLAG_INT32(process_thread_count);
+
 namespace logtail {
 
 namespace prom {
@@ -52,7 +54,7 @@ private:
     bool ProcessEvent(PipelineEventPtr& e, const GroupTags& targetTags, const std::vector<StringView>& toDelete);
     std::vector<StringView> GetToDeleteTargetLabels(const GroupTags& targetTags) const;
 
-    void AddAutoMetrics(PipelineEventGroup& eGroup,const prom::AutoMetric& autoMetric) const;
+    void AddAutoMetrics(PipelineEventGroup& eGroup, const prom::AutoMetric& autoMetric) const;
     void UpdateAutoMetrics(const PipelineEventGroup& eGroup, prom::AutoMetric& autoMetric) const;
     void AddMetric(PipelineEventGroup& metricGroup,
                    const std::string& name,
@@ -60,6 +62,17 @@ private:
                    time_t timestamp,
                    uint32_t nanoSec,
                    const GroupTags& targetTags) const;
+
+    void Lock() {
+        if (INT32_FLAG(process_thread_count) > 1) {
+            mStreamMutex.lock();
+        }
+    }
+    void UnLock() {
+        if (INT32_FLAG(process_thread_count) > 1) {
+            mStreamMutex.unlock();
+        }
+    }
 
     std::unique_ptr<ScrapeConfig> mScrapeConfigPtr;
     std::string mLoongCollectorScraper;
