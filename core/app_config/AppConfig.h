@@ -54,7 +54,16 @@ std::string GetObserverEbpfHostPath();
 std::string GetSendBufferFileNamePrefix();
 std::string GetLegacyUserLocalConfigFilePath();
 std::string GetExactlyOnceCheckpoint();
+std::string GetContinuousPipelineConfigDir();
 std::string GetPipelineConfigDir();
+std::string GetPluginLogName();
+std::string GetVersionTag();
+std::string GetGoPluginCheckpoint();
+std::string GetAgentName();
+std::string GetMonitorInfoFileName();
+std::string GetSymLinkName();
+std::string GetPidFileName();
+std::string GetAgentPrefix();
 
 template <class T>
 class DoubleBuffer {
@@ -299,7 +308,7 @@ private:
 
 public:
     AppConfig();
-    ~AppConfig() {};
+    ~AppConfig(){};
 
     void LoadInstanceConfig(const std::map<std::string, std::shared_ptr<InstanceConfig>>&);
 

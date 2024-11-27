@@ -25,6 +25,8 @@
 #include "common/FileSystemUtil.h"
 #include "common/JsonUtil.h"
 #include "common/LogtailCommonFlags.h"
+#include "common/version.h"
+#include "config/InstanceConfigManager.h"
 #include "config/watcher/InstanceConfigWatcher.h"
 #include "file_server/ConfigManager.h"
 #include "file_server/reader/LogFileReader.h"
@@ -37,6 +39,10 @@
 #endif
 
 using namespace std;
+
+#define ILOGTAIL_PREFIX "ilogtail_"
+#define ILOGTAIL_PIDFILE_SUFFIX ".pid"
+#define LOONGCOLLECTOR_PREFIX "loongcollector_"
 
 DEFINE_FLAG_BOOL(logtail_mode, "logtail mode", false);
 DEFINE_FLAG_INT32(max_buffer_num, "max size", 40);
@@ -482,11 +488,75 @@ string GetFileTagsDir() {
     }
 }
 
-string GetPipelineConfigDir() {
+string GetContinuousPipelineConfigDir() {
     if (BOOL_FLAG(logtail_mode)) {
         return "config";
     } else {
-        return "pipeline_config";
+        return "continuous_pipeline_config";
+    }
+}
+
+string GetPluginLogName() {
+    if (BOOL_FLAG(logtail_mode)) {
+        return "logtail_plugin.LOG";
+    } else {
+        return "go_plugin.LOG";
+    }
+}
+
+std::string GetVersionTag() {
+    if (BOOL_FLAG(logtail_mode)) {
+        return "logtail_version";
+    } else {
+        return "loongcollector_version";
+    }
+}
+
+std::string GetGoPluginCheckpoint() {
+    if (BOOL_FLAG(logtail_mode)) {
+        return "checkpoint";
+    } else {
+        return "go_plugin_checkpoint";
+    }
+}
+
+std::string GetAgentName() {
+    if (BOOL_FLAG(logtail_mode)) {
+        return "ilogtail";
+    } else {
+        return "loongcollector";
+    }
+}
+
+std::string GetMonitorInfoFileName() {
+    if (BOOL_FLAG(logtail_mode)) {
+        return "logtail_monitor_info";
+    } else {
+        return "loongcollector_monitor_info";
+    }
+}
+
+std::string GetSymLinkName() {
+    if (BOOL_FLAG(logtail_mode)) {
+        return GetProcessExecutionDir() + "ilogtail";
+    } else {
+        return GetProcessExecutionDir() + "loongcollector";
+    }
+}
+
+std::string GetPidFileName() {
+    if (BOOL_FLAG(logtail_mode)) {
+        return GetProcessExecutionDir() + ILOGTAIL_PREFIX + ILOGTAIL_VERSION + ILOGTAIL_PIDFILE_SUFFIX;
+    } else {
+        return GetAgentRunDir() + "loongcollector.pid";
+    }
+}
+
+std::string GetAgentPrefix() {
+    if (BOOL_FLAG(logtail_mode)) {
+        return ILOGTAIL_PREFIX;
+    } else {
+        return LOONGCOLLECTOR_PREFIX;
     }
 }
 
@@ -1468,8 +1538,8 @@ void AppConfig::ReadFlagsFromMap(const std::unordered_map<std::string, std::stri
  *    - 记录无法转换的值
  */
 void AppConfig::RecurseParseJsonToFlags(const Json::Value& confJson, std::string prefix) {
-    const static unordered_set<string> sIgnoreKeySet = {"data_server_list", "legacy_data_server_list"};
-    const static unordered_set<string> sForceKeySet = {"config_server_address_list", "config_server_list"};
+    const static unordered_set<string> sIgnoreKeySet = {"data_server_list", "data_servers"};
+    const static unordered_set<string> sForceKeySet = {"config_server_address_list", "config_servers"};
     for (auto name : confJson.getMemberNames()) {
         auto jsonvalue = confJson[name];
         string fullName;
@@ -1645,7 +1715,7 @@ void AppConfig::SetLoongcollectorConfDir(const std::string& dirPath) {
     //     = AbsolutePath(STRING_FLAG(ilogtail_local_yaml_config_dir), mLogtailSysConfDir) + PATH_SEPARATOR;
     // mUserRemoteYamlConfigDirPath
     //     = AbsolutePath(STRING_FLAG(ilogtail_remote_yaml_config_dir), mLogtailSysConfDir) + PATH_SEPARATOR;
-    LOG_INFO(sLogger, ("set loongcollector conf dir", mLoongcollectorConfDir));
+    LOG_INFO(sLogger, ("set " + GetAgentName() + " conf dir", mLoongcollectorConfDir));
 }
 
 bool AppConfig::IsHostPathMatchBlacklist(const string& dirPath) const {

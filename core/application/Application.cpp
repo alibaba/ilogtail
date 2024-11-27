@@ -32,15 +32,14 @@
 #include "common/version.h"
 #include "config/ConfigDiff.h"
 #include "config/InstanceConfigManager.h"
-#include "config/watcher/ConfigWatcher.h"
 #include "config/watcher/InstanceConfigWatcher.h"
+#include "config/watcher/PipelineConfigWatcher.h"
 #include "file_server/ConfigManager.h"
 #include "file_server/EventDispatcher.h"
 #include "file_server/FileServer.h"
 #include "file_server/event_handler/LogInput.h"
 #include "go_pipeline/LogtailPlugin.h"
 #include "logger/Logger.h"
-#include "monitor/MetricExportor.h"
 #include "monitor/Monitor.h"
 #include "pipeline/PipelineManager.h"
 #include "pipeline/plugin/PluginRegistry.h"
@@ -48,9 +47,11 @@
 #include "pipeline/queue/SenderQueueManager.h"
 #include "plugin/flusher/sls/DiskBufferWriter.h"
 #include "plugin/input/InputFeedbackInterfaceRegistry.h"
+#include "prometheus/PrometheusInputRunner.h"
 #include "runner/FlusherRunner.h"
 #include "runner/ProcessorRunner.h"
 #include "runner/sink/http/HttpSink.h"
+#include "task_pipeline/TaskPipelineManager.h"
 #ifdef __ENTERPRISE__
 #include "config/provider/EnterpriseConfigProvider.h"
 #include "config/provider/LegacyConfigProvider.h"
@@ -65,7 +66,6 @@
 DEFINE_FLAG_BOOL(ilogtail_disable_core, "disable core in worker process", true);
 DEFINE_FLAG_INT32(file_tags_update_interval, "second", 1);
 DEFINE_FLAG_INT32(config_scan_interval, "seconds", 10);
-DEFINE_FLAG_INT32(profiling_check_interval, "seconds", 60);
 DEFINE_FLAG_INT32(tcmalloc_release_memory_interval, "force release memory held by tcmalloc, seconds", 300);
 DEFINE_FLAG_INT32(exit_flushout_duration, "exit process flushout duration", 20 * 1000);
 DEFINE_FLAG_INT32(queue_check_gc_interval_sec, "30s", 30);
@@ -173,9 +173,10 @@ void Application::Init() {
     appInfoJson["UUID"] = Json::Value(Application::GetInstance()->GetUUID());
     appInfoJson["instance_id"] = Json::Value(Application::GetInstance()->GetInstanceId());
 #ifdef __ENTERPRISE__
-    appInfoJson["loongcollector_version"] = Json::Value(ILOGTAIL_VERSION);
+    appInfoJson["host_id"] = Json::Value(FetchHostId());
+    appInfoJson[GetVersionTag()] = Json::Value(ILOGTAIL_VERSION);
 #else
-    appInfoJson["loongcollector_version"] = Json::Value(string(ILOGTAIL_VERSION) + " Community Edition");
+    appInfoJson[GetVersionTag()] = Json::Value(string(ILOGTAIL_VERSION) + " Community Edition");
     appInfoJson["git_hash"] = Json::Value(ILOGTAIL_GIT_HASH);
     appInfoJson["build_date"] = Json::Value(ILOGTAIL_BUILD_DATE);
 #endif
@@ -209,16 +210,16 @@ void Application::Start() { // GCOVR_EXCL_START
 
     {
         // add local config dir
-        filesystem::path localConfigPath
-            = filesystem::path(AppConfig::GetInstance()->GetLoongcollectorConfDir()) / GetPipelineConfigDir() / "local";
+        filesystem::path localConfigPath = filesystem::path(AppConfig::GetInstance()->GetLoongcollectorConfDir())
+            / GetContinuousPipelineConfigDir() / "local";
         error_code ec;
         filesystem::create_directories(localConfigPath, ec);
         if (ec) {
             LOG_WARNING(sLogger,
-                        ("failed to create dir for local pipeline_config",
+                        ("failed to create dir for local continuous_pipeline_config",
                          "manual creation may be required")("error code", ec.value())("error msg", ec.message()));
         }
-        ConfigWatcher::GetInstance()->AddSource(localConfigPath.string());
+        PipelineConfigWatcher::GetInstance()->AddSource(localConfigPath.string());
     }
 
 #ifdef __ENTERPRISE__
@@ -263,7 +264,7 @@ void Application::Start() { // GCOVR_EXCL_START
 
     ProcessorRunner::GetInstance()->Init();
 
-    time_t curTime = 0, lastProfilingCheckTime = 0, lastConfigCheckTime = 0, lastUpdateMetricTime = 0,
+    time_t curTime = 0, lastConfigCheckTime = 0, lastUpdateMetricTime = 0,
            lastCheckTagsTime = 0, lastQueueGCTime = 0;
 #ifndef LOGTAIL_NO_TC_MALLOC
     time_t lastTcmallocReleaseMemTime = 0;
@@ -275,19 +276,18 @@ void Application::Start() { // GCOVR_EXCL_START
             lastCheckTagsTime = curTime;
         }
         if (curTime - lastConfigCheckTime >= INT32_FLAG(config_scan_interval)) {
-            PipelineConfigDiff pipelineConfigDiff = ConfigWatcher::GetInstance()->CheckConfigDiff();
-            if (!pipelineConfigDiff.IsEmpty()) {
-                PipelineManager::GetInstance()->UpdatePipelines(pipelineConfigDiff);
+            auto configDiff = PipelineConfigWatcher::GetInstance()->CheckConfigDiff();
+            if (!configDiff.first.IsEmpty()) {
+                PipelineManager::GetInstance()->UpdatePipelines(configDiff.first);
+            }
+            if (!configDiff.second.IsEmpty()) {
+                TaskPipelineManager::GetInstance()->UpdatePipelines(configDiff.second);
             }
             InstanceConfigDiff instanceConfigDiff = InstanceConfigWatcher::GetInstance()->CheckConfigDiff();
             if (!instanceConfigDiff.IsEmpty()) {
                 InstanceConfigManager::GetInstance()->UpdateInstanceConfigs(instanceConfigDiff);
             }
             lastConfigCheckTime = curTime;
-        }
-        if (curTime - lastProfilingCheckTime >= INT32_FLAG(profiling_check_interval)) {
-            MetricExportor::GetInstance()->PushMetrics(false);
-            lastProfilingCheckTime = curTime;
         }
 #ifndef LOGTAIL_NO_TC_MALLOC
         if (curTime - lastTcmallocReleaseMemTime >= INT32_FLAG(tcmalloc_release_memory_interval)) {
@@ -322,6 +322,7 @@ void Application::Start() { // GCOVR_EXCL_START
 
         // destruct event handlers here so that it will not block file reading task
         ConfigManager::GetInstance()->DeleteHandlers();
+        PrometheusInputRunner::GetInstance()->CheckGC();
 
         this_thread::sleep_for(chrono::seconds(1));
     }

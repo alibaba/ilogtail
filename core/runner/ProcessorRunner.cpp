@@ -55,6 +55,9 @@ void ProcessorRunner::Stop() {
     mIsFlush = true;
     ProcessQueueManager::GetInstance()->Trigger();
     for (uint32_t threadNo = 0; threadNo < mThreadCount; ++threadNo) {
+        if (!mThreadRes[threadNo].valid()) {
+            continue;
+        }
         future_status s
             = mThreadRes[threadNo].wait_for(chrono::seconds(INT32_FLAG(processor_runner_exit_timeout_secs)));
         if (s == future_status::ready) {
@@ -79,6 +82,7 @@ bool ProcessorRunner::PushQueue(QueueKey key, size_t inputIndex, PipelineEventGr
         }
         this_thread::sleep_for(chrono::milliseconds(10));
     }
+    group = std::move(item->mEventGroup);
     return false;
 }
 

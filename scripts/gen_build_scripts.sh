@@ -38,7 +38,7 @@ BUILD_LOGTAIL=${BUILD_LOGTAIL:-ON}
 BUILD_LOGTAIL_UT=${BUILD_LOGTAIL_UT:-OFF}
 ENABLE_COMPATIBLE_MODE=${ENABLE_COMPATIBLE_MODE:-OFF}
 ENABLE_STATIC_LINK_CRT=${ENABLE_STATIC_LINK_CRT:-OFF}
-WITHOUTGDB==${WITHOUTGDB:-OFF}
+WITHOUTGDB=${WITHOUTGDB:-OFF}
 WITHSPL=${WITHSPL:-ON}
 BUILD_SCRIPT_FILE=$GENERATED_HOME/gen_build.sh
 COPY_SCRIPT_FILE=$GENERATED_HOME/gen_copy_docker.sh
@@ -122,7 +122,7 @@ function generateCopyScript() {
   fi
   echo 'mkdir -p $BINDIR/conf/instance_config/local/' >>$COPY_SCRIPT_FILE
   echo 'echo -e "{\n}" > $BINDIR/conf/instance_config/local/loongcollector_config.json' >>$COPY_SCRIPT_FILE
-  echo 'mkdir -p $BINDIR/conf/pipeline_config/local' >>$COPY_SCRIPT_FILE
+  echo 'mkdir -p $BINDIR/conf/continuous_pipeline_config/local' >>$COPY_SCRIPT_FILE
   echo 'docker rm -v "$id"' >>$COPY_SCRIPT_FILE
 }
 

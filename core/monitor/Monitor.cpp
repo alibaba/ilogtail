@@ -37,7 +37,7 @@
 #include "go_pipeline/LogtailPlugin.h"
 #include "logger/Logger.h"
 #include "monitor/AlarmManager.h"
-#include "monitor/MetricExportor.h"
+#include "monitor/SelfMonitorServer.h"
 #include "plugin/flusher/sls/FlusherSLS.h"
 #include "protobuf/sls/sls_logs.pb.h"
 #include "runner/FlusherRunner.h"
@@ -130,6 +130,9 @@ void LogtailMonitor::Stop() {
         mIsThreadRunning = false;
     }
     mStopCV.notify_one();
+    if (!mThreadRes.valid()) {
+        return;
+    }
     future_status s = mThreadRes.wait_for(chrono::seconds(1));
     if (s == future_status::ready) {
         LOG_INFO(sLogger, ("profiling", "stopped successfully"));
@@ -357,7 +360,7 @@ bool LogtailMonitor::GetMemStat() {
 
     std::ifstream fin;
     fin.open(SELF_STATM_PATH);
-    if (!fin.good()) {
+    if (!fin) {
         LOG_ERROR(sLogger, ("open stat error", ""));
         return false;
     }
@@ -389,7 +392,7 @@ bool LogtailMonitor::GetCpuStat(CpuStat& cur) {
     std::ifstream fin;
     fin.open(SELF_STAT_PATH);
     uint64_t start = GetCurrentTimeInMilliSeconds();
-    if (!fin.good()) {
+    if (!fin) {
         LOG_ERROR(sLogger, ("open stat error", ""));
         return false;
     }
@@ -489,7 +492,7 @@ void LogtailMonitor::DumpToLocal(const sls_logs::LogGroup& logGroup) {
 }
 
 bool LogtailMonitor::DumpMonitorInfo(time_t monitorTime) {
-    string path = GetAgentLogDir() + "loongcollector_monitor_info";
+    string path = GetAgentLogDir() + GetMonitorInfoFileName();
     ofstream outfile(path.c_str(), ofstream::app);
     if (!outfile)
         return false;
@@ -537,7 +540,7 @@ std::string LogtailMonitor::GetLoadAvg() {
     std::ifstream fin;
     std::string loadStr;
     fin.open(PROC_LOAD_PATH);
-    if (!fin.good()) {
+    if (!fin) {
         LOG_ERROR(sLogger, ("open load error", ""));
         return loadStr;
     }
@@ -718,6 +721,9 @@ LoongCollectorMonitor::~LoongCollectorMonitor() {
 }
 
 void LoongCollectorMonitor::Init() {
+    LOG_INFO(sLogger, ("LoongCollector monitor", "started"));
+    SelfMonitorServer::GetInstance()->Init();
+
     // create metric record
     MetricLabels labels;
     labels.emplace_back(METRIC_LABEL_KEY_INSTANCE_ID, Application::GetInstance()->GetInstanceId());
@@ -748,7 +754,56 @@ void LoongCollectorMonitor::Init() {
 }
 
 void LoongCollectorMonitor::Stop() {
-    MetricExportor::GetInstance()->PushMetrics(true);
+    SelfMonitorServer::GetInstance()->Stop();
+    LOG_INFO(sLogger, ("LoongCollector monitor", "stopped successfully"));
+
+}
+
+const string LoongCollectorMonitor::GetInnerSelfMonitorMetricPipeline() {
+#ifdef __ENTERPRISE__
+    static string pipeline = "";
+#else
+    static string pipeline = R"(
+        {
+            "inputs": [
+                {
+                    "Type": "input_internal_metrics",
+                    "Agent": {
+                        "Enable": false,
+                        "Interval": 1
+                    },
+                    "Runner": {
+                        "Enable": false,
+                        "Interval": 1
+                    },
+                    "Pipeline": {
+                        "Enable": true,
+                        "Interval": 1
+                    },
+                    "PluginSource": {
+                        "Enable": true,
+                        "Interval": 10
+                    },
+                    "Plugin": {
+                        "Enable": false,
+                        "Interval": 10
+                    },
+                    "Component": {
+                        "Enable": false,
+                        "Interval": 10
+                    }
+                }
+            ],
+            "flushers": [
+                {
+                    "Type": "flusher_file",
+                    "FilePath": "./log/self_metrics.log"
+                }
+            ]
+        }
+    )";
+#endif
+    return pipeline;
 }
 
 } // namespace logtail

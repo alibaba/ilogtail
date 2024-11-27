@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 iLogtail Authors
+ * Copyright 2024 iLogtail Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,20 +14,22 @@
  * limitations under the License.
  */
 
-#pragma once
-#include <string>
+#include "task_pipeline/TaskPipeline.h"
 
-namespace apsara::sls::spl {
+#include "task_pipeline/TaskRegistry.h"
 
-extern const std::string FIELD_TIMESTAMP;
-extern const std::string FIELD_TIMESTAMP_NANOSECOND;
-extern const std::string FIELD_PREFIX_TAG;
-extern const std::string FIELD_CONTENT;
-extern const std::string NULL_STR;
+using namespace std;
 
-extern const size_t LENGTH_FIELD_TIMESTAMP;
-extern const size_t LENGTH_FIELD_TIMESTAMP_NANOSECOND;
-extern const size_t LENGTH_FIELD_PREFIX_TAG;
+namespace logtail {
 
+bool TaskPipeline::Init(TaskConfig&& config) {
+    mConfigName = config.mName;
+    mCreateTime = config.mCreateTime;
+    mConfig = std::move(config.mDetail);
 
-} // namespace apsara::sls::spl
+    const auto& detail = (*mConfig)["task"];
+    mPlugin = TaskRegistry::GetInstance()->CreateTask(detail["Type"].asString());
+    return mPlugin->Init(detail);
+}
+
+} // namespace logtail
