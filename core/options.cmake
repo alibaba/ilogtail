@@ -14,7 +14,7 @@
 
 # Name/Version information.
 if (NOT DEFINED LOGTAIL_VERSION)
-    set(LOGTAIL_VERSION "loongcollector-0.2.0")
+    set(LOGTAIL_VERSION "0.2.0")
 endif ()
 message(STATUS "Version: ${LOGTAIL_VERSION}")
 

@@ -19,7 +19,7 @@ WORKDIR /src
 COPY . .
 
 ARG HOST_OS=Linux
-ARG VERSION=loongcollector-0.2.0
+ARG VERSION=0.2.0
 
 USER root
 
