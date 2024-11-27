@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 iLogtail Authors
+ * Copyright 2024 iLogtail Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,19 +15,20 @@
  */
 
 #pragma once
+
 #include <string>
+#include <vector>
 
-namespace apsara::sls::spl {
+#include "pipeline/serializer/Serializer.h"
 
-extern const std::string FIELD_TIMESTAMP;
-extern const std::string FIELD_TIMESTAMP_NANOSECOND;
-extern const std::string FIELD_PREFIX_TAG;
-extern const std::string FIELD_CONTENT;
-extern const std::string NULL_STR;
+namespace logtail {
 
-extern const size_t LENGTH_FIELD_TIMESTAMP;
-extern const size_t LENGTH_FIELD_TIMESTAMP_NANOSECOND;
-extern const size_t LENGTH_FIELD_PREFIX_TAG;
+class JsonEventGroupSerializer : public Serializer<BatchedEvents> {
+public:
+    JsonEventGroupSerializer(Flusher* f) : Serializer<BatchedEvents>(f) {}
 
+private:
+    bool Serialize(BatchedEvents&& p, std::string& res, std::string& errorMsg) override;
+};
 
-} // namespace apsara::sls::spl
+} // namespace logtail
