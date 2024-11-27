@@ -124,6 +124,7 @@ void ScrapeScheduler::OnMetricResult(HttpResponse& response, uint64_t timestampM
     auto currTimestampMilliSec = GetCurrentTimeInMilliSeconds();
     auto& responseBody = *response.GetBody<ScrapeScheduler>();
     responseBody.FlushCache();
+    mStreamIndex++;
     mSelfMonitor->AddCounter(METRIC_PLUGIN_OUT_EVENTS_TOTAL, response.GetStatusCode());
     mSelfMonitor->AddCounter(METRIC_PLUGIN_OUT_SIZE_BYTES, response.GetStatusCode(), responseBody.mRawSize);
     mSelfMonitor->AddCounter(

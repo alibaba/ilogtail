@@ -81,6 +81,7 @@ bool ProcessorPromParseMetricNative::ProcessEvent(PipelineEventPtr& e,
     auto content = rawEvent.GetContent();
     if (content.empty()) {
         LOG_WARNING(sLogger, ("empty content", ""));
+        return false;
     }
     auto metricEvent = eGroup.CreateMetricEvent(true);
     if (parser.ParseLine(content, *metricEvent)) {
