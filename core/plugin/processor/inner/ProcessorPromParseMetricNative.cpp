@@ -47,19 +47,19 @@ void ProcessorPromParseMetricNative::Process(PipelineEventGroup& eGroup) {
     auto streamID = eGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_ID).to_string();
     // cache the metrics count
     {
-        std::lock_guard<std::mutex> lock(mCountMutex);
+        std::lock_guard<std::mutex> lock(mStreamMutex);
         mStreamCountCache[streamID]++;
         mMetricCountCache[streamID] += events.size();
         if (eGroup.HasMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_COUNTS)) {
-            mMetricTotalCache[streamID]
+            mStreamTotalCache[streamID]
                 = StringTo<uint64_t>(eGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_COUNTS).to_string());
         }
         // add auto metric,if this is the last one of the stream
-        if (mMetricTotalCache.count(streamID) && mStreamCountCache[streamID] == mMetricTotalCache[streamID]) {
+        if (mStreamTotalCache.count(streamID) && mStreamCountCache[streamID] == mStreamTotalCache[streamID]) {
             eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SAMPLES_SCRAPED, ToString(mMetricCountCache[streamID]));
             // erase the cache
             mMetricCountCache.erase(streamID);
-            mMetricTotalCache.erase(streamID);
+            mStreamTotalCache.erase(streamID);
             mStreamCountCache.erase(streamID);
         }
     }
