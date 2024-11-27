@@ -767,7 +767,7 @@ const string LoongCollectorMonitor::GetInnerSelfMonitorMetricPipeline() {
         {
             "inputs": [
                 {
-                    "Type": "input_self_monitor_metric",
+                    "Type": "input_internal_metrics",
                     "Agent": {
                         "Enable": false,
                         "Interval": 1
@@ -796,8 +796,8 @@ const string LoongCollectorMonitor::GetInnerSelfMonitorMetricPipeline() {
             ],
             "flushers": [
                 {
-                    "Type": "flusher_local_file",
-                    "FileName": "./log/self_metrics.log"
+                    "Type": "flusher_file",
+                    "FilePath": "./log/self_metrics.log"
                 }
             ]
         }

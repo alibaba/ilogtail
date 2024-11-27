@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "plugin/flusher/local_file/FlusherLocalFile.h"
+#include "plugin/flusher/file/FlusherFile.h"
 
 #include <spdlog/async.h>
 #include <spdlog/sinks/rotating_file_sink.h>
@@ -24,16 +24,16 @@ using namespace std;
 
 namespace logtail {
 
-const string FlusherLocalFile::sName = "flusher_local_file";
+const string FlusherFile::sName = "flusher_file";
 
-bool FlusherLocalFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
+bool FlusherFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
     static uint32_t cnt = 0;
     GenerateQueueKey(to_string(++cnt));
     SenderQueueManager::GetInstance()->CreateQueue(mQueueKey, mPluginID, *mContext);
 
     string errorMsg;
-    // FileName
-    if (!GetMandatoryStringParam(config, "FileName", mFileName, errorMsg)) {
+    // FilePath
+    if (!GetMandatoryStringParam(config, "FilePath", mFilePath, errorMsg)) {
         PARAM_ERROR_RETURN(mContext->GetLogger(),
                            mContext->GetAlarm(),
                            errorMsg,
@@ -44,14 +44,14 @@ bool FlusherLocalFile::Init(const Json::Value& config, Json::Value& optionalGoPi
                            mContext->GetRegion());
     }
     // Pattern
-    GetMandatoryStringParam(config, "Pattern", mPattern, errorMsg);
+    // GetMandatoryStringParam(config, "Pattern", mPattern, errorMsg);
     // MaxFileSize
-    GetMandatoryUIntParam(config, "MaxFileSize", mMaxFileSize, errorMsg);
+    // GetMandatoryUIntParam(config, "MaxFileSize", mMaxFileSize, errorMsg);
     // MaxFiles
-    GetMandatoryUIntParam(config, "MaxFiles", mMaxFileSize, errorMsg);
+    // GetMandatoryUIntParam(config, "MaxFiles", mMaxFileSize, errorMsg);
 
     // create file writer
-    auto file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(mFileName, mMaxFileSize, mMaxFiles, true);
+    auto file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(mFilePath, mMaxFileSize, mMaxFiles, true);
     mFileWriter = std::make_shared<spdlog::async_logger>(
         sName, file_sink, spdlog::thread_pool(), spdlog::async_overflow_policy::block);
     mFileWriter->set_pattern(mPattern);
@@ -62,7 +62,7 @@ bool FlusherLocalFile::Init(const Json::Value& config, Json::Value& optionalGoPi
     return true;
 }
 
-bool FlusherLocalFile::Send(PipelineEventGroup&& g) {
+bool FlusherFile::Send(PipelineEventGroup&& g) {
     if (g.IsReplay()) {
         return SerializeAndPush(std::move(g));
     } else {
@@ -72,19 +72,19 @@ bool FlusherLocalFile::Send(PipelineEventGroup&& g) {
     }
 }
 
-bool FlusherLocalFile::Flush(size_t key) {
+bool FlusherFile::Flush(size_t key) {
     BatchedEventsList res;
     mBatcher.FlushQueue(key, res);
     return SerializeAndPush(std::move(res));
 }
 
-bool FlusherLocalFile::FlushAll() {
+bool FlusherFile::FlushAll() {
     vector<BatchedEventsList> res;
     mBatcher.FlushAll(res);
     return SerializeAndPush(std::move(res));
 }
 
-bool FlusherLocalFile::SerializeAndPush(PipelineEventGroup&& group) {
+bool FlusherFile::SerializeAndPush(PipelineEventGroup&& group) {
     string serializedData, errorMsg;
     BatchedEvents g(std::move(group.MutableEvents()),
                     std::move(group.GetSizedTags()),
@@ -101,7 +101,7 @@ bool FlusherLocalFile::SerializeAndPush(PipelineEventGroup&& group) {
     return true;
 }
 
-bool FlusherLocalFile::SerializeAndPush(BatchedEventsList&& groupList) {
+bool FlusherFile::SerializeAndPush(BatchedEventsList&& groupList) {
     string serializedData;
     for (auto& group : groupList) {
         string errorMsg;
@@ -116,7 +116,7 @@ bool FlusherLocalFile::SerializeAndPush(BatchedEventsList&& groupList) {
     return true;
 }
 
-bool FlusherLocalFile::SerializeAndPush(vector<BatchedEventsList>&& groupLists) {
+bool FlusherFile::SerializeAndPush(vector<BatchedEventsList>&& groupLists) {
     for (auto& groupList : groupLists) {
         SerializeAndPush(std::move(groupList));
     }

@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-#include "plugin/input/InputSelfMonitorMetric.h"
+#include "plugin/input/InputInternalMetrics.h"
 
 namespace logtail {
 
-const std::string InputSelfMonitorMetric::sName = "input_self_monitor_metric";
+const std::string InputInternalMetrics::sName = "input_internal_metrics";
 
 bool GetEnabled(const Json::Value& rule) {
     if (rule.isMember("Enable") && rule["Enable"].isBool())
@@ -39,7 +39,7 @@ void ParseSelfMonitorMetricRule(std::string&& ruleKey, const Json::Value& ruleJs
     }
 }
 
-bool InputSelfMonitorMetric::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
+bool InputInternalMetrics::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
     ParseSelfMonitorMetricRule("Agent", config, mSelfMonitorMetricRules.mAgentMetricsRule);
     ParseSelfMonitorMetricRule("Runner", config, mSelfMonitorMetricRules.mRunnerMetricsRule);
     ParseSelfMonitorMetricRule("Pipeline", config, mSelfMonitorMetricRules.mPipelineMetricsRule);
@@ -49,12 +49,12 @@ bool InputSelfMonitorMetric::Init(const Json::Value& config, Json::Value& option
     return true;
 }
 
-bool InputSelfMonitorMetric::Start() {
+bool InputInternalMetrics::Start() {
     SelfMonitorServer::GetInstance()->UpdateMetricPipeline(mContext, &mSelfMonitorMetricRules);
     return true;
 }
 
-bool InputSelfMonitorMetric::Stop(bool isPipelineRemoving) {
+bool InputInternalMetrics::Stop(bool isPipelineRemoving) {
     if (isPipelineRemoving) {
         SelfMonitorServer::GetInstance()->RemoveMetricPipeline();
     }

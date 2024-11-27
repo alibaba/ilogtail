@@ -26,7 +26,7 @@
 
 namespace logtail {
 
-class FlusherLocalFile : public Flusher {
+class FlusherFile : public Flusher {
 public:
     static const std::string sName;
 
@@ -42,7 +42,7 @@ private:
     bool SerializeAndPush(std::vector<BatchedEventsList>&& groupLists);
 
     std::shared_ptr<spdlog::logger> mFileWriter;
-    std::string mFileName;
+    std::string mFilePath;
     std::string mPattern = "%v";
     uint32_t mMaxFileSize = 1024 * 1024 * 10;
     uint32_t mMaxFiles = 10;

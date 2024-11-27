@@ -26,17 +26,17 @@
 #include "app_config/AppConfig.h"
 #include "common/Flags.h"
 #include "plugin/flusher/blackhole/FlusherBlackHole.h"
-#include "plugin/flusher/local_file/FlusherLocalFile.h"
+#include "plugin/flusher/file/FlusherFile.h"
 #include "plugin/flusher/sls/FlusherSLS.h"
 #include "plugin/input/InputContainerStdio.h"
 #include "plugin/input/InputFile.h"
 #include "plugin/input/InputPrometheus.h"
 #if defined(__linux__) && !defined(__ANDROID__)
 #include "plugin/input/InputFileSecurity.h"
+#include "plugin/input/InputInternalMetrics.h"
 #include "plugin/input/InputNetworkObserver.h"
 #include "plugin/input/InputNetworkSecurity.h"
 #include "plugin/input/InputProcessSecurity.h"
-#include "plugin/input/InputSelfMonitorMetric.h"
 #endif
 #include "logger/Logger.h"
 #include "pipeline/plugin/creator/CProcessor.h"
@@ -127,7 +127,7 @@ bool PluginRegistry::IsValidNativeFlusherPlugin(const string& name) const {
 void PluginRegistry::LoadStaticPlugins() {
     RegisterInputCreator(new StaticInputCreator<InputFile>());
     RegisterInputCreator(new StaticInputCreator<InputPrometheus>());
-    RegisterInputCreator(new StaticInputCreator<InputSelfMonitorMetric>());
+    RegisterInputCreator(new StaticInputCreator<InputInternalMetrics>());
 #if defined(__linux__) && !defined(__ANDROID__)
     RegisterInputCreator(new StaticInputCreator<InputContainerStdio>());
     RegisterInputCreator(new StaticInputCreator<InputFileSecurity>());
@@ -159,7 +159,7 @@ void PluginRegistry::LoadStaticPlugins() {
 
     RegisterFlusherCreator(new StaticFlusherCreator<FlusherSLS>());
     RegisterFlusherCreator(new StaticFlusherCreator<FlusherBlackHole>());
-    RegisterFlusherCreator(new StaticFlusherCreator<FlusherLocalFile>());
+    RegisterFlusherCreator(new StaticFlusherCreator<FlusherFile>());
 }
 
 void PluginRegistry::LoadDynamicPlugins(const set<string>& plugins) {

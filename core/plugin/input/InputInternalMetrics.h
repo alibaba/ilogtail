@@ -21,7 +21,7 @@
 
 namespace logtail {
 
-class InputSelfMonitorMetric : public Input {
+class InputInternalMetrics : public Input {
 public:
     static const std::string sName;
 
