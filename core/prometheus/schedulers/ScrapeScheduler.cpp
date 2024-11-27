@@ -240,20 +240,21 @@ std::unique_ptr<TimerEvent> ScrapeScheduler::BuildScrapeTimerEvent(std::chrono::
     if (retry > 0) {
         retry -= 1;
     }
-    auto request = std::make_unique<PromHttpRequest>(sdk::HTTP_GET,
-                                                     mScrapeConfigPtr->mScheme == prometheus::HTTPS,
-                                                     mHost,
-                                                     mPort,
-                                                     mScrapeConfigPtr->mMetricsPath,
-                                                     mScrapeConfigPtr->mQueryString,
-                                                     mScrapeConfigPtr->mRequestHeaders,
-                                                     "",
-                                                     HttpResponse(
-                                                         this, [](void*) {}, PromMetricWriteCallback),
-                                                     mScrapeConfigPtr->mScrapeTimeoutSeconds,
-                                                     retry,
-                                                     this->mFuture,
-                                                     this->mIsContextValidFuture),
+    auto request = std::make_unique<PromHttpRequest>(
+        sdk::HTTP_GET,
+        mScrapeConfigPtr->mScheme == prometheus::HTTPS,
+        mHost,
+        mPort,
+        mScrapeConfigPtr->mMetricsPath,
+        mScrapeConfigPtr->mQueryString,
+        mScrapeConfigPtr->mRequestHeaders,
+        "",
+        HttpResponse(
+            this, [](void*) {}, PromMetricWriteCallback),
+        mScrapeConfigPtr->mScrapeTimeoutSeconds,
+        retry,
+        this->mFuture,
+        this->mIsContextValidFuture,
         mScrapeConfigPtr->mFollowRedirects,
         mScrapeConfigPtr->mEnableTLS ? std::optional<CurlTLS>(mScrapeConfigPtr->mTLS) : std::nullopt);
     auto timerEvent = std::make_unique<HttpRequestTimerEvent>(execTime, std::move(request));
