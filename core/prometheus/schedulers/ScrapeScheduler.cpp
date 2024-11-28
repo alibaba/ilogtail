@@ -38,6 +38,8 @@ using namespace std;
 
 DEFINE_FLAG_INT64(prom_stream_bytes_size, "stream bytes size", 1024 * 1024);
 
+DEFINE_FLAG_BOOL(enable_prom_stream_scrape, "enable prom stream scrape", true);
+
 namespace logtail {
 
 size_t ScrapeScheduler::PromMetricWriteCallback(char* buffer, size_t size, size_t nmemb, void* data) {
@@ -69,7 +71,7 @@ size_t ScrapeScheduler::PromMetricWriteCallback(char* buffer, size_t size, size_
     body->mRawSize += sizes;
     body->mCurrStreamSize += sizes;
 
-    if (body->mCurrStreamSize >= (size_t)INT64_FLAG(prom_stream_bytes_size)) {
+    if (BOOL_FLAG(enable_prom_stream_scrape) && body->mCurrStreamSize >= (size_t)INT64_FLAG(prom_stream_bytes_size)) {
         body->mEventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_TIMESTAMP_MILLISEC,
                                       ToString(GetCurrentTimeInMilliSeconds()));
         body->mEventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_ID, body->GetId());
