@@ -93,19 +93,17 @@ ScrapeScheduler::ScrapeScheduler(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
 void ScrapeScheduler::OnMetricResult(HttpResponse& response, uint64_t timestampMilliSec) {
     auto& responseBody = *response.GetBody<PromMetricResponseBody>();
     responseBody.FlushCache();
-    mSelfMonitor->AddCounter(METRIC_PLUGIN_OUT_EVENTS_TOTAL,
-                             PromSelfMonitorUnsafe::StatusToString(response.GetStatusCode()));
-    mSelfMonitor->AddCounter(METRIC_PLUGIN_OUT_SIZE_BYTES,
-                             PromSelfMonitorUnsafe::StatusToString(response.GetStatusCode()),
-                             responseBody.mRawSize);
+    mSelfMonitor->AddCounter(METRIC_PLUGIN_OUT_EVENTS_TOTAL, response.GetStatusCode());
+    mSelfMonitor->AddCounter(METRIC_PLUGIN_OUT_SIZE_BYTES, response.GetStatusCode(), responseBody.mRawSize);
     mSelfMonitor->AddCounter(METRIC_PLUGIN_PROM_SCRAPE_TIME_MS,
-                             PromSelfMonitorUnsafe::StatusToString(response.GetStatusCode()),
+                             response.GetStatusCode(),
                              GetCurrentTimeInMilliSeconds() - timestampMilliSec);
+
     if (response.GetCurlCode() != 0) {
         // not 0 means curl error
         mScrapeState = PromSelfMonitorUnsafe::CurlCodeToString(response.GetCurlCode());
     } else if (response.GetStatusCode() != 200) {
-        mScrapeState = PromSelfMonitorUnsafe::StatusToString(response.GetStatusCode());
+        mScrapeState = ToString(response.GetStatusCode());
     } else {
         // 0 means success
         mScrapeState = PromSelfMonitorUnsafe::CurlCodeToString(0);
