@@ -40,6 +40,9 @@ DEFINE_FLAG_INT32(quota_exceed_wait_interval, "when daemon buffer thread get quo
 DEFINE_FLAG_INT32(secondary_buffer_count_limit, "data ready for write buffer file", 20);
 DEFINE_FLAG_INT32(send_retry_sleep_interval, "sleep microseconds when sync send fail, 50ms", 50000);
 DEFINE_FLAG_INT32(buffer_check_period, "check logtail local storage buffer period", 60);
+DEFINE_FLAG_INT32(unauthorized_wait_interval, "", 1);
+
+DECLARE_FLAG_INT32(discard_send_fail_interval);
 
 using namespace std;
 
@@ -481,7 +484,7 @@ void DiskBufferWriter::SendEncryptionBuffer(const std::string& filename, int32_t
                     SendResult res = SendBufferFileData(bufferMeta, logData, errorCode);
                     if (res == SEND_OK)
                         sendResult = true;
-                    else if (res == SEND_DISCARD_ERROR || res == SEND_UNAUTHORIZED) {
+                    else if (res == SEND_DISCARD_ERROR || res == SEND_PARAMETER_INVALID) {
                         AlarmManager::GetInstance()->SendAlarm(SEND_DATA_FAIL_ALARM,
                                                                string("send buffer file fail, rawsize:")
                                                                    + ToString(bufferMeta.rawsize())
@@ -491,8 +494,7 @@ void DiskBufferWriter::SendEncryptionBuffer(const std::string& filename, int32_t
                                                                "");
                         sendResult = true;
                         discardCount++;
-                    } else if (res == SEND_QUOTA_EXCEED && INT32_FLAG(quota_exceed_wait_interval) > 0)
-                        sleep(INT32_FLAG(quota_exceed_wait_interval));
+                    }
                 }
             }
             delete[] des;
@@ -714,23 +716,19 @@ SendResult DiskBufferWriter::SendBufferFileData(const sls_logs::LogtailBufferMet
     if (endpoint.empty())
         sendRes = SEND_NETWORK_ERROR;
     else {
-        sendRes = SendToNetSync(sendClient, bufferMeta, logData, errorCode);
-    }
-    if (sendRes == SEND_NETWORK_ERROR) {
-        SLSClientManager::GetInstance()->UpdateEndpointStatus(region, endpoint, false);
-        SLSClientManager::GetInstance()->ResetClientEndpoint(bufferMeta.aliuid(), region, time(NULL));
-        LOG_DEBUG(sLogger,
-                  ("SendBufferFileData",
-                   "SEND_NETWORK_ERROR")("region", region)("aliuid", bufferMeta.aliuid())("endpoint", endpoint));
+        sendRes = SendToNetSync(sendClient, region, endpoint, bufferMeta, logData, errorCode);
     }
     return sendRes;
 }
 
 SendResult DiskBufferWriter::SendToNetSync(sdk::Client* sendClient,
+                                           const std::string& region,
+                                           const std::string& endpoint,
                                            const sls_logs::LogtailBufferMeta& bufferMeta,
                                            const std::string& logData,
                                            std::string& errorCode) {
     int32_t retryTimes = 0;
+    time_t beginTime = time(NULL);
     while (true) {
         ++retryTimes;
         try {
@@ -770,30 +768,62 @@ SendResult DiskBufferWriter::SendToNetSync(sdk::Client* sendClient,
         } catch (sdk::LOGException& ex) {
             errorCode = ex.GetErrorCode();
             SendResult sendRes = ConvertErrorCode(errorCode);
-            if (sendRes == SEND_DISCARD_ERROR || sendRes == SEND_UNAUTHORIZED || sendRes == SEND_QUOTA_EXCEED
-                || retryTimes >= INT32_FLAG(send_retrytimes)) {
-                if (sendRes == SEND_QUOTA_EXCEED)
+#ifdef __ENTERPRISE__
+            bool hasAuthError = false;
+#endif
+            switch (sendRes) {
+                case SEND_NETWORK_ERROR:
+                case SEND_SERVER_ERROR:
+                    SLSClientManager::GetInstance()->UpdateEndpointStatus(region, endpoint, false);
+                    SLSClientManager::GetInstance()->ResetClientEndpoint(bufferMeta.aliuid(), region, time(NULL));
+                    LOG_WARNING(sLogger,
+                                ("send data to SLS fail", "retry later")("error_code", errorCode)(
+                                    "error_message", ex.GetMessage())("endpoint", sendClient->GetRawSlsHost())(
+                                    "projectName", bufferMeta.project())("logstore", bufferMeta.logstore())(
+                                    "RetryTimes", retryTimes)("rawsize", bufferMeta.rawsize()));
+                    usleep(INT32_FLAG(send_retry_sleep_interval));
+                    break;
+                case SEND_QUOTA_EXCEED:
                     AlarmManager::GetInstance()->SendAlarm(SEND_QUOTA_EXCEED_ALARM,
                                                            "error_code: " + errorCode
                                                                + ", error_message: " + ex.GetMessage(),
                                                            bufferMeta.project(),
                                                            bufferMeta.logstore(),
                                                            "");
-                // no region
-                if (!GetProfileSender()->IsProfileData("", bufferMeta.project(), bufferMeta.logstore()))
-                    LOG_ERROR(sLogger,
-                              ("send data to SLS fail, error_code", errorCode)("error_message", ex.GetMessage())(
-                                  "endpoint", sendClient->GetRawSlsHost())("projectName", bufferMeta.project())(
-                                  "logstore", bufferMeta.logstore())("RetryTimes", retryTimes)("rawsize",
-                                                                                               bufferMeta.rawsize()));
+                    // no region
+                    if (!GetProfileSender()->IsProfileData("", bufferMeta.project(), bufferMeta.logstore()))
+                        LOG_WARNING(sLogger,
+                                    ("send data to SLS fail, error_code", errorCode)("error_message", ex.GetMessage())(
+                                        "endpoint", sendClient->GetRawSlsHost())("projectName", bufferMeta.project())(
+                                        "logstore", bufferMeta.logstore())("RetryTimes", retryTimes)(
+                                        "rawsize", bufferMeta.rawsize()));
+                    usleep(INT32_FLAG(quota_exceed_wait_interval));
+                    break;
+                case SEND_UNAUTHORIZED:
+#ifdef __ENTERPRISE__
+                    hasAuthError = true;
+#endif
+                    usleep(INT32_FLAG(unauthorized_wait_interval));
+                    break;
+                default:
+                    break;
+            }
+#ifdef __ENTERPRISE__
+            static_cast<EnterpriseSLSClientManager*>(SLSClientManager::GetInstance())
+                ->UpdateAccessKeyStatus(mAliuid, !hasAuthError);
+#endif
+            if (time(nullptr) - beginTime >= INT32_FLAG(discard_send_fail_interval)) {
+                sendRes = SEND_DISCARD_ERROR;
+            }
+            if (sendRes != SEND_NETWORK_ERROR && sendRes != SEND_SERVER_ERROR && sendRes != SEND_QUOTA_EXCEED
+                && sendRes != SEND_UNAUTHORIZED) {
                 return sendRes;
-            } else {
-                LOG_DEBUG(
-                    sLogger,
-                    ("send data to SLS fail", "retry later")("error_code", errorCode)("error_message", ex.GetMessage())(
-                        "endpoint", sendClient->GetRawSlsHost())("projectName", bufferMeta.project())(
-                        "logstore", bufferMeta.logstore())("RetryTimes", retryTimes)("rawsize", bufferMeta.rawsize()));
-                usleep(INT32_FLAG(send_retry_sleep_interval));
+            }
+            {
+                lock_guard<mutex> lock(mBufferSenderThreadRunningMux);
+                if (!mIsSendBufferThreadRunning) {
+                    return sendRes;
+                }
             }
         } catch (...) {
             if (retryTimes >= INT32_FLAG(send_retrytimes)) {
