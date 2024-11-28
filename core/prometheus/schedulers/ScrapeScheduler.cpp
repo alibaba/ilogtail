@@ -147,7 +147,6 @@ void ScrapeScheduler::OnMetricResult(HttpResponse& response, uint64_t timestampM
             sLogger,
             ("scrape failed, status code", response.GetStatusCode())("target", mHash)("http header", headerStr));
     }
-    responseBody.mEventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_TOTAL, ToString(mStreamIndex));
     SetAutoMetricMeta(responseBody.mEventGroup);
     SetTargetLabels(responseBody.mEventGroup);
     PushEventGroup(std::move(responseBody.mEventGroup));
@@ -168,6 +167,7 @@ void ScrapeScheduler::SetAutoMetricMeta(PipelineEventGroup& eGroup) const {
     eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_RESPONSE_SIZE, ToString(mScrapeResponseSizeBytes));
     eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_UP_STATE, ToString(mUpState));
     eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_ID, GetId());
+    eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_TOTAL, ToString(mStreamIndex));
 }
 
 void ScrapeScheduler::SetTargetLabels(PipelineEventGroup& eGroup) const {
