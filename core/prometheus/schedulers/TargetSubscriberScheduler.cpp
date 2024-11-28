@@ -58,10 +58,9 @@ bool TargetSubscriberScheduler::operator<(const TargetSubscriberScheduler& other
 }
 
 void TargetSubscriberScheduler::OnSubscription(HttpResponse& response, uint64_t timestampMilliSec) {
-    mSelfMonitor->AddCounter(METRIC_PLUGIN_PROM_SUBSCRIBE_TOTAL,
-                             PromSelfMonitorUnsafe::StatusToString(response.GetStatusCode()));
+    mSelfMonitor->AddCounter(METRIC_PLUGIN_PROM_SUBSCRIBE_TOTAL, response.GetStatusCode());
     mSelfMonitor->AddCounter(METRIC_PLUGIN_PROM_SUBSCRIBE_TIME_MS,
-                             PromSelfMonitorUnsafe::StatusToString(response.GetStatusCode()),
+                             response.GetStatusCode(),
                              GetCurrentTimeInMilliSeconds() - timestampMilliSec);
     if (response.GetStatusCode() == 304) {
         // not modified
@@ -337,8 +336,7 @@ void TargetSubscriberScheduler::InitSelfMonitor(const MetricLabels& defaultLabel
     mSelfMonitor = std::make_shared<PromSelfMonitorUnsafe>();
     mSelfMonitor->InitMetricManager(sSubscriberMetricKeys, mDefaultLabels);
 
-    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
-        mMetricsRecordRef, MetricCategory::METRIC_CATEGORY_PLUGIN_SOURCE, std::move(mDefaultLabels));
+    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, MetricCategory::METRIC_CATEGORY_PLUGIN_SOURCE, std::move(mDefaultLabels));
     mPromSubscriberTargets = mMetricsRecordRef.CreateIntGauge(METRIC_PLUGIN_PROM_SUBSCRIBE_TARGETS);
     mTotalDelayMs = mMetricsRecordRef.CreateCounter(METRIC_PLUGIN_TOTAL_DELAY_MS);
 }
