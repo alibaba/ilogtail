@@ -22,23 +22,19 @@
 #include <boost/filesystem.hpp>
 #include <cstdint>
 #include <cstdlib>
+#include <filesystem>
 #include <memory>
-#include <mutex>
-#include <sstream>
 #include <string>
 #include <unordered_map>
 
 #include "Flags.h"
 #include "Logger.h"
-#include "MachineInfoUtil.h"
-#include "StringTools.h"
 #include "constants/EntityConstants.h"
 #include "host_monitor/Constants.h"
 #include "host_monitor/collector/BaseCollector.h"
 
 DECLARE_FLAG_INT32(process_collect_silent_count);
 
-namespace bfs = boost::filesystem;
 using namespace std::chrono;
 
 namespace logtail {
@@ -167,11 +163,10 @@ private:
     ProcessStatPtr ReadProcessStat(pid_t pid);
     ProcessStatPtr ParseProcessStat(pid_t pid, std::string& line);
 
-    bool WalkAllProcess(const bfs::path& root, const std::function<void(const std::string&)>& callback);
+    bool WalkAllProcess(const std::filesystem::path& root, const std::function<void(const std::string&)>& callback);
 
     ProcessStatPtr GetPreProcessStat(pid_t pid) { return mPrevProcessStat[pid]; }
 
-    std::mutex mCollectLock;
     steady_clock::time_point mProcessSortTime;
     std::vector<ProcessStatPtr> mSortProcessStats;
     std::unordered_map<pid_t, ProcessStatPtr> mPrevProcessStat;

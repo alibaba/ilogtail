@@ -42,9 +42,7 @@ namespace logtail {
 const size_t ProcessTopN = 20;
 
 void ProcessCollector::Collect(PipelineEventGroup& group) {
-    std::lock_guard<std::mutex> lock(mCollectLock);
-
-    group.SetMetadata(EventGroupMetaKey::HOST_MONITOR_COLLECT_TIME, std::to_string(time(nullptr)));
+    group.SetMetadata(EventGroupMetaKey::COLLECT_TIME, std::to_string(time(nullptr)));
     std::vector<ProcessStatPtr> processes;
     SortProcessByCpu(processes, ProcessTopN);
     for (auto process : processes) {
@@ -205,13 +203,15 @@ ProcessStatPtr ProcessCollector::ParseProcessStat(pid_t pid, std::string& line) 
     return ptr;
 }
 
-bool ProcessCollector::WalkAllProcess(const bfs::path& root, const std::function<void(const std::string&)>& callback) {
-    if (!bfs::exists(root) || !bfs::is_directory(root)) {
+bool ProcessCollector::WalkAllProcess(const std::filesystem::path& root,
+                                      const std::function<void(const std::string&)>& callback) {
+    if (!std::filesystem::exists(root) || !std::filesystem::is_directory(root)) {
         LOG_ERROR(sLogger, ("ProcessCollector", "root path is not a directory or not exist")("root", root));
         return false;
     }
 
-    for (const auto& dirEntry : bfs::directory_iterator{root, bfs::directory_options::skip_permission_denied}) {
+    for (const auto& dirEntry :
+         std::filesystem::directory_iterator{root, std::filesystem::directory_options::skip_permission_denied}) {
         std::string filename = dirEntry.path().filename().string();
         if (IsInt(filename)) {
             callback(filename);

@@ -39,9 +39,8 @@ bool ProcessorHostMetaNative::Init(const Json::Value& config) {
     if (hostType == DEFAULT_ENV_VALUE_ECS) {
         oss << DEFAULT_CONTENT_VALUE_DOMAIN_ACS << "." << DEFAULT_ENV_VALUE_ECS << "."
             << DEFAULT_CONTENT_VALUE_ENTITY_TYPE_PROCESS;
-        ECSMeta ecsMeta = FetchECSMeta();
         mDomain = DEFAULT_CONTENT_VALUE_DOMAIN_ACS;
-        mHostEntityID = ecsMeta.instanceID;
+        mHostEntityID = FetchHostId();
     } else {
         oss << DEFAULT_CONTENT_VALUE_DOMAIN_INFRA << "." << DEFAULT_ENV_VALUE_HOST << "."
             << DEFAULT_CONTENT_VALUE_ENTITY_TYPE_PROCESS;
@@ -86,8 +85,7 @@ void ProcessorHostMetaNative::ProcessEvent(PipelineEventGroup& group,
     targetEvent->SetContent(DEFAULT_CONTENT_KEY_DOMAIN, mDomain);
     targetEvent->SetContent(DEFAULT_CONTENT_KEY_FIRST_OBSERVED_TIME,
                             sourceEvent.GetContent(DEFAULT_CONTENT_KEY_PROCESS_CREATE_TIME));
-    targetEvent->SetContent(DEFAULT_CONTENT_KEY_LAST_OBSERVED_TIME,
-                            group.GetMetadata(EventGroupMetaKey::HOST_MONITOR_COLLECT_TIME));
+    targetEvent->SetContent(DEFAULT_CONTENT_KEY_LAST_OBSERVED_TIME, group.GetMetadata(EventGroupMetaKey::COLLECT_TIME));
     targetEvent->SetContent(DEFAULT_CONTENT_KEY_KEEP_ALIVE_SECONDS, "30");
     // TODO: support delete event
     targetEvent->SetContent(DEFAULT_CONTENT_KEY_METHOD, DEFAULT_CONTENT_VALUE_METHOD_UPDATE);

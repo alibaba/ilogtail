@@ -20,11 +20,11 @@
 namespace logtail {
 
 #ifndef APSARA_UNIT_TEST_MAIN
-const bfs::path PROCESS_DIR = "/proc";
+const std::filesystem::path PROCESS_DIR = "/proc";
 #else
-bfs::path PROCESS_DIR = "/proc";
+std::filesystem::path PROCESS_DIR = "/proc";
 #endif
 
-const bfs::path PROCESS_STAT = "stat";
+const std::filesystem::path PROCESS_STAT = "stat";
 
 } // namespace logtail

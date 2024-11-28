@@ -16,18 +16,16 @@
 
 #pragma once
 
-#include <boost/filesystem.hpp>
-
-namespace bfs = boost::filesystem;
+#include <filesystem>
 
 namespace logtail {
 
 #ifndef APSARA_UNIT_TEST_MAIN
-extern const bfs::path PROCESS_DIR;
+extern const std::filesystem::path PROCESS_DIR;
 #else
-extern bfs::path PROCESS_DIR;
+extern std::filesystem::path PROCESS_DIR;
 #endif
 
-const extern bfs::path PROCESS_STAT;
+const extern std::filesystem::path PROCESS_STAT;
 
 } // namespace logtail

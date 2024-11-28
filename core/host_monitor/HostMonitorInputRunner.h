@@ -16,16 +16,19 @@
 
 #pragma once
 
+#include <atomic>
 #include <memory>
+#include <shared_mutex>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
+#include "BaseCollector.h"
 #include "InputRunner.h"
 #include "Lock.h"
 #include "QueueKey.h"
 #include "ThreadPool.h"
-#include "timer/HostMonitorTimerEvent.h"
-#include "timer/Timer.h"
+#include "host_monitor/HostMonitorTimerEvent.h"
 
 namespace logtail {
 
@@ -45,7 +48,8 @@ public:
 
     void UpdateCollector(const std::string& configName,
                          const std::vector<std::string>& collectorNames,
-                         QueueKey processQueueKey);
+                         QueueKey processQueueKey,
+                         int inputIndex);
     void RemoveCollector(const std::string& configName);
 
     void Init() override;
@@ -53,21 +57,24 @@ public:
     bool HasRegisteredPlugins() const override;
 
     bool IsCollectTaskValid(const std::string& configName, const std::string& collectorName) const;
-    void ScheduleOnce(HostMonitorTimerEvent* event);
+    void ScheduleOnce(std::unique_ptr<HostMonitorTimerEvent::CollectConfig> collectConfig);
 
 private:
     HostMonitorInputRunner();
-    std::unique_ptr<TimerEvent>
-    BuildTimerEvent(const std::string& configName, const std::string& collectorName, QueueKey processQueueKey);
+    std::unique_ptr<HostMonitorTimerEvent>
+    BuildTimerEvent(std::unique_ptr<HostMonitorTimerEvent::CollectConfig> collectConfig);
 
-    bool mIsStarted = false;
-    std::mutex mStartMutex;
+    template <typename T>
+    void RegisterCollector();
+    std::shared_ptr<BaseCollector> GetCollector(const std::string& collectorName);
 
-    std::shared_ptr<Timer> mTimer;
-    std::shared_ptr<ThreadPool> mThreadPool;
+    std::atomic_bool mIsStarted = false;
 
-    mutable ReadWriteLock mCollectorMapRWLock;
-    std::unordered_map<std::string, std::vector<std::string>> mCollectorMap;
+    ThreadPool mThreadPool;
+
+    mutable std::shared_mutex mCollectorRegisterMapMutex;
+    std::unordered_map<std::string, std::vector<std::string>> mCollectorRegisterMap;
+    std::unordered_map<std::string, std::shared_ptr<BaseCollector>> mCollectorInstanceMap;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class HostMonitorInputRunnerUnittest;

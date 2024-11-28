@@ -199,6 +199,7 @@ void PipelineManager::StopAllPipelines() {
 
     LogtailPlugin::GetInstance()->StopAllPipelines(true);
 
+    Timer::GetInstance()->Stop();
     ProcessorRunner::GetInstance()->Stop();
 
     FlushAllBatch();

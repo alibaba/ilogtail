@@ -14,31 +14,22 @@
  * limitations under the License.
  */
 
-#pragma once
+#include "HostMonitorTimerEvent.h"
 
-#include <memory>
-#include <unordered_map>
+#include <utility>
 
-#include "host_monitor/collector/BaseCollector.h"
+#include "HostMonitorInputRunner.h"
+
 namespace logtail {
 
-class CollectorManager {
-public:
-    static CollectorManager* GetInstance() {
-        static CollectorManager sInstance;
-        return &sInstance;
-    }
+bool HostMonitorTimerEvent::IsValid() const {
+    return HostMonitorInputRunner::GetInstance()->IsCollectTaskValid(mCollectConfig->mConfigName,
+                                                                     mCollectConfig->mCollectorName);
+}
 
-    std::shared_ptr<BaseCollector> GetCollector(const std::string& collectorName);
-
-private:
-    CollectorManager();
-    ~CollectorManager() = default;
-
-    template <typename T>
-    void RegisterCollector();
-
-    std::unordered_map<std::string, std::shared_ptr<BaseCollector>> mCollectorMap;
-};
+bool HostMonitorTimerEvent::Execute() {
+    HostMonitorInputRunner::GetInstance()->ScheduleOnce(std::move(mCollectConfig));
+    return true;
+}
 
 } // namespace logtail

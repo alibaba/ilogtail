@@ -26,13 +26,11 @@
 #elif defined(_MSC_VER)
 #include <Windows.h>
 #endif
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 #include "DevInode.h"
 #include "ErrorUtil.h"
 #include "LogtailCommonFlags.h"
-
-namespace bfs = boost::filesystem;
 
 // Filesystem utility.
 namespace logtail {
@@ -95,11 +93,11 @@ int GetLines(std::istream& is,
              bool enableEmptyLine,
              const std::function<void(const std::string&)>& pushBack,
              std::string* errorMessage);
-int GetLines(const bfs::path& filename,
+int GetLines(const std::filesystem::path& filename,
              bool enableEmptyLine,
              const std::function<void(const std::string&)>& pushBack,
              std::string* errorMessage);
-int GetFileLines(const bfs::path& filename,
+int GetFileLines(const std::filesystem::path& filename,
                  std::vector<std::string>& res,
                  bool enableEmptyLine = true,
                  std::string* errorMessage = nullptr);

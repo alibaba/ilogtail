@@ -156,7 +156,7 @@ int GetLines(std::istream& is,
     return 0;
 }
 
-int GetLines(const bfs::path& filename,
+int GetLines(const std::filesystem::path& filename,
              bool enableEmptyLine,
              const std::function<void(const std::string&)>& pushBack,
              std::string* errorMessage) {
@@ -178,7 +178,7 @@ int GetLines(const bfs::path& filename,
     return ret;
 }
 
-int GetFileLines(const bfs::path& filename,
+int GetFileLines(const std::filesystem::path& filename,
                  std::vector<std::string>& res,
                  bool enableEmptyLine,
                  std::string* errorMessage) {

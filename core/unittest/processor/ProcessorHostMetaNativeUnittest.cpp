@@ -68,7 +68,7 @@ void ProcessorHostMetaNativeUnittest::TestProcess() {
     Json::Value config;
     auto sourceBuffer = std::make_shared<logtail::SourceBuffer>();
     PipelineEventGroup eventGroup(sourceBuffer);
-    eventGroup.SetMetadataNoCopy(EventGroupMetaKey::HOST_MONITOR_COLLECT_TIME, "123456");
+    eventGroup.SetMetadataNoCopy(EventGroupMetaKey::COLLECT_TIME, "123456");
     auto event = eventGroup.AddLogEvent();
     event->SetContent(DEFAULT_CONTENT_KEY_PROCESS_PID, "123");
     event->SetContent(DEFAULT_CONTENT_KEY_PROCESS_CREATE_TIME, "123456");

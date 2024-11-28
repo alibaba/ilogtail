@@ -38,13 +38,15 @@ bool InputHostMeta::Start() {
     LOG_INFO(sLogger, ("input host meta start", mContext->GetConfigName()));
     HostMonitorInputRunner::GetInstance()->Init();
     HostMonitorInputRunner::GetInstance()->UpdateCollector(
-        mContext->GetConfigName(), {"process"}, mContext->GetProcessQueueKey());
+        mContext->GetConfigName(), {"process"}, mContext->GetProcessQueueKey(), mIndex);
     return true;
 }
 
 bool InputHostMeta::Stop(bool isPipelineRemoving) {
     LOG_INFO(sLogger, ("input host meta stop", mContext->GetConfigName()));
-    HostMonitorInputRunner::GetInstance()->RemoveCollector(mContext->GetConfigName());
+    if (isPipelineRemoving) {
+        HostMonitorInputRunner::GetInstance()->RemoveCollector(mContext->GetConfigName());
+    }
     return true;
 }
 
