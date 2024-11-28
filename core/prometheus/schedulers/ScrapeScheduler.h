@@ -101,6 +101,7 @@ private:
     std::shared_ptr<Timer> mTimer;
 
     // auto metrics
+    std::string mScrapeState;
     uint64_t mScrapeTimestampMilliSec = 0;
     double mScrapeDurationSeconds = 0;
     uint64_t mScrapeResponseSizeBytes = 0;

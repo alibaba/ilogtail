@@ -103,14 +103,12 @@ void ScrapeScheduler::OnMetricResult(HttpResponse& response, uint64_t timestampM
                              GetCurrentTimeInMilliSeconds() - timestampMilliSec);
     if (response.GetCurlCode() != 0) {
         // not 0 means curl error
-        mSelfMonitor->AddCounter(METRIC_PLUGIN_PROM_SCRAPE_STATE,
-                                 PromSelfMonitorUnsafe::CurlCodeToString(response.GetCurlCode()));
+        mScrapeState = PromSelfMonitorUnsafe::CurlCodeToString(response.GetCurlCode());
     } else if (response.GetStatusCode() != 200) {
-        mSelfMonitor->AddCounter(METRIC_PLUGIN_PROM_SCRAPE_STATE,
-                                 PromSelfMonitorUnsafe::StatusToString(response.GetStatusCode()));
+        mScrapeState = PromSelfMonitorUnsafe::StatusToString(response.GetStatusCode());
     } else {
         // 0 means success
-        mSelfMonitor->AddCounter(METRIC_PLUGIN_PROM_SCRAPE_STATE, PromSelfMonitorUnsafe::CurlCodeToString(0));
+        mScrapeState = PromSelfMonitorUnsafe::CurlCodeToString(0);
     }
 
     mScrapeTimestampMilliSec = timestampMilliSec;
@@ -136,6 +134,7 @@ void ScrapeScheduler::OnMetricResult(HttpResponse& response, uint64_t timestampM
 }
 
 void ScrapeScheduler::SetAutoMetricMeta(PipelineEventGroup& eGroup) {
+    eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_STATE, mScrapeState);
     eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_TIMESTAMP_MILLISEC, ToString(mScrapeTimestampMilliSec));
     eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_DURATION, ToString(mScrapeDurationSeconds));
     eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_RESPONSE_SIZE, ToString(mScrapeResponseSizeBytes));
@@ -264,8 +263,7 @@ void ScrapeScheduler::InitSelfMonitor(const MetricLabels& defaultLabels) {
     static const std::unordered_map<std::string, MetricType> sScrapeMetricKeys
         = {{METRIC_PLUGIN_OUT_EVENTS_TOTAL, MetricType::METRIC_TYPE_COUNTER},
            {METRIC_PLUGIN_OUT_SIZE_BYTES, MetricType::METRIC_TYPE_COUNTER},
-           {METRIC_PLUGIN_PROM_SCRAPE_TIME_MS, MetricType::METRIC_TYPE_COUNTER},
-           {METRIC_PLUGIN_PROM_SCRAPE_STATE, MetricType::METRIC_TYPE_COUNTER}};
+           {METRIC_PLUGIN_PROM_SCRAPE_TIME_MS, MetricType::METRIC_TYPE_COUNTER}};
 
     mSelfMonitor->InitMetricManager(sScrapeMetricKeys, labels);
 
