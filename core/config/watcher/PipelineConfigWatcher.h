@@ -46,7 +46,8 @@ private:
     PipelineConfigWatcher();
     ~PipelineConfigWatcher() = default;
 
-    void InsertInnerPipelines(PipelineConfigDiff& pDiff, TaskConfigDiff& tDiff, std::unordered_set<std::string>& configSet);
+    void
+    InsertInnerPipelines(PipelineConfigDiff& pDiff, TaskConfigDiff& tDiff, std::unordered_set<std::string>& configSet);
     void InsertPipelines(PipelineConfigDiff& pDiff, TaskConfigDiff& tDiff, std::unordered_set<std::string>& configSet);
     bool CheckAddedConfig(const std::string& configName,
                           std::unique_ptr<Json::Value>&& configDetail,
@@ -56,9 +57,14 @@ private:
                              std::unique_ptr<Json::Value>&& configDetail,
                              PipelineConfigDiff& pDiff,
                              TaskConfigDiff& tDiff);
+    void SortPipelineConfigDiff(PipelineConfigDiff& pDiff);
 
     const PipelineManager* mPipelineManager = nullptr;
     const TaskPipelineManager* mTaskPipelineManager = nullptr;
+
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class PipelineConfigWatcherUnittest;
+#endif
 };
 
 } // namespace logtail

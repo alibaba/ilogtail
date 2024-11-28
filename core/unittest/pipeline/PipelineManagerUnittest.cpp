@@ -14,6 +14,8 @@
 
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineManager.h"
+#include "pipeline/plugin/PluginRegistry.h"
+#include "plugin/input/InputNetworkSecurity.h"
 #include "unittest/Unittest.h"
 
 using namespace std;
@@ -23,6 +25,11 @@ namespace logtail {
 class PipelineManagerUnittest : public testing::Test {
 public:
     void TestPipelineManagement() const;
+    void TestCheckIfGlobalSingletonInputLoaded() const;
+
+protected:
+    static void SetUpTestCase() { PluginRegistry::GetInstance()->LoadPlugins(); }
+    static void TearDownTestCase() { PluginRegistry::GetInstance()->UnloadPlugins(); }
 };
 
 void PipelineManagerUnittest::TestPipelineManagement() const {
@@ -34,7 +41,35 @@ void PipelineManagerUnittest::TestPipelineManagement() const {
     APSARA_TEST_EQUAL(nullptr, PipelineManager::GetInstance()->FindConfigByName("test3"));
 }
 
+void PipelineManagerUnittest::TestCheckIfGlobalSingletonInputLoaded() const {
+    { // test not singleton input
+        auto inputConfig = Json::Value();
+        inputConfig["Type"] = InputFile::sName;
+        std::vector<const Json::Value*> inputConfigs = {&inputConfig};
+
+        PipelineManager::GetInstance()->mPluginCntMap["inputs"][InputFile::sName] = 1;
+        APSARA_TEST_EQUAL(false, PipelineManager::GetInstance()->CheckIfGlobalSingletonInputLoaded(inputConfigs));
+    }
+    { // test singleton input not loaded
+        auto inputConfig = Json::Value();
+        inputConfig["Type"] = InputNetworkSecurity::sName;
+        std::vector<const Json::Value*> inputConfigs = {&inputConfig};
+
+        PipelineManager::GetInstance()->mPluginCntMap["inputs"][InputNetworkSecurity::sName] = 0;
+        APSARA_TEST_EQUAL(false, PipelineManager::GetInstance()->CheckIfGlobalSingletonInputLoaded(inputConfigs));
+    }
+    { // test singleton input loaded
+        auto inputConfig = Json::Value();
+        inputConfig["Type"] = InputNetworkSecurity::sName;
+        std::vector<const Json::Value*> inputConfigs = {&inputConfig};
+
+        PipelineManager::GetInstance()->mPluginCntMap["inputs"][InputNetworkSecurity::sName] = 1;
+        APSARA_TEST_EQUAL(true, PipelineManager::GetInstance()->CheckIfGlobalSingletonInputLoaded(inputConfigs));
+    }
+}
+
 UNIT_TEST_CASE(PipelineManagerUnittest, TestPipelineManagement)
+UNIT_TEST_CASE(PipelineManagerUnittest, TestCheckIfGlobalSingletonInputLoaded)
 
 } // namespace logtail
 

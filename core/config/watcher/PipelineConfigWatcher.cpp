@@ -80,6 +80,7 @@ pair<PipelineConfigDiff, TaskConfigDiff> PipelineConfigWatcher::CheckConfigDiff(
         LOG_DEBUG(sLogger, ("config files scan done", "no task update"));
     }
 
+    SortPipelineConfigDiff(pDiff);
     return make_pair(std::move(pDiff), std::move(tDiff));
 }
 
@@ -403,6 +404,25 @@ bool PipelineConfigWatcher::CheckModifiedConfig(const string& configName,
         }
     }
     return true;
+}
+
+void PipelineConfigWatcher::SortPipelineConfigDiff(PipelineConfigDiff& pDiff) {
+    // sort rule
+    // 1. sort by create time first, if create time is 0 (include local config), put it back
+    // 2. if create time is the same, sort by name
+    auto cmp = [](const PipelineConfig& a, const PipelineConfig& b) {
+        if (a.mCreateTime == b.mCreateTime) {
+            return a.mName < b.mName;
+        } else if (a.mCreateTime == 0 && b.mCreateTime != 0) {
+            return false;
+        } else if (a.mCreateTime != 0 && b.mCreateTime == 0) {
+            return true;
+        } else {
+            return a.mCreateTime < b.mCreateTime;
+        }
+    };
+    sort(pDiff.mAdded.begin(), pDiff.mAdded.end(), cmp);
+    sort(pDiff.mModified.begin(), pDiff.mModified.end(), cmp);
 }
 
 } // namespace logtail
