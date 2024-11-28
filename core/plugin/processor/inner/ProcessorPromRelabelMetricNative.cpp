@@ -83,7 +83,7 @@ void ProcessorPromRelabelMetricNative::Process(PipelineEventGroup& eGroup) {
         auto& autoMetric = mAutoMetricCache[streamID];
         UpdateAutoMetrics(eGroup, autoMetric);
         // add auto metric,if this is the last one of the stream
-        if (mStreamCounter.MeetLast(streamID)) {
+        if (mStreamCounter.IsLast(streamID)) {
             AddAutoMetrics(eGroup, autoMetric);
             // erase the cache
             mAutoMetricCache.erase(streamID);

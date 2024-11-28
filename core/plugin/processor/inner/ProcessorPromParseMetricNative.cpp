@@ -56,7 +56,7 @@ void ProcessorPromParseMetricNative::Process(PipelineEventGroup& eGroup) {
                 StringTo<uint64_t>(eGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_TOTAL).to_string()));
         }
         // add auto metric,if this is the last one of the stream
-        if (mStreamCounter.MeetLast(streamID)) {
+        if (mStreamCounter.IsLast(streamID)) {
             eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SAMPLES_SCRAPED, ToString(mMetricCountCache[streamID]));
             // erase the cache
             mMetricCountCache.erase(streamID);

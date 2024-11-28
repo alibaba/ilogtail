@@ -12,7 +12,7 @@ class StreamCounter {
 public:
     void Add(const std::string& streamID) { mStreamCache[streamID].first++; }
     void SetTotal(const std::string& streamID, uint64_t total) { mStreamCache[streamID].second = total; }
-    bool MeetLast(const std::string& streamID) {
+    bool IsLast(const std::string& streamID) {
         auto stream = mStreamCache.find(streamID);
         if (stream == mStreamCache.end()) {
             LOG_WARNING(sLogger, ("streamID not found", streamID));
