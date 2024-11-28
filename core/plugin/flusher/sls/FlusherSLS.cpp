@@ -115,9 +115,8 @@ unordered_map<string, weak_ptr<ConcurrencyLimiter>> FlusherSLS::sProjectConcurre
 unordered_map<string, weak_ptr<ConcurrencyLimiter>> FlusherSLS::sRegionConcurrencyLimiterMap;
 unordered_map<string, weak_ptr<ConcurrencyLimiter>> FlusherSLS::sLogstoreConcurrencyLimiterMap;
 
-
-shared_ptr<ConcurrencyLimiter> GetConcurrencyLimiter() {
-    return make_shared<ConcurrencyLimiter>(AppConfig::GetInstance()->GetSendRequestConcurrency());
+shared_ptr<ConcurrencyLimiter> GetConcurrencyLimiter(const std::string& description) {
+    return make_shared<ConcurrencyLimiter>(description, AppConfig::GetInstance()->GetSendRequestConcurrency());
 }
 
 shared_ptr<ConcurrencyLimiter> FlusherSLS::GetLogstoreConcurrencyLimiter(const std::string& project,
@@ -127,12 +126,12 @@ shared_ptr<ConcurrencyLimiter> FlusherSLS::GetLogstoreConcurrencyLimiter(const s
 
     auto iter = sLogstoreConcurrencyLimiterMap.find(key);
     if (iter == sLogstoreConcurrencyLimiterMap.end()) {
-        auto limiter = GetConcurrencyLimiter();
+        auto limiter = GetConcurrencyLimiter(sName + "#quota#logstore#" + key);
         sLogstoreConcurrencyLimiterMap.try_emplace(key, limiter);
         return limiter;
     }
     if (iter->second.expired()) {
-        auto limiter = GetConcurrencyLimiter();
+        auto limiter = GetConcurrencyLimiter(sName + "#quota#logstore#" + key);
         iter->second = limiter;
         return limiter;
     }
@@ -143,12 +142,12 @@ shared_ptr<ConcurrencyLimiter> FlusherSLS::GetProjectConcurrencyLimiter(const st
     lock_guard<mutex> lock(sMux);
     auto iter = sProjectConcurrencyLimiterMap.find(project);
     if (iter == sProjectConcurrencyLimiterMap.end()) {
-        auto limiter = GetConcurrencyLimiter();
+        auto limiter = GetConcurrencyLimiter(sName + "#quota#project#" + project);
         sProjectConcurrencyLimiterMap.try_emplace(project, limiter);
         return limiter;
     }
     if (iter->second.expired()) {
-        auto limiter = GetConcurrencyLimiter();
+        auto limiter = GetConcurrencyLimiter(sName + "#quota#project#" + project);
         iter->second = limiter;
         return limiter;
     }
@@ -159,12 +158,12 @@ shared_ptr<ConcurrencyLimiter> FlusherSLS::GetRegionConcurrencyLimiter(const str
     lock_guard<mutex> lock(sMux);
     auto iter = sRegionConcurrencyLimiterMap.find(region);
     if (iter == sRegionConcurrencyLimiterMap.end()) {
-        auto limiter = GetConcurrencyLimiter();
+        auto limiter = GetConcurrencyLimiter(sName + "#network#region#" + region);
         sRegionConcurrencyLimiterMap.try_emplace(region, limiter);
         return limiter;
     }
     if (iter->second.expired()) {
-        auto limiter = GetConcurrencyLimiter();
+        auto limiter = GetConcurrencyLimiter(sName + "#network#region#" + region);
         iter->second = limiter;
         return limiter;
     }
