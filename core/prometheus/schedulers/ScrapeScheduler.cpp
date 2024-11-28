@@ -78,6 +78,7 @@ size_t ScrapeScheduler::PromMetricWriteCallback(char* buffer, size_t size, size_
 
         body->SetTargetLabels(body->mEventGroup);
         body->PushEventGroup(std::move(body->mEventGroup));
+        body->mScrapeSamplesScraped += body->mEventGroup.GetEvents().size();
         body->mStreamIndex++;
         body->mEventGroup = PipelineEventGroup(std::make_shared<SourceBuffer>());
         body->mCurrStreamSize = 0;
@@ -126,6 +127,7 @@ void ScrapeScheduler::OnMetricResult(HttpResponse& response, uint64_t timestampM
     auto& responseBody = *response.GetBody<ScrapeScheduler>();
     responseBody.FlushCache();
     mStreamIndex++;
+    responseBody.mScrapeSamplesScraped += responseBody.mEventGroup.GetEvents().size();
     mSelfMonitor->AddCounter(METRIC_PLUGIN_OUT_EVENTS_TOTAL, response.GetStatusCode());
     mSelfMonitor->AddCounter(METRIC_PLUGIN_OUT_SIZE_BYTES, response.GetStatusCode(), responseBody.mRawSize);
     mSelfMonitor->AddCounter(
@@ -154,12 +156,14 @@ void ScrapeScheduler::OnMetricResult(HttpResponse& response, uint64_t timestampM
     responseBody.mCurrStreamSize = 0;
     responseBody.mCache.clear();
     responseBody.mStreamIndex = 0;
+    responseBody.mScrapeSamplesScraped = 0;
 
     mPluginTotalDelayMs->Add(GetCurrentTimeInMilliSeconds() - timestampMilliSec);
 }
 
 void ScrapeScheduler::SetAutoMetricMeta(PipelineEventGroup& eGroup) const {
     eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_TIMESTAMP_MILLISEC, ToString(mScrapeTimestampMilliSec));
+    eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SAMPLES_SCRAPED, ToString(mScrapeSamplesScraped));
     eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_DURATION, ToString(mScrapeDurationSeconds));
     eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_RESPONSE_SIZE, ToString(mScrapeResponseSizeBytes));
     eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_UP_STATE, ToString(mUpState));

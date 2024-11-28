@@ -83,6 +83,7 @@ private:
 
     // auto metrics
     uint64_t mScrapeTimestampMilliSec = 0;
+    uint64_t mScrapeSamplesScraped = 0;
     double mScrapeDurationSeconds = 0;
     uint64_t mScrapeResponseSizeBytes = 0;
     bool mUpState = true;

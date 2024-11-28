@@ -1,12 +1,10 @@
 #pragma once
 
 #include <string>
-#include <unordered_map>
 
 #include "models/PipelineEventGroup.h"
 #include "models/PipelineEventPtr.h"
 #include "pipeline/plugin/interface/Processor.h"
-#include "prometheus/labels/StreamCounter.h"
 #include "prometheus/labels/TextParser.h"
 #include "prometheus/schedulers/ScrapeConfig.h"
 
@@ -29,21 +27,7 @@ private:
     void
     AddEvent(const char* data, size_t size, EventsContainer& events, PipelineEventGroup& eGroup, TextParser& parser);
 
-    void Lock() {
-        if (INT32_FLAG(process_thread_count) > 1) {
-            mStreamMutex.lock();
-        }
-    }
-    void UnLock() {
-        if (INT32_FLAG(process_thread_count) > 1) {
-            mStreamMutex.unlock();
-        }
-    }
     std::unique_ptr<ScrapeConfig> mScrapeConfigPtr;
-
-    std::mutex mStreamMutex;
-    prom::StreamCounter mStreamCounter;
-    std::unordered_map<std::string, int64_t> mMetricCountCache;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class InputPrometheusUnittest;

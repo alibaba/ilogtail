@@ -43,27 +43,6 @@ void ProcessorPromParseMetricNative::Process(PipelineEventGroup& eGroup) {
     for (auto& rawEvent : rawEvents) {
         ProcessEvent(rawEvent, events, eGroup, parser);
     }
-
-    auto streamID = eGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_ID).to_string();
-    // cache the metrics count
-    {
-        Lock();
-        mStreamCounter.Add(streamID);
-        mMetricCountCache[streamID] += events.size();
-        if (eGroup.HasMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_TOTAL)) {
-            mStreamCounter.SetTotal(
-                streamID,
-                StringTo<uint64_t>(eGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_TOTAL).to_string()));
-        }
-        // add auto metric,if this is the last one of the stream
-        if (mStreamCounter.IsLast(streamID)) {
-            eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SAMPLES_SCRAPED, ToString(mMetricCountCache[streamID]));
-            // erase the cache
-            mMetricCountCache.erase(streamID);
-            mStreamCounter.Erase(streamID);
-        }
-        UnLock();
-    }
 }
 
 bool ProcessorPromParseMetricNative::IsSupportedEvent(const PipelineEventPtr& e) const {
