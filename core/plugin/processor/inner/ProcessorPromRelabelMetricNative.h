@@ -21,6 +21,7 @@
 #include "models/PipelineEventGroup.h"
 #include "models/PipelineEventPtr.h"
 #include "pipeline/plugin/interface/Processor.h"
+#include "prometheus/labels/StreamCounter.h"
 #include "prometheus/schedulers/ScrapeConfig.h"
 
 DECLARE_FLAG_INT32(process_thread_count);
@@ -64,9 +65,9 @@ private:
                    const GroupTags& targetTags) const;
 
     void Lock() {
-        if (INT32_FLAG(process_thread_count) > 1) {
+        if (INT32_FLAG(process_thread_count) > 1) 
             mStreamMutex.lock();
-        }
+        
     }
     void UnLock() {
         if (INT32_FLAG(process_thread_count) > 1) {
@@ -78,9 +79,7 @@ private:
     std::string mLoongCollectorScraper;
 
     std::mutex mStreamMutex;
-    std::unordered_map<std::string, int64_t> mStreamTotalCache;
-    std::unordered_map<std::string, int64_t> mStreamCountCache;
-    std::unordered_map<std::string, int64_t> mPostRelabelCache;
+    prom::StreamCounter mStreamCounter;
     std::unordered_map<std::string, prom::AutoMetric> mAutoMetricCache;
 
 #ifdef APSARA_UNIT_TEST_MAIN

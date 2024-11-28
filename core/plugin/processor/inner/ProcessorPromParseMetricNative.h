@@ -6,6 +6,7 @@
 #include "models/PipelineEventGroup.h"
 #include "models/PipelineEventPtr.h"
 #include "pipeline/plugin/interface/Processor.h"
+#include "prometheus/labels/StreamCounter.h"
 #include "prometheus/labels/TextParser.h"
 #include "prometheus/schedulers/ScrapeConfig.h"
 
@@ -41,8 +42,7 @@ private:
     std::unique_ptr<ScrapeConfig> mScrapeConfigPtr;
 
     std::mutex mStreamMutex;
-    std::unordered_map<std::string, int64_t> mStreamTotalCache;
-    std::unordered_map<std::string, int64_t> mStreamCountCache;
+    prom::StreamCounter mStreamCounter;
     std::unordered_map<std::string, int64_t> mMetricCountCache;
 
 #ifdef APSARA_UNIT_TEST_MAIN

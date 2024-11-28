@@ -73,24 +73,21 @@ void ProcessorPromRelabelMetricNative::Process(PipelineEventGroup& eGroup) {
     // cache the metrics count
     {
         Lock();
-        mStreamCountCache[streamID]++;
-        mPostRelabelCache[streamID] += eGroup.GetEvents().size();
-
+        mStreamCounter.Add(streamID);
+        mAutoMetricCache[streamID].mPostRelabel += eGroup.GetEvents().size();
         if (eGroup.HasMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_TOTAL)) {
-            mStreamTotalCache[streamID]
-                = StringTo<uint64_t>(eGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_TOTAL).to_string());
+            mStreamCounter.SetTotal(
+                streamID,
+                StringTo<uint64_t>(eGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_TOTAL).to_string()));
         }
         auto& autoMetric = mAutoMetricCache[streamID];
         UpdateAutoMetrics(eGroup, autoMetric);
         // add auto metric,if this is the last one of the stream
-        if (mStreamCountCache[streamID] == mStreamTotalCache[streamID]) {
-            autoMetric.mPostRelabel = mPostRelabelCache[streamID];
+        if (mStreamCounter.MeetLast(streamID)) {
             AddAutoMetrics(eGroup, autoMetric);
             // erase the cache
-            mStreamTotalCache.erase(streamID);
-            mStreamCountCache.erase(streamID);
-            mPostRelabelCache.erase(streamID);
             mAutoMetricCache.erase(streamID);
+            mStreamCounter.Erase(streamID);
         }
         UnLock();
     }
