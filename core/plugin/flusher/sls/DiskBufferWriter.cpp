@@ -813,7 +813,7 @@ SendResult DiskBufferWriter::SendToNetSync(sdk::Client* sendClient,
             }
 #ifdef __ENTERPRISE__
             static_cast<EnterpriseSLSClientManager*>(SLSClientManager::GetInstance())
-                ->UpdateAccessKeyStatus(mAliuid, !hasAuthError);
+                ->UpdateAccessKeyStatus(bufferMeta.aliuid(), !hasAuthError);
 #endif
             if (time(nullptr) - beginTime >= INT32_FLAG(discard_send_fail_interval)) {
                 sendRes = SEND_DISCARD_ERROR;
