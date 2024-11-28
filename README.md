@@ -1,6 +1,6 @@
 # Alibaba LoongCollector - Fast and Lightweight Observability Data Collector | 中文用户手册（[GitBook](https://ilogtail.gitbook.io/ilogtail-docs/) | [可观测中文社区](https://open.observability.cn/project/ilogtail/about/)）
 
-<img src="https://sls-opensource.oss-us-west-1.aliyuncs.com/ilogtail/ilogtail.svg?versionId=CAEQMxiBgIDEmq.m6BciIDkzNmE2OWU4NzIwZjQ1Y2ZiYmIxZjhiYjMyNmQxZTdi" alt="ilogtail logo" height="150px" align="right" />
+<img src="https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/images/logo/jpg/black-blue.jpg" alt="loongcollector logo" height="100px" align="center" />
 
 LoongCollector was born for observable scenarios and has many production-level features such as lightweight, high performance, and automated configuration, which are widely used internally by Alibaba Group and tens of thousands of external Alibaba Cloud customers. You can deploy it in physical machines, Kubernetes and other environments to collect telemetry data, such as logs, traces and metrics.
 
