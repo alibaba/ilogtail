@@ -150,7 +150,6 @@ void ProcessorPromRelabelMetricNative::AddAutoMetrics(PipelineEventGroup& metric
     auto timestamp = timestampMilliSec / 1000;
     auto nanoSec = timestampMilliSec % 1000 * 1000000;
 
-
     uint64_t samplesPostMetricRelabel = metricGroup.GetEvents().size();
 
     auto scrapeDurationSeconds
