@@ -76,9 +76,9 @@ void ProcessorPromRelabelMetricNative::Process(PipelineEventGroup& eGroup) {
         mStreamCountCache[streamID]++;
         mPostRelabelCache[streamID] += eGroup.GetEvents().size();
 
-        if (eGroup.HasMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_COUNTS)) {
+        if (eGroup.HasMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_TOTAL)) {
             mStreamTotalCache[streamID]
-                = StringTo<uint64_t>(eGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_COUNTS).to_string());
+                = StringTo<uint64_t>(eGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_TOTAL).to_string());
         }
         auto& autoMetric = mAutoMetricCache[streamID];
         UpdateAutoMetrics(eGroup, autoMetric);

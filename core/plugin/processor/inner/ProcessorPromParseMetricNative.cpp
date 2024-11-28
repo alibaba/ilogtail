@@ -50,9 +50,9 @@ void ProcessorPromParseMetricNative::Process(PipelineEventGroup& eGroup) {
         Lock();
         mStreamCountCache[streamID]++;
         mMetricCountCache[streamID] += events.size();
-        if (eGroup.HasMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_COUNTS)) {
+        if (eGroup.HasMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_TOTAL)) {
             mStreamTotalCache[streamID]
-                = StringTo<uint64_t>(eGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_COUNTS).to_string());
+                = StringTo<uint64_t>(eGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_TOTAL).to_string());
         }
         // add auto metric,if this is the last one of the stream
         if (mStreamTotalCache.count(streamID) && mStreamCountCache[streamID] == mStreamTotalCache[streamID]) {

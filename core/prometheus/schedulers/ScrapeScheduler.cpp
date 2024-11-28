@@ -143,7 +143,7 @@ void ScrapeScheduler::OnMetricResult(HttpResponse& response, uint64_t timestampM
             sLogger,
             ("scrape failed, status code", response.GetStatusCode())("target", mHash)("http header", headerStr));
     }
-    responseBody.mEventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_COUNTS, ToString(mStreamIndex));
+    responseBody.mEventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_TOTAL, ToString(mStreamIndex));
     SetAutoMetricMeta(responseBody.mEventGroup);
     SetTargetLabels(responseBody.mEventGroup);
     PushEventGroup(std::move(responseBody.mEventGroup));
