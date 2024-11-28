@@ -234,10 +234,11 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
     if (!suicide && mStatusCount % 2 != 0)
         return false;
 
+    auto now = GetCurrentLogtailTime();
     // Check input thread.
     int32_t lastReadEventTime = LogInput::GetInstance()->GetLastReadEventTime();
     if (lastReadEventTime > 0
-        && (GetCurrentLogtailTime().tv_sec - lastReadEventTime > AppConfig::GetInstance()->GetForceQuitReadTimeout())) {
+        && (now.tv_sec - lastReadEventTime > AppConfig::GetInstance()->GetForceQuitReadTimeout())) {
         LOG_ERROR(sLogger, ("last read event time is too old", lastReadEventTime)("prepare force exit", ""));
         AlarmManager::GetInstance()->SendAlarm(
             LOGTAIL_CRASH_ALARM, "last read event time is too old: " + ToString(lastReadEventTime) + " force exit");
