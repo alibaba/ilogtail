@@ -3,6 +3,7 @@
 
 #include <string>
 
+#include "common/http/HttpResponse.h"
 #include "models/StringView.h"
 
 namespace logtail {
@@ -21,7 +22,7 @@ bool IsNumber(const std::string& str);
 uint64_t GetRandSleepMilliSec(const std::string& key, uint64_t intervalSeconds, uint64_t currentMilliSeconds);
 
 namespace prom {
-    std::string NetworkCodeToString(uint64_t code);
+    std::string NetworkCodeToString(NetworkCode code);
 }
 
 } // namespace logtail
