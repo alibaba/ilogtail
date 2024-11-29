@@ -216,7 +216,6 @@ void ProcessorPromRelabelMetricNative::AddMetric(PipelineEventGroup& metricGroup
     metricEvent->SetValue<UntypedSingleValue>(value);
     metricEvent->SetTimestamp(timestamp, nanoSec);
     metricEvent->SetTag(prometheus::NAME, name);
-    metricEvent->SetTag(prometheus::LC_SCRAPER, mLoongCollectorScraper);
     for (const auto& [k, v] : targetTags) {
         metricEvent->SetTag(k, v);
     }

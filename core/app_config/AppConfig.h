@@ -18,12 +18,12 @@
 
 #include <json/json.h>
 
+#include <functional>
 #include <map>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-#include <functional>
 
 #include "InstanceConfig.h"
 #include "protobuf/sls/sls_logs.pb.h"
@@ -49,14 +49,21 @@ std::string GetInotifyWatcherDirsDumpFileName();
 std::string GetAgentLoggersPrefix();
 std::string GetAgentLogName();
 std::string GetAgentSnapshotDir();
-std::string GetAgentProfileLogName();
 std::string GetAgentStatusLogName();
-std::string GetProfileSnapshotDumpFileName();
 std::string GetObserverEbpfHostPath();
 std::string GetSendBufferFileNamePrefix();
 std::string GetLegacyUserLocalConfigFilePath();
 std::string GetExactlyOnceCheckpoint();
+std::string GetContinuousPipelineConfigDir();
 std::string GetPipelineConfigDir();
+std::string GetPluginLogName();
+std::string GetVersionTag();
+std::string GetGoPluginCheckpoint();
+std::string GetAgentName();
+std::string GetMonitorInfoFileName();
+std::string GetSymLinkName();
+std::string GetPidFileName();
+std::string GetAgentPrefix();
 
 template <class T>
 class DoubleBuffer {
