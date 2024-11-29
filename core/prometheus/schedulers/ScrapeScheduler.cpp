@@ -103,7 +103,7 @@ void ScrapeScheduler::OnMetricResult(HttpResponse& response, uint64_t timestampM
         mScrapeState = ToString(response.GetStatusCode());
     } else {
         // 0 means success
-        mScrapeState = prom::NetworkCodeToString(0);
+        mScrapeState = prom::NetworkCodeToString(NetworkCode::Ok);
     }
 
     mScrapeTimestampMilliSec = timestampMilliSec;
