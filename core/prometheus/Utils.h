@@ -19,4 +19,9 @@ void SplitStringView(const std::string& s, char delimiter, std::vector<StringVie
 bool IsNumber(const std::string& str);
 
 uint64_t GetRandSleepMilliSec(const std::string& key, uint64_t intervalSeconds, uint64_t currentMilliSeconds);
+
+namespace prom {
+    std::string CurlCodeToString(uint64_t code);
+}
+
 } // namespace logtail

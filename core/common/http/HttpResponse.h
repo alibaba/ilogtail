@@ -71,12 +71,12 @@ public:
     }
 
     void SetStatusCode(int32_t code) { mStatusCode = code; }
-    void SetCurlCode(int32_t code) { mCurlCode = code; }
-    int32_t GetCurlCode() { return mCurlCode; }
+    void SetCurlCode(int32_t code) { mNetworkStatus = code; }
+    int32_t GetCurlCode() { return mNetworkStatus; }
 
 private:
     int32_t mStatusCode = 0; // 0 means no response from server
-    int32_t mCurlCode = 0; // 0 means no error
+    int32_t mNetworkStatus = 0; // 0 means no error
     std::map<std::string, std::string, decltype(compareHeader)*> mHeader;
     std::unique_ptr<void, std::function<void(void*)>> mBody;
     size_t (*mWriteCallback)(char*, size_t, size_t, void*) = nullptr;

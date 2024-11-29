@@ -19,7 +19,6 @@ public:
     void AddCounter(const std::string& metricName, uint64_t status, uint64_t val = 1);
 
     void SetIntGauge(const std::string& metricName, uint64_t status, uint64_t value);
-    static std::string CurlCodeToString(uint64_t code);
 
 private:
     ReentrantMetricsRecordRef GetOrCreateReentrantMetricsRecordRef(const std::string& status);
