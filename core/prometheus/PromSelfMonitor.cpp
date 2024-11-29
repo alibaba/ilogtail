@@ -42,31 +42,4 @@ ReentrantMetricsRecordRef PromSelfMonitorUnsafe::GetOrCreateReentrantMetricsReco
     }
     return mPromStatusMap[status];
 }
-
-std::string& PromSelfMonitorUnsafe::StatusToString(uint64_t status) {
-    static string sHttp0XX = "0XX";
-    static string sHttp1XX = "1XX";
-    static string sHttp2XX = "2XX";
-    static string sHttp3XX = "3XX";
-    static string sHttp4XX = "4XX";
-    static string sHttp5XX = "5XX";
-    static string sHttpOther = "other";
-    if (status < 100) {
-        return sHttp0XX;
-    } else if (status < 200) {
-        return sHttp1XX;
-    } else if (status < 300) {
-        return sHttp2XX;
-    } else if (status < 400) {
-        return sHttp3XX;
-    } else if (status < 500) {
-        return sHttp4XX;
-    } else if (status < 500) {
-        return sHttp5XX;
-    } else {
-        return sHttpOther;
-    }
-}
-
-
 } // namespace logtail
