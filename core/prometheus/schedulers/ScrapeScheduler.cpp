@@ -95,14 +95,15 @@ void ScrapeScheduler::OnMetricResult(HttpResponse& response, uint64_t timestampM
                              response.GetStatusCode(),
                              GetCurrentTimeInMilliSeconds() - timestampMilliSec);
 
-    if (response.GetCurlCode() != 0) {
+    auto networkStatus = response.GetNetworkStatus();
+    if (networkStatus.mCode != NetworkCode::Ok) {
         // not 0 means curl error
-        mScrapeState = prom::CurlCodeToString(response.GetCurlCode());
+        mScrapeState = prom::NetworkCodeToString(networkStatus.mCode);
     } else if (response.GetStatusCode() != 200) {
         mScrapeState = ToString(response.GetStatusCode());
     } else {
         // 0 means success
-        mScrapeState = prom::CurlCodeToString(0);
+        mScrapeState = prom::NetworkCodeToString(0);
     }
 
     mScrapeTimestampMilliSec = timestampMilliSec;
