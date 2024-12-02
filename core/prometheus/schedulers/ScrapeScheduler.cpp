@@ -174,7 +174,8 @@ void ScrapeScheduler::SetAutoMetricMeta(PipelineEventGroup& eGroup) const {
     eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_DURATION, ToString(mScrapeDurationSeconds));
     eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_RESPONSE_SIZE, ToString(mScrapeResponseSizeBytes));
     eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_UP_STATE, ToString(mUpState));
-    eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_ID, GetId() + mCurrTimestampMilliSec);
+    eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_ID,
+                       GetId() + mCurrTimestampMilliSec + mCurrTimestampMilliSec);
     eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_TOTAL, ToString(mStreamIndex));
 }
 
