@@ -76,9 +76,14 @@ void ConcurrencyLimiter::OnSuccess() {
     }
     if (mCurrenctConcurrency != mMaxConcurrency) {
         ++mCurrenctConcurrency;
-        LOG_INFO(sLogger,
-                 ("increase send concurrency, type",
-                  mDescription)("from", mCurrenctConcurrency - 1)("to", mCurrenctConcurrency));
+        if (mCurrenctConcurrency == mMaxConcurrency) {
+            LOG_INFO(sLogger,
+                     ("increase send concurrency to maximum, type", mDescription)("concurrency", mCurrenctConcurrency));
+        } else {
+            LOG_DEBUG(sLogger,
+                      ("increase send concurrency, type",
+                       mDescription)("from", mCurrenctConcurrency - 1)("to", mCurrenctConcurrency));
+        }
     }
 }
 
