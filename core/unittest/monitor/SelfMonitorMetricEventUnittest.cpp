@@ -70,6 +70,8 @@ void SelfMonitorMetricEventUnittest::TestCreateFromMetricEvent() {
     APSARA_TEST_EQUAL(1024U, event.mCounters["out_event_total"]);
     APSARA_TEST_EQUAL(1U, event.mGauges.size());
     APSARA_TEST_EQUAL(10, event.mGauges["monitor_file_total"]);
+
+    delete pluginMetric;
 }
 
 void SelfMonitorMetricEventUnittest::TestCreateFromGoMetricMap() {
