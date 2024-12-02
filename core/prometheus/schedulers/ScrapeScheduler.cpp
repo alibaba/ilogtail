@@ -70,11 +70,15 @@ size_t ScrapeScheduler::PromMetricWriteCallback(char* buffer, size_t size, size_
     }
     body->mRawSize += sizes;
     body->mCurrStreamSize += sizes;
+    if (body->mCurrTimestampMilliSec.empty()) {
+        body->mCurrTimestampMilliSec = ToString(GetCurrentTimeInMilliSeconds());
+    }
 
     if (BOOL_FLAG(enable_prom_stream_scrape) && body->mCurrStreamSize >= (size_t)INT64_FLAG(prom_stream_bytes_size)) {
         body->mEventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_TIMESTAMP_MILLISEC,
-                                      ToString(GetCurrentTimeInMilliSeconds()));
-        body->mEventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_ID, body->GetId());
+                                      body->mCurrTimestampMilliSec);
+        body->mEventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_ID,
+                                      body->GetId() + body->mCurrTimestampMilliSec);
 
         body->SetTargetLabels(body->mEventGroup);
         body->PushEventGroup(std::move(body->mEventGroup));
@@ -147,6 +151,9 @@ void ScrapeScheduler::OnMetricResult(HttpResponse& response, uint64_t timestampM
             sLogger,
             ("scrape failed, status code", response.GetStatusCode())("target", mHash)("http header", headerStr));
     }
+    if (responseBody.mCurrTimestampMilliSec.empty()) {
+        responseBody.mCurrTimestampMilliSec = ToString(GetCurrentTimeInMilliSeconds());
+    }
     SetAutoMetricMeta(responseBody.mEventGroup);
     SetTargetLabels(responseBody.mEventGroup);
     PushEventGroup(std::move(responseBody.mEventGroup));
@@ -156,6 +163,7 @@ void ScrapeScheduler::OnMetricResult(HttpResponse& response, uint64_t timestampM
     responseBody.mCache.clear();
     responseBody.mStreamIndex = 0;
     responseBody.mScrapeSamplesScraped = 0;
+    responseBody.mCurrTimestampMilliSec.clear();
 
     mPluginTotalDelayMs->Add(GetCurrentTimeInMilliSeconds() - timestampMilliSec);
 }
@@ -166,7 +174,7 @@ void ScrapeScheduler::SetAutoMetricMeta(PipelineEventGroup& eGroup) const {
     eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_DURATION, ToString(mScrapeDurationSeconds));
     eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_RESPONSE_SIZE, ToString(mScrapeResponseSizeBytes));
     eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_UP_STATE, ToString(mUpState));
-    eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_ID, GetId());
+    eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_ID, GetId() + mCurrTimestampMilliSec);
     eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_TOTAL, ToString(mStreamIndex));
 }
 

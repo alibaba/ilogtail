@@ -54,6 +54,7 @@ public:
     std::string mCache;
     PipelineEventGroup mEventGroup;
     uint64_t mStreamIndex = 0;
+    std::string mCurrTimestampMilliSec;
 
     std::string GetId() const;
 
