@@ -81,8 +81,8 @@ size_t ScrapeScheduler::PromMetricWriteCallback(char* buffer, size_t size, size_
                                       body->GetId() + body->mCurrTimestampMilliSec);
 
         body->SetTargetLabels(body->mEventGroup);
-        body->PushEventGroup(std::move(body->mEventGroup));
         body->mScrapeSamplesScraped += body->mEventGroup.GetEvents().size();
+        body->PushEventGroup(std::move(body->mEventGroup));
         body->mStreamIndex++;
         body->mEventGroup = PipelineEventGroup(std::make_shared<SourceBuffer>());
         body->mCurrStreamSize = 0;
@@ -174,8 +174,7 @@ void ScrapeScheduler::SetAutoMetricMeta(PipelineEventGroup& eGroup) const {
     eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_DURATION, ToString(mScrapeDurationSeconds));
     eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_RESPONSE_SIZE, ToString(mScrapeResponseSizeBytes));
     eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_UP_STATE, ToString(mUpState));
-    eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_ID,
-                       GetId() + mCurrTimestampMilliSec + mCurrTimestampMilliSec);
+    eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_ID, GetId() + mCurrTimestampMilliSec);
     eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_TOTAL, ToString(mStreamIndex));
 }
 
