@@ -81,10 +81,6 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
                                                                                      ConfigFeedbackStatus::DELETED);
     }
     for (auto& config : diff.mModified) {
-        if (!PreCheckPipelineConfig(config)) {
-            continue;
-        }
-
         auto p = BuildPipeline(std::move(config)); // auto reuse old pipeline's process queue and sender queue
         if (!p) {
             LOG_WARNING(sLogger,
@@ -115,10 +111,6 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
                                                                                      ConfigFeedbackStatus::APPLIED);
     }
     for (auto& config : diff.mAdded) {
-        if (!PreCheckPipelineConfig(config)) {
-            continue;
-        }
-
         auto p = BuildPipeline(std::move(config));
         if (!p) {
             LOG_WARNING(sLogger,
@@ -244,35 +236,6 @@ void PipelineManager::DecreasePluginUsageCnt(const unordered_map<string, unorder
             mPluginCntMap[item.first][plugin.first] -= plugin.second;
         }
     }
-}
-
-
-bool PipelineManager::PreCheckPipelineConfig(PipelineConfig& config) {
-    if (CheckIfGlobalSingletonInputLoaded(config.mInputs)) {
-        LOG_WARNING(sLogger,
-                    ("global singleton input plugin is already loaded", "skip current object")("config", config.mName));
-        AlarmManager::GetInstance()->SendAlarm(
-            CATEGORY_CONFIG_ALARM,
-            "global singleton input plugin is already loaded: skip current object, config: " + config.mName,
-            config.mProject,
-            config.mLogstore,
-            config.mRegion);
-        ConfigFeedbackReceiver::GetInstance().FeedbackContinuousPipelineConfigStatus(config.mName,
-                                                                                     ConfigFeedbackStatus::FAILED);
-        return false;
-    }
-    return true;
-}
-
-bool PipelineManager::CheckIfGlobalSingletonInputLoaded(std::vector<const Json::Value*>& inputConfig) {
-    for (const auto& input : inputConfig) {
-        auto inputType = (*input)["Type"].asString();
-        if (PluginRegistry::GetInstance()->IsGlobalSingletonInputPlugin(inputType)
-            && mPluginCntMap["inputs"][inputType] > 0) {
-            return true;
-        }
-    }
-    return false;
 }
 
 bool PipelineManager::CheckIfFileServerUpdated(const Json::Value& config) {

@@ -239,14 +239,6 @@ bool PluginRegistry::IsGlobalSingletonInputPlugin(const string& name) const {
     return IsGlobalSingleton(INPUT_PLUGIN, name);
 }
 
-bool PluginRegistry::IsGlobalSingletonProcessorPlugin(const string& name) const {
-    return IsGlobalSingleton(PROCESSOR_PLUGIN, name);
-}
-
-bool PluginRegistry::IsGlobalSingletonFlusherPlugin(const string& name) const {
-    return IsGlobalSingleton(FLUSHER_PLUGIN, name);
-}
-
 bool PluginRegistry::IsGlobalSingleton(PluginCat cat, const string& name) const {
     auto creatorEntry = mPluginDict.find(PluginKey(cat, name));
     if (creatorEntry != mPluginDict.end()) {

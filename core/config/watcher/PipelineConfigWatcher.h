@@ -16,12 +16,18 @@
 
 #pragma once
 
+#include <filesystem>
+#include <memory>
+#include <unordered_map>
 #include <unordered_set>
 
 #include "config/ConfigDiff.h"
 #include "config/watcher/ConfigWatcher.h"
 
 namespace logtail {
+
+using ConfigWithPath = std::pair<std::filesystem::path, std::unique_ptr<Json::Value>>;
+using ConfigPriority = std::pair<uint32_t, std::string>;
 
 class PipelineManager;
 class TaskPipelineManager;
@@ -57,7 +63,11 @@ private:
                              std::unique_ptr<Json::Value>&& configDetail,
                              PipelineConfigDiff& pDiff,
                              TaskConfigDiff& tDiff);
-    void SortPipelineConfigDiff(PipelineConfigDiff& pDiff);
+    bool PreCheckConfig(const std::string& configName,
+                        const std::filesystem::path& path,
+                        std::unique_ptr<Json::Value>&& configDetail,
+                        std::unordered_map<std::string, ConfigWithPath>& toBeDiffedConfigs,
+                        std::unordered_map<std::string, ConfigPriority>& singletonConfigs);
 
     const PipelineManager* mPipelineManager = nullptr;
     const TaskPipelineManager* mTaskPipelineManager = nullptr;

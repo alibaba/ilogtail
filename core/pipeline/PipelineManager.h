@@ -58,8 +58,6 @@ private:
     void DecreasePluginUsageCnt(
         const std::unordered_map<std::string, std::unordered_map<std::string, uint32_t>>& statistics);
     void FlushAllBatch();
-    bool PreCheckPipelineConfig(PipelineConfig& config);
-    bool CheckIfGlobalSingletonInputLoaded(std::vector<const Json::Value*>& inputConfig);
     // TODO: 长期过渡使用
     bool CheckIfFileServerUpdated(const Json::Value& config);
 
