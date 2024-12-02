@@ -29,7 +29,6 @@
 using namespace std;
 
 DECLARE_FLAG_STRING(_pod_name_);
-DEFINE_FLAG_BOOL(enable_scrape_state, "enable scrape_state auto metric", true);
 
 namespace logtail {
 
@@ -195,7 +194,7 @@ void ProcessorPromRelabelMetricNative::AddAutoMetrics(PipelineEventGroup& metric
     // up metric must be the last one
     bool upState = StringTo<bool>(metricGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_UP_STATE).to_string());
 
-    if (BOOL_FLAG(enable_scrape_state) && metricGroup.HasMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_STATE)) {
+    if (metricGroup.HasMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_STATE)) {
         auto scrapeState = metricGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_STATE);
         AddMetric(metricGroup, prometheus::SCRAPE_STATE, 1.0 * upState, timestamp, nanoSec, targetTags);
         auto& last = metricGroup.MutableEvents()[metricGroup.GetEvents().size() - 1];
