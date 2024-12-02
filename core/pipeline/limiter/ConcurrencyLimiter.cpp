@@ -73,6 +73,7 @@ void ConcurrencyLimiter::OnSuccess() {
     lock_guard<mutex> lock(mLimiterMux);
     if (mCurrenctConcurrency <= 0) {
         mRetryIntervalSecs = mMinRetryIntervalSecs;
+        LOG_INFO(sLogger, ("reset send retry interval, type", mDescription));
     }
     if (mCurrenctConcurrency != mMaxConcurrency) {
         ++mCurrenctConcurrency;
