@@ -30,9 +30,6 @@
 #include "pipeline/queue/QueueKeyManager.h"
 #include "pipeline/queue/SLSSenderQueueItem.h"
 #include "pipeline/queue/SenderQueueManager.h"
-#ifdef __ENTERPRISE__
-#include "plugin/flusher/sls/EnterpriseSLSClientManager.h"
-#endif
 #include "plugin/flusher/sls/PackIdManager.h"
 #include "plugin/flusher/sls/SLSClientManager.h"
 #include "plugin/flusher/sls/SLSResponse.h"

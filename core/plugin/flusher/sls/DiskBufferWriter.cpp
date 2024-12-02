@@ -32,9 +32,6 @@
 #include "protobuf/sls/sls_logs.pb.h"
 #include "provider/Provider.h"
 #include "sdk/Exception.h"
-#ifdef __ENTERPRISE__
-#include "plugin/flusher/sls/EnterpriseSLSClientManager.h"
-#endif
 
 DEFINE_FLAG_INT32(write_secondary_wait_timeout, "interval of dump seconary buffer from memory to file, seconds", 2);
 DEFINE_FLAG_INT32(buffer_file_alive_interval, "the max alive time of a bufferfile, 5 minutes", 300);
