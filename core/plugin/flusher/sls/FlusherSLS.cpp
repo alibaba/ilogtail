@@ -676,9 +676,7 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
     bool isProfileData = GetProfileSender()->IsProfileData(mRegion, mProject, data->mLogstore);
     int32_t curTime = time(NULL);
     auto curSystemTime = chrono::system_clock::now();
-#ifdef __ENTERPRISE__
     bool hasAuthError = false;
-#endif
     if (slsResponse.mStatusCode == 200) {
         auto& cpt = data->mExactlyOnceCheckpoint;
         if (cpt) {
@@ -777,9 +775,7 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
             suggestion << "check access keys provided";
             operation = OperationOnFail::RETRY_LATER;
             BOOL_FLAG(global_network_success) = true;
-#ifdef __ENTERPRISE__
             hasAuthError = true;
-#endif
             if (mUnauthErrorCnt) {
                 mUnauthErrorCnt->Add(1);
             }
@@ -902,10 +898,7 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
                 break;
         }
     }
-#ifdef __ENTERPRISE__
-    static_cast<EnterpriseSLSClientManager*>(SLSClientManager::GetInstance())
-        ->UpdateAccessKeyStatus(mAliuid, !hasAuthError);
-#endif
+    SLSClientManager::GetInstance()->UpdateAccessKeyStatus(mAliuid, !hasAuthError);
 }
 
 bool FlusherSLS::Send(string&& data, const string& shardHashKey, const string& logstore) {

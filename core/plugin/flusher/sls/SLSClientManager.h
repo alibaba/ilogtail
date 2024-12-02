@@ -56,6 +56,7 @@ public:
     void CleanTimeoutClient();
     virtual bool
     GetAccessKey(const std::string& aliuid, AuthType& type, std::string& accessKeyId, std::string& accessKeySecret);
+    virtual void UpdateAccessKeyStatus(const std::string& aliuid, bool success) {}
 
     void AddEndpointEntry(const std::string& region,
                           const std::string& endpoint,

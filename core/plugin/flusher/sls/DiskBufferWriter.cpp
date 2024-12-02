@@ -771,9 +771,7 @@ SendResult DiskBufferWriter::SendToNetSync(sdk::Client* sendClient,
         } catch (sdk::LOGException& ex) {
             errorCode = ex.GetErrorCode();
             SendResult sendRes = ConvertErrorCode(errorCode);
-#ifdef __ENTERPRISE__
             bool hasAuthError = false;
-#endif
             switch (sendRes) {
                 case SEND_NETWORK_ERROR:
                 case SEND_SERVER_ERROR:
@@ -803,18 +801,13 @@ SendResult DiskBufferWriter::SendToNetSync(sdk::Client* sendClient,
                     usleep(INT32_FLAG(quota_exceed_wait_interval));
                     break;
                 case SEND_UNAUTHORIZED:
-#ifdef __ENTERPRISE__
                     hasAuthError = true;
-#endif
                     usleep(INT32_FLAG(unauthorized_wait_interval));
                     break;
                 default:
                     break;
             }
-#ifdef __ENTERPRISE__
-            static_cast<EnterpriseSLSClientManager*>(SLSClientManager::GetInstance())
-                ->UpdateAccessKeyStatus(bufferMeta.aliuid(), !hasAuthError);
-#endif
+            SLSClientManager::GetInstance()->UpdateAccessKeyStatus(bufferMeta.aliuid(), !hasAuthError);
             if (time(nullptr) - beginTime >= INT32_FLAG(discard_send_fail_interval)) {
                 sendRes = SEND_DISCARD_ERROR;
             }
