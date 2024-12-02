@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "config/internal_provider/InternalConfigProvider.h"
 #include "config/provider/ConfigProvider.h"
 #include "monitor/profile_sender/ProfileSender.h"
 
@@ -23,6 +24,8 @@ namespace logtail {
 /*
     providers modules are used to replace the default implementation of ilogtail.
 */
+
+InternalConfigProvider* GetInternalConfigProvider();
 
 // GetRemoteConfigProviders returns a vector of pairs for remote config providers.
 // It currently returns two providers: LegacyCommonConfigProvider and CommonConfigProvider.
