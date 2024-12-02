@@ -55,8 +55,6 @@ public:
     bool IsValidNativeProcessorPlugin(const std::string& name) const;
     bool IsValidNativeFlusherPlugin(const std::string& name) const;
     bool IsGlobalSingletonInputPlugin(const std::string& name) const;
-    bool IsGlobalSingletonProcessorPlugin(const std::string& name) const;
-    bool IsGlobalSingletonFlusherPlugin(const std::string& name) const;
 
 private:
     enum PluginCat { INPUT_PLUGIN, PROCESSOR_PLUGIN, FLUSHER_PLUGIN };

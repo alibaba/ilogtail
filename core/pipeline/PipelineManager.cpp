@@ -96,7 +96,6 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
                                                                                          ConfigFeedbackStatus::FAILED);
             continue;
         }
-
         LOG_INFO(sLogger,
                  ("pipeline building for existing config succeeded",
                   "stop the old pipeline and start the new one")("config", config.mName));
