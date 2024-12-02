@@ -18,6 +18,7 @@
 
 #include "common/FileSystemUtil.h"
 #include "config/ConfigUtil.h"
+#include "config/internal_provider/InternalConfigProvider.h"
 #include "logger/Logger.h"
 #include "monitor/Monitor.h"
 #include "pipeline/PipelineManager.h"
@@ -87,7 +88,8 @@ pair<PipelineConfigDiff, TaskConfigDiff> PipelineConfigWatcher::CheckConfigDiff(
 void PipelineConfigWatcher::InsertInnerPipelines(PipelineConfigDiff& pDiff,
                                                  TaskConfigDiff& tDiff,
                                                  unordered_set<string>& configSet) {
-    const std::map<std::string, std::string>& innerPipelines = GetInternalConfigProvider()->GetAllInernalPipelineConfigs();
+    const std::map<std::string, std::string>& innerPipelines
+        = InternalConfigProvider::GetInstance()->GetAllInernalPipelineConfigs();
 
     // process
     for (const auto& pipeline : innerPipelines) {

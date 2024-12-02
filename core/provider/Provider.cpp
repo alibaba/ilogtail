@@ -21,9 +21,6 @@
 
 namespace logtail {
 
-InternalConfigProvider* GetInternalConfigProvider() {
-    return InternalConfigProvider::GetInstance();
-}
 
 std::vector<ConfigProvider*> GetRemoteConfigProviders() {
     std::vector<ConfigProvider*> providers;
