@@ -163,7 +163,7 @@ void PollingDirFile::PollingIteration() {
     LoongCollectorMonitor::GetInstance()->SetAgentConfigTotal(nameConfigMap.size());
     {
         ScopedSpinLock lock(mCacheLock);
-        mPollingDirCacheSize->Set( mDirCacheMap.size());
+        mPollingDirCacheSize->Set(mDirCacheMap.size());
         mPollingFileCacheSize->Set(mFileCacheMap.size());
     }
 

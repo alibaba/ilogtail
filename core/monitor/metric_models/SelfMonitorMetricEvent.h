@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#pragma once
 #include "MetricRecord.h"
 #include "models/PipelineEventGroup.h"
 
@@ -58,6 +59,10 @@ private:
     int32_t mSendInterval;
     int32_t mLastSendInterval;
     bool mUpdatedFlag;
+
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class SelfMonitorMetricEventUnittest;
+#endif
 };
 using SelfMonitorMetricEventMap = std::unordered_map<SelfMonitorMetricEventKey, SelfMonitorMetricEvent>;
 

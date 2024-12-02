@@ -85,12 +85,6 @@ SelfMonitorMetricEvent::SelfMonitorMetricEvent(const std::map<std::string, std::
     }
     // counters
     for (Json::Value::const_iterator itr = counters.begin(); itr != counters.end(); ++itr) {
-        if (itr->isUInt64()) {
-            mCounters[itr.key().asString()] = itr->asUInt64();
-        }
-        if (itr->isDouble()) {
-            mCounters[itr.key().asString()] = static_cast<uint64_t>(itr->asDouble());
-        }
         if (itr->isString()) {
             try {
                 mCounters[itr.key().asString()] = static_cast<uint64_t>(std::stod(itr->asString()));
@@ -166,7 +160,7 @@ void SelfMonitorMetricEvent::ReadAsMetricEvent(MetricEvent* metricEventPtr) {
     // name
     metricEventPtr->SetName(mCategory);
     // values
-    metricEventPtr->SetValue({});
+    metricEventPtr->SetValue(UntypedMultiDoubleValues{{}, nullptr});
     for (auto counter = mCounters.begin(); counter != mCounters.end(); counter++) {
         metricEventPtr->MutableValue<UntypedMultiDoubleValues>()->SetValue(counter->first, counter->second);
         counter->second = 0;
