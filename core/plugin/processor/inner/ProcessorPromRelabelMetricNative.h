@@ -21,7 +21,6 @@
 #include "models/PipelineEventGroup.h"
 #include "models/PipelineEventPtr.h"
 #include "pipeline/plugin/interface/Processor.h"
-#include "prometheus/component/StreamCounter.h"
 #include "prometheus/schedulers/ScrapeConfig.h"
 
 DECLARE_FLAG_INT32(process_thread_count);
@@ -33,7 +32,7 @@ namespace prom {
         double mScrapeDurationSeconds;
         uint64_t mScrapeResponseSizeBytes;
         uint64_t mScrapeSamplesLimit;
-        uint64_t mPostRelabel;
+        // uint64_t mPostRelabel;
         uint64_t mScrapeSamplesScraped;
         uint64_t mScrapeTimeoutSeconds;
         bool mUp;
@@ -64,22 +63,8 @@ private:
                    uint32_t nanoSec,
                    const GroupTags& targetTags) const;
 
-    void Lock() {
-        if (INT32_FLAG(process_thread_count) > 1)
-            mStreamMutex.lock();
-    }
-    void UnLock() {
-        if (INT32_FLAG(process_thread_count) > 1) {
-            mStreamMutex.unlock();
-        }
-    }
-
     std::unique_ptr<ScrapeConfig> mScrapeConfigPtr;
     std::string mLoongCollectorScraper;
-
-    std::mutex mStreamMutex;
-    prom::StreamCounter mStreamCounter;
-    std::unordered_map<std::string, prom::AutoMetric> mAutoMetricCache;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorPromRelabelMetricNativeUnittest;

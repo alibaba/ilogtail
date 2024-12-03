@@ -69,28 +69,12 @@ void ProcessorPromRelabelMetricNative::Process(PipelineEventGroup& eGroup) {
         eGroup.DelTag(k);
     }
 
-    auto streamID = eGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_ID).to_string();
-    // cache the metrics count
-    {
-        Lock();
-        mStreamCounter.Add(streamID);
-        mAutoMetricCache[streamID].mPostRelabel += eGroup.GetEvents().size();
-        if (eGroup.HasMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_TOTAL)) {
-            mStreamCounter.SetTotal(
-                streamID,
-                StringTo<uint64_t>(eGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_TOTAL).to_string()));
-            UpdateAutoMetrics(eGroup, mAutoMetricCache[streamID]);
-        }
-
-        // add auto metric,if this is the last one of the stream
-        if (mStreamCounter.IsLast(streamID)) {
-            AddAutoMetrics(eGroup, mAutoMetricCache[streamID]);
-            // erase the cache
-            mAutoMetricCache.erase(streamID);
-            mStreamCounter.Erase(streamID);
-        }
-        UnLock();
+    if (eGroup.HasMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_TOTAL)) {
+        auto autoMetric = prom::AutoMetric();
+        UpdateAutoMetrics(eGroup, autoMetric);
+        AddAutoMetrics(eGroup, autoMetric);
     }
+
 
     // delete all tags
     for (const auto& [k, v] : targetTags) {
@@ -207,12 +191,12 @@ void ProcessorPromRelabelMetricNative::AddAutoMetrics(PipelineEventGroup& eGroup
             eGroup, prometheus::SCRAPE_SAMPLES_LIMIT, autoMetric.mScrapeSamplesLimit, timestamp, nanoSec, targetTags);
     }
 
-    AddMetric(eGroup,
-              prometheus::SCRAPE_SAMPLES_POST_METRIC_RELABELING,
-              autoMetric.mPostRelabel,
-              timestamp,
-              nanoSec,
-              targetTags);
+    // AddMetric(eGroup,
+    //           prometheus::SCRAPE_SAMPLES_POST_METRIC_RELABELING,
+    //           autoMetric.mPostRelabel,
+    //           timestamp,
+    //           nanoSec,
+    //           targetTags);
 
     AddMetric(
         eGroup, prometheus::SCRAPE_SAMPLES_SCRAPED, autoMetric.mScrapeSamplesScraped, timestamp, nanoSec, targetTags);
