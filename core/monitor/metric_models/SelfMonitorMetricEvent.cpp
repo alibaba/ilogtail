@@ -67,8 +67,19 @@ SelfMonitorMetricEvent::SelfMonitorMetricEvent(const std::map<std::string, std::
     Json::Value labels, counters, gauges;
     string errMsg;
     ParseJsonTable(metricRecord.at(METRIC_GO_KEY_LABELS), labels, errMsg);
+    if (!errMsg.empty()) {
+        mCategory = MetricCategory::METRIC_CATEGORY_UNKNOWN;
+        LOG_ERROR(sLogger, ("parse go metric", "labels")("err", errMsg));
+        return;
+    }
     ParseJsonTable(metricRecord.at(METRIC_GO_KEY_COUNTERS), counters, errMsg);
+    if (!errMsg.empty()) {
+        LOG_ERROR(sLogger, ("parse go metric", "counters")("err", errMsg));
+    }
     ParseJsonTable(metricRecord.at(METRIC_GO_KEY_GAUGES), gauges, errMsg);
+    if (!errMsg.empty()) {
+        LOG_ERROR(sLogger, ("parse go metric", "gauges")("err", errMsg));
+    }
     // category
     if (labels.isMember("metric_category")) {
         mCategory = labels["metric_category"].asString();
@@ -88,7 +99,7 @@ SelfMonitorMetricEvent::SelfMonitorMetricEvent(const std::map<std::string, std::
         if (itr->isString()) {
             try {
                 mCounters[itr.key().asString()] = static_cast<uint64_t>(std::stod(itr->asString()));
-            } catch (...) {
+            } catch (...) { // catch std::invalid_argument & std::out_of_range
                 mCounters[itr.key().asString()] = 0;
             }
         }
