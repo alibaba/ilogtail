@@ -28,8 +28,7 @@ namespace logtail {
 
 class PipelineConfigWatcherUnittest : public testing::Test {
 public:
-    void TestPreCheckConfig() const;
-    void TestPreCheckConfigWithInvalidConfig() const;
+    void TestPushPipelineConfig() const;
 
 protected:
     static void SetUpTestCase() { PluginRegistry::GetInstance()->LoadPlugins(); }
@@ -38,11 +37,11 @@ protected:
 private:
 };
 
-void PipelineConfigWatcherUnittest::TestPreCheckConfig() const {
+void PipelineConfigWatcherUnittest::TestPushPipelineConfig() const {
+    PipelineConfigDiff pDiff;
     unique_ptr<Json::Value> configJson;
     string configStr, errorMsg;
-    std::unordered_map<std::string, ConfigWithPath> toBeDiffedConfigs;
-    std::unordered_map<std::string, ConfigPriority> singletonConfigs;
+    SingletonConfigCache singletonCache;
 
     configStr = R"(
         {
@@ -56,9 +55,11 @@ void PipelineConfigWatcherUnittest::TestPreCheckConfig() const {
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     std::string configName1 = "test1";
-    PipelineConfigWatcher::GetInstance()->PreCheckConfig(
-        configName1, std::filesystem::path(), std::move(configJson), toBeDiffedConfigs, singletonConfigs);
-    APSARA_TEST_EQUAL_FATAL(1, toBeDiffedConfigs.size());
+    PipelineConfig config1(configName1, std::move(configJson));
+    config1.Parse();
+    PipelineConfigWatcher::GetInstance()->PushPipelineConfig(
+        std::move(config1), ConfigDiffEnum::Added, pDiff, singletonCache);
+    APSARA_TEST_EQUAL_FATAL(1, pDiff.mAdded.size());
 
     configStr = R"(
         {
@@ -72,9 +73,11 @@ void PipelineConfigWatcherUnittest::TestPreCheckConfig() const {
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     std::string configName2 = "test2";
-    PipelineConfigWatcher::GetInstance()->PreCheckConfig(
-        configName2, std::filesystem::path(), std::move(configJson), toBeDiffedConfigs, singletonConfigs);
-    APSARA_TEST_EQUAL_FATAL(2, toBeDiffedConfigs.size());
+    PipelineConfig config2(configName2, std::move(configJson));
+    config2.Parse();
+    PipelineConfigWatcher::GetInstance()->PushPipelineConfig(
+        std::move(config2), ConfigDiffEnum::Added, pDiff, singletonCache);
+    APSARA_TEST_EQUAL_FATAL(2, pDiff.mAdded.size());
 
     // case: singleton input
     configStr = R"(
@@ -90,10 +93,12 @@ void PipelineConfigWatcherUnittest::TestPreCheckConfig() const {
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     std::string configName3 = "test3";
-    PipelineConfigWatcher::GetInstance()->PreCheckConfig(
-        configName3, std::filesystem::path(), std::move(configJson), toBeDiffedConfigs, singletonConfigs);
-    APSARA_TEST_EQUAL_FATAL(3, toBeDiffedConfigs.size());
-    APSARA_TEST_EQUAL_FATAL(singletonConfigs["input_network_observer"].second, configName3);
+    PipelineConfig config3(configName3, std::move(configJson));
+    config3.Parse();
+    APSARA_TEST_EQUAL_FATAL("input_network_observer", config3.mSingletonInput);
+    PipelineConfigWatcher::GetInstance()->PushPipelineConfig(
+        std::move(config3), ConfigDiffEnum::Added, pDiff, singletonCache);
+    APSARA_TEST_EQUAL_FATAL(singletonCache["input_network_observer"]->config.mName, configName3);
 
     // case: compare by create time
     configStr = R"(
@@ -108,10 +113,12 @@ void PipelineConfigWatcherUnittest::TestPreCheckConfig() const {
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     std::string configName4 = "test4";
-    PipelineConfigWatcher::GetInstance()->PreCheckConfig(
-        configName4, std::filesystem::path(), std::move(configJson), toBeDiffedConfigs, singletonConfigs);
-    APSARA_TEST_EQUAL_FATAL(3, toBeDiffedConfigs.size());
-    APSARA_TEST_EQUAL_FATAL(singletonConfigs["input_network_observer"].second, configName4);
+    PipelineConfig config4(configName4, std::move(configJson));
+    config4.Parse();
+    APSARA_TEST_EQUAL_FATAL("input_network_observer", config4.mSingletonInput);
+    PipelineConfigWatcher::GetInstance()->PushPipelineConfig(
+        std::move(config4), ConfigDiffEnum::Added, pDiff, singletonCache);
+    APSARA_TEST_EQUAL_FATAL(singletonCache["input_network_observer"]->config.mName, configName4);
 
     // case: compare by name
     configStr = R"(
@@ -125,175 +132,17 @@ void PipelineConfigWatcherUnittest::TestPreCheckConfig() const {
     )";
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-    std::string configName5 = "a-test5";
-    PipelineConfigWatcher::GetInstance()->PreCheckConfig(
-        configName5, std::filesystem::path(), std::move(configJson), toBeDiffedConfigs, singletonConfigs);
-    APSARA_TEST_EQUAL_FATAL(3, toBeDiffedConfigs.size());
-    APSARA_TEST_EQUAL_FATAL(singletonConfigs["input_network_observer"].second, configName5);
-
-    // case: load config with singleton input and not singleton input
-    configStr = R"(
-        {
-            "inputs": [
-                {
-                    "Type": "input_file"
-                },
-                {
-                    "Type": "input_network_observer"
-                }
-            ],
-        }
-    )";
-    configJson.reset(new Json::Value());
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-    std::string configName6 = "ab-test6";
-    PipelineConfigWatcher::GetInstance()->PreCheckConfig(
-        configName6, std::filesystem::path(), std::move(configJson), toBeDiffedConfigs, singletonConfigs);
-    APSARA_TEST_EQUAL_FATAL(3, toBeDiffedConfigs.size());
-    APSARA_TEST_EQUAL_FATAL(singletonConfigs["input_network_observer"].second, configName5);
-
-    // case: load config with different singleton input
-    configStr = R"(
-        {
-            "inputs": [
-                {
-                    "Type": "input_network_security"
-                }
-            ],
-        }
-    )";
-    configJson.reset(new Json::Value());
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-    std::string configName7 = "test7";
-    PipelineConfigWatcher::GetInstance()->PreCheckConfig(
-        configName7, std::filesystem::path(), std::move(configJson), toBeDiffedConfigs, singletonConfigs);
-    APSARA_TEST_EQUAL_FATAL(4, toBeDiffedConfigs.size());
-    APSARA_TEST_EQUAL_FATAL(singletonConfigs["input_network_security"].second, configName7);
-
-    // case: load config with two singleton input, one valid and one invalid
-    configStr = R"(
-        {
-            "inputs": [
-                {
-                    "Type": "input_network_observer"
-                },
-                {
-                    "Type": "input_network_security"
-                }
-            ],
-        }
-    )";
-    configJson.reset(new Json::Value());
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-    std::string configName8 = "a-test8";
-    PipelineConfigWatcher::GetInstance()->PreCheckConfig(
-        configName8, std::filesystem::path(), std::move(configJson), toBeDiffedConfigs, singletonConfigs);
-    APSARA_TEST_EQUAL_FATAL(4, toBeDiffedConfigs.size());
-    APSARA_TEST_EQUAL_FATAL(singletonConfigs["input_network_observer"].second, configName5);
-    APSARA_TEST_EQUAL_FATAL(singletonConfigs["input_network_security"].second, configName7);
+    std::string configName5 = "z-test5";
+    PipelineConfig config5(configName5, std::move(configJson));
+    config5.Parse();
+    APSARA_TEST_EQUAL_FATAL("input_network_observer", config5.mSingletonInput);
+    PipelineConfigWatcher::GetInstance()->PushPipelineConfig(
+        std::move(config5), ConfigDiffEnum::Added, pDiff, singletonCache);
+    APSARA_TEST_EQUAL_FATAL(singletonCache["input_network_observer"]->config.mName, configName4);
 }
 
-void PipelineConfigWatcherUnittest::TestPreCheckConfigWithInvalidConfig() const {
-    {
-        unique_ptr<Json::Value> configJson;
-        string configStr, errorMsg;
-        std::unordered_map<std::string, ConfigWithPath> toBeDiffedConfigs;
-        std::unordered_map<std::string, ConfigPriority> singletonConfigs;
 
-        configStr = R"(
-        {
-        }
-        )";
-        configJson.reset(new Json::Value());
-        APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-        std::string configName1 = "test1";
-        PipelineConfigWatcher::GetInstance()->PreCheckConfig(
-            configName1, std::filesystem::path(), std::move(configJson), toBeDiffedConfigs, singletonConfigs);
-        APSARA_TEST_EQUAL_FATAL(1, toBeDiffedConfigs.size());
-    }
-    {
-        unique_ptr<Json::Value> configJson;
-        string configStr, errorMsg;
-        std::unordered_map<std::string, ConfigWithPath> toBeDiffedConfigs;
-        std::unordered_map<std::string, ConfigPriority> singletonConfigs;
-
-        configStr = R"(
-        {
-            "inputs": 1
-        }
-        )";
-        configJson.reset(new Json::Value());
-        APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-        std::string configName1 = "test1";
-        PipelineConfigWatcher::GetInstance()->PreCheckConfig(
-            configName1, std::filesystem::path(), std::move(configJson), toBeDiffedConfigs, singletonConfigs);
-        APSARA_TEST_EQUAL_FATAL(1, toBeDiffedConfigs.size());
-    }
-    {
-        unique_ptr<Json::Value> configJson;
-        string configStr, errorMsg;
-        std::unordered_map<std::string, ConfigWithPath> toBeDiffedConfigs;
-        std::unordered_map<std::string, ConfigPriority> singletonConfigs;
-
-        configStr = R"(
-        {
-            "inputs": [],
-        }
-        )";
-        configJson.reset(new Json::Value());
-        APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-        std::string configName1 = "test1";
-        PipelineConfigWatcher::GetInstance()->PreCheckConfig(
-            configName1, std::filesystem::path(), std::move(configJson), toBeDiffedConfigs, singletonConfigs);
-        APSARA_TEST_EQUAL_FATAL(1, toBeDiffedConfigs.size());
-    }
-    {
-        unique_ptr<Json::Value> configJson;
-        string configStr, errorMsg;
-        std::unordered_map<std::string, ConfigWithPath> toBeDiffedConfigs;
-        std::unordered_map<std::string, ConfigPriority> singletonConfigs;
-
-        configStr = R"(
-        {
-            "inputs": [
-                {
-                }
-            ],
-        }
-        )";
-        configJson.reset(new Json::Value());
-        APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-        std::string configName1 = "test1";
-        PipelineConfigWatcher::GetInstance()->PreCheckConfig(
-            configName1, std::filesystem::path(), std::move(configJson), toBeDiffedConfigs, singletonConfigs);
-        APSARA_TEST_EQUAL_FATAL(1, toBeDiffedConfigs.size());
-    }
-    {
-        unique_ptr<Json::Value> configJson;
-        string configStr, errorMsg;
-        std::unordered_map<std::string, ConfigWithPath> toBeDiffedConfigs;
-        std::unordered_map<std::string, ConfigPriority> singletonConfigs;
-
-        configStr = R"(
-        {
-            "inputs": [
-                {
-                    "Type": 1
-                }
-            ],
-        }
-        )";
-        configJson.reset(new Json::Value());
-        APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-        std::string configName1 = "test1";
-        PipelineConfigWatcher::GetInstance()->PreCheckConfig(
-            configName1, std::filesystem::path(), std::move(configJson), toBeDiffedConfigs, singletonConfigs);
-        APSARA_TEST_EQUAL_FATAL(1, toBeDiffedConfigs.size());
-    }
-}
-
-UNIT_TEST_CASE(PipelineConfigWatcherUnittest, TestPreCheckConfig)
-UNIT_TEST_CASE(PipelineConfigWatcherUnittest, TestPreCheckConfigWithInvalidConfig)
+UNIT_TEST_CASE(PipelineConfigWatcherUnittest, TestPushPipelineConfig)
 
 } // namespace logtail
 

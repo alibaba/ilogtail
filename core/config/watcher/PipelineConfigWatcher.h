@@ -26,11 +26,16 @@
 
 namespace logtail {
 
-using ConfigWithPath = std::pair<std::filesystem::path, std::unique_ptr<Json::Value>>;
-using ConfigPriority = std::pair<uint32_t, std::string>;
-
 class PipelineManager;
 class TaskPipelineManager;
+
+struct PipelineConfigWithDiffInfo {
+    PipelineConfig config;
+    ConfigDiffEnum diffEnum;
+    PipelineConfigWithDiffInfo(PipelineConfig&& config, ConfigDiffEnum diffEnum)
+        : config(std::move(config)), diffEnum(diffEnum) {}
+};
+using SingletonConfigCache = std::unordered_map<std::string, std::shared_ptr<PipelineConfigWithDiffInfo>>;
 
 class PipelineConfigWatcher : public ConfigWatcher {
 public:
@@ -52,22 +57,28 @@ private:
     PipelineConfigWatcher();
     ~PipelineConfigWatcher() = default;
 
-    void
-    InsertInnerPipelines(PipelineConfigDiff& pDiff, TaskConfigDiff& tDiff, std::unordered_set<std::string>& configSet);
-    void InsertPipelines(PipelineConfigDiff& pDiff, TaskConfigDiff& tDiff, std::unordered_set<std::string>& configSet);
+    void InsertInnerPipelines(PipelineConfigDiff& pDiff,
+                              TaskConfigDiff& tDiff,
+                              std::unordered_set<std::string>& configSet,
+                              SingletonConfigCache& singletonCache);
+    void InsertPipelines(PipelineConfigDiff& pDiff,
+                         TaskConfigDiff& tDiff,
+                         std::unordered_set<std::string>& configSet,
+                         SingletonConfigCache& singletonCache);
     bool CheckAddedConfig(const std::string& configName,
                           std::unique_ptr<Json::Value>&& configDetail,
                           PipelineConfigDiff& pDiff,
-                          TaskConfigDiff& tDiff);
+                          TaskConfigDiff& tDiff,
+                          SingletonConfigCache& singletonCache);
     bool CheckModifiedConfig(const std::string& configName,
                              std::unique_ptr<Json::Value>&& configDetail,
                              PipelineConfigDiff& pDiff,
-                             TaskConfigDiff& tDiff);
-    bool PreCheckConfig(const std::string& configName,
-                        const std::filesystem::path& path,
-                        std::unique_ptr<Json::Value>&& configDetail,
-                        std::unordered_map<std::string, ConfigWithPath>& toBeDiffedConfigs,
-                        std::unordered_map<std::string, ConfigPriority>& singletonConfigs);
+                             TaskConfigDiff& tDiff,
+                             SingletonConfigCache& singletonCache);
+    void PushPipelineConfig(PipelineConfig&& config,
+                            ConfigDiffEnum diffEnum,
+                            PipelineConfigDiff& pDiff,
+                            SingletonConfigCache& singletonCache);
 
     const PipelineManager* mPipelineManager = nullptr;
     const TaskPipelineManager* mTaskPipelineManager = nullptr;
