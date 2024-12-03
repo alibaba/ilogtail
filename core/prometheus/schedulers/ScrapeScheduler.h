@@ -21,10 +21,10 @@
 
 #include "BaseScheduler.h"
 #include "common/http/HttpResponse.h"
-#include "models/PipelineEventGroup.h"
 #include "monitor/metric_models/MetricTypes.h"
 #include "pipeline/queue/QueueKey.h"
 #include "prometheus/PromSelfMonitor.h"
+#include "prometheus/component/StreamScraper.h"
 #include "prometheus/schedulers/ScrapeConfig.h"
 
 #ifdef APSARA_UNIT_TEST_MAIN
@@ -32,7 +32,6 @@
 #endif
 
 namespace logtail {
-
 
 class ScrapeScheduler : public BaseScheduler {
 public:
@@ -46,15 +45,6 @@ public:
     ~ScrapeScheduler() override = default;
 
     void OnMetricResult(HttpResponse&, uint64_t timestampMilliSec);
-    static size_t PromMetricWriteCallback(char* buffer, size_t size, size_t nmemb, void* data);
-    void AddEvent(const char* line, size_t len);
-    void FlushCache();
-    size_t mRawSize = 0;
-    size_t mCurrStreamSize = 0;
-    std::string mCache;
-    PipelineEventGroup mEventGroup;
-    uint64_t mStreamIndex = 0;
-    std::string mCurrTimestampMilliSec;
 
     std::string GetId() const;
 
@@ -64,30 +54,18 @@ public:
     void InitSelfMonitor(const MetricLabels&);
 
 private:
-    void PushEventGroup(PipelineEventGroup&&) const;
-    void SetAutoMetricMeta(PipelineEventGroup& eGroup) const;
-    void SetTargetLabels(PipelineEventGroup& eGroup) const;
-
     std::unique_ptr<TimerEvent> BuildScrapeTimerEvent(std::chrono::steady_clock::time_point execTime);
 
-    std::shared_ptr<ScrapeConfig> mScrapeConfigPtr;
+    prom::PromStreamScraper mPromStreamScraper;
 
+    std::shared_ptr<ScrapeConfig> mScrapeConfigPtr;
     std::string mHash;
     std::string mHost;
     int32_t mPort;
     std::string mInstance;
-    Labels mTargetLabels;
 
     // pipeline
     QueueKey mQueueKey;
-    size_t mInputIndex;
-
-    // auto metrics
-    uint64_t mScrapeTimestampMilliSec = 0;
-    uint64_t mScrapeSamplesScraped = 0;
-    double mScrapeDurationSeconds = 0;
-    uint64_t mScrapeResponseSizeBytes = 0;
-    bool mUpState = true;
 
     // self monitor
     std::shared_ptr<PromSelfMonitorUnsafe> mSelfMonitor;

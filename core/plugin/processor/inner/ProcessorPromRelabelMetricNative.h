@@ -21,7 +21,7 @@
 #include "models/PipelineEventGroup.h"
 #include "models/PipelineEventPtr.h"
 #include "pipeline/plugin/interface/Processor.h"
-#include "prometheus/labels/StreamCounter.h"
+#include "prometheus/component/StreamCounter.h"
 #include "prometheus/schedulers/ScrapeConfig.h"
 
 DECLARE_FLAG_INT32(process_thread_count);
@@ -65,9 +65,8 @@ private:
                    const GroupTags& targetTags) const;
 
     void Lock() {
-        if (INT32_FLAG(process_thread_count) > 1) 
+        if (INT32_FLAG(process_thread_count) > 1)
             mStreamMutex.lock();
-        
     }
     void UnLock() {
         if (INT32_FLAG(process_thread_count) > 1) {
