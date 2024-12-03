@@ -41,9 +41,9 @@ pair<PipelineConfigDiff, TaskConfigDiff> PipelineConfigWatcher::CheckConfigDiff(
     PipelineConfigDiff pDiff;
     TaskConfigDiff tDiff;
     unordered_set<string> configSet;
-    // inner configs
-    InsertInnerPipelines(pDiff, tDiff, configSet);
-    // configs from file
+    // builtin pipeline configs
+    InsertBuiltInPipelines(pDiff, tDiff, configSet);
+    // file pipeline configs 
     InsertPipelines(pDiff, tDiff, configSet);
 
     for (const auto& name : mPipelineManager->GetAllConfigNames()) {
@@ -87,19 +87,14 @@ pair<PipelineConfigDiff, TaskConfigDiff> PipelineConfigWatcher::CheckConfigDiff(
     return make_pair(std::move(pDiff), std::move(tDiff));
 }
 
-void PipelineConfigWatcher::InsertInnerPipelines(PipelineConfigDiff& pDiff,
+void PipelineConfigWatcher::InsertBuiltInPipelines(PipelineConfigDiff& pDiff,
                                                  TaskConfigDiff& tDiff,
                                                  unordered_set<string>& configSet) {
 #ifdef __ENTERPRISE__
-    const std::map<std::string, std::string>& innerPipelines
-        = EnterpriseConfigProvider::GetInstance()->GetAllInernalPipelineConfigs();
-#else
-    const std::map<std::string, std::string>& innerPipelines
-        = CommonConfigProvider::GetInstance()->GetAllInernalPipelineConfigs();
-#endif
+    const std::map<std::string, std::string>& builtInPipelines
+        = EnterpriseConfigProvider::GetInstance()->GetAllBuiltInPipelineConfigs();
 
-    // process
-    for (const auto& pipeline : innerPipelines) {
+    for (const auto& pipeline : builtInPipelines) {
         const string& pipelineName = pipeline.first;
         const string& pipleineDetail = pipeline.second;
         if (configSet.find(pipelineName) != configSet.end()) {
@@ -173,6 +168,9 @@ void PipelineConfigWatcher::InsertInnerPipelines(PipelineConfigDiff& pDiff,
             LOG_DEBUG(sLogger, ("existing inner config unchanged", "skip current object"));
         }
     }
+#else
+    return;
+#endif
 }
 
 void PipelineConfigWatcher::InsertPipelines(PipelineConfigDiff& pDiff,
