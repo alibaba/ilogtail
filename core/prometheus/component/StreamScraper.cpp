@@ -62,6 +62,7 @@ void PromStreamScraper::AddEvent(const char* line, size_t len) {
         auto* e = mEventGroup.AddRawEvent(true, mEventPool);
         auto sb = mEventGroup.GetSourceBuffer()->CopyString(line, len);
         e->SetContentNoCopy(sb);
+        mScrapeSamplesScraped++;
     }
 }
 
@@ -90,13 +91,12 @@ void PromStreamScraper::PushEventGroup(PipelineEventGroup&& eGroup) const {
     }
 }
 
-void PromStreamScraper::SendMetrics(bool) {
+void PromStreamScraper::SendMetrics() {
     mEventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_TIMESTAMP_MILLISEC,
                             ToString(mScrapeTimestampMilliSec));
     mEventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_ID, GetId() + ToString(mScrapeTimestampMilliSec));
 
     SetTargetLabels(mEventGroup);
-    mScrapeSamplesScraped += mEventGroup.GetEvents().size();
     PushEventGroup(std::move(mEventGroup));
     mEventGroup = PipelineEventGroup(std::make_shared<SourceBuffer>());
     mCurrStreamSize = 0;

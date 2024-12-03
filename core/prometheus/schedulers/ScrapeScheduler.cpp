@@ -85,7 +85,7 @@ void ScrapeScheduler::OnMetricResult(HttpResponse& response, uint64_t) {
     mPromStreamScraper.mStreamIndex++;
     mPromStreamScraper.FlushCache();
     mPromStreamScraper.SetAutoMetricMeta(mScrapeDurationSeconds, mUpState);
-    mPromStreamScraper.SendMetrics(true);
+    mPromStreamScraper.SendMetrics();
     mPromStreamScraper.Reset();
 
     mPluginTotalDelayMs->Add(scrapeDurationMilliSeconds);

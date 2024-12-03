@@ -19,7 +19,7 @@ public:
 
     static size_t MetricWriteCallback(char* buffer, size_t size, size_t nmemb, void* data);
     void FlushCache();
-    void SendMetrics(bool isLast = false);
+    void SendMetrics();
     void Reset();
     void SetAutoMetricMeta(double scrapeDurationSeconds, bool upState);
 
@@ -28,6 +28,7 @@ public:
     std::string mHash;
     size_t mRawSize = 0;
     uint64_t mStreamIndex = 0;
+    uint64_t mScrapeSamplesScraped = 0;
 
 private:
     void AddEvent(const char* line, size_t len);
@@ -47,7 +48,6 @@ private:
 
     // auto metrics
     uint64_t mScrapeTimestampMilliSec = 0;
-    uint64_t mScrapeSamplesScraped = 0;
 
     EventPool* mEventPool = nullptr;
 };
