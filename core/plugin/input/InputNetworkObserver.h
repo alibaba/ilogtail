@@ -19,6 +19,7 @@
 #include <string>
 
 #include "ebpf/config.h"
+#include "pipeline/plugin/interface/Input.h"
 #include "ebpf/include/export.h"
 #include "monitor/metric_models/ReentrantMetricsRecord.h"
 

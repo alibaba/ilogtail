@@ -23,6 +23,7 @@
 #include "file_server/MultilineOptions.h"
 #include "monitor/metric_models/ReentrantMetricsRecord.h"
 #include "pipeline/plugin/interface/Input.h"
+#include "file_server/reader/FileReaderOptions.h"
 
 namespace logtail {
 

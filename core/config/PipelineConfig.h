@@ -50,8 +50,7 @@ struct PipelineConfig {
     std::string mLogstore;
     std::string mRegion;
 
-    PipelineConfig(const std::string& name, std::unique_ptr<Json::Value>&& detail)
-        : mName(name), mDetail(std::move(detail)) {}
+    PipelineConfig(const std::string& name, std::unique_ptr<Json::Value>&& detail) : mName(name), mDetail(std::move(detail)) {}
 
     bool Parse();
 
@@ -69,8 +68,7 @@ struct PipelineConfig {
     // bool IsProcessRunnerInvolved() const {
     //     // 长期过渡使用，待C++部分的时序聚合能力与Go持平后恢复下面的正式版
     //     return !(mHasGoInput && !mHasNativeProcessor);
-    //     // return !(mHasGoInput && !mHasNativeProcessor && (mHasGoProcessor || (mHasGoFlusher &&
-    //     !mHasNativeFlusher)));
+    // // return !(mHasGoInput && !mHasNativeProcessor && (mHasGoProcessor || (mHasGoFlusher && !mHasNativeFlusher)));
     // }
 
     bool HasGoPlugin() const { return mHasGoFlusher || mHasGoProcessor || mHasGoInput; }
