@@ -67,7 +67,7 @@ void PromUtilsUnittest::TestNetworkCodeToString() {
 }
 
 void PromUtilsUnittest::TestHttpCodeToState() {
-    APSARA_TEST_EQUAL("ERR_HTTP_UNKNOWN", prom::HttpCodeToState(604));
+    APSARA_TEST_EQUAL("ERR_HTTP_UNKNOWN", prom::HttpCodeToState(1001));
     APSARA_TEST_EQUAL("ERR_HTTP_300", prom::HttpCodeToState(300));
     APSARA_TEST_EQUAL("OK", prom::HttpCodeToState(200));
 }

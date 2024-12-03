@@ -171,7 +171,7 @@ namespace prom {
     }
 
     std::string HttpCodeToState(uint64_t code) {
-        if (code > 600) {
+        if (code > 1000) {
             return "ERR_HTTP_UNKNOWN";
         }
         if (code == 200) {
