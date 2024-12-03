@@ -86,14 +86,18 @@ ScrapeScheduler::ScrapeScheduler(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
     mInterval = mScrapeConfigPtr->mScrapeIntervalSeconds;
 }
 
-void ScrapeScheduler::OnMetricResult(HttpResponse& response, uint64_t timestampMilliSec) {
+void ScrapeScheduler::OnMetricResult(HttpResponse& response, uint64_t) {
+    static double sRate = 0.001;
+    auto now = GetCurrentTimeInMilliSeconds();
+    mScrapeTimestampMilliSec
+        = chrono::duration_cast<chrono::milliseconds>(mLatestScrapeTime.time_since_epoch()).count();
+    auto scrapeDurationMilliSeconds = now - mScrapeTimestampMilliSec;
+
     auto& responseBody = *response.GetBody<PromMetricResponseBody>();
     responseBody.FlushCache();
     mSelfMonitor->AddCounter(METRIC_PLUGIN_OUT_EVENTS_TOTAL, response.GetStatusCode());
     mSelfMonitor->AddCounter(METRIC_PLUGIN_OUT_SIZE_BYTES, response.GetStatusCode(), responseBody.mRawSize);
-    mSelfMonitor->AddCounter(METRIC_PLUGIN_PROM_SCRAPE_TIME_MS,
-                             response.GetStatusCode(),
-                             GetCurrentTimeInMilliSeconds() - timestampMilliSec);
+    mSelfMonitor->AddCounter(METRIC_PLUGIN_PROM_SCRAPE_TIME_MS, response.GetStatusCode(), scrapeDurationMilliSeconds);
 
     const auto& networkStatus = response.GetNetworkStatus();
     if (networkStatus.mCode != NetworkCode::Ok) {
@@ -106,8 +110,7 @@ void ScrapeScheduler::OnMetricResult(HttpResponse& response, uint64_t timestampM
         mScrapeState = prom::NetworkCodeToState(NetworkCode::Ok);
     }
 
-    mScrapeTimestampMilliSec = timestampMilliSec;
-    mScrapeDurationSeconds = 1.0 * (GetCurrentTimeInMilliSeconds() - timestampMilliSec) / 1000;
+    mScrapeDurationSeconds = scrapeDurationMilliSeconds * sRate;
     mScrapeResponseSizeBytes = responseBody.mRawSize;
     mUpState = response.GetStatusCode() == 200;
     if (response.GetStatusCode() != 200) {
@@ -121,7 +124,7 @@ void ScrapeScheduler::OnMetricResult(HttpResponse& response, uint64_t timestampM
     SetAutoMetricMeta(eventGroup);
     SetTargetLabels(eventGroup);
     PushEventGroup(std::move(eventGroup));
-    mPluginTotalDelayMs->Add(GetCurrentTimeInMilliSeconds() - timestampMilliSec);
+    mPluginTotalDelayMs->Add(scrapeDurationMilliSeconds);
 }
 
 void ScrapeScheduler::SetAutoMetricMeta(PipelineEventGroup& eGroup) {
