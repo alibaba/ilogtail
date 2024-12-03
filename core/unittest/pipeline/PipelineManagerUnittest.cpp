@@ -14,8 +14,6 @@
 
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineManager.h"
-#include "pipeline/plugin/PluginRegistry.h"
-#include "plugin/input/InputNetworkSecurity.h"
 #include "unittest/Unittest.h"
 
 using namespace std;
@@ -25,10 +23,6 @@ namespace logtail {
 class PipelineManagerUnittest : public testing::Test {
 public:
     void TestPipelineManagement() const;
-
-protected:
-    static void SetUpTestCase() { PluginRegistry::GetInstance()->LoadPlugins(); }
-    static void TearDownTestCase() { PluginRegistry::GetInstance()->UnloadPlugins(); }
 };
 
 void PipelineManagerUnittest::TestPipelineManagement() const {
