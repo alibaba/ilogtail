@@ -25,7 +25,6 @@
 #include "logger/Logger.h"
 #include "monitor/Monitor.h"
 #include "pipeline/PipelineManager.h"
-#include "provider/Provider.h"
 #include "task_pipeline/TaskPipelineManager.h"
 
 using namespace std;
