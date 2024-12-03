@@ -44,9 +44,22 @@ pair<PipelineConfigDiff, TaskConfigDiff> PipelineConfigWatcher::CheckConfigDiff(
     SingletonConfigCache singletonCache;
     // builtin pipeline configs
     InsertBuiltInPipelines(pDiff, tDiff, configSet, singletonCache);
-    // file pipeline configs 
+    // file pipeline configs
     InsertPipelines(pDiff, tDiff, configSet, singletonCache);
 
+    for (const auto& [name, config] : singletonCache) {
+        if (config->diffEnum == ConfigDiffEnum::Added) {
+            pDiff.mAdded.push_back(std::move(config->config));
+            LOG_INFO(sLogger,
+                     ("new config found and passed topology check", "prepare to build pipeline")("config",
+                                                                                                 config->config.mName));
+        } else {
+            pDiff.mModified.push_back(std::move(config->config));
+            LOG_INFO(sLogger,
+                     ("existing invalid config modified and passed topology check",
+                      "prepare to build pipeline")("config", config->config.mName));
+        }
+    }
     for (const auto& name : mPipelineManager->GetAllConfigNames()) {
         if (configSet.find(name) == configSet.end()) {
             pDiff.mRemoved.push_back(name);
@@ -89,9 +102,9 @@ pair<PipelineConfigDiff, TaskConfigDiff> PipelineConfigWatcher::CheckConfigDiff(
 }
 
 void PipelineConfigWatcher::InsertBuiltInPipelines(PipelineConfigDiff& pDiff,
-                                                 TaskConfigDiff& tDiff,
-                                                 unordered_set<string>& configSet,
-                                                 SingletonConfigCache& singletonCache) {
+                                                   TaskConfigDiff& tDiff,
+                                                   unordered_set<string>& configSet,
+                                                   SingletonConfigCache& singletonCache) {
 #ifdef __ENTERPRISE__
     const std::map<std::string, std::string>& builtInPipelines
         = EnterpriseConfigProvider::GetInstance()->GetAllBuiltInPipelineConfigs();
@@ -281,19 +294,6 @@ void PipelineConfigWatcher::InsertPipelines(PipelineConfigDiff& pDiff,
             }
         }
     }
-    for (const auto& [name, config] : singletonCache) {
-        if (config->diffEnum == ConfigDiffEnum::Added) {
-            pDiff.mAdded.push_back(std::move(config->config));
-            LOG_INFO(sLogger,
-                     ("new config found and passed topology check", "prepare to build pipeline")("config",
-                                                                                                 config->config.mName));
-        } else {
-            pDiff.mModified.push_back(std::move(config->config));
-            LOG_INFO(sLogger,
-                     ("existing invalid config modified and passed topology check",
-                      "prepare to build pipeline")("config", config->config.mName));
-        }
-    }
 }
 
 bool PipelineConfigWatcher::CheckAddedConfig(
@@ -316,6 +316,8 @@ bool PipelineConfigWatcher::CheckAddedConfig(
                 return false;
             }
             PushPipelineConfig(std::move(config), ConfigDiffEnum::Added, pDiff, singletonCache);
+            LOG_INFO(sLogger,
+                     ("new config found and passed topology check", "prepare to build pipeline")("config", configName));
             break;
         }
         case ConfigType::Task: {
@@ -359,7 +361,10 @@ bool PipelineConfigWatcher::CheckModifiedConfig(
                         config.mRegion);
                     return false;
                 }
-                PushPipelineConfig(std::move(config), ConfigDiffEnum::Modified, pDiff, singletonCache);
+                PushPipelineConfig(std::move(config), ConfigDiffEnum::Added, pDiff, singletonCache);
+                LOG_INFO(sLogger,
+                         ("existing invalid config modified and passed topology check",
+                          "prepare to build pipeline")("config", configName));
             } else if (*configDetail != p->GetConfig()) {
                 PipelineConfig config(configName, std::move(configDetail));
                 if (!config.Parse()) {
@@ -376,6 +381,9 @@ bool PipelineConfigWatcher::CheckModifiedConfig(
                     return false;
                 }
                 PushPipelineConfig(std::move(config), ConfigDiffEnum::Modified, pDiff, singletonCache);
+                LOG_INFO(sLogger,
+                         ("existing valid config modified and passed topology check",
+                          "prepare to rebuild pipeline")("config", configName));
             } else {
                 LOG_DEBUG(sLogger, ("existing valid config file modified, but no change found", "skip current object"));
             }
@@ -469,15 +477,9 @@ void PipelineConfigWatcher::PushPipelineConfig(PipelineConfig&& config,
     switch (diffEnum) {
         case ConfigDiffEnum::Added:
             pDiff.mAdded.push_back(std::move(config));
-            LOG_INFO(
-                sLogger,
-                ("new config found and passed topology check", "prepare to build pipeline")("config", config.mName));
             break;
         case ConfigDiffEnum::Modified:
             pDiff.mModified.push_back(std::move(config));
-            LOG_INFO(sLogger,
-                     ("existing invalid config modified and passed topology check",
-                      "prepare to build pipeline")("config", config.mName));
             break;
         default:
             break;
