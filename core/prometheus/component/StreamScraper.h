@@ -29,6 +29,7 @@ public:
     size_t mRawSize = 0;
     uint64_t mStreamIndex = 0;
     uint64_t mScrapeSamplesScraped = 0;
+    EventPool* mEventPool = nullptr;
 
 private:
     void AddEvent(const char* line, size_t len);
@@ -49,6 +50,5 @@ private:
     // auto metrics
     uint64_t mScrapeTimestampMilliSec = 0;
 
-    EventPool* mEventPool = nullptr;
 };
 } // namespace logtail::prom

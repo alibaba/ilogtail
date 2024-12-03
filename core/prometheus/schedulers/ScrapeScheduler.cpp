@@ -96,6 +96,12 @@ string ScrapeScheduler::GetId() const {
     return mHash;
 }
 
+void ScrapeScheduler::SetComponent(shared_ptr<Timer> timer, EventPool* eventPool) {
+    mTimer = std::move(timer);
+    mEventPool = eventPool;
+    mPromStreamScraper.mEventPool = mEventPool;
+}
+
 void ScrapeScheduler::ScheduleNext() {
     auto future = std::make_shared<PromFuture<HttpResponse&, uint64_t>>();
     auto isContextValidFuture = std::make_shared<PromFuture<>>();
