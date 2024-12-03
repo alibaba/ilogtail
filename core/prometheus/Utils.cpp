@@ -152,7 +152,7 @@ uint64_t GetRandSleepMilliSec(const std::string& key, uint64_t intervalSeconds, 
 
 namespace prom {
 
-    std::string NetworkCodeToString(NetworkCode code) {
+    std::string NetworkCodeToState(NetworkCode code) {
         static map<uint64_t, string> sNetworkCodeMap = {{NetworkCode::Ok, "OK"},
                                                         {NetworkCode::ConnectionFailed, "ERR_CONN_FAILED"},
                                                         {NetworkCode::RemoteAccessDenied, "ERR_ACCESS_DENIED"},
@@ -168,6 +168,17 @@ namespace prom {
             return sNetworkCodeMap[code];
         }
         return sCurlOther;
+    }
+
+    std::string HttpCodeToState(uint64_t code) {
+        if (code > 600) {
+            return "ERR_HTTP_UNKNOWN";
+        }
+        if (code == 200) {
+            return "OK";
+        }
+        string statePrefix = "ERR_HTTP_";
+        return statePrefix + ToString(code);
     }
 
 } // namespace prom

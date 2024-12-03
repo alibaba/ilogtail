@@ -98,12 +98,12 @@ void ScrapeScheduler::OnMetricResult(HttpResponse& response, uint64_t timestampM
     auto networkStatus = response.GetNetworkStatus();
     if (networkStatus.mCode != NetworkCode::Ok) {
         // not 0 means curl error
-        mScrapeState = prom::NetworkCodeToString(networkStatus.mCode);
+        mScrapeState = prom::NetworkCodeToState(networkStatus.mCode);
     } else if (response.GetStatusCode() != 200) {
-        mScrapeState = ToString(response.GetStatusCode());
+        mScrapeState = prom::HttpCodeToState(response.GetStatusCode());
     } else {
         // 0 means success
-        mScrapeState = prom::NetworkCodeToString(NetworkCode::Ok);
+        mScrapeState = prom::NetworkCodeToState(NetworkCode::Ok);
     }
 
     mScrapeTimestampMilliSec = timestampMilliSec;
@@ -112,13 +112,9 @@ void ScrapeScheduler::OnMetricResult(HttpResponse& response, uint64_t timestampM
     mUpState = response.GetStatusCode() == 200;
     if (response.GetStatusCode() != 200) {
         mScrapeResponseSizeBytes = 0;
-        string headerStr;
-        for (const auto& [k, v] : mScrapeConfigPtr->mRequestHeaders) {
-            headerStr.append(k).append(":").append(v).append(";");
-        }
-        LOG_WARNING(
-            sLogger,
-            ("scrape failed, status code", response.GetStatusCode())("target", mHash)("http header", headerStr));
+        LOG_WARNING(sLogger,
+                    ("scrape failed, status code",
+                     response.GetStatusCode())("target", mHash)("curl msg", response.GetNetworkStatus().mMessage));
     }
     auto& eventGroup = responseBody.mEventGroup;
 
