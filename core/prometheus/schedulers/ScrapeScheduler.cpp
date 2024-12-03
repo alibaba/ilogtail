@@ -87,7 +87,7 @@ ScrapeScheduler::ScrapeScheduler(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
 }
 
 void ScrapeScheduler::OnMetricResult(HttpResponse& response, uint64_t) {
-    static double sRate = 1.0 / 1000;
+    static double sRate = 0.001;
     auto now = GetCurrentTimeInMilliSeconds();
     mScrapeTimestampMilliSec
         = chrono::duration_cast<chrono::milliseconds>(mLatestScrapeTime.time_since_epoch()).count();
