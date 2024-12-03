@@ -156,7 +156,7 @@ namespace prom {
         static map<uint64_t, string> sNetworkCodeMap = {{NetworkCode::Ok, "OK"},
                                                         {NetworkCode::ConnectionFailed, "ERR_CONN_FAILED"},
                                                         {NetworkCode::RemoteAccessDenied, "ERR_ACCESS_DENIED"},
-                                                        {NetworkCode::TIMEOUT, "ERR_TIMEOUT"},
+                                                        {NetworkCode::Timeout, "ERR_TIMEOUT"},
                                                         {NetworkCode::SSLConnectError, "ERR_SSL_CONN_ERR"},
                                                         {NetworkCode::SSLCertError, "ERR_SSL_CERT_ERR"},
                                                         {NetworkCode::SSLOtherProblem, "ERR_SSL_OTHER_PROBLEM"},

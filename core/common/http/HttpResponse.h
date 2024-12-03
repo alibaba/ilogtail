@@ -39,11 +39,11 @@ enum NetworkCode {
     SSLOtherProblem,
     SendDataFailed,
     RecvDataFailed,
-    TIMEOUT, // 超时
-    Other // 回显请求收到
+    Timeout,
+    Other
 };
 
-struct NetWorkStatus {
+struct NetworkStatus {
     NetworkCode mCode = NetworkCode::Ok;
     std::string mMessage;
 };
@@ -111,7 +111,7 @@ public:
                 mNetworkStatus.mCode = NetworkCode::RemoteAccessDenied;
                 break;
             case CURLE_OPERATION_TIMEDOUT:
-                mNetworkStatus.mCode = NetworkCode::TIMEOUT;
+                mNetworkStatus.mCode = NetworkCode::Timeout;
                 break;
             case CURLE_SSL_CONNECT_ERROR:
                 mNetworkStatus.mCode = NetworkCode::SSLConnectError;
@@ -147,11 +147,11 @@ public:
         }
     }
 
-    NetWorkStatus GetNetworkStatus() { return mNetworkStatus; }
+    const NetworkStatus& GetNetworkStatus() { return mNetworkStatus; }
 
 private:
     int32_t mStatusCode = 0; // 0 means no response from server
-    NetWorkStatus mNetworkStatus; // 0 means no error
+    NetworkStatus mNetworkStatus; // 0 means no error
     std::map<std::string, std::string, decltype(compareHeader)*> mHeader;
     std::unique_ptr<void, std::function<void(void*)>> mBody;
     size_t (*mWriteCallback)(char*, size_t, size_t, void*) = nullptr;
