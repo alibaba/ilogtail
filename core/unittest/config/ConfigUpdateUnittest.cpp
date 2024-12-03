@@ -19,7 +19,7 @@
 #include <vector>
 
 #include "config/PipelineConfig.h"
-#include "config/internal_provider/InternalConfigProvider.h"
+#include "config/common_provider/CommonConfigProvider.h"
 #include "config/watcher/PipelineConfigWatcher.h"
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineManager.h"
@@ -268,7 +268,7 @@ private:
 
 void ConfigUpdateUnittest::OnStartUp() const {
     auto diff = PipelineConfigWatcher::GetInstance()->CheckConfigDiff();
-    auto innerPipelinesCnt = InternalConfigProvider::GetInstance()->GetAllInernalPipelineConfigs().size();
+    auto innerPipelinesCnt = CommonConfigProvider::GetInstance()->GetAllInernalPipelineConfigs().size();
     APSARA_TEST_EQUAL(innerPipelinesCnt, diff.first.mAdded.size());
     APSARA_TEST_TRUE(diff.second.IsEmpty());
 

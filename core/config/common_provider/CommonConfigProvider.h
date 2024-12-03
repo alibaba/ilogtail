@@ -54,6 +54,7 @@ public:
     void Init(const std::string& dir) override;
     void Stop() override;
 
+    const std::map<std::string, std::string>& GetAllInernalPipelineConfigs();
     void FeedbackContinuousPipelineConfigStatus(const std::string& name, ConfigFeedbackStatus status) override;
     void FeedbackInstanceConfigStatus(const std::string& name, ConfigFeedbackStatus status) override;
     void FeedbackOnetimePipelineConfigStatus(const std::string& type,
@@ -130,6 +131,7 @@ private:
     std::vector<ConfigServerAddress> mConfigServerAddresses;
     int mConfigServerAddressId = 0;
     std::map<std::string, std::string> mConfigServerTags;
+    std::map<std::string, std::string> mPipelineMaps;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class CommonConfigProviderUnittest;

@@ -21,7 +21,6 @@
 #include "config/ConfigDiff.h"
 #include "config/InstanceConfigManager.h"
 #include "config/common_provider/CommonConfigProvider.h"
-#include "config/internal_provider/InternalConfigProvider.h"
 #include "config/watcher/InstanceConfigWatcher.h"
 #include "config/watcher/PipelineConfigWatcher.h"
 #include "gmock/gmock.h"
@@ -434,7 +433,7 @@ void CommonConfigProviderUnittest::TestGetConfigUpdateAndConfigWatcher() {
 
         // 处理 pipelineconfig
         auto pipelineConfigDiff = PipelineConfigWatcher::GetInstance()->CheckConfigDiff();
-        auto innerPipelinesCnt = InternalConfigProvider::GetInstance()->GetAllInernalPipelineConfigs().size();
+        auto innerPipelinesCnt = CommonConfigProvider::GetInstance()->GetAllInernalPipelineConfigs().size();
         PipelineManager::GetInstance()->UpdatePipelines(pipelineConfigDiff.first);
         APSARA_TEST_TRUE(!pipelineConfigDiff.first.IsEmpty());
         APSARA_TEST_EQUAL(1U + innerPipelinesCnt, pipelineConfigDiff.first.mAdded.size());
@@ -651,7 +650,7 @@ void CommonConfigProviderUnittest::TestGetConfigUpdateAndConfigWatcher() {
 
         // 处理pipelineConfigDiff
         auto pipelineConfigDiff = PipelineConfigWatcher::GetInstance()->CheckConfigDiff();
-        auto innerPipelinesCnt = InternalConfigProvider::GetInstance()->GetAllInernalPipelineConfigs().size();
+        auto innerPipelinesCnt = CommonConfigProvider::GetInstance()->GetAllInernalPipelineConfigs().size();
         PipelineManager::GetInstance()->UpdatePipelines(pipelineConfigDiff.first);
         APSARA_TEST_TRUE(!pipelineConfigDiff.first.IsEmpty());
         APSARA_TEST_EQUAL(1U, pipelineConfigDiff.first.mRemoved.size());

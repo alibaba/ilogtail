@@ -132,6 +132,10 @@ void CommonConfigProvider::Stop() {
     }
 }
 
+const std::map<std::string, std::string>& CommonConfigProvider::GetAllInernalPipelineConfigs() {
+    return mPipelineMaps;
+}
+
 void CommonConfigProvider::LoadConfigFile() {
     error_code ec;
     lock_guard<mutex> pipelineInfomaplock(mContinuousPipelineInfoMapMux);

@@ -16,7 +16,7 @@
 #include <fstream>
 
 #include "config/ConfigDiff.h"
-#include "config/internal_provider/InternalConfigProvider.h"
+#include "config/common_provider/CommonConfigProvider.h"
 #include "config/watcher/InstanceConfigWatcher.h"
 #include "config/watcher/PipelineConfigWatcher.h"
 #include "pipeline/plugin/PluginRegistry.h"
@@ -51,7 +51,7 @@ const filesystem::path ConfigWatcherUnittest::instanceConfigDir = "./instance_co
 void ConfigWatcherUnittest::InvalidConfigDirFound() const {
     {
         auto diff = PipelineConfigWatcher::GetInstance()->CheckConfigDiff();
-        auto innerPipelinesCnt = InternalConfigProvider::GetInstance()->GetAllInernalPipelineConfigs().size();
+        auto innerPipelinesCnt = CommonConfigProvider::GetInstance()->GetAllInernalPipelineConfigs().size();
         APSARA_TEST_EQUAL(innerPipelinesCnt, diff.first.mAdded.size());
         APSARA_TEST_TRUE(diff.second.IsEmpty());
 
@@ -84,7 +84,7 @@ void ConfigWatcherUnittest::InvalidConfigFileFound() const {
             fout << "[}";
         }
         auto diff = PipelineConfigWatcher::GetInstance()->CheckConfigDiff();
-        auto innerPipelinesCnt = InternalConfigProvider::GetInstance()->GetAllInernalPipelineConfigs().size();
+        auto innerPipelinesCnt = CommonConfigProvider::GetInstance()->GetAllInernalPipelineConfigs().size();
         APSARA_TEST_EQUAL(innerPipelinesCnt, diff.first.mAdded.size());
         APSARA_TEST_TRUE(diff.second.IsEmpty());
         filesystem::remove_all(configDir);
@@ -134,7 +134,7 @@ void ConfigWatcherUnittest::DuplicateConfigs() const {
         }
         { ofstream fout("dir2/config.json"); }
         auto diff = PipelineConfigWatcher::GetInstance()->CheckConfigDiff();
-        auto innerPipelinesCnt = InternalConfigProvider::GetInstance()->GetAllInernalPipelineConfigs().size();
+        auto innerPipelinesCnt = CommonConfigProvider::GetInstance()->GetAllInernalPipelineConfigs().size();
         APSARA_TEST_FALSE(diff.first.IsEmpty());
         APSARA_TEST_EQUAL(1U + innerPipelinesCnt, diff.first.mAdded.size());
 

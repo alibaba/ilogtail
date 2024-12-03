@@ -18,7 +18,10 @@
 
 #include "common/FileSystemUtil.h"
 #include "config/ConfigUtil.h"
-#include "config/internal_provider/InternalConfigProvider.h"
+#include "config/common_provider/CommonConfigProvider.h"
+#ifdef __ENTERPRISE__
+#include "config/provider/EnterpriseConfigProvider.h"
+#endif
 #include "logger/Logger.h"
 #include "monitor/Monitor.h"
 #include "pipeline/PipelineManager.h"
@@ -88,12 +91,18 @@ pair<PipelineConfigDiff, TaskConfigDiff> PipelineConfigWatcher::CheckConfigDiff(
 void PipelineConfigWatcher::InsertInnerPipelines(PipelineConfigDiff& pDiff,
                                                  TaskConfigDiff& tDiff,
                                                  unordered_set<string>& configSet) {
+#ifdef __ENTERPRISE__
     const std::map<std::string, std::string>& innerPipelines
-        = InternalConfigProvider::GetInstance()->GetAllInernalPipelineConfigs();
+        = EnterpriseConfigProvider::GetInstance()->GetAllInernalPipelineConfigs();
+#else
+    const std::map<std::string, std::string>& innerPipelines
+        = CommonConfigProvider::GetInstance()->GetAllInernalPipelineConfigs();
+#endif
 
     // process
     for (const auto& pipeline : innerPipelines) {
-        const string pipelineName = pipeline.first, pipleineDetail = pipeline.second;
+        const string& pipelineName = pipeline.first;
+        const string& pipleineDetail = pipeline.second;
         if (configSet.find(pipelineName) != configSet.end()) {
             LOG_WARNING(sLogger,
                         ("more than 1 config with the same name is found", "skip current config")("inner pipeline",
