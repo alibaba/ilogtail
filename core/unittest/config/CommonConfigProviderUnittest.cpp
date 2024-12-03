@@ -438,14 +438,14 @@ void CommonConfigProviderUnittest::TestGetConfigUpdateAndConfigWatcher() {
         APSARA_TEST_EQUAL(1U, pipelineConfigDiff.first.mAdded.size());
         APSARA_TEST_EQUAL(pipelineConfigDiff.first.mAdded[0].mName, "config1");
         APSARA_TEST_EQUAL(PipelineManager::GetInstance()->GetAllConfigNames().size(), 1);
-        APSARA_TEST_EQUAL(PipelineManager::GetInstance()->GetAllConfigNames()[0], "config1");
+        APSARA_TEST_TRUE(PipelineManager::GetInstance()->FindConfigByName("config1").get() != nullptr);
         // 再次处理 pipelineconfig
         pipelineConfigDiff = PipelineConfigWatcher::GetInstance()->CheckConfigDiff();
         PipelineManager::GetInstance()->UpdatePipelines(pipelineConfigDiff.first);
         APSARA_TEST_TRUE(pipelineConfigDiff.first.IsEmpty());
         APSARA_TEST_TRUE(pipelineConfigDiff.first.mAdded.empty());
         APSARA_TEST_EQUAL(PipelineManager::GetInstance()->GetAllConfigNames().size(), 1);
-        APSARA_TEST_EQUAL(PipelineManager::GetInstance()->GetAllConfigNames()[0], "config1");
+        APSARA_TEST_TRUE(PipelineManager::GetInstance()->FindConfigByName("config1").get() != nullptr);
 
 
         APSARA_TEST_EQUAL(provider.mInstanceConfigInfoMap.size(), 2);
@@ -653,13 +653,13 @@ void CommonConfigProviderUnittest::TestGetConfigUpdateAndConfigWatcher() {
         APSARA_TEST_TRUE(!pipelineConfigDiff.first.IsEmpty());
         APSARA_TEST_EQUAL(1U, pipelineConfigDiff.first.mRemoved.size());
         APSARA_TEST_EQUAL(pipelineConfigDiff.first.mRemoved[0], "config1");
-        APSARA_TEST_TRUE(PipelineManager::GetInstance()->GetAllConfigNames().empty());
+        APSARA_TEST_EQUAL(0U, PipelineManager::GetInstance()->GetAllConfigNames().size());
         // 再次处理pipelineConfigDiff
         pipelineConfigDiff = PipelineConfigWatcher::GetInstance()->CheckConfigDiff();
         PipelineManager::GetInstance()->UpdatePipelines(pipelineConfigDiff.first);
         APSARA_TEST_TRUE(pipelineConfigDiff.first.IsEmpty());
         APSARA_TEST_TRUE(pipelineConfigDiff.first.mRemoved.empty());
-        APSARA_TEST_TRUE(PipelineManager::GetInstance()->GetAllConfigNames().empty());
+        APSARA_TEST_EQUAL(0U, PipelineManager::GetInstance()->GetAllConfigNames().size());
 
         APSARA_TEST_TRUE(provider.mInstanceConfigInfoMap.empty());
         // 处理instanceConfigDiff
