@@ -32,8 +32,9 @@ import (
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
-	_ "github.com/alibaba/ilogtail/plugins/all"
 	"github.com/alibaba/ilogtail/plugins/extension/basicauth"
+	_ "github.com/alibaba/ilogtail/plugins/extension/request_breaker"
+	_ "github.com/alibaba/ilogtail/plugins/flusher/http"
 	"github.com/alibaba/ilogtail/plugins/input"
 	"github.com/alibaba/ilogtail/plugins/processor/regex"
 )
