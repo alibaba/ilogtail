@@ -57,10 +57,10 @@ private:
     PipelineConfigWatcher();
     ~PipelineConfigWatcher() = default;
 
-    void InsertInnerPipelines(PipelineConfigDiff& pDiff,
-                              TaskConfigDiff& tDiff,
-                              std::unordered_set<std::string>& configSet,
-                              SingletonConfigCache& singletonCache);
+    void InsertBuiltInPipelines(PipelineConfigDiff& pDiff,
+                                TaskConfigDiff& tDiff,
+                                std::unordered_set<std::string>& configSet,
+                                SingletonConfigCache& singletonCache);
     void InsertPipelines(PipelineConfigDiff& pDiff,
                          TaskConfigDiff& tDiff,
                          std::unordered_set<std::string>& configSet,

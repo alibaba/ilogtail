@@ -20,8 +20,7 @@
 
 #include "ebpf/config.h"
 #include "ebpf/include/export.h"
-#include "monitor/PluginMetricManager.h"
-#include "pipeline/plugin/interface/Input.h"
+#include "monitor/metric_models/ReentrantMetricsRecord.h"
 
 namespace logtail {
 

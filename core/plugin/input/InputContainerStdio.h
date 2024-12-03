@@ -21,8 +21,7 @@
 #include "container_manager/ContainerDiscoveryOptions.h"
 #include "file_server/FileDiscoveryOptions.h"
 #include "file_server/MultilineOptions.h"
-#include "file_server/reader/FileReaderOptions.h"
-#include "monitor/PluginMetricManager.h"
+#include "monitor/metric_models/ReentrantMetricsRecord.h"
 #include "pipeline/plugin/interface/Input.h"
 
 namespace logtail {
