@@ -1060,7 +1060,7 @@ func (dc *DockerCenter) updateContainer(id string, container *DockerInfoDetail) 
 	dc.refreshLastUpdateMapTime()
 }
 
-func (dc *DockerCenter) inspectOneContainer(containerID string) (types.ContainerJSON, error, bool) {
+func (dc *DockerCenter) inspectOneContainer(containerID string) (types.ContainerJSON, bool, error) {
 	var err error
 	var containerDetail types.ContainerJSON
 	isAlive := true
@@ -1072,13 +1072,13 @@ func (dc *DockerCenter) inspectOneContainer(containerID string) (types.Container
 	}
 	if err != nil {
 		dc.setLastError(err, "inspect container error "+containerID)
-		return types.ContainerJSON{}, err, false
+		return types.ContainerJSON{}, false, err
 	}
 	if !dc.client.ContainerProcessAlive(containerDetail.State.Pid) {
 		containerDetail.State.Status = ContainerStatusExited
 		isAlive = false
 	}
-	return containerDetail, nil, isAlive
+	return containerDetail, isAlive, nil
 }
 
 func (dc *DockerCenter) fetchAll() error {
@@ -1095,7 +1095,7 @@ func (dc *DockerCenter) fetchAll() error {
 	for _, container := range containers {
 		var containerDetail types.ContainerJSON
 		var isAlive bool
-		containerDetail, err, isAlive = dc.inspectOneContainer(container.ID)
+		containerDetail, isAlive, err = dc.inspectOneContainer(container.ID)
 		if err == nil && isAlive {
 			containerMap[container.ID] = dc.CreateInfoDetail(containerDetail, envConfigPrefix, false)
 		}
@@ -1107,7 +1107,7 @@ func (dc *DockerCenter) fetchAll() error {
 func (dc *DockerCenter) fetchOne(containerID string, tryFindSandbox bool) error {
 	dc.containerStateLock.Lock()
 	defer dc.containerStateLock.Unlock()
-	containerDetail, err, isAlive := dc.inspectOneContainer(containerID)
+	containerDetail, isAlive, err := dc.inspectOneContainer(containerID)
 	if err != nil || !isAlive {
 		return err
 	}
