@@ -193,6 +193,16 @@ bool PipelineConfig::Parse() {
         const string pluginType = it->asString();
         if (PluginRegistry::GetInstance()->IsGlobalSingletonInputPlugin(pluginType)) {
             mSingletonInput = pluginType;
+            if (itr->size() > 1) {
+                PARAM_ERROR_RETURN(sLogger,
+                                   alarm,
+                                   "more than 1 input plugin is given when global singleton input plugin is used",
+                                   noModule,
+                                   mName,
+                                   mProject,
+                                   mLogstore,
+                                   mRegion);
+            }
         }
         if (i == 0) {
             if (PluginRegistry::GetInstance()->IsValidGoPlugin(pluginType)) {
@@ -241,10 +251,10 @@ bool PipelineConfig::Parse() {
         }
     }
     // TODO: remove these special restrictions
-    if ((hasFileInput || !mSingletonInput.empty()) && (*mDetail)["inputs"].size() > 1) {
+    if ((hasFileInput) && (*mDetail)["inputs"].size() > 1) {
         PARAM_ERROR_RETURN(sLogger,
                            alarm,
-                           "more than 1 input_file or input_container_stdio or global singleton plugin is given",
+                           "more than 1 input_file or input_container_stdio is given",
                            noModule,
                            mName,
                            mProject,
