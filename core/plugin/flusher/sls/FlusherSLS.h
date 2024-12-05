@@ -49,6 +49,7 @@ public:
     static void SetDefaultRegion(const std::string& region);
     static std::string GetAllProjects();
     static bool IsRegionContainingConfig(const std::string& region);
+    static std::string GetProjectRegion(const std::string& project);
 
     // TODO: should be moved to enterprise config provider
     static bool GetRegionStatus(const std::string& region);
@@ -94,6 +95,8 @@ private:
     static void DecreaseProjectReferenceCnt(const std::string& project);
     static void IncreaseRegionReferenceCnt(const std::string& region);
     static void DecreaseRegionReferenceCnt(const std::string& region);
+    static void SetProjectRegion(const std::string& project, const std::string& region);
+    static void RemoveProjectRegion(const std::string& project);
 
     static std::mutex sMux;
     static std::unordered_map<std::string, std::weak_ptr<ConcurrencyLimiter>> sProjectConcurrencyLimiterMap;
@@ -107,6 +110,8 @@ private:
     static std::unordered_map<std::string, int32_t> sProjectRefCntMap;
     static std::mutex sRegionRefCntMapLock;
     static std::unordered_map<std::string, int32_t> sRegionRefCntMap;
+    static std::mutex sProjectRegionMapLock;
+    static std::unordered_map<std::string, std::string> sProjectRegionMap;
 
     // TODO: should be moved to enterprise config provider
     static std::mutex sRegionStatusLock;
