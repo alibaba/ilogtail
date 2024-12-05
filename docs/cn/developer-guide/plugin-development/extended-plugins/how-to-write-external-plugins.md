@@ -19,7 +19,7 @@ go mod init my-repo.com/my_space/my_plugins
 在仓库根目录执行如下目录，引入
 
 ```shell
-go get github.com/alibaba/ilogtail/pkg
+go get github.com/alibaba/loongcollector/pkg
 ```
 
 ### 3. 创建插件目录
@@ -43,9 +43,9 @@ package example_plugin
 import (
  "time"
 
- "github.com/alibaba/ilogtail/pkg/models"
- "github.com/alibaba/ilogtail/pkg/pipeline"
- "github.com/alibaba/ilogtail/pkg/protocol"
+ "github.com/alibaba/loongcollector/pkg/models"
+ "github.com/alibaba/loongcollector/pkg/pipeline"
+ "github.com/alibaba/loongcollector/pkg/protocol"
 )
 
 type MyServiceInput struct {

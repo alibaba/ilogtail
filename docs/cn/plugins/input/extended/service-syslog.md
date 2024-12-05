@@ -2,7 +2,7 @@
 
 ## 简介
 
-`service_syslog` 插件通过Logtail插件对指定的地址和端口进行监听后，Logtail开始采集数据，包括通过rsyslog采集的系统日志、 Nginx转发的访问日志或错误日志，以及通过syslog客户端转发的日志。[源代码](https://github.com/alibaba/ilogtail/blob/main/plugins/input/syslog/syslog.go)
+`service_syslog` 插件通过Logtail插件对指定的地址和端口进行监听后，Logtail开始采集数据，包括通过rsyslog采集的系统日志、 Nginx转发的访问日志或错误日志，以及通过syslog客户端转发的日志。[源代码](https://github.com/alibaba/loongcollector/blob/main/plugins/input/syslog/syslog.go)
 
 ## 版本
 

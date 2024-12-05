@@ -2,7 +2,7 @@
 
 ## 简介
 
-`metric_input_example` 可作为编写`MetricInput`类插件的参考示例样例，该插件会定时生成模拟的指标数据。[源代码](https://github.com/alibaba/ilogtail/blob/main/plugins/input/example/metric_example.go)
+`metric_input_example` 可作为编写`MetricInput`类插件的参考示例样例，该插件会定时生成模拟的指标数据。[源代码](https://github.com/alibaba/loongcollector/blob/main/plugins/input/example/metric_example.go)
 
 ## 版本
 

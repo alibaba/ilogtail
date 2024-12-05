@@ -2,11 +2,11 @@
 
 ## 插件引用机制
 
-iLogtail 通过 [插件引用配置文件](https://github.com/alibaba/ilogtail/blob/main/plugins.yml) 来定义要包含在构建产物中的插件，该文件中默认包含了iLogtail仓库中的所有插件。
+iLogtail 通过 [插件引用配置文件](https://github.com/alibaba/loongcollector/blob/main/plugins.yml) 来定义要包含在构建产物中的插件，该文件中默认包含了iLogtail仓库中的所有插件。
 
 同时，iLogtail 也以同样的机制支持引入外部私有插件，关于如何开发外部插件，请参阅[如何构建外部私有插件](how-to-write-external-plugins.md)。iLogtail 默认会检测仓库根目录下的 `external_plugins.yml` 文件来查找外部插件定义。
 
-当执行诸如 `make all` 等构建指令时，该配置文件会被解析并生成 go import 文件到 [plugins/all](https://github.com/alibaba/ilogtail/tree/main/plugins/all) 目录下。
+当执行诸如 `make all` 等构建指令时，该配置文件会被解析并生成 go import 文件到 [plugins/all](https://github.com/alibaba/loongcollector/tree/main/plugins/all) 目录下。
 
 插件引用配置文件的格式定义如下：
 
@@ -32,7 +32,7 @@ project:
 
 ### 方式一：修改默认的 `plugins.yml` 或 `external_plugins` 文件
 
-如前文所述，您可以通过直接修改默认的 [插件引用配置文件](https://github.com/alibaba/ilogtail/blob/main/plugins.yml) 文件内容，来选择要包含在构建产物中的插件。
+如前文所述，您可以通过直接修改默认的 [插件引用配置文件](https://github.com/alibaba/loongcollector/blob/main/plugins.yml) 文件内容，来选择要包含在构建产物中的插件。
 
 ### 方式二：自定义文件
 

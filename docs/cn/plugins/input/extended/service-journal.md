@@ -2,7 +2,7 @@
 
 ## 简介
 
-`service_journal` 插件支持从原始的二进制文件中采集Linux系统的Journal（systemd）日志。systemd是专用于 Linux 操作系统的系统与服务管理器。当作为启动进程(PID=1)运行时，它将作为初始化系统运行，启动并维护各种用户空间的服务。 systemd统一管理所有Unit的日志（包括内核和应用日志），配置文件一般在`/etc/systemd/journald.conf`中。[源代码](https://github.com/alibaba/ilogtail/blob/main/plugins/input/journal/input_journal.go)
+`service_journal` 插件支持从原始的二进制文件中采集Linux系统的Journal（systemd）日志。systemd是专用于 Linux 操作系统的系统与服务管理器。当作为启动进程(PID=1)运行时，它将作为初始化系统运行，启动并维护各种用户空间的服务。 systemd统一管理所有Unit的日志（包括内核和应用日志），配置文件一般在`/etc/systemd/journald.conf`中。[源代码](https://github.com/alibaba/loongcollector/blob/main/plugins/input/journal/input_journal.go)
 
 ## 版本
 

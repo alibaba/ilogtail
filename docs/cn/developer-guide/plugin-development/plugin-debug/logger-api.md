@@ -1,6 +1,6 @@
 # Logger接口
 
-<https://github.com/alibaba/ilogtail/blob/main/pkg/logger/logger.go>
+<https://github.com/alibaba/loongcollector/blob/main/pkg/logger/logger.go>
 
 Logger提供了DBG、INFO、WARN、ERR 4个级别的日志打印，每个级别分别提供kv和format形式打印接口。
 
@@ -89,7 +89,7 @@ func Test_plugin_func1(t *testing.T) {
 
 ### 高级用法-自定义Logger
 
-你可以使用[logger.ConfigOption](https://github.com/alibaba/ilogtail/blob/main/pkg/logger/option.go)设置Logger 的行为，比如输出、日志级别、异步打印等。
+你可以使用[logger.ConfigOption](https://github.com/alibaba/loongcollector/blob/main/pkg/logger/option.go)设置Logger 的行为，比如输出、日志级别、异步打印等。
 
 ```go
 package test

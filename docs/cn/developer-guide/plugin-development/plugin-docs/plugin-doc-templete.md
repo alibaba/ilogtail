@@ -44,7 +44,7 @@
 
 #### 参考
 
-可用于参考的`service_journal`插件文档 [service-journal.md](https://github.com/alibaba/ilogtail/blob/main/docs/cn/plugins/input/service-journal.md) 。
+可用于参考的`service_journal`插件文档 [service-journal.md](https://github.com/alibaba/loongcollector/blob/main/docs/cn/plugins/input/service-journal.md) 。
 
 ### 汇总页
 

@@ -97,7 +97,7 @@ go install ...
 
 ```
 
-其中，image指定了ilogtail的开发镜像地址，customizations.vscode.extensions指定了开发环境的插件。部分插件介绍如下，开发者也可以按照自己的习惯进行修改，[欢迎讨论](https://github.com/alibaba/ilogtail/discussions/299)。
+其中，image指定了ilogtail的开发镜像地址，customizations.vscode.extensions指定了开发环境的插件。部分插件介绍如下，开发者也可以按照自己的习惯进行修改，[欢迎讨论](https://github.com/alibaba/loongcollector/discussions/299)。
 
 | **插件名** | **用途** |
 | --- | --- |

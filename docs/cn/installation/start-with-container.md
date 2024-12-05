@@ -6,11 +6,11 @@
 
 ## 采集Docker容器日志
 
-1. 准备iLogtail配置目录
+1. 准备 LoongCollector 配置目录
 
     新建配置目录`config`目录，在目录中创建`file_simple.yaml`和`stdout_simple.yaml`。
 
-    在`file_simple.yaml`中配置采集容器中的simple.log到标准输出。
+    在`file_simple.yaml`中配置采集容器中的`simple.log`到标准输出。
 
     ```yaml
     enable: true
@@ -23,7 +23,7 @@
         OnlyStdout: true
     ```
 
-    在`stdout_simple.yaml`中配置采集容器标准输出并输出到simple.stdout文件。
+    在`stdout_simple.yaml`中配置采集容器标准输出并输出到`simple.stdout`文件。
 
     ```yaml
     enable: true
@@ -40,18 +40,18 @@
 
     ```bash
     mkdir config && cd config
-    wget https://raw.githubusercontent.com/alibaba/ilogtail/main/example_config/start_with_docker/config/file_simple.yaml
-    wget https://raw.githubusercontent.com/alibaba/ilogtail/main/example_config/start_with_docker/config/stdout_simple.yaml
+    wget https://raw.githubusercontent.com/alibaba/loongcollector/main/example_config/start_with_docker/config/file_simple.yaml
+    wget https://raw.githubusercontent.com/alibaba/loongcollector/main/example_config/start_with_docker/config/stdout_simple.yaml
     cd -
     ```
 
-2. 启动iLogtail容器，并挂载iLogtail配置目录
+2. 启动 LoongCollector 容器，并挂载 LoongCollector 配置目录
 
     ```bash
-    docker run -d --name docker_ilogtail \
+    docker run -d --name docker_loongcollector \
       -v /:/logtail_host:ro \
       -v /var/run:/var/run \
-      -v /var/lib/docker_ilogtail/checkpoint:/usr/local/ilogtail/checkpoint \
+      -v /var/lib/docker_loongcollector/checkpoint:/usr/local/loongcollector/checkpoint \
       -v `pwd`/config:/usr/local/ilogtail/config/local \
       sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/ilogtail:latest
     ```
@@ -62,10 +62,10 @@
     第4行将主机目录挂载到容器中iLogtail的checkpoint目录，使采集状态在容器重启时可恢复。\
     第5行将配置目录挂载到iLogtail容器中。
 
-3. 查看ilogtail\_docker容器自身标准输出日志
+3. 查看 docker_loongcollector 容器自身标准输出日志
 
     ```bash
-    docker logs docker_ilogtail
+    docker logs docker_loongcollector
     ```
 
     结果为
@@ -83,7 +83,7 @@
 4. 进入iLogtail容器
 
     ```bash
-    docker exec -it docker_ilogtail bash
+    docker exec -it docker_loongcollector bash
     ```
 
 5. 查看采集到的标准输出
@@ -95,9 +95,9 @@
     结果为
 
     ```text
-    2022-07-14 16:23:20 {"content":"delay stop seconds:  0","_time_":"2022-07-14T16:23:17.704235928Z","_source_":"stdout","_image_name_":"sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/ilogtail:1.1.0","_container_name_":"docker_ilogtail","_container_ip_":"172.17.0.2","__time__":"1657815797"}
-    2022-07-14 16:23:20 {"content":"ilogtail started. pid: 10","_time_":"2022-07-14T16:23:17.704404952Z","_source_":"stdout","_image_name_":"sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/ilogtail:1.1.0","_container_name_":"docker_ilogtail","_container_ip_":"172.17.0.2","__time__":"1657815797"}
-    2022-07-14 16:23:20 {"content":"recover stdout","_time_":"2022-07-14T16:23:17.847939016Z","_source_":"stdout","_image_name_":"sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/ilogtail:1.1.0","_container_name_":"docker_ilogtail","_container_ip_":"172.17.0.2","__time__":"1657815797"}
+    2022-07-14 16:23:20 {"content":"delay stop seconds:  0","_time_":"2022-07-14T16:23:17.704235928Z","_source_":"stdout","_image_name_":"sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/ilogtail:1.1.0","_container_name_":"docker_loongcollector","_container_ip_":"172.17.0.2","__time__":"1657815797"}
+    2022-07-14 16:23:20 {"content":"ilogtail started. pid: 10","_time_":"2022-07-14T16:23:17.704404952Z","_source_":"stdout","_image_name_":"sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/ilogtail:1.1.0","_container_name_":"docker_loongcollector","_container_ip_":"172.17.0.2","__time__":"1657815797"}
+    2022-07-14 16:23:20 {"content":"recover stdout","_time_":"2022-07-14T16:23:17.847939016Z","_source_":"stdout","_image_name_":"sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/ilogtail:1.1.0","_container_name_":"docker_loongcollector","_container_ip_":"172.17.0.2","__time__":"1657815797"}
     ```
 
 6. 构造示例日志
@@ -111,7 +111,7 @@
     跳出容器，在宿主机上执行
 
     ```bash
-    docker logs docker_ilogtail
+    docker logs docker_loongcollector
     ```
 
     结果相比第3步的结果，多了
@@ -124,4 +124,4 @@
 
 了解采集配置结构：[采集配置](../configuration/collection-config.md)
 
-参考更多可组合的日志采集和处理配置样例：<https://github.com/alibaba/ilogtail/blob/main/example_config>
+参考更多可组合的日志采集和处理配置样例：<https://github.com/alibaba/loongcollector/blob/main/example_config>

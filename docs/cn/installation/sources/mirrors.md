@@ -2,7 +2,7 @@
 
 ## 代码仓库
 
-主站GitHub：[https://github.com/alibaba/ilogtail](https://github.com/alibaba/ilogtail)
+主站GitHub：[https://github.com/alibaba/loongcollector](https://github.com/alibaba/loongcollector)
 
 镜像站Gitee：[https://gitee.com/mirrors/iLogtail](https://gitee.com/mirrors/iLogtail)
 

@@ -2,7 +2,7 @@
 
 ## 简介
 
-`service_input_example` 可作为编写`ServiceInput`类插件的参考示例样例，可以在指定端口接收模拟HTTP请求。[源代码](https://github.com/alibaba/ilogtail/blob/main/plugins/input/example/service_example.go)
+`service_input_example` 可作为编写`ServiceInput`类插件的参考示例样例，可以在指定端口接收模拟HTTP请求。[源代码](https://github.com/alibaba/loongcollector/blob/main/plugins/input/example/service_example.go)
 
 ## 版本
 

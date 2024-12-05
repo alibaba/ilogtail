@@ -187,4 +187,4 @@ stdin.log内容如下：
 
 ### C API 配置变更
 
-以C-shared模式编译，与C程序结合使用，对外开放API参考 [plugin\_export.go](https://github.com/alibaba/ilogtail/blob/main/plugin\_main/plugin\_export.go)。
+以C-shared模式编译，与C程序结合使用，对外开放API参考 [plugin\_export.go](https://github.com/alibaba/loongcollector/blob/main/plugin\_main/plugin\_export.go)。

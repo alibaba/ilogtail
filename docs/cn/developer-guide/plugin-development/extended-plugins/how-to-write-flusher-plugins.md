@@ -61,10 +61,10 @@ type Flusher interface {
 Flusher 的开发分为以下步骤:
 
 1. 创建Issue，描述开发插件功能，会有社区同学参与讨论插件开发的可行性，如果社区review 通过，请参考步骤2继续进行。
-2. 实现 Flusher 接口，这里我们使用样例模式进行介绍，详细样例请查看[flusher/stdout](https://github.com/alibaba/ilogtail/blob/main/plugins/flusher/stdout/flusher_stdout.go)
-3. 通过init将插件注册到[Flushers](https://github.com/alibaba/ilogtail/blob/main/plugin.go)，Flusher插件的注册名（即json配置中的plugin_type）必须以"flusher_"开头，详细样例请查看[flusher/stdout](https://github.com/alibaba/ilogtail/blob/main/plugins/flusher/stdout/flusher_stdout.go)。
-   ，你可以使用 [example.json](https://github.com/alibaba/ilogtail/blob/main/plugins/processor/addfields/example.json) 试验此插件功能。
-4. 将插件加入[插件引用配置文件](https://github.com/alibaba/ilogtail/blob/main/plugins.yml)的`common`配置节, 如果仅运行于指定系统，请添加到`linux`或`windows`配置节.
+2. 实现 Flusher 接口，这里我们使用样例模式进行介绍，详细样例请查看[flusher/stdout](https://github.com/alibaba/loongcollector/blob/main/plugins/flusher/stdout/flusher_stdout.go)
+3. 通过init将插件注册到[Flushers](https://github.com/alibaba/loongcollector/blob/main/plugin.go)，Flusher插件的注册名（即json配置中的plugin_type）必须以"flusher_"开头，详细样例请查看[flusher/stdout](https://github.com/alibaba/loongcollector/blob/main/plugins/flusher/stdout/flusher_stdout.go)。
+   ，你可以使用 [example.json](https://github.com/alibaba/loongcollector/blob/main/plugins/processor/addfields/example.json) 试验此插件功能。
+4. 将插件加入[插件引用配置文件](https://github.com/alibaba/loongcollector/blob/main/plugins.yml)的`common`配置节, 如果仅运行于指定系统，请添加到`linux`或`windows`配置节.
 5. 进行单测或者E2E测试，请参考[如何使用单测](../test/unit-test.md) 与 [如何使用E2E测试](../test/e2e-test.md).
 6. 使用 *make lint* 检查代码规范。
 7. 提交Pull Request。

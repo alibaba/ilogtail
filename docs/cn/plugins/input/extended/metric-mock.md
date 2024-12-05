@@ -2,7 +2,7 @@
 
 ## 简介
 
-`metric_mock` 插件是用于模拟采集Metric类型输入数据的插件，可以通过调整参数获取不同的模拟输入。[源代码](https://github.com/alibaba/ilogtail/blob/main/plugins/input/mock/input_mock.go)
+`metric_mock` 插件是用于模拟采集Metric类型输入数据的插件，可以通过调整参数获取不同的模拟输入。[源代码](https://github.com/alibaba/loongcollector/blob/main/plugins/input/mock/input_mock.go)
 
 ## 版本
 

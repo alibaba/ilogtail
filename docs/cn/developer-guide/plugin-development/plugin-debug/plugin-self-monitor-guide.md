@@ -3,11 +3,11 @@ iLogtail提供了指标接口，可以方便地为插件增加一些自监控指
 
 接口：
 
-<https://github.com/alibaba/ilogtail/blob/main/pkg/pipeline/self_metric.go>
+<https://github.com/alibaba/loongcollector/blob/main/pkg/pipeline/self_metric.go>
 
 实现：
 
-<https://github.com/alibaba/ilogtail/blob/main/pkg/helper/self_metrics_vector_imp.go>
+<https://github.com/alibaba/loongcollector/blob/main/pkg/helper/self_metrics_vector_imp.go>
 
 用户使用时需要引入pkg/helper包：
 ```go
@@ -97,7 +97,7 @@ f.statusCodeStatistics.WithLabels(pipeline.Label{Key: "status_code", Value: strc
 可以参考内置的一些插件：
 
 限流插件：
-<https://github.com/alibaba/ilogtail/blob/main/plugins/processor/ratelimit/processor_rate_limit.go>
+<https://github.com/alibaba/loongcollector/blob/main/plugins/processor/ratelimit/processor_rate_limit.go>
 
 http flusher插件：
-<https://github.com/alibaba/ilogtail/blob/main/plugins/flusher/http/flusher_http.go>
+<https://github.com/alibaba/loongcollector/blob/main/plugins/flusher/http/flusher_http.go>

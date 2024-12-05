@@ -290,6 +290,6 @@
 
 了解采集配置结构：[采集配置](../configuration/collection-config.md)
 
-查看更多K8s采集日志模版（从容器中采集文件日等）：<https://github.com/alibaba/ilogtail/blob/main/k8s_templates>
+查看更多K8s采集日志模版（从容器中采集文件日等）：<https://github.com/alibaba/loongcollector/blob/main/k8s_templates>
 
-参考更多可组合的日志采集和处理配置样例：<https://github.com/alibaba/ilogtail/blob/main/example_config>
+参考更多可组合的日志采集和处理配置样例：<https://github.com/alibaba/loongcollector/blob/main/example_config>
