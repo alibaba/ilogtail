@@ -221,9 +221,9 @@
     kubectl apply -f loongcollector-daemonset.yaml
     ```
 
-4. 部署用来测试的nginx
+4. 部署用来测试的 nginx
 
-    将下面内容保存为nginx-deployment.yaml。
+    将下面内容保存为`nginx-deployment.yaml`。
 
     ```yaml {.line-numbers}
     apiVersion: apps/v1

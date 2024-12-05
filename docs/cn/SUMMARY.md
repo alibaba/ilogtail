@@ -24,9 +24,9 @@
   * [编译依赖](installation/sources/dependencies.md)
   * [镜像站](installation/sources/mirrors.md)
 * 发布记录
-  * [LoongCollector发布记录](installation/release-notes/release-notes-3.md)
-  * [iLogtail发布记录(2.x版本)](installation/release-notes/release-notes-2.md)
-  * [iLogtail发布记录(1.x版本)](installation/release-notes/release-notes-1.md)
+  * [LoongCollector 发布记录](installation/release-notes/release-notes-3.md)
+  * [iLogtail 发布记录(2.x版本)](installation/release-notes/release-notes-2.md)
+  * [iLogtail 发布记录(1.x版本)](installation/release-notes/release-notes-1.md)
 
 ## 配置 <a href="#configuration" id="configuration"></a>
 
@@ -75,7 +75,6 @@
     * [正则解析](plugins/processor/native/processor-parse-regex-native.md)
     * [分隔符解析](plugins/processor/native/processor-parse-delimiter-native.md)
     * [Json解析](plugins/processor/native/processor-parse-json-native.md)
-    * [SPL处理](plugins/processor/native/processor-spl-native.md)
     * [时间解析](plugins/processor/native/processor-parse-timestamp-native.md)
     * [过滤](plugins/processor/native/processor-filter-regex-native.md)
     * [脱敏](plugins/processor/native/processor-desensitize-native.md)
@@ -101,6 +100,8 @@
     * [键值对](plugins/processor/extended/processor-split-key-value.md)
     * [多行切分](plugins/processor/extended/processor-split-log-regex.md)
     * [字符串替换](plugins/processor/extended/processor-string-replace.md)
+  * SPL 处理
+    * [SPL 处理](plugins/processor/native/processor-spl-native.md)
 * 聚合
   * [什么是聚合插件](plugins/aggregator/README.md)
   * [基础聚合](plugins/aggregator/aggregator-base.md)

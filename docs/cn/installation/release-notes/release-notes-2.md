@@ -1,4 +1,4 @@
-# 发布历史
+# iLogtail 发布记录(2.x版本)
 
 ## 2.0.0
 
@@ -60,4 +60,4 @@ docker pull sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-communi
 
 ## 1.x版本
 
-[发布记录(1.x版本)](./release-notes-1.md)
+[iLogtail 发布记录(1.x版本)](./release-notes-1.md)
