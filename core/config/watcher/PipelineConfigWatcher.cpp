@@ -169,7 +169,6 @@ void PipelineConfigWatcher::InsertBuiltInPipelines(PipelineConfigDiff& pDiff,
             }
         } else {
             LOG_DEBUG(sLogger, ("existing inner config unchanged", "skip current object"));
-            CheckUnchangedConfig(pipelineName, path, pDiff, tDiff, singletonCache);
         }
     }
 #else
