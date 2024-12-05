@@ -112,4 +112,4 @@ Discussion 分类：
 
 ## 联系我们
 
-<img src="https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/images/chatgroup.png" style="width: 50%; height: 50%" />
+<img src="../.gitbook/assets/chatgroup.png" style="width: 60%; height: 60%" />
