@@ -35,7 +35,7 @@ struct PipelineConfigWithDiffInfo {
     PipelineConfigWithDiffInfo(PipelineConfig&& config, ConfigDiffEnum diffEnum)
         : config(std::move(config)), diffEnum(diffEnum) {}
 };
-using SingletonConfigCache = std::unordered_map<std::string, std::shared_ptr<PipelineConfigWithDiffInfo>>;
+using SingletonConfigCache = std::unordered_map<std::string, std::vector<std::shared_ptr<PipelineConfigWithDiffInfo>>>;
 
 class PipelineConfigWatcher : public ConfigWatcher {
 public:
@@ -75,10 +75,16 @@ private:
                              PipelineConfigDiff& pDiff,
                              TaskConfigDiff& tDiff,
                              SingletonConfigCache& singletonCache);
+    bool CheckUnchangedConfig(const std::string& configName,
+                              const std::filesystem::path& path,
+                              PipelineConfigDiff& pDiff,
+                              TaskConfigDiff& tDiff,
+                              SingletonConfigCache& singletonCache);
     void PushPipelineConfig(PipelineConfig&& config,
                             ConfigDiffEnum diffEnum,
                             PipelineConfigDiff& pDiff,
                             SingletonConfigCache& singletonCache);
+    void CheckSingletonInput(PipelineConfigDiff& pDiff, SingletonConfigCache& singletonCache);
 
     const PipelineManager* mPipelineManager = nullptr;
     const TaskPipelineManager* mTaskPipelineManager = nullptr;
