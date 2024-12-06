@@ -23,9 +23,9 @@
   * [Docker镜像](installation/sources/docker-image.md)
   * [编译依赖](installation/sources/dependencies.md)
 * 发布记录
-  * [LoongCollector 发布记录](installation/release-notes/release-notes-3.md)
-  * [iLogtail 发布记录(2.x版本)](installation/release-notes/release-notes-2.md)
-  * [iLogtail 发布记录(1.x版本)](installation/release-notes/release-notes-1.md)
+  * [LoongCollector 发布记录](installation/release-notes/release-notes.md)
+  * [iLogtail 发布记录(2.x版本)](installation/release-notes/release-notes-ilogtail-2x.md)
+  * [iLogtail 发布记录(1.x版本)](installation/release-notes/release-notes-ilogtail-1x.md)
 
 ## 配置 <a href="#configuration" id="configuration"></a>
 
