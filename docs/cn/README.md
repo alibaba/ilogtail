@@ -1,6 +1,6 @@
 # 什么是LoongCollector
 
-![](<.gitbook/assets/loongcollector-icon.png>)
+![](<https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/images/readme/loongcollector-icon.png>)
 
 LoongCollector 是一款集卓越性能、超强稳定性和灵活可编程性于一身的数据采集器，专为构建下一代可观测 Pipeline 设计。源自阿里云可观测性团队所开源的 iLogtail 项目，在继承了 iLogtail 强大的日志采集与处理能力的基础上，进行了全面的功能升级与扩展。从原来单一日志场景，逐步扩展为可观测数据采集、本地计算、服务发现的统一体。
 
@@ -20,11 +20,11 @@ LoongCollector 社区将紧密围绕既定的愿景蓝图，专注于核心价�
 
 LoongCollector 始终将追求极致的采集性能和超强可靠性放在首位，坚信这是实践长期主义理念的根基。我们深知，LoongCollector 核心价值在于为大规模分布式系统提供稳固、高效的可观测性数据统一采集 Agent 与端到端 Pipeline。不管在过去、现在、未来，LoongCollector 都将持续通过技术革新与优化，实现资源利用效率的提升与在极端场景下的稳定运行。
 
-![](<.gitbook/assets/about-1.png>)
+![](<https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/images/readme/uncompromised_performance_and_reliability.png>)
 
 ### 遥测数据，无限边界 Unlimited Telemetry Data
 
-![](<.gitbook/assets/about-2.png>)
+![](<https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/images/readme/unlimited_telemetry_data.png>)
 
 LoongCollector 坚信 All-in-One 的设计理念，致力于所有的采集工作用一个 Agent 实现 Logs、Metric、Traces、Events、Profiles 的采集、处理、路由、发送等功能。展望未来，LoongCollector 将着重强化其 Prometheus 抓取能力，深度融入 eBPF（Extended Berkeley Packet Filter）技术以实现无侵入式采集，提供原生的指标采集功能，做到真正的 OneAgent。
 
@@ -39,7 +39,7 @@ LoongCollector 通过 SPL 与多语言 Plugin 双引擎加持，构建完善的�
 * 不同引擎都可以相互打通，通过灵活的组合实现预期的计算能力。
 * 设计通用的 Event 数据模型，可扩展表达 Logs、Metric、Traces、Events、Profiles 等在内的多种可观测类型，为通用计算提供便捷。
 
-![](<.gitbook/assets/about-3.png>)
+![](<https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/images/readme/unrestricted_programmable_pipeline.png>)
 
 开发者可以根据自身需求灵活选择可编程引擎。如果看重执行效率，可以选择原生插件；如果看重算子全面性，需要处理复杂数据，可以选择 SPL 引擎；如果强调低门槛的自身定制化，可以选择扩展插件，采用 Golang 进行编程。
 
@@ -61,15 +61,15 @@ LoongCollector 通过 SPL 与多语言 Plugin 双引擎加持，构建完善的�
 
 同时，对于存储适配层进行了抽象，便于开发者对接符合自己环境需求的持久化存储。
 
-![](<.gitbook/assets/about-4.png>)
+![](<https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/images/readme/config_server.png>)
 
 LoongCollector 极大地完善了自身可观测性的建设。不管是 LoongCollector 自身运行状态，还是采集 Pipeline 节点都有完整指标。开发者只需要将这些指标对接到可观测系统，即可体验对 LoongCollector 运行状态的清晰洞察。
 
-![](<.gitbook/assets/about-5.png>)
+![](<https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/images/readme/self_monitor.png>)
 
 ## 核心场景：不仅仅是 Agent
 
-![](<.gitbook/assets/about-6.png>)
+![](<https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/images/readme/not_only_agent.png>)
 
 作为一款高性能的可观测数据采集与处理 Pipeline，LoongCollector 的部署模式在很大程度上能够被灵活定制以满足各种不同的业务需求和技术架构。
 
@@ -103,7 +103,7 @@ cd output
 
 未来，LoongCollector 社区将持续围绕长期主义进行建设，打造核心竞争力。同时，也期待更多小伙伴的加入。
 
-![](<.gitbook/assets/about-7.png>)
+![](<https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/images/readme/roadmap.png>)
 
 * 通过框架能力增强，构建高性能、高可靠的基础底座。
   * 通用发送重构框架
@@ -157,4 +157,4 @@ cd output
 * 知乎：[iLogtail社区](https://www.zhihu.com/column/c_1533139823409270785)
 * 扫描二维码加入微信/钉钉交流群
 
-<img src=".gitbook/assets/chatgroup.png" style="width: 60%; height: 60%" />
+<img src="https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/images/chatgroup/chatgroup.png" style="width: 60%; height: 60%" />
