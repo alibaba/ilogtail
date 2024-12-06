@@ -251,7 +251,7 @@ bool PipelineConfig::Parse() {
         }
     }
     // TODO: remove these special restrictions
-    if ((hasFileInput) && (*mDetail)["inputs"].size() > 1) {
+    if (hasFileInput && (*mDetail)["inputs"].size() > 1) {
         PARAM_ERROR_RETURN(sLogger,
                            alarm,
                            "more than 1 input_file or input_container_stdio is given",
