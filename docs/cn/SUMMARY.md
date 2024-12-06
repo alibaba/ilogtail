@@ -22,7 +22,6 @@
   * [编译](installation/sources/build.md)
   * [Docker镜像](installation/sources/docker-image.md)
   * [编译依赖](installation/sources/dependencies.md)
-  * [镜像站](installation/sources/mirrors.md)
 * 发布记录
   * [LoongCollector 发布记录](installation/release-notes/release-notes-3.md)
   * [iLogtail 发布记录(2.x版本)](installation/release-notes/release-notes-2.md)
@@ -71,6 +70,8 @@
     * [【Debug】文本日志](plugins/input/extended/metric-debug-file.md)
 * 处理
   * [什么是处理插件](plugins/processor/README.md)
+  * SPL 处理
+    * [SPL 处理](plugins/processor/spl/processor-spl-native.md)
   * 原生插件
     * [正则解析](plugins/processor/native/processor-parse-regex-native.md)
     * [分隔符解析](plugins/processor/native/processor-parse-delimiter-native.md)
@@ -100,8 +101,6 @@
     * [键值对](plugins/processor/extended/processor-split-key-value.md)
     * [多行切分](plugins/processor/extended/processor-split-log-regex.md)
     * [字符串替换](plugins/processor/extended/processor-string-replace.md)
-  * SPL 处理
-    * [SPL 处理](plugins/processor/native/processor-spl-native.md)
 * 聚合
   * [什么是聚合插件](plugins/aggregator/README.md)
   * [基础聚合](plugins/aggregator/aggregator-base.md)

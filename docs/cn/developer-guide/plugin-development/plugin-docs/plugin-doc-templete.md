@@ -8,7 +8,7 @@
 
 #### 文件命名
 
-文档以插件英文名命名文件，`_`改为`-`，例如`metric_mock`插件的文档名为`metric-mock.md`，保存在`docs/cn/data-pipline`的相应文件夹下。
+文档以插件英文名命名文件，`_`改为`-`，例如`metric_mock`插件的文档名为`metric-mock.md`，保存在`docs/cn/plugins/input/extended/metric-mock.md`的相应文件夹下。
 
 #### 标题部分
 
@@ -44,11 +44,11 @@
 
 #### 参考
 
-可用于参考的`service_journal`插件文档 [service-journal.md](https://github.com/alibaba/loongcollector/blob/main/docs/cn/plugins/input/service-journal.md) 。
+可用于参考的`service_journal`插件文档 [service-journal.md](https://github.com/alibaba/loongcollector/blob/main/docs/cn/plugins/input/extended/service-journal.md) 。
 
 ### 汇总页
 
-文档完成后，需要修改`docs/cn/data-pipline`中的`overview.md`和`docs/cn`中的`SUMMARY.md`。
+文档完成后，需要修改`docs/cn/plugins/overview.md`和`docs/cnSUMMARY.md`。
 
 1. `overview.md`里所有的插件按英文名字典序升序排列，添加的时候注意插入的位置。
 2. `SUMMARY.md`中的插件顺序与`overview.md`保持一致，并附上链接。

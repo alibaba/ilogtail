@@ -6,7 +6,7 @@
 
 ## 版本
 
-[Deprecated](../stability-level.md)，请使用`flusher_kafka_v2`
+[Deprecated](../../stability-level.md)，请使用`flusher_kafka_v2`
 
 ## 配置参数
 

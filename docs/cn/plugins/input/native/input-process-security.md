@@ -6,7 +6,7 @@
 
 ## 版本
 
-[Dev](../stability-level.md)
+[Dev](../../stability-level.md)
 
 ## 配置参数
 

@@ -8,7 +8,7 @@
 
 ## 版本
 
-[Alpha](../stability-level.md)
+[Alpha](../../stability-level.md)
 
 ## 配置参数
 

@@ -4,11 +4,11 @@
 
 `flusher_sls` `flusher`插件将采集到的事件发送至SLS。
 
-使用本插件时，必须在启动参数中配置[AK和SK](../../configuration/system-config.md)。
+使用本插件时，必须在启动参数中配置[AK和SK](../../../configuration/system-config.md)。
 
 ## 版本
 
-[Stable](../stability-level.md)
+[Stable](../../stability-level.md)
 
 ## 配置参数
 
@@ -23,7 +23,7 @@
 
 ## 安全性说明
 
-`flusher_sls` 默认使用 `HTTPS` 协议发送数据到 `SLS`，也可以使用[data_server_port](../../configuration/system-config.md)参数更改发送协议。
+`flusher_sls` 默认使用 `HTTPS` 协议发送数据到 `SLS`，也可以使用[data_server_port](../../../configuration/system-config.md)参数更改发送协议。
 
 ## 样例
 
