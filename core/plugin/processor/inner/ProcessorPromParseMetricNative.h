@@ -5,7 +5,7 @@
 #include "models/PipelineEventGroup.h"
 #include "models/PipelineEventPtr.h"
 #include "pipeline/plugin/interface/Processor.h"
-#include "prometheus/labels/TextParser.h"
+#include "prometheus/labels/TextParserSIMD.h"
 #include "prometheus/schedulers/ScrapeConfig.h"
 
 namespace logtail {
@@ -21,7 +21,7 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr&) const override;
 
 private:
-    bool ProcessEvent(PipelineEventPtr&, EventsContainer&, PipelineEventGroup&, TextParser& parser);
+    bool ProcessEvent(PipelineEventPtr&, EventsContainer&, PipelineEventGroup&, prom::TextParserSIMD& parser);
     std::unique_ptr<ScrapeConfig> mScrapeConfigPtr;
 
 #ifdef APSARA_UNIT_TEST_MAIN
