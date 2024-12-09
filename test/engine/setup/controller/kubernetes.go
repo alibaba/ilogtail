@@ -65,10 +65,7 @@ func (c *DeploymentController) GetDeploymentPods(deploymentName, deploymentNames
 	if err != nil {
 		return nil, err
 	}
-	labels := map[string]string{
-		"app": deployment.Spec.Template.Labels["app"],
-	}
-	selector := metav1.FormatLabelSelector(&metav1.LabelSelector{MatchLabels: labels})
+	selector := metav1.FormatLabelSelector(deployment.Spec.Selector)
 	listOptions := metav1.ListOptions{LabelSelector: selector}
 
 	pods, err := c.k8sClient.CoreV1().Pods(deploymentNamespace).List(context.TODO(), listOptions)
