@@ -25,28 +25,20 @@ namespace logtail {
 bool IsHttpsEndpoint(const string& endpoint) {
     return endpoint.find("https://") == 0;
 }
-    
-string StandardizeEndpoint(const string& endpoint, const string& defaultEndpoint) {
-    string res = endpoint;
-    if (endpoint.find("https://") == 0) {
-        if (endpoint.size() < string("https://x").size()) {
-            LOG_WARNING(sLogger, ("invalid endpoint", endpoint)("use default instead", defaultEndpoint));
-            return defaultEndpoint;
-        }
-    } else if (endpoint.find("http://") == 0) {
-        if (endpoint.size() < string("http://x").size()) {
-            LOG_WARNING(sLogger, ("invalid endpoint", endpoint)("use default instead", defaultEndpoint));
-            return defaultEndpoint;
-        }
+
+string StandardizeEndpoint(const string& endpoint) {
+    auto bpos = endpoint.find("://");
+    if (bpos == string::npos) {
+        bpos = 0;
     } else {
-        res = string("http://") + endpoint;
-        LOG_DEBUG(sLogger, ("add default protocol for endpoint, old", endpoint)("new", res));
+        bpos += strlen("://");
     }
-    // trim the last '/'
-    if (res[res.size() - 1] == '/') {
-        return res.substr(0, res.size() - 1);
+
+    auto epos = endpoint.find("/", bpos);
+    if (epos == string::npos) {
+        epos = endpoint.length();
     }
-    return res;
+    return endpoint.substr(bpos, epos - bpos);
 }
 
 string GetHostFromEndpoint(const std::string& endpoint) {

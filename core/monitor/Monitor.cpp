@@ -25,6 +25,7 @@
 #include "app_config/AppConfig.h"
 #include "application/Application.h"
 #include "common/DevInode.h"
+#include "common/EncodingUtil.h"
 #include "common/ExceptionBase.h"
 #include "common/LogtailCommonFlags.h"
 #include "common/MachineInfoUtil.h"
@@ -41,7 +42,6 @@
 #include "plugin/flusher/sls/FlusherSLS.h"
 #include "protobuf/sls/sls_logs.pb.h"
 #include "runner/FlusherRunner.h"
-#include "sdk/Common.h"
 #ifdef __ENTERPRISE__
 #include "config/provider/EnterpriseConfigProvider.h"
 #endif

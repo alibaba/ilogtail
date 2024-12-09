@@ -30,7 +30,9 @@
 #include "pipeline/batch/Batcher.h"
 #include "pipeline/limiter/ConcurrencyLimiter.h"
 #include "pipeline/plugin/interface/HttpFlusher.h"
+#include "pipeline/queue/SLSSenderQueueItem.h"
 #include "pipeline/serializer/SLSSerializer.h"
+#include "plugin/flusher/sls/SLSClientManager.h"
 #include "protobuf/sls/sls_logs.pb.h"
 
 namespace logtail {
@@ -48,12 +50,7 @@ public:
     static std::string GetDefaultRegion();
     static void SetDefaultRegion(const std::string& region);
     static std::string GetAllProjects();
-    static bool IsRegionContainingConfig(const std::string& region);
     static std::string GetProjectRegion(const std::string& project);
-
-    // TODO: should be moved to enterprise config provider
-    static bool GetRegionStatus(const std::string& region);
-    static void UpdateRegionStatus(const std::string& region, bool status);
 
     static const std::string sName;
 
@@ -77,8 +74,11 @@ public:
     std::string mProject;
     std::string mLogstore;
     std::string mRegion;
-    std::string mEndpoint;
     std::string mAliuid;
+#ifdef __ENTERPRISE__
+    EndpointMode mEndpointMode = EndpointMode::DEFAULT;
+#endif
+    std::string mEndpoint;
     sls_logs::SlsTelemetryType mTelemetryType = sls_logs::SlsTelemetryType::SLS_TELEMETRY_TYPE_LOGS;
     std::vector<std::string> mShardHashKeys;
     uint32_t mMaxSendRate = 0; // preserved only for exactly once
@@ -87,8 +87,6 @@ public:
     std::unique_ptr<Compressor> mCompressor;
 
 private:
-    static const std::unordered_set<std::string> sNativeParam;
-
     static void InitResource();
 
     static void IncreaseProjectRegionReferenceCnt(const std::string& project, const std::string& region);
@@ -99,17 +97,14 @@ private:
     static std::unordered_map<std::string, std::weak_ptr<ConcurrencyLimiter>> sRegionConcurrencyLimiterMap;
     static std::unordered_map<std::string, std::weak_ptr<ConcurrencyLimiter>> sLogstoreConcurrencyLimiterMap;
 
+    static const std::unordered_set<std::string> sNativeParam;
+
     static std::mutex sDefaultRegionLock;
     static std::string sDefaultRegion;
 
     static std::mutex sProjectRegionMapLock;
     static std::unordered_map<std::string, int32_t> sProjectRefCntMap;
-    static std::unordered_map<std::string, int32_t> sRegionRefCntMap;
     static std::unordered_map<std::string, std::string> sProjectRegionMap;
-
-    // TODO: should be moved to enterprise config provider
-    static std::mutex sRegionStatusLock;
-    static std::unordered_map<std::string, bool> sAllRegionStatus;
 
     static bool sIsResourceInited;
 
@@ -121,9 +116,19 @@ private:
     std::string GetShardHashKey(const BatchedEvents& g) const;
     void AddPackId(BatchedEvents& g) const;
 
+    std::unique_ptr<HttpSinkRequest> CreatePostLogStoreLogsRequest(const std::string& accessKeyId,
+                                                                   const std::string& accessKeySecret,
+                                                                   SLSClientManager::AuthType type,
+                                                                   SLSSenderQueueItem* item) const;
+    std::unique_ptr<HttpSinkRequest> CreatePostMetricStoreLogsRequest(const std::string& accessKeyId,
+                                                                      const std::string& accessKeySecret,
+                                                                      SLSClientManager::AuthType type,
+                                                                      SLSSenderQueueItem* item) const;
+
     Batcher<SLSEventBatchStatus> mBatcher;
     std::unique_ptr<EventGroupSerializer> mGroupSerializer;
     std::unique_ptr<Serializer<std::vector<CompressedLogGroup>>> mGroupListSerializer;
+    std::shared_ptr<CandidateHostsInfo> mCandidateHostsInfo;
 
     CounterPtr mSendCnt;
     CounterPtr mSendDoneCnt;
