@@ -26,6 +26,8 @@ extern const std::string HEALTH;
 
 extern const std::string CONTENT_MD5;
 
+extern const std::string LOGTAIL_USER_AGENT;
+
 extern const std::string LOG_HEADER_PREFIX;
 extern const std::string LOG_OLD_HEADER_PREFIX;
 extern const std::string ACS_HEADER_PREFIX;

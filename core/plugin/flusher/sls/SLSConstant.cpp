@@ -22,6 +22,8 @@ const string LOGSTORES = "/logstores";
 const string METRICSTORES = "/prometheus";
 const string HEALTH = "/health";
 
+const string LOGTAIL_USER_AGENT = "ali-log-logtail";
+
 const string CONTENT_MD5 = "Content-MD5";
 
 const string LOG_HEADER_PREFIX = "x-log-";
