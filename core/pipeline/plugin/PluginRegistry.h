@@ -80,7 +80,7 @@ private:
     void LoadStaticPlugins();
     void LoadDynamicPlugins(const std::set<std::string>& plugins);
     void RegisterInputCreator(PluginCreator* creator, bool isSingleton = false);
-    void RegisterProcessorCreator(PluginCreator* creator, bool isSingleton = false);
+    void RegisterProcessorCreator(PluginCreator* creator);
     void RegisterFlusherCreator(PluginCreator* creator, bool isSingleton = false);
     PluginCreator* LoadProcessorPlugin(DynamicLibLoader& loader, const std::string pluginType);
     void RegisterCreator(PluginCat cat, PluginCreator* creator, bool isSingleton);

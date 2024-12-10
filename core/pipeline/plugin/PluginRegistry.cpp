@@ -187,8 +187,8 @@ void PluginRegistry::RegisterInputCreator(PluginCreator* creator, bool isSinglet
     RegisterCreator(INPUT_PLUGIN, creator, isSingleton);
 }
 
-void PluginRegistry::RegisterProcessorCreator(PluginCreator* creator, bool isSingleton) {
-    RegisterCreator(PROCESSOR_PLUGIN, creator, isSingleton);
+void PluginRegistry::RegisterProcessorCreator(PluginCreator* creator) {
+    RegisterCreator(PROCESSOR_PLUGIN, creator, false);
 }
 
 void PluginRegistry::RegisterFlusherCreator(PluginCreator* creator, bool isSingleton) {

@@ -32,7 +32,7 @@ struct PipelineConfig {
     uint32_t mCreateTime = 0;
     const Json::Value* mGlobal = nullptr;
     std::vector<const Json::Value*> mInputs;
-    std::string mSingletonInput;
+    std::optional<std::string> mSingletonInput;
     std::vector<const Json::Value*> mProcessors;
     std::vector<const Json::Value*> mAggregators;
     std::vector<const Json::Value*> mFlushers;

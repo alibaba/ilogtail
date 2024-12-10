@@ -191,6 +191,7 @@ bool PipelineConfig::Parse() {
                                mRegion);
         }
         const string pluginType = it->asString();
+        // when input is singleton, there should only one input to simpify config load transaction
         if (PluginRegistry::GetInstance()->IsGlobalSingletonInputPlugin(pluginType)) {
             mSingletonInput = pluginType;
             if (itr->size() > 1) {

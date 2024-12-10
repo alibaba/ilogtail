@@ -454,8 +454,8 @@ bool PipelineConfigWatcher::CheckUnchangedConfig(const std::string& configName,
                                                    config.mRegion);
             return false;
         }
-        if (!config.mSingletonInput.empty()) {
-            singletonCache[config.mSingletonInput].push_back(
+        if (config.mSingletonInput) {
+            singletonCache[config.mSingletonInput.value()].push_back(
                 make_shared<PipelineConfigWithDiffInfo>(std::move(config), ConfigDiffEnum::Added));
         }
     }
@@ -467,10 +467,10 @@ void PipelineConfigWatcher::PushPipelineConfig(PipelineConfig&& config,
                                                PipelineConfigDiff& pDiff,
                                                SingletonConfigCache& singletonCache) {
     // singleton input
-    if (!config.mSingletonInput.empty()) {
+    if (config.mSingletonInput) {
         if (diffEnum == ConfigDiffEnum::Added || diffEnum == ConfigDiffEnum::Modified
             || diffEnum == ConfigDiffEnum::Unchanged) {
-            singletonCache[config.mSingletonInput].push_back(
+            singletonCache[config.mSingletonInput.value()].push_back(
                 make_shared<PipelineConfigWithDiffInfo>(std::move(config), diffEnum));
         } else {
             LOG_ERROR(sLogger, ("should not reach here", "invalid diff enum")("diff", diffEnum));
