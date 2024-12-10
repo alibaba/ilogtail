@@ -1334,7 +1334,7 @@ void SLSClientManagerUnittest::TestAccessKeyManagement() {
     APSARA_TEST_EQUAL(STRING_FLAG(default_access_key), accessKeySecret);
 }
 
-void SLSClientManagerUnittest::TestGetCandidateHostsInfoOpen() {
+void SLSClientManagerUnittest::TestGetCandidateHostsInfo() {
     const string project = "project";
     const string endpoint = "endpoint";
     CandidateHostsInfo* infoPtr = nullptr;
