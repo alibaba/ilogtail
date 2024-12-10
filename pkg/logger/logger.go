@@ -125,7 +125,7 @@ func initNormalLogger() {
 	}
 	confDir := config.LoongcollectorGlobalConfig.LoongcollectorConfDir
 	if _, err := os.Stat(confDir); os.IsNotExist(err) {
-		os.MkdirAll(confDir, os.ModePerm)
+		_ = os.MkdirAll(confDir, os.ModePerm)
 	}
 	setLogConf(path.Join(confDir, "plugin_logger.xml"))
 }
