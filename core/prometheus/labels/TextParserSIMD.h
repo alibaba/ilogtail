@@ -45,10 +45,10 @@ public:
 private:
     std::optional<size_t> FindFirstLetter(const char* s, size_t len, char target);
     std::optional<size_t> FindFirstWhiteSpace(const char* s, size_t len);
-
     std::optional<size_t> FindWhiteSpaceAndExemplar(const char* s, size_t len);
 
     std::optional<size_t> SkipTrailingWhitespace(const char* s, size_t pos);
+    inline size_t SkipLeadingWhitespace(const char* s, size_t len, size_t pos);
 
     void HandleError(const std::string& errMsg);
 
@@ -58,7 +58,6 @@ private:
     void HandleLabelValue(MetricEvent& metricEvent, const char* s, size_t len);
     void HandleSampleValue(MetricEvent& metricEvent, const char* s, size_t len);
     void HandleTimestamp(MetricEvent& metricEvent, const char* s, size_t len);
-    inline size_t SkipLeadingWhitespace(const char* s, size_t len, size_t pos);
 
     TextState mState{TextState::Start};
     bool mEscape{false};
