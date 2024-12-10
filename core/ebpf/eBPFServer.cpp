@@ -240,6 +240,7 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
 
     case nami::PluginType::NETWORK_OBSERVE:{
         nami::NetworkObserveConfig nconfig;
+        nconfig.enable_cid_filter = false;
         nami::ObserverNetworkOption* opts = std::get<nami::ObserverNetworkOption*>(options);
         if (opts->mEnableMetric) {
             nconfig.enable_metric_ = true;
