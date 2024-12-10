@@ -16,26 +16,26 @@
 
 #pragma once
 
-#include <curl/curl.h>
+// #include <curl/curl.h>
 
-#include <atomic>
+// #include <atomic>
 #include <chrono>
-#include <condition_variable>
+// #include <condition_variable>
 #include <cstdint>
-#include <ctime>
-#include <future>
+// #include <ctime>
+// #include <future>
 #include <list>
 #include <map>
 #include <memory>
 #include <mutex>
 #include <optional>
 #include <string>
-#include <unordered_map>
-#include <unordered_set>
+// #include <unordered_map>
+// #include <unordered_set>
 #include <vector>
 
-#include "common/http/HttpRequest.h"
-#include "common/http/HttpResponse.h"
+// #include "common/http/HttpRequest.h"
+// #include "common/http/HttpResponse.h"
 #include "pipeline/queue/SenderQueueItem.h"
 #include "plugin/flusher/sls/SLSResponse.h"
 
@@ -108,6 +108,7 @@ private:
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class CandidateHostsInfoUnittest;
     friend class SLSClientManagerUnittest;
+    friend class EnterpriseSLSClientManagerUnittest;
 #endif
 };
 
@@ -132,8 +133,8 @@ public:
     virtual void UpdateAccessKeyStatus(const std::string& aliuid, bool success) {}
 
     // // currently not support hot relead
-    // void UpdateLocalRegionEndpointsAndHttpsInfo(const std::string& region, const std::vector<std::string>& endpoints);
-    // void UpdateRemoteRegionEndpoints(const std::string& region,
+    // void UpdateLocalRegionEndpointsAndHttpsInfo(const std::string& region, const std::vector<std::string>&
+    // endpoints); void UpdateRemoteRegionEndpoints(const std::string& region,
     //                                  const std::vector<std::string>& endpoints,
     //                                  RemoteEndpointUpdateAction action = RemoteEndpointUpdateAction::OVERWRITE);
 
@@ -144,7 +145,8 @@ public:
     //                     const std::string& host,
     //                     const std::chrono::milliseconds& latency);
     // // only for real ip
-    // bool UpdateHostInfo(const std::string& region, const std::string& host, const std::chrono::milliseconds& latency);
+    // bool UpdateHostInfo(const std::string& region, const std::string& host, const std::chrono::milliseconds&
+    // latency);
 
     // only for open source
     std::shared_ptr<CandidateHostsInfo> GetCandidateHostsInfo(const std::string& project, const std::string& endpoint);
@@ -157,7 +159,7 @@ public:
     std::string GetRegionFromEndpoint(const std::string& endpoint); // for backward compatibility
 
 #ifdef APSARA_UNIT_TEST_MAIN
-    void Clear();
+    virtual void Clear();
 #endif
 
 protected:
@@ -206,49 +208,47 @@ private:
     // std::unordered_set<std::string> mHttpsRegions;
 
     mutable std::mutex mCandidateHostsInfosMapMux;
-    std::map<std::string, std::list<std::weak_ptr<CandidateHostsInfo>>> mRegionCandidateHostsInfosMap;
-    // for opensource, only custom mode is supported, and one project supports multiple custom endpoints
-    // for enterprise, only one info for each mode is supported
+    // only custom mode is supported, and one project supports multiple custom endpoints
     std::map<std::string, std::list<std::weak_ptr<CandidateHostsInfo>>> mProjectCandidateHostsInfosMap;
 
-//     CURLM* mUnInitializedHostProbeClient = nullptr;
-//     mutable std::mutex mUnInitializedCandidateHostsInfosMux;
-//     std::vector<std::weak_ptr<CandidateHostsInfo>> mUnInitializedCandidateHostsInfos;
+    //     CURLM* mUnInitializedHostProbeClient = nullptr;
+    //     mutable std::mutex mUnInitializedCandidateHostsInfosMux;
+    //     std::vector<std::weak_ptr<CandidateHostsInfo>> mUnInitializedCandidateHostsInfos;
 
-//     std::future<void> mUnInitializedHostProbeThreadRes;
-//     mutable std::mutex mUnInitializedHostProbeThreadRunningMux;
-//     bool mIsUnInitializedHostProbeThreadRunning = true;
+    //     std::future<void> mUnInitializedHostProbeThreadRes;
+    //     mutable std::mutex mUnInitializedHostProbeThreadRunningMux;
+    //     bool mIsUnInitializedHostProbeThreadRunning = true;
 
-//     CURLM* mHostProbeClient = nullptr;
-//     mutable std::mutex mPartiallyInitializedCandidateHostsInfosMux;
-//     std::vector<std::weak_ptr<CandidateHostsInfo>> mPartiallyInitializedCandidateHostsInfos;
+    //     CURLM* mHostProbeClient = nullptr;
+    //     mutable std::mutex mPartiallyInitializedCandidateHostsInfosMux;
+    //     std::vector<std::weak_ptr<CandidateHostsInfo>> mPartiallyInitializedCandidateHostsInfos;
 
-//     std::future<void> mHostProbeThreadRes;
-//     mutable std::mutex mHostProbeThreadRunningMux;
-//     bool mIsHostProbeThreadRunning = true;
-// #ifdef APSARA_UNIT_TEST_MAIN
-//     HttpResponse (*mDoProbeNetwork)(const std::unique_ptr<ProbeNetworkHttpRequest>& req) = nullptr;
-// #endif
+    //     std::future<void> mHostProbeThreadRes;
+    //     mutable std::mutex mHostProbeThreadRunningMux;
+    //     bool mIsHostProbeThreadRunning = true;
+    // #ifdef APSARA_UNIT_TEST_MAIN
+    //     HttpResponse (*mDoProbeNetwork)(const std::unique_ptr<ProbeNetworkHttpRequest>& req) = nullptr;
+    // #endif
 
-//     mutable std::mutex mRegionRealIpMux;
-//     std::map<std::string, std::string> mRegionRealIpMap;
-//     mutable std::mutex mOutdatedRealIpRegionsMux;
-//     std::vector<std::string> mOutdatedRealIpRegions;
-//     mutable std::mutex mRegionRealIpCandidateHostsInfosMapMux;
-//     std::map<std::string, CandidateHostsInfo> mRegionRealIpCandidateHostsInfosMap;
-//     bool (*mGetEndpointRealIp)(const std::string& endpoint, std::string& ip) = nullptr;
+    //     mutable std::mutex mRegionRealIpMux;
+    //     std::map<std::string, std::string> mRegionRealIpMap;
+    //     mutable std::mutex mOutdatedRealIpRegionsMux;
+    //     std::vector<std::string> mOutdatedRealIpRegions;
+    //     mutable std::mutex mRegionRealIpCandidateHostsInfosMapMux;
+    //     std::map<std::string, CandidateHostsInfo> mRegionRealIpCandidateHostsInfosMap;
+    //     bool (*mGetEndpointRealIp)(const std::string& endpoint, std::string& ip) = nullptr;
 
-//     std::future<void> mUpdateRealIpThreadRes;
-//     mutable std::mutex mUpdateRealIpThreadRunningMux;
-//     bool mIsUpdateRealIpThreadRunning = true;
+    //     std::future<void> mUpdateRealIpThreadRes;
+    //     mutable std::mutex mUpdateRealIpThreadRunningMux;
+    //     bool mIsUpdateRealIpThreadRunning = true;
 
-//     mutable std::condition_variable mStopCV;
+    //     mutable std::condition_variable mStopCV;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class FlusherSLSUnittest;
     friend class SLSClientManagerUnittest;
-    friend class ProbeNetworkMock;
-    friend class GetRealIpMock;
+    // friend class ProbeNetworkMock;
+    // friend class GetRealIpMock;
 #endif
 };
 

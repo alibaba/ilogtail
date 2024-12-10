@@ -30,6 +30,9 @@
 #include "pipeline/queue/QueueKeyManager.h"
 #include "pipeline/queue/SLSSenderQueueItem.h"
 #include "pipeline/queue/SenderQueueManager.h"
+#ifdef __ENTERPRISE__
+#include "plugin/flusher/sls/EnterpriseSLSClientManager.h"
+#endif
 #include "plugin/flusher/sls/FlusherSLS.h"
 #include "plugin/flusher/sls/PackIdManager.h"
 #include "plugin/flusher/sls/SLSClientManager.h"
@@ -240,8 +243,9 @@ void FlusherSLSUnittest::OnSuccessfulInit() {
     flusher->SetMetricsRecordRef(FlusherSLS::sName, "1");
     APSARA_TEST_TRUE(flusher->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL(EndpointMode::ACCELERATE, flusher->mEndpointMode);
-    APSARA_TEST_TRUE(
-        SLSClientManager::GetInstance()->mRegionCandidateEndpointsMap["cn-hangzhou"].mRemoteEndpoints.empty());
+    APSARA_TEST_TRUE(EnterpriseSLSClientManager::GetInstance()
+                         ->mRegionCandidateEndpointsMap["cn-hangzhou"]
+                         .mRemoteEndpoints.empty());
     APSARA_TEST_EQUAL(flusher->mProject, flusher->mCandidateHostsInfo->GetProject());
     APSARA_TEST_EQUAL(flusher->mRegion, flusher->mCandidateHostsInfo->GetRegion());
     APSARA_TEST_EQUAL(EndpointMode::ACCELERATE, flusher->mCandidateHostsInfo->GetMode());
@@ -263,7 +267,8 @@ void FlusherSLSUnittest::OnSuccessfulInit() {
     flusher->SetMetricsRecordRef(FlusherSLS::sName, "1");
     APSARA_TEST_TRUE(flusher->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL(EndpointMode::DEFAULT, flusher->mEndpointMode);
-    auto& endpoints = SLSClientManager::GetInstance()->mRegionCandidateEndpointsMap["cn-hangzhou"].mRemoteEndpoints;
+    auto& endpoints
+        = EnterpriseSLSClientManager::GetInstance()->mRegionCandidateEndpointsMap["cn-hangzhou"].mRemoteEndpoints;
     APSARA_TEST_EQUAL(1U, endpoints.size());
     APSARA_TEST_EQUAL("cn-hangzhou.log.aliyuncs.com", endpoints[0]);
     APSARA_TEST_EQUAL(flusher->mProject, flusher->mCandidateHostsInfo->GetProject());
@@ -287,7 +292,8 @@ void FlusherSLSUnittest::OnSuccessfulInit() {
     flusher->SetMetricsRecordRef(FlusherSLS::sName, "1");
     APSARA_TEST_TRUE(flusher->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL(EndpointMode::DEFAULT, flusher->mEndpointMode);
-    auto& endpoints = SLSClientManager::GetInstance()->mRegionCandidateEndpointsMap["cn-hangzhou"].mRemoteEndpoints;
+    auto& endpoints
+        = EnterpriseSLSClientManager::GetInstance()->mRegionCandidateEndpointsMap["cn-hangzhou"].mRemoteEndpoints;
     APSARA_TEST_EQUAL(1U, endpoints.size());
     APSARA_TEST_EQUAL("cn-hangzhou.log.aliyuncs.com", endpoints[0]);
     APSARA_TEST_EQUAL(flusher->mProject, flusher->mCandidateHostsInfo->GetProject());

@@ -16,6 +16,7 @@
 
 #include "common/EndpointUtil.h"
 
+#include "common/StringTools.h"
 #include "logger/Logger.h"
 
 using namespace std;
@@ -23,22 +24,47 @@ using namespace std;
 namespace logtail {
 
 bool IsHttpsEndpoint(const string& endpoint) {
-    return endpoint.find("https://") == 0;
+    string trimmedEndpoint = TrimString(endpoint);
+    return trimmedEndpoint.find("https://") == 0;
 }
 
-string StandardizeEndpoint(const string& endpoint) {
-    auto bpos = endpoint.find("://");
+string StandardizeHost(const string& endpoint, const string& defaultEndpoint) {
+    string res = endpoint;
+    if (endpoint.find("https://") == 0) {
+        if (endpoint.size() < string("https://x").size()) {
+            LOG_WARNING(sLogger, ("invalid endpoint", endpoint)("use default instead", defaultEndpoint));
+            return defaultEndpoint;
+        }
+    } else if (endpoint.find("http://") == 0) {
+        if (endpoint.size() < string("http://x").size()) {
+            LOG_WARNING(sLogger, ("invalid endpoint", endpoint)("use default instead", defaultEndpoint));
+            return defaultEndpoint;
+        }
+    } else {
+        res = string("http://") + endpoint;
+        LOG_DEBUG(sLogger, ("add default protocol for endpoint, old", endpoint)("new", res));
+    }
+    // trim the last '/'
+    if (res[res.size() - 1] == '/') {
+        return res.substr(0, res.size() - 1);
+    }
+    return res;
+}
+
+string ExtractEndpoint(const string& endpoint) {
+    string trimmedEndpoint = TrimString(endpoint);
+    auto bpos = trimmedEndpoint.find("://");
     if (bpos == string::npos) {
         bpos = 0;
     } else {
         bpos += strlen("://");
     }
 
-    auto epos = endpoint.find("/", bpos);
+    auto epos = trimmedEndpoint.find("/", bpos);
     if (epos == string::npos) {
-        epos = endpoint.length();
+        epos = trimmedEndpoint.length();
     }
-    return endpoint.substr(bpos, epos - bpos);
+    return trimmedEndpoint.substr(bpos, epos - bpos);
 }
 
 string GetHostFromEndpoint(const std::string& endpoint) {

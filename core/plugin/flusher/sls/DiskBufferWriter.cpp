@@ -28,6 +28,9 @@
 #include "pipeline/queue/QueueKeyManager.h"
 #include "pipeline/queue/SLSSenderQueueItem.h"
 #include "plugin/flusher/sls/FlusherSLS.h"
+#ifdef __ENTERPRISE__
+#include "plugin/flusher/sls/EnterpriseSLSClientManager.h"
+#endif
 #include "plugin/flusher/sls/SLSClientManager.h"
 #include "plugin/flusher/sls/SLSConstant.h"
 #include "protobuf/sls/sls_logs.pb.h"
@@ -809,11 +812,10 @@ SLSResponse DiskBufferWriter::SendBufferFileData(const sls_logs::LogtailBufferMe
 
 #ifdef __ENTERPRISE__
     if (bufferMeta.endpointmode() == sls_logs::EndpointMode::DEFAULT) {
-        mRegion = region;
-        SLSClientManager::GetInstance()->UpdateRemoteRegionEndpoints(
-            region, {bufferMeta.endpoint()}, SLSClientManager::RemoteEndpointUpdateAction::CREATE);
+        EnterpriseSLSClientManager::GetInstance()->UpdateRemoteRegionEndpoints(
+            region, {bufferMeta.endpoint()}, EnterpriseSLSClientManager::RemoteEndpointUpdateAction::CREATE);
     }
-    auto info = SLSClientManager::GetInstance()->GetCandidateHostsInfo(
+    auto info = EnterpriseSLSClientManager::GetInstance()->GetCandidateHostsInfo(
         region, bufferMeta.project(), GetEndpointMode(bufferMeta.endpointmode()));
 #else
     auto info = SLSClientManager::GetInstance()->GetCandidateHostsInfo(bufferMeta.project(), bufferMeta.endpoint());

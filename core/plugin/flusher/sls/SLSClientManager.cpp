@@ -20,6 +20,9 @@
 
 #include "app_config/AppConfig.h"
 #include "common/EndpointUtil.h"
+#ifdef __ENTERPRISE__
+#include "common/EnterpriseEndpointUtil.h"
+#endif
 #include "common/Flags.h"
 #include "common/HashUtil.h"
 #include "common/LogtailCommonFlags.h"
@@ -81,7 +84,7 @@ namespace logtail {
 //     return EndpointAddressType::INNER;
 // }
 
-// static const string globalAccelerationEndpoint = "log.global.aliyuncs.com";
+// static const string kAccelerationDataEndpoint = "log-global.aliyuncs.com";
 
 const string& EndpointModeToString(EndpointMode mode) {
     switch (mode) {
@@ -161,7 +164,7 @@ void CandidateHostsInfo::UpdateHosts(const CandidateEndpoints& regionEndpoints) 
             break;
         }
         case EndpointMode::ACCELERATE: {
-            vector<string> endpoints{globalAccelerationEndpoint};
+            vector<string> endpoints{kAccelerationDataEndpoint};
             for (const auto& item : regionEndpoints.mRemoteEndpoints) {
                 if (GetEndpointAddressType(item) == EndpointAddressType::PUBLIC) {
                     endpoints.emplace_back(item);
@@ -348,11 +351,11 @@ void CandidateHostsInfo::SetCurrentHost(const string& host) {
 
 SLSClientManager* SLSClientManager::GetInstance() {
 #ifdef __ENTERPRISE__
-    static auto ptr = unique_ptr<SLSClientManager>(new EnterpriseSLSClientManager());
+    return EnterpriseSLSClientManager::GetInstance();
 #else
     static auto ptr = unique_ptr<SLSClientManager>(new SLSClientManager());
-#endif
     return ptr.get();
+#endif
 }
 
 void SLSClientManager::Init() {
@@ -433,7 +436,7 @@ bool SLSClientManager::GetAccessKey(const string& aliuid,
 //                                                               const vector<string>& rawEndpoints) {
 //     vector<string> endpoints;
 //     for (const auto& item : rawEndpoints) {
-//         auto tmp = StandardizeEndpoint(item);
+//         auto tmp = ExtracteEndpoint(item);
 //         if (!tmp.empty()) {
 //             endpoints.emplace_back(tmp);
 //         }
@@ -445,7 +448,7 @@ bool SLSClientManager::GetAccessKey(const string& aliuid,
 //     candidate.mLocalEndpoints.clear();
 //     for (const auto& item : endpoints) {
 //         // if both acclerate and custom endpoints are given, we ignore custom endpoints
-//         if (item == globalAccelerationEndpoint) {
+//         if (item == kAccelerationDataEndpoint) {
 //             candidate.mMode = EndpointMode::ACCELERATE;
 //             break;
 //         }
@@ -483,7 +486,7 @@ bool SLSClientManager::GetAccessKey(const string& aliuid,
 //                                                    RemoteEndpointUpdateAction action) {
 //     vector<string> endpoints;
 //     for (const auto& item : rawEndpoints) {
-//         auto tmp = StandardizeEndpoint(item);
+//         auto tmp = ExtractEndpoint(item);
 //         if (!tmp.empty()) {
 //             endpoints.emplace_back(tmp);
 //         }
@@ -625,7 +628,7 @@ shared_ptr<CandidateHostsInfo> SLSClientManager::GetCandidateHostsInfo(const str
         return nullptr;
     }
 
-    string standardEndpoint = StandardizeEndpoint(endpoint);
+    string standardEndpoint = ExtractEndpoint(endpoint);
     {
         lock_guard<mutex> lock(mCandidateHostsInfosMapMux);
         auto& hostsInfo = mProjectCandidateHostsInfosMap[project];
@@ -649,9 +652,7 @@ shared_ptr<CandidateHostsInfo> SLSClientManager::GetCandidateHostsInfo(const str
 }
 
 bool SLSClientManager::UsingHttps(const string& region) const {
-    if (AppConfig::GetInstance()->GetDataServerPort() == 443) {
-        return true;
-    }
+    return true;
     // lock_guard<mutex> lock(mHttpsRegionsMux);
     // return mHttpsRegions.find(region) != mHttpsRegions.end();
 }
@@ -1067,14 +1068,7 @@ bool SLSClientManager::PingEndpoint(const string& host, const string& path) {
 
 #ifdef APSARA_UNIT_TEST_MAIN
 void SLSClientManager::Clear() {
-    mRegionCandidateEndpointsMap.clear();
-    mHttpsRegions.clear();
-    mRegionCandidateHostsInfosMap.clear();
     mProjectCandidateHostsInfosMap.clear();
-    mUnInitializedCandidateHostsInfos.clear();
-    mRegionRealIpMap.clear();
-    mOutdatedRealIpRegions.clear();
-    mRegionRealIpCandidateHostsInfosMap.clear();
 }
 #endif
 

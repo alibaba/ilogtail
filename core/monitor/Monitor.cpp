@@ -52,7 +52,6 @@ using namespace std;
 using namespace sls_logs;
 
 DEFINE_FLAG_BOOL(logtail_dump_monitor_info, "enable to dump Logtail monitor info (CPU, mem)", false);
-DECLARE_FLAG_BOOL(send_prefer_real_ip);
 DECLARE_FLAG_BOOL(check_profile_region);
 
 namespace logtail {

@@ -31,6 +31,9 @@
 #include "pipeline/queue/QueueKeyManager.h"
 #include "pipeline/queue/SLSSenderQueueItem.h"
 #include "pipeline/queue/SenderQueueManager.h"
+#ifdef __ENTERPRISE__
+#include "plugin/flusher/sls/EnterpriseSLSClientManager.h"
+#endif
 #include "plugin/flusher/sls/PackIdManager.h"
 #include "plugin/flusher/sls/SLSClientManager.h"
 #include "plugin/flusher/sls/SLSConstant.h"
@@ -57,7 +60,6 @@ DEFINE_FLAG_INT32(unauthorized_allowed_delay_after_reset, "allowed delay to retr
 DEFINE_FLAG_INT32(discard_send_fail_interval, "discard data when send fail after 6 * 3600 seconds", 6 * 3600);
 DEFINE_FLAG_INT32(profile_data_send_retrytimes, "how many times should retry if profile data send fail", 5);
 DEFINE_FLAG_INT32(unknow_error_try_max, "discard data when try times > this value", 5);
-DEFINE_FLAG_BOOL(global_network_success, "global network success flag, default false", false);
 DEFINE_FLAG_BOOL(enable_metricstore_channel, "only works for metrics data for enhance metrics query performance", true);
 DEFINE_FLAG_INT32(max_send_log_group_size, "bytes", 10 * 1024 * 1024);
 DEFINE_FLAG_DOUBLE(sls_serialize_size_expansion_ratio, "", 1.2);
@@ -356,7 +358,7 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
     if (mEndpointMode == EndpointMode::DEFAULT) {
         // for local pipeline whose flusher region is neither specified in local info nor included by config provider,
         // param Endpoint should be used, and the mode is set to default.
-        // warning: if inconsistency exists among configs, only the first config would be considered in this situation. 
+        // warning: if inconsistency exists among configs, only the first config would be considered in this situation.
         if (!GetOptionalStringParam(config, "Endpoint", mEndpoint, errorMsg)) {
             PARAM_WARNING_IGNORE(mContext->GetLogger(),
                                  mContext->GetAlarm(),
@@ -367,10 +369,11 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
                                  mContext->GetLogstoreName(),
                                  mContext->GetRegion());
         }
-        SLSClientManager::GetInstance()->UpdateRemoteRegionEndpoints(
-            mRegion, {mEndpoint}, SLSClientManager::RemoteEndpointUpdateAction::CREATE);
+        EnterpriseSLSClientManager::GetInstance()->UpdateRemoteRegionEndpoints(
+            mRegion, {mEndpoint}, EnterpriseSLSClientManager::RemoteEndpointUpdateAction::CREATE);
     }
-    mCandidateHostsInfo = SLSClientManager::GetInstance()->GetCandidateHostsInfo(mRegion, mProject, mEndpointMode);
+    mCandidateHostsInfo
+        = EnterpriseSLSClientManager::GetInstance()->GetCandidateHostsInfo(mRegion, mProject, mEndpointMode);
 #else
     // Endpoint
     if (!GetMandatoryStringParam(config, "Endpoint", mEndpoint, errorMsg)) {
@@ -591,8 +594,9 @@ bool FlusherSLS::BuildRequest(SenderQueueItem* item, unique_ptr<HttpSinkRequest>
     }
 
     auto data = static_cast<SLSSenderQueueItem*>(item);
+#ifdef __ENTERPRISE__
     if (BOOL_FLAG(send_prefer_real_ip)) {
-        data->mCurrentHost = SLSClientManager::GetInstance()->GetRealIp(mRegion);
+        data->mCurrentHost = EnterpriseSLSClientManager::GetInstance()->GetRealIp(mRegion);
         if (data->mCurrentHost.empty()) {
             data->mCurrentHost = mCandidateHostsInfo->GetCurrentHost();
             data->mRealIpFlag = false;
@@ -600,8 +604,11 @@ bool FlusherSLS::BuildRequest(SenderQueueItem* item, unique_ptr<HttpSinkRequest>
             data->mRealIpFlag = true;
         }
     } else {
+#endif
         data->mCurrentHost = mCandidateHostsInfo->GetCurrentHost();
+#ifdef __ENTERPRISE__
     }
+#endif
     if (data->mCurrentHost.empty()) {
         *keepItem = true;
         GetRegionConcurrencyLimiter(mRegion)->OnFail();
@@ -675,17 +682,18 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
                 }
             }
             suggestion << "check network connection to endpoint";
+#ifdef __ENTERPRISE__
             if (data->mRealIpFlag) {
                 // connect refused, use vip directly
                 failDetail << ", real ip may be stale, force update";
-                SLSClientManager::GetInstance()->UpdateOutdatedRealIpRegions(mRegion);
+                EnterpriseSLSClientManager::GetInstance()->UpdateOutdatedRealIpRegions(mRegion);
             }
+#endif
             operation = data->mBufferOrNot ? OperationOnFail::RETRY_LATER : OperationOnFail::DISCARD;
             GetRegionConcurrencyLimiter(mRegion)->OnFail();
             GetProjectConcurrencyLimiter(mProject)->OnSuccess();
             GetLogstoreConcurrencyLimiter(mProject, mLogstore)->OnSuccess();
         } else if (sendResult == SEND_QUOTA_EXCEED) {
-            BOOL_FLAG(global_network_success) = true;
             if (slsResponse.mErrorCode == LOGE_SHARD_WRITE_QUOTA_EXCEED) {
                 failDetail << "shard write quota exceed";
                 suggestion << "Split logstore shards. https://help.aliyun.com/zh/sls/user-guide/expansion-of-resources";
@@ -718,7 +726,6 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
             failDetail << "write unauthorized";
             suggestion << "check access keys provided";
             operation = OperationOnFail::RETRY_LATER;
-            BOOL_FLAG(global_network_success) = true;
             hasAuthError = true;
             if (mUnauthErrorCnt) {
                 mUnauthErrorCnt->Add(1);
