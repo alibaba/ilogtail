@@ -10,8 +10,8 @@
 #include <memory>
 #include <string>
 #include <variant>
-#include <future>
 #include <vector>
+#include <future>
 
 enum class SecureEventType {
   SECURE_EVENT_TYPE_SOCKET_SECURE,
@@ -199,8 +199,8 @@ struct ObserverNetworkOption {
     bool mEnableConnTrackerDump = false;
     bool mEnableSpan = false;
     bool mEnableMetric = false;
-    bool mEnableLog = true;
-    bool mEnableCidFilter = true;
+    bool mEnableLog = false;
+    bool mEnableCidFilter = false;
     std::vector<std::string> mEnableCids;
     std::vector<std::string> mDisableCids;
     std::string mMeterHandlerType;

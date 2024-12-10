@@ -193,14 +193,14 @@ bool SourceManager::StartPlugin(nami::PluginType plugin_type, std::unique_ptr<na
   return !res;
 }
 
-bool SourceManager::UpdatePlugin(nami::PluginType plugin_type, std::unique_ptr<nami::eBPFConfig> conf) {
+bool SourceManager::UpdatePlugin(nami::PluginType plugin_type, std::unique_ptr<nami::eBPFConfig> conf, UpdataType update_type) {
   if (!CheckPluginRunning(plugin_type)) {
     LOG_ERROR(sLogger, ("plugin not started, type",  int(plugin_type)));
     return false;
   }
 
   LOG_INFO(sLogger, ("begin to update plugin, type", int(plugin_type)));
-  conf->type = UpdataType::SECURE_UPDATE_TYPE_CONFIG_CHAGE;
+  conf->type = update_type;
   FillCommonConf(conf);
 #ifdef APSARA_UNIT_TEST_MAIN
   mConfig = std::move(conf);

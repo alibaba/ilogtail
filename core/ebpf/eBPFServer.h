@@ -76,6 +76,8 @@ public:
 
     bool DisablePlugin(const std::string& pipeline_name, nami::PluginType type);
 
+    bool UpdatePlugin(nami::PluginType type, UpdataType updateType, const std::variant<SecurityOptions*, nami::ObserverNetworkOption*> options);
+
     bool SuspendPlugin(const std::string& pipeline_name, nami::PluginType type);
 
     bool HasRegisteredPlugins() const override;
@@ -99,6 +101,7 @@ private:
     std::unique_ptr<EventHandler> mEventCB;
     std::unique_ptr<MeterHandler> mMeterCB;
     std::unique_ptr<SpanHandler> mSpanCB;
+    std::unique_ptr<HostMetadataHandler> mHostMetadataCB;
     std::unique_ptr<SecurityHandler> mNetworkSecureCB;
     std::unique_ptr<SecurityHandler> mProcessSecureCB;
     std::unique_ptr<SecurityHandler> mFileSecureCB;
