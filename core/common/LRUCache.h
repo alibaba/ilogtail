@@ -102,14 +102,9 @@ namespace logtail {
      * directly anyway! :)
      */
     explicit Cache(size_t maxSize = 64, size_t elasticity = 10)
-        : maxSize_(maxSize), elasticity_(elasticity), prune_thread(&Cache::pruneThreadFunc, this) {}
+        : maxSize_(maxSize), elasticity_(elasticity) {}
 
-    virtual ~Cache() {
-        stop_pruning = true;
-        if (prune_thread.joinable()) {
-            prune_thread.join();
-        }
-    }
+    virtual ~Cache() {}
 
     size_t size() const {
       Guard g(lock_);
@@ -250,13 +245,6 @@ namespace logtail {
       return count;
     }
 
-    void pruneThreadFunc() {
-      while (!stop_pruning) {
-        pruneExpired();
-        std::this_thread::sleep_for(std::chrono::seconds(60)); // 每60秒检查一次
-      }
-    }
-
   private:
     // Disallow copying.
     Cache(const Cache&) = delete;
@@ -267,8 +255,6 @@ namespace logtail {
     list_type keys_;
     size_t maxSize_;
     size_t elasticity_;
-    std::atomic<bool> stop_pruning{false};
-    std::thread prune_thread;
 
   #ifdef APSARA_UNIT_TEST_MAIN
     friend class LRUCacheUnittest;
