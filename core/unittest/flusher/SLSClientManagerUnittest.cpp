@@ -572,10 +572,10 @@ protected:
     //     SLSClientManager::GetInstance()->mGetEndpointRealIp = GetRealIpMock::GetEndpointRealIpMock;
     // }
 
-    // void TearDown() override { mManager->Clear(); }
+    // void TearDown() override { mManager.Clear(); }
 
 private:
-    SLSClientManager* mManager = SLSClientManager::GetInstance();
+    SLSClientManager mManager;
 };
 
 // void SLSClientManagerUnittest::TestLocalRegionEndpoints() {
@@ -583,80 +583,80 @@ private:
 //     {
 //         // default
 //         const string endpoint = region + ".log.aliyuncs.com";
-//         mManager->UpdateLocalRegionEndpointsAndHttpsInfo(region, {endpoint});
+//         mManager.UpdateLocalRegionEndpointsAndHttpsInfo(region, {endpoint});
 
-//         auto& item = mManager->mRegionCandidateEndpointsMap[region];
+//         auto& item = mManager.mRegionCandidateEndpointsMap[region];
 //         APSARA_TEST_EQUAL(EndpointMode::DEFAULT, item.mMode);
 //         APSARA_TEST_EQUAL(1U, item.mLocalEndpoints.size());
 //         APSARA_TEST_EQUAL(endpoint, item.mLocalEndpoints[0]);
-//         APSARA_TEST_FALSE(mManager->UsingHttps(region));
+//         APSARA_TEST_FALSE(mManager.UsingHttps(region));
 //     }
 //     {
 //         // accelerate (+ default)
 //         const string endpoint1 = region + "-intranet.log.aliyuncs.com";
 //         const string endpoint2 = kAccelerationDataEndpoint;
-//         mManager->UpdateLocalRegionEndpointsAndHttpsInfo(region, {endpoint1, endpoint2});
+//         mManager.UpdateLocalRegionEndpointsAndHttpsInfo(region, {endpoint1, endpoint2});
 
-//         auto& item = mManager->mRegionCandidateEndpointsMap[region];
+//         auto& item = mManager.mRegionCandidateEndpointsMap[region];
 //         APSARA_TEST_EQUAL(EndpointMode::ACCELERATE, item.mMode);
 //         APSARA_TEST_EQUAL(0U, item.mLocalEndpoints.size());
-//         APSARA_TEST_FALSE(mManager->UsingHttps(region));
+//         APSARA_TEST_FALSE(mManager.UsingHttps(region));
 //     }
 //     {
 //         // custom (+ default)
 //         const string endpoint1 = region + "-intranet.log.aliyuncs.com";
 //         const string endpoint2 = "custom.endpoint";
-//         mManager->UpdateLocalRegionEndpointsAndHttpsInfo(region, {endpoint1, endpoint2});
+//         mManager.UpdateLocalRegionEndpointsAndHttpsInfo(region, {endpoint1, endpoint2});
 
-//         auto& item = mManager->mRegionCandidateEndpointsMap[region];
+//         auto& item = mManager.mRegionCandidateEndpointsMap[region];
 //         APSARA_TEST_EQUAL(EndpointMode::CUSTOM, item.mMode);
 //         APSARA_TEST_EQUAL(1U, item.mLocalEndpoints.size());
 //         APSARA_TEST_EQUAL(endpoint2, item.mLocalEndpoints[0]);
-//         APSARA_TEST_FALSE(mManager->UsingHttps(region));
+//         APSARA_TEST_FALSE(mManager.UsingHttps(region));
 //     }
 //     {
 //         // accelerate + custom (+ default)
 //         const string endpoint1 = "custom.endpoint";
 //         const string endpoint2 = region + "-intranet.log.aliyuncs.com";
 //         const string endpoint3 = kAccelerationDataEndpoint;
-//         mManager->UpdateLocalRegionEndpointsAndHttpsInfo(region, {endpoint1, endpoint2, endpoint3});
+//         mManager.UpdateLocalRegionEndpointsAndHttpsInfo(region, {endpoint1, endpoint2, endpoint3});
 
-//         auto& item = mManager->mRegionCandidateEndpointsMap[region];
+//         auto& item = mManager.mRegionCandidateEndpointsMap[region];
 //         APSARA_TEST_EQUAL(EndpointMode::ACCELERATE, item.mMode);
 //         APSARA_TEST_EQUAL(0U, item.mLocalEndpoints.size());
-//         APSARA_TEST_FALSE(mManager->UsingHttps(region));
+//         APSARA_TEST_FALSE(mManager.UsingHttps(region));
 //     }
 //     {
 //         // http -> https -> https
 //         const string endpoint1 = region + "-intranet.log.aliyuncs.com";
 //         const string endpoint2 = "https://" + kAccelerationDataEndpoint;
-//         mManager->UpdateLocalRegionEndpointsAndHttpsInfo(region, {endpoint1, endpoint2});
-//         APSARA_TEST_TRUE(mManager->UsingHttps(region));
+//         mManager.UpdateLocalRegionEndpointsAndHttpsInfo(region, {endpoint1, endpoint2});
+//         APSARA_TEST_TRUE(mManager.UsingHttps(region));
 
-//         mManager->UpdateLocalRegionEndpointsAndHttpsInfo(region, {endpoint1, endpoint2});
-//         APSARA_TEST_TRUE(mManager->UsingHttps(region));
+//         mManager.UpdateLocalRegionEndpointsAndHttpsInfo(region, {endpoint1, endpoint2});
+//         APSARA_TEST_TRUE(mManager.UsingHttps(region));
 //     }
 //     {
 //         // https -> http -> http
 //         const string endpoint1 = region + "-intranet.log.aliyuncs.com";
 //         const string endpoint2 = kAccelerationDataEndpoint;
-//         mManager->UpdateLocalRegionEndpointsAndHttpsInfo(region, {endpoint1, endpoint2});
-//         APSARA_TEST_FALSE(mManager->UsingHttps(region));
+//         mManager.UpdateLocalRegionEndpointsAndHttpsInfo(region, {endpoint1, endpoint2});
+//         APSARA_TEST_FALSE(mManager.UsingHttps(region));
 
-//         mManager->UpdateLocalRegionEndpointsAndHttpsInfo(region, {endpoint1, endpoint2});
-//         APSARA_TEST_FALSE(mManager->UsingHttps(region));
+//         mManager.UpdateLocalRegionEndpointsAndHttpsInfo(region, {endpoint1, endpoint2});
+//         APSARA_TEST_FALSE(mManager.UsingHttps(region));
 //     }
 // }
 
 // void SLSClientManagerUnittest::TestRemoteRegionEndpoints() {
 //     {
-//         auto info1 = mManager->GetCandidateHostsInfo("region_1", "project_1", EndpointMode::DEFAULT);
-//         auto info2 = mManager->GetCandidateHostsInfo("region_1", "project_2", EndpointMode::DEFAULT);
-//         auto info3 = mManager->GetCandidateHostsInfo("region_2", "project_3", EndpointMode::DEFAULT);
+//         auto info1 = mManager.GetCandidateHostsInfo("region_1", "project_1", EndpointMode::DEFAULT);
+//         auto info2 = mManager.GetCandidateHostsInfo("region_1", "project_2", EndpointMode::DEFAULT);
+//         auto info3 = mManager.GetCandidateHostsInfo("region_2", "project_3", EndpointMode::DEFAULT);
 //         APSARA_TEST_EQUAL(0U, info3->mCandidateHosts.size());
 
 //         // create remote info
-//         mManager->UpdateRemoteRegionEndpoints("region_1", {"endpoint_1", "endpoint_2"});
+//         mManager.UpdateRemoteRegionEndpoints("region_1", {"endpoint_1", "endpoint_2"});
 //         APSARA_TEST_EQUAL(2U, info1->mCandidateHosts.size());
 //         APSARA_TEST_EQUAL(2U, info2->mCandidateHosts.size());
 //         APSARA_TEST_EQUAL(0U, info3->mCandidateHosts.size());
@@ -670,7 +670,7 @@ private:
 //         APSARA_TEST_EQUAL("project_2.endpoint_2", info2->mCandidateHosts[1][0].GetHostname());
 
 //         // update remote info with overwrite
-//         mManager->UpdateRemoteRegionEndpoints("region_1", {"endpoint_2", "endpoint_3"});
+//         mManager.UpdateRemoteRegionEndpoints("region_1", {"endpoint_2", "endpoint_3"});
 //         APSARA_TEST_EQUAL(2U, info1->mCandidateHosts.size());
 //         APSARA_TEST_EQUAL(2U, info2->mCandidateHosts.size());
 //         APSARA_TEST_EQUAL(0U, info3->mCandidateHosts.size());
@@ -684,7 +684,7 @@ private:
 //         APSARA_TEST_EQUAL("project_2.endpoint_3", info2->mCandidateHosts[1][0].GetHostname());
 
 //         // update remote info with create
-//         mManager->UpdateRemoteRegionEndpoints(
+//         mManager.UpdateRemoteRegionEndpoints(
 //             "region_1", {"endpoint_4"}, SLSClientManager::RemoteEndpointUpdateAction::CREATE);
 //         APSARA_TEST_EQUAL(2U, info1->mCandidateHosts.size());
 //         APSARA_TEST_EQUAL(2U, info2->mCandidateHosts.size());
@@ -699,7 +699,7 @@ private:
 //         APSARA_TEST_EQUAL("project_2.endpoint_3", info2->mCandidateHosts[1][0].GetHostname());
 
 //         // update remote info with append
-//         mManager->UpdateRemoteRegionEndpoints(
+//         mManager.UpdateRemoteRegionEndpoints(
 //             "region_1", {"endpoint_3", "endpoint_1"}, SLSClientManager::RemoteEndpointUpdateAction::APPEND);
 //         APSARA_TEST_EQUAL(3U, info1->mCandidateHosts.size());
 //         APSARA_TEST_EQUAL(3U, info2->mCandidateHosts.size());
@@ -719,7 +719,7 @@ private:
 //     }
 //     {
 //         // get candidate host info after remote info is updated
-//         auto info = mManager->GetCandidateHostsInfo("region_1", "project_1", EndpointMode::DEFAULT);
+//         auto info = mManager.GetCandidateHostsInfo("region_1", "project_1", EndpointMode::DEFAULT);
 //         APSARA_TEST_EQUAL(3U, info->mCandidateHosts.size());
 //         APSARA_TEST_EQUAL(1U, info->mCandidateHosts[0].size());
 //         APSARA_TEST_EQUAL(1U, info->mCandidateHosts[1].size());
@@ -747,33 +747,33 @@ private:
 //         // no candidate host info && no region endpoints
 //         {
 //             // default mode
-//             auto info = mManager->GetCandidateHostsInfo(region, project, EndpointMode::DEFAULT);
+//             auto info = mManager.GetCandidateHostsInfo(region, project, EndpointMode::DEFAULT);
 //             APSARA_TEST_EQUAL(project, info->GetProject());
 //             APSARA_TEST_EQUAL(region, info->GetRegion());
 //             APSARA_TEST_EQUAL(EndpointMode::DEFAULT, info->GetMode());
 //             APSARA_TEST_EQUAL(0U, info->mCandidateHosts.size());
 //             {
-//                 APSARA_TEST_EQUAL(1U, mManager->mProjectCandidateHostsInfosMap.size());
-//                 auto& infos = mManager->mProjectCandidateHostsInfosMap[project];
+//                 APSARA_TEST_EQUAL(1U, mManager.mProjectCandidateHostsInfosMap.size());
+//                 auto& infos = mManager.mProjectCandidateHostsInfosMap[project];
 //                 APSARA_TEST_EQUAL(1U, infos.size());
 //                 auto& weakInfo = *infos.begin();
 //                 APSARA_TEST_FALSE(weakInfo.expired());
 //                 APSARA_TEST_EQUAL(info.get(), weakInfo.lock().get());
 //             }
 //             {
-//                 APSARA_TEST_EQUAL(1U, mManager->mRegionCandidateHostsInfosMap.size());
-//                 auto& infos = mManager->mRegionCandidateHostsInfosMap[region];
+//                 APSARA_TEST_EQUAL(1U, mManager.mRegionCandidateHostsInfosMap.size());
+//                 auto& infos = mManager.mRegionCandidateHostsInfosMap[region];
 //                 APSARA_TEST_EQUAL(1U, infos.size());
 //                 auto& weakInfo = *infos.begin();
 //                 APSARA_TEST_FALSE(weakInfo.expired());
 //                 APSARA_TEST_EQUAL(info.get(), weakInfo.lock().get());
 //             }
-//             APSARA_TEST_EQUAL(1U, mManager->mUnInitializedCandidateHostsInfos.size());
-//             APSARA_TEST_EQUAL(info.get(), mManager->mUnInitializedCandidateHostsInfos[0].lock().get());
+//             APSARA_TEST_EQUAL(1U, mManager.mUnInitializedCandidateHostsInfos.size());
+//             APSARA_TEST_EQUAL(info.get(), mManager.mUnInitializedCandidateHostsInfos[0].lock().get());
 //         }
 //         {
 //             // accelerate mode
-//             auto info = mManager->GetCandidateHostsInfo(region, project, EndpointMode::ACCELERATE);
+//             auto info = mManager.GetCandidateHostsInfo(region, project, EndpointMode::ACCELERATE);
 //             APSARA_TEST_EQUAL(project, info->GetProject());
 //             APSARA_TEST_EQUAL(region, info->GetRegion());
 //             APSARA_TEST_EQUAL(EndpointMode::ACCELERATE, info->GetMode());
@@ -782,8 +782,8 @@ private:
 //             APSARA_TEST_EQUAL(globalHost, info->mCandidateHosts[0][0].GetHostname());
 //             APSARA_TEST_EQUAL(chrono::milliseconds::max(), info->mCandidateHosts[0][0].GetLatency());
 //             {
-//                 APSARA_TEST_EQUAL(1U, mManager->mProjectCandidateHostsInfosMap.size());
-//                 auto& infos = mManager->mProjectCandidateHostsInfosMap[project];
+//                 APSARA_TEST_EQUAL(1U, mManager.mProjectCandidateHostsInfosMap.size());
+//                 auto& infos = mManager.mProjectCandidateHostsInfosMap[project];
 //                 APSARA_TEST_EQUAL(2U, infos.size());
 //                 auto it = infos.begin();
 //                 APSARA_TEST_TRUE(it->expired());
@@ -792,8 +792,8 @@ private:
 //                 APSARA_TEST_EQUAL(info.get(), it->lock().get());
 //             }
 //             {
-//                 APSARA_TEST_EQUAL(1U, mManager->mRegionCandidateHostsInfosMap.size());
-//                 auto& infos = mManager->mRegionCandidateHostsInfosMap[region];
+//                 APSARA_TEST_EQUAL(1U, mManager.mRegionCandidateHostsInfosMap.size());
+//                 auto& infos = mManager.mRegionCandidateHostsInfosMap[region];
 //                 APSARA_TEST_EQUAL(2U, infos.size());
 //                 auto it = infos.begin();
 //                 APSARA_TEST_TRUE(it->expired());
@@ -801,17 +801,17 @@ private:
 //                 APSARA_TEST_FALSE(it->expired());
 //                 APSARA_TEST_EQUAL(info.get(), it->lock().get());
 //             }
-//             APSARA_TEST_EQUAL(2U, mManager->mUnInitializedCandidateHostsInfos.size());
-//             APSARA_TEST_EQUAL(info.get(), mManager->mUnInitializedCandidateHostsInfos[1].lock().get());
+//             APSARA_TEST_EQUAL(2U, mManager.mUnInitializedCandidateHostsInfos.size());
+//             APSARA_TEST_EQUAL(info.get(), mManager.mUnInitializedCandidateHostsInfos[1].lock().get());
 //         }
-//         mManager->Clear();
+//         mManager.Clear();
 //     }
 //     {
 //         // no candidate host info && with region endpoints && region endpoint mode is default
-//         mManager->UpdateLocalRegionEndpointsAndHttpsInfo(region, {privateEndpoint});
+//         mManager.UpdateLocalRegionEndpointsAndHttpsInfo(region, {privateEndpoint});
 //         {
 //             // default mode
-//             auto info = mManager->GetCandidateHostsInfo(region, project, EndpointMode::DEFAULT);
+//             auto info = mManager.GetCandidateHostsInfo(region, project, EndpointMode::DEFAULT);
 //             APSARA_TEST_EQUAL(project, info->GetProject());
 //             APSARA_TEST_EQUAL(region, info->GetRegion());
 //             APSARA_TEST_EQUAL(EndpointMode::DEFAULT, info->GetMode());
@@ -819,27 +819,27 @@ private:
 //             APSARA_TEST_EQUAL(1U, info->mCandidateHosts[0].size());
 //             APSARA_TEST_EQUAL(privateHost, info->mCandidateHosts[0][0].GetHostname());
 //             {
-//                 APSARA_TEST_EQUAL(1U, mManager->mProjectCandidateHostsInfosMap.size());
-//                 auto& infos = mManager->mProjectCandidateHostsInfosMap[project];
+//                 APSARA_TEST_EQUAL(1U, mManager.mProjectCandidateHostsInfosMap.size());
+//                 auto& infos = mManager.mProjectCandidateHostsInfosMap[project];
 //                 APSARA_TEST_EQUAL(1U, infos.size());
 //                 auto& weakInfo = *infos.begin();
 //                 APSARA_TEST_FALSE(weakInfo.expired());
 //                 APSARA_TEST_EQUAL(info.get(), weakInfo.lock().get());
 //             }
 //             {
-//                 APSARA_TEST_EQUAL(1U, mManager->mRegionCandidateHostsInfosMap.size());
-//                 auto& infos = mManager->mRegionCandidateHostsInfosMap[region];
+//                 APSARA_TEST_EQUAL(1U, mManager.mRegionCandidateHostsInfosMap.size());
+//                 auto& infos = mManager.mRegionCandidateHostsInfosMap[region];
 //                 APSARA_TEST_EQUAL(1U, infos.size());
 //                 auto& weakInfo = *infos.begin();
 //                 APSARA_TEST_FALSE(weakInfo.expired());
 //                 APSARA_TEST_EQUAL(info.get(), weakInfo.lock().get());
 //             }
-//             APSARA_TEST_EQUAL(1U, mManager->mUnInitializedCandidateHostsInfos.size());
-//             APSARA_TEST_EQUAL(info.get(), mManager->mUnInitializedCandidateHostsInfos[0].lock().get());
+//             APSARA_TEST_EQUAL(1U, mManager.mUnInitializedCandidateHostsInfos.size());
+//             APSARA_TEST_EQUAL(info.get(), mManager.mUnInitializedCandidateHostsInfos[0].lock().get());
 //         }
 //         {
 //             // accelerate mode
-//             auto info = mManager->GetCandidateHostsInfo(region, project, EndpointMode::ACCELERATE);
+//             auto info = mManager.GetCandidateHostsInfo(region, project, EndpointMode::ACCELERATE);
 //             APSARA_TEST_EQUAL(project, info->GetProject());
 //             APSARA_TEST_EQUAL(region, info->GetRegion());
 //             APSARA_TEST_EQUAL(EndpointMode::ACCELERATE, info->GetMode());
@@ -848,8 +848,8 @@ private:
 //             APSARA_TEST_EQUAL(globalHost, info->mCandidateHosts[0][0].GetHostname());
 //             APSARA_TEST_EQUAL(chrono::milliseconds::max(), info->mCandidateHosts[0][0].GetLatency());
 //             {
-//                 APSARA_TEST_EQUAL(1U, mManager->mProjectCandidateHostsInfosMap.size());
-//                 auto& infos = mManager->mProjectCandidateHostsInfosMap[project];
+//                 APSARA_TEST_EQUAL(1U, mManager.mProjectCandidateHostsInfosMap.size());
+//                 auto& infos = mManager.mProjectCandidateHostsInfosMap[project];
 //                 APSARA_TEST_EQUAL(2U, infos.size());
 //                 auto it = infos.begin();
 //                 APSARA_TEST_TRUE(it->expired());
@@ -858,8 +858,8 @@ private:
 //                 APSARA_TEST_EQUAL(info.get(), it->lock().get());
 //             }
 //             {
-//                 APSARA_TEST_EQUAL(1U, mManager->mRegionCandidateHostsInfosMap.size());
-//                 auto& infos = mManager->mRegionCandidateHostsInfosMap[region];
+//                 APSARA_TEST_EQUAL(1U, mManager.mRegionCandidateHostsInfosMap.size());
+//                 auto& infos = mManager.mRegionCandidateHostsInfosMap[region];
 //                 APSARA_TEST_EQUAL(2U, infos.size());
 //                 auto it = infos.begin();
 //                 APSARA_TEST_TRUE(it->expired());
@@ -867,17 +867,17 @@ private:
 //                 APSARA_TEST_FALSE(it->expired());
 //                 APSARA_TEST_EQUAL(info.get(), it->lock().get());
 //             }
-//             APSARA_TEST_EQUAL(2U, mManager->mUnInitializedCandidateHostsInfos.size());
-//             APSARA_TEST_EQUAL(info.get(), mManager->mUnInitializedCandidateHostsInfos[1].lock().get());
+//             APSARA_TEST_EQUAL(2U, mManager.mUnInitializedCandidateHostsInfos.size());
+//             APSARA_TEST_EQUAL(info.get(), mManager.mUnInitializedCandidateHostsInfos[1].lock().get());
 //         }
-//         mManager->Clear();
+//         mManager.Clear();
 //     }
 //     {
 //         // no candidate host info && with region endpoints && region endpoint mode is accelerate
-//         mManager->UpdateLocalRegionEndpointsAndHttpsInfo(region, {globalEndpoint});
+//         mManager.UpdateLocalRegionEndpointsAndHttpsInfo(region, {globalEndpoint});
 //         {
 //             // default mode
-//             auto info = mManager->GetCandidateHostsInfo(region, project, EndpointMode::DEFAULT);
+//             auto info = mManager.GetCandidateHostsInfo(region, project, EndpointMode::DEFAULT);
 //             APSARA_TEST_EQUAL(project, info->GetProject());
 //             APSARA_TEST_EQUAL(region, info->GetRegion());
 //             APSARA_TEST_EQUAL(EndpointMode::ACCELERATE, info->GetMode());
@@ -886,27 +886,27 @@ private:
 //             APSARA_TEST_EQUAL(globalHost, info->mCandidateHosts[0][0].GetHostname());
 //             APSARA_TEST_EQUAL(chrono::milliseconds::max(), info->mCandidateHosts[0][0].GetLatency());
 //             {
-//                 APSARA_TEST_EQUAL(1U, mManager->mProjectCandidateHostsInfosMap.size());
-//                 auto& infos = mManager->mProjectCandidateHostsInfosMap[project];
+//                 APSARA_TEST_EQUAL(1U, mManager.mProjectCandidateHostsInfosMap.size());
+//                 auto& infos = mManager.mProjectCandidateHostsInfosMap[project];
 //                 APSARA_TEST_EQUAL(1U, infos.size());
 //                 auto& weakInfo = *infos.begin();
 //                 APSARA_TEST_FALSE(weakInfo.expired());
 //                 APSARA_TEST_EQUAL(info.get(), weakInfo.lock().get());
 //             }
 //             {
-//                 APSARA_TEST_EQUAL(1U, mManager->mRegionCandidateHostsInfosMap.size());
-//                 auto& infos = mManager->mRegionCandidateHostsInfosMap[region];
+//                 APSARA_TEST_EQUAL(1U, mManager.mRegionCandidateHostsInfosMap.size());
+//                 auto& infos = mManager.mRegionCandidateHostsInfosMap[region];
 //                 APSARA_TEST_EQUAL(1U, infos.size());
 //                 auto& weakInfo = *infos.begin();
 //                 APSARA_TEST_FALSE(weakInfo.expired());
 //                 APSARA_TEST_EQUAL(info.get(), weakInfo.lock().get());
 //             }
-//             APSARA_TEST_EQUAL(1U, mManager->mUnInitializedCandidateHostsInfos.size());
-//             APSARA_TEST_EQUAL(info.get(), mManager->mUnInitializedCandidateHostsInfos[0].lock().get());
+//             APSARA_TEST_EQUAL(1U, mManager.mUnInitializedCandidateHostsInfos.size());
+//             APSARA_TEST_EQUAL(info.get(), mManager.mUnInitializedCandidateHostsInfos[0].lock().get());
 //         }
 //         {
 //             // accelerate mode
-//             auto info = mManager->GetCandidateHostsInfo(region, project, EndpointMode::ACCELERATE);
+//             auto info = mManager.GetCandidateHostsInfo(region, project, EndpointMode::ACCELERATE);
 //             APSARA_TEST_EQUAL(project, info->GetProject());
 //             APSARA_TEST_EQUAL(region, info->GetRegion());
 //             APSARA_TEST_EQUAL(EndpointMode::ACCELERATE, info->GetMode());
@@ -915,8 +915,8 @@ private:
 //             APSARA_TEST_EQUAL(globalHost, info->mCandidateHosts[0][0].GetHostname());
 //             APSARA_TEST_EQUAL(chrono::milliseconds::max(), info->mCandidateHosts[0][0].GetLatency());
 //             {
-//                 APSARA_TEST_EQUAL(1U, mManager->mProjectCandidateHostsInfosMap.size());
-//                 auto& infos = mManager->mProjectCandidateHostsInfosMap[project];
+//                 APSARA_TEST_EQUAL(1U, mManager.mProjectCandidateHostsInfosMap.size());
+//                 auto& infos = mManager.mProjectCandidateHostsInfosMap[project];
 //                 APSARA_TEST_EQUAL(2U, infos.size());
 //                 auto it = infos.begin();
 //                 APSARA_TEST_TRUE(it->expired());
@@ -925,8 +925,8 @@ private:
 //                 APSARA_TEST_EQUAL(info.get(), it->lock().get());
 //             }
 //             {
-//                 APSARA_TEST_EQUAL(1U, mManager->mRegionCandidateHostsInfosMap.size());
-//                 auto& infos = mManager->mRegionCandidateHostsInfosMap[region];
+//                 APSARA_TEST_EQUAL(1U, mManager.mRegionCandidateHostsInfosMap.size());
+//                 auto& infos = mManager.mRegionCandidateHostsInfosMap[region];
 //                 APSARA_TEST_EQUAL(2U, infos.size());
 //                 auto it = infos.begin();
 //                 APSARA_TEST_TRUE(it->expired());
@@ -934,17 +934,17 @@ private:
 //                 APSARA_TEST_FALSE(it->expired());
 //                 APSARA_TEST_EQUAL(info.get(), it->lock().get());
 //             }
-//             APSARA_TEST_EQUAL(2U, mManager->mUnInitializedCandidateHostsInfos.size());
-//             APSARA_TEST_EQUAL(info.get(), mManager->mUnInitializedCandidateHostsInfos[1].lock().get());
+//             APSARA_TEST_EQUAL(2U, mManager.mUnInitializedCandidateHostsInfos.size());
+//             APSARA_TEST_EQUAL(info.get(), mManager.mUnInitializedCandidateHostsInfos[1].lock().get());
 //         }
-//         mManager->Clear();
+//         mManager.Clear();
 //     }
 //     {
 //         // no candidate host info && with region endpoints && region endpoint mode is custom
-//         mManager->UpdateLocalRegionEndpointsAndHttpsInfo(region, {customEndpoint});
+//         mManager.UpdateLocalRegionEndpointsAndHttpsInfo(region, {customEndpoint});
 //         {
 //             // default mode
-//             auto info = mManager->GetCandidateHostsInfo(region, project, EndpointMode::DEFAULT);
+//             auto info = mManager.GetCandidateHostsInfo(region, project, EndpointMode::DEFAULT);
 //             APSARA_TEST_EQUAL(project, info->GetProject());
 //             APSARA_TEST_EQUAL(region, info->GetRegion());
 //             APSARA_TEST_EQUAL(EndpointMode::CUSTOM, info->GetMode());
@@ -953,27 +953,27 @@ private:
 //             APSARA_TEST_EQUAL(customHost, info->mCandidateHosts[0][0].GetHostname());
 //             APSARA_TEST_EQUAL(chrono::milliseconds::max(), info->mCandidateHosts[0][0].GetLatency());
 //             {
-//                 APSARA_TEST_EQUAL(1U, mManager->mProjectCandidateHostsInfosMap.size());
-//                 auto& infos = mManager->mProjectCandidateHostsInfosMap[project];
+//                 APSARA_TEST_EQUAL(1U, mManager.mProjectCandidateHostsInfosMap.size());
+//                 auto& infos = mManager.mProjectCandidateHostsInfosMap[project];
 //                 APSARA_TEST_EQUAL(1U, infos.size());
 //                 auto& weakInfo = *infos.begin();
 //                 APSARA_TEST_FALSE(weakInfo.expired());
 //                 APSARA_TEST_EQUAL(info.get(), weakInfo.lock().get());
 //             }
 //             {
-//                 APSARA_TEST_EQUAL(1U, mManager->mRegionCandidateHostsInfosMap.size());
-//                 auto& infos = mManager->mRegionCandidateHostsInfosMap[region];
+//                 APSARA_TEST_EQUAL(1U, mManager.mRegionCandidateHostsInfosMap.size());
+//                 auto& infos = mManager.mRegionCandidateHostsInfosMap[region];
 //                 APSARA_TEST_EQUAL(1U, infos.size());
 //                 auto& weakInfo = *infos.begin();
 //                 APSARA_TEST_FALSE(weakInfo.expired());
 //                 APSARA_TEST_EQUAL(info.get(), weakInfo.lock().get());
 //             }
-//             APSARA_TEST_EQUAL(1U, mManager->mUnInitializedCandidateHostsInfos.size());
-//             APSARA_TEST_EQUAL(info.get(), mManager->mUnInitializedCandidateHostsInfos[0].lock().get());
+//             APSARA_TEST_EQUAL(1U, mManager.mUnInitializedCandidateHostsInfos.size());
+//             APSARA_TEST_EQUAL(info.get(), mManager.mUnInitializedCandidateHostsInfos[0].lock().get());
 //         }
 //         {
 //             // accelerate mode
-//             auto info = mManager->GetCandidateHostsInfo(region, project, EndpointMode::ACCELERATE);
+//             auto info = mManager.GetCandidateHostsInfo(region, project, EndpointMode::ACCELERATE);
 //             APSARA_TEST_EQUAL(project, info->GetProject());
 //             APSARA_TEST_EQUAL(region, info->GetRegion());
 //             APSARA_TEST_EQUAL(EndpointMode::ACCELERATE, info->GetMode());
@@ -982,107 +982,107 @@ private:
 //             APSARA_TEST_EQUAL(globalHost, info->mCandidateHosts[0][0].GetHostname());
 //             APSARA_TEST_EQUAL(chrono::milliseconds::max(), info->mCandidateHosts[0][0].GetLatency());
 //             {
-//                 APSARA_TEST_EQUAL(1U, mManager->mProjectCandidateHostsInfosMap.size());
-//                 auto& infos = mManager->mProjectCandidateHostsInfosMap[project];
+//                 APSARA_TEST_EQUAL(1U, mManager.mProjectCandidateHostsInfosMap.size());
+//                 auto& infos = mManager.mProjectCandidateHostsInfosMap[project];
 //                 APSARA_TEST_EQUAL(2U, infos.size());
 //                 auto& weakInfo = *(++infos.begin());
 //                 APSARA_TEST_FALSE(weakInfo.expired());
 //                 APSARA_TEST_EQUAL(info.get(), weakInfo.lock().get());
 //             }
 //             {
-//                 APSARA_TEST_EQUAL(1U, mManager->mRegionCandidateHostsInfosMap.size());
-//                 auto& infos = mManager->mRegionCandidateHostsInfosMap[region];
+//                 APSARA_TEST_EQUAL(1U, mManager.mRegionCandidateHostsInfosMap.size());
+//                 auto& infos = mManager.mRegionCandidateHostsInfosMap[region];
 //                 APSARA_TEST_EQUAL(2U, infos.size());
 //                 auto& weakInfo = *(++infos.begin());
 //                 APSARA_TEST_FALSE(weakInfo.expired());
 //                 APSARA_TEST_EQUAL(info.get(), weakInfo.lock().get());
 //             }
-//             APSARA_TEST_EQUAL(2U, mManager->mUnInitializedCandidateHostsInfos.size());
-//             APSARA_TEST_EQUAL(info.get(), mManager->mUnInitializedCandidateHostsInfos[1].lock().get());
+//             APSARA_TEST_EQUAL(2U, mManager.mUnInitializedCandidateHostsInfos.size());
+//             APSARA_TEST_EQUAL(info.get(), mManager.mUnInitializedCandidateHostsInfos[1].lock().get());
 //         }
-//         mManager->Clear();
+//         mManager.Clear();
 //     }
 //     {
 //         // candidate host info exists && no region endpoints
-//         auto info1 = mManager->GetCandidateHostsInfo(region, project, EndpointMode::DEFAULT);
-//         auto info2 = mManager->GetCandidateHostsInfo(region, project, EndpointMode::DEFAULT);
+//         auto info1 = mManager.GetCandidateHostsInfo(region, project, EndpointMode::DEFAULT);
+//         auto info2 = mManager.GetCandidateHostsInfo(region, project, EndpointMode::DEFAULT);
 //         APSARA_TEST_EQUAL(info1.get(), info2.get());
-//         APSARA_TEST_EQUAL(1U, mManager->mProjectCandidateHostsInfosMap.size());
-//         APSARA_TEST_EQUAL(1U, mManager->mProjectCandidateHostsInfosMap[project].size());
-//         APSARA_TEST_EQUAL(1U, mManager->mUnInitializedCandidateHostsInfos.size());
-//         APSARA_TEST_EQUAL(info1.get(), mManager->mUnInitializedCandidateHostsInfos[0].lock().get());
+//         APSARA_TEST_EQUAL(1U, mManager.mProjectCandidateHostsInfosMap.size());
+//         APSARA_TEST_EQUAL(1U, mManager.mProjectCandidateHostsInfosMap[project].size());
+//         APSARA_TEST_EQUAL(1U, mManager.mUnInitializedCandidateHostsInfos.size());
+//         APSARA_TEST_EQUAL(info1.get(), mManager.mUnInitializedCandidateHostsInfos[0].lock().get());
 
-//         mManager->Clear();
+//         mManager.Clear();
 //     }
 //     {
 //         // candidate host info exists && with region endpoints && region endpoint mode is default
-//         mManager->UpdateLocalRegionEndpointsAndHttpsInfo(region, {privateEndpoint});
-//         auto infoDefault = mManager->GetCandidateHostsInfo(region, project, EndpointMode::DEFAULT);
-//         auto infoAcc = mManager->GetCandidateHostsInfo(region, project, EndpointMode::ACCELERATE);
-//         APSARA_TEST_EQUAL(2U, mManager->mUnInitializedCandidateHostsInfos.size());
-//         APSARA_TEST_EQUAL(infoDefault.get(), mManager->mUnInitializedCandidateHostsInfos[0].lock().get());
-//         APSARA_TEST_EQUAL(infoAcc.get(), mManager->mUnInitializedCandidateHostsInfos[1].lock().get());
+//         mManager.UpdateLocalRegionEndpointsAndHttpsInfo(region, {privateEndpoint});
+//         auto infoDefault = mManager.GetCandidateHostsInfo(region, project, EndpointMode::DEFAULT);
+//         auto infoAcc = mManager.GetCandidateHostsInfo(region, project, EndpointMode::ACCELERATE);
+//         APSARA_TEST_EQUAL(2U, mManager.mUnInitializedCandidateHostsInfos.size());
+//         APSARA_TEST_EQUAL(infoDefault.get(), mManager.mUnInitializedCandidateHostsInfos[0].lock().get());
+//         APSARA_TEST_EQUAL(infoAcc.get(), mManager.mUnInitializedCandidateHostsInfos[1].lock().get());
 //         {
 //             // default mode
-//             auto info = mManager->GetCandidateHostsInfo(region, project, EndpointMode::DEFAULT);
+//             auto info = mManager.GetCandidateHostsInfo(region, project, EndpointMode::DEFAULT);
 //             APSARA_TEST_EQUAL(infoDefault.get(), info.get());
-//             APSARA_TEST_EQUAL(1U, mManager->mProjectCandidateHostsInfosMap.size());
-//             APSARA_TEST_EQUAL(2U, mManager->mProjectCandidateHostsInfosMap[project].size());
+//             APSARA_TEST_EQUAL(1U, mManager.mProjectCandidateHostsInfosMap.size());
+//             APSARA_TEST_EQUAL(2U, mManager.mProjectCandidateHostsInfosMap[project].size());
 //         }
 //         {
 //             // accelerate mode
-//             auto info = mManager->GetCandidateHostsInfo(region, project, EndpointMode::ACCELERATE);
+//             auto info = mManager.GetCandidateHostsInfo(region, project, EndpointMode::ACCELERATE);
 //             APSARA_TEST_EQUAL(infoAcc.get(), info.get());
-//             APSARA_TEST_EQUAL(1U, mManager->mProjectCandidateHostsInfosMap.size());
-//             APSARA_TEST_EQUAL(2U, mManager->mProjectCandidateHostsInfosMap[project].size());
+//             APSARA_TEST_EQUAL(1U, mManager.mProjectCandidateHostsInfosMap.size());
+//             APSARA_TEST_EQUAL(2U, mManager.mProjectCandidateHostsInfosMap[project].size());
 //         }
-//         mManager->Clear();
+//         mManager.Clear();
 //     }
 //     {
 //         // candidate host info exists && with region endpoints && region endpoint mode is accelerate
-//         mManager->UpdateLocalRegionEndpointsAndHttpsInfo(region, {globalEndpoint});
-//         auto infoAcc = mManager->GetCandidateHostsInfo(region, project, EndpointMode::DEFAULT);
-//         APSARA_TEST_EQUAL(1U, mManager->mUnInitializedCandidateHostsInfos.size());
-//         APSARA_TEST_EQUAL(infoAcc.get(), mManager->mUnInitializedCandidateHostsInfos[0].lock().get());
+//         mManager.UpdateLocalRegionEndpointsAndHttpsInfo(region, {globalEndpoint});
+//         auto infoAcc = mManager.GetCandidateHostsInfo(region, project, EndpointMode::DEFAULT);
+//         APSARA_TEST_EQUAL(1U, mManager.mUnInitializedCandidateHostsInfos.size());
+//         APSARA_TEST_EQUAL(infoAcc.get(), mManager.mUnInitializedCandidateHostsInfos[0].lock().get());
 //         {
 //             // default mode
-//             auto info = mManager->GetCandidateHostsInfo(region, project, EndpointMode::DEFAULT);
+//             auto info = mManager.GetCandidateHostsInfo(region, project, EndpointMode::DEFAULT);
 //             APSARA_TEST_EQUAL(infoAcc.get(), info.get());
-//             APSARA_TEST_EQUAL(1U, mManager->mProjectCandidateHostsInfosMap.size());
-//             APSARA_TEST_EQUAL(1U, mManager->mProjectCandidateHostsInfosMap[project].size());
+//             APSARA_TEST_EQUAL(1U, mManager.mProjectCandidateHostsInfosMap.size());
+//             APSARA_TEST_EQUAL(1U, mManager.mProjectCandidateHostsInfosMap[project].size());
 //         }
 //         {
 //             // accelerate mode
-//             auto info = mManager->GetCandidateHostsInfo(region, project, EndpointMode::ACCELERATE);
+//             auto info = mManager.GetCandidateHostsInfo(region, project, EndpointMode::ACCELERATE);
 //             APSARA_TEST_EQUAL(infoAcc.get(), info.get());
-//             APSARA_TEST_EQUAL(1U, mManager->mProjectCandidateHostsInfosMap.size());
-//             APSARA_TEST_EQUAL(1U, mManager->mProjectCandidateHostsInfosMap[project].size());
+//             APSARA_TEST_EQUAL(1U, mManager.mProjectCandidateHostsInfosMap.size());
+//             APSARA_TEST_EQUAL(1U, mManager.mProjectCandidateHostsInfosMap[project].size());
 //         }
-//         mManager->Clear();
+//         mManager.Clear();
 //     }
 //     {
 //         // candidate host info exists && with region endpoints && region endpoint mode is custom
-//         mManager->UpdateLocalRegionEndpointsAndHttpsInfo(region, {customEndpoint});
-//         auto infoCustom = mManager->GetCandidateHostsInfo(region, project, EndpointMode::DEFAULT);
-//         auto infoAcc = mManager->GetCandidateHostsInfo(region, project, EndpointMode::ACCELERATE);
-//         APSARA_TEST_EQUAL(2U, mManager->mUnInitializedCandidateHostsInfos.size());
-//         APSARA_TEST_EQUAL(infoCustom.get(), mManager->mUnInitializedCandidateHostsInfos[0].lock().get());
-//         APSARA_TEST_EQUAL(infoAcc.get(), mManager->mUnInitializedCandidateHostsInfos[1].lock().get());
+//         mManager.UpdateLocalRegionEndpointsAndHttpsInfo(region, {customEndpoint});
+//         auto infoCustom = mManager.GetCandidateHostsInfo(region, project, EndpointMode::DEFAULT);
+//         auto infoAcc = mManager.GetCandidateHostsInfo(region, project, EndpointMode::ACCELERATE);
+//         APSARA_TEST_EQUAL(2U, mManager.mUnInitializedCandidateHostsInfos.size());
+//         APSARA_TEST_EQUAL(infoCustom.get(), mManager.mUnInitializedCandidateHostsInfos[0].lock().get());
+//         APSARA_TEST_EQUAL(infoAcc.get(), mManager.mUnInitializedCandidateHostsInfos[1].lock().get());
 //         {
 //             // default mode
-//             auto info = mManager->GetCandidateHostsInfo(region, project, EndpointMode::DEFAULT);
+//             auto info = mManager.GetCandidateHostsInfo(region, project, EndpointMode::DEFAULT);
 //             APSARA_TEST_EQUAL(infoCustom.get(), info.get());
-//             APSARA_TEST_EQUAL(1U, mManager->mProjectCandidateHostsInfosMap.size());
-//             APSARA_TEST_EQUAL(2U, mManager->mProjectCandidateHostsInfosMap[project].size());
+//             APSARA_TEST_EQUAL(1U, mManager.mProjectCandidateHostsInfosMap.size());
+//             APSARA_TEST_EQUAL(2U, mManager.mProjectCandidateHostsInfosMap[project].size());
 //         }
 //         {
 //             // accelerate mode
-//             auto info = mManager->GetCandidateHostsInfo(region, project, EndpointMode::ACCELERATE);
+//             auto info = mManager.GetCandidateHostsInfo(region, project, EndpointMode::ACCELERATE);
 //             APSARA_TEST_EQUAL(infoAcc.get(), info.get());
-//             APSARA_TEST_EQUAL(1U, mManager->mProjectCandidateHostsInfosMap.size());
-//             APSARA_TEST_EQUAL(2U, mManager->mProjectCandidateHostsInfosMap[project].size());
+//             APSARA_TEST_EQUAL(1U, mManager.mProjectCandidateHostsInfosMap.size());
+//             APSARA_TEST_EQUAL(2U, mManager.mProjectCandidateHostsInfosMap[project].size());
 //         }
-//         mManager->Clear();
+//         mManager.Clear();
 //     }
 // }
 
@@ -1094,29 +1094,29 @@ private:
 //     const string endpoint2 = region + "-intranet.log.aliyuncs.com";
 //     const string host1 = project + "." + endpoint1;
 //     const string host2 = project + "." + endpoint2;
-//     mManager->UpdateLocalRegionEndpointsAndHttpsInfo(region, {endpoint1, endpoint2});
+//     mManager.UpdateLocalRegionEndpointsAndHttpsInfo(region, {endpoint1, endpoint2});
 //     {
-//         auto info = mManager->GetCandidateHostsInfo(region, project, mode);
+//         auto info = mManager.GetCandidateHostsInfo(region, project, mode);
 
-//         APSARA_TEST_TRUE(mManager->UpdateHostInfo(project, mode, host1, chrono::milliseconds(100)));
+//         APSARA_TEST_TRUE(mManager.UpdateHostInfo(project, mode, host1, chrono::milliseconds(100)));
 //         APSARA_TEST_EQUAL(chrono::milliseconds(100), info->mCandidateHosts[0][0].GetLatency());
 //     }
 
 //     // expired info
-//     APSARA_TEST_FALSE(mManager->UpdateHostInfo(project, mode, host1, chrono::milliseconds(50)));
+//     APSARA_TEST_FALSE(mManager.UpdateHostInfo(project, mode, host1, chrono::milliseconds(50)));
 
 //     // unknown project
-//     APSARA_TEST_FALSE(mManager->UpdateHostInfo("unknown_project", mode, host1, chrono::milliseconds(50)));
+//     APSARA_TEST_FALSE(mManager.UpdateHostInfo("unknown_project", mode, host1, chrono::milliseconds(50)));
 // }
 
 // void SLSClientManagerUnittest::TestUsingHttps() {
 //     const string region = "region";
 //     const string host = region + ".log.aliyuncs.com";
-//     mManager->UpdateLocalRegionEndpointsAndHttpsInfo(region, {host});
-//     APSARA_TEST_FALSE(mManager->UsingHttps(region));
+//     mManager.UpdateLocalRegionEndpointsAndHttpsInfo(region, {host});
+//     APSARA_TEST_FALSE(mManager.UsingHttps(region));
 
 //     AppConfig::GetInstance()->mSendDataPort = 443;
-//     APSARA_TEST_TRUE(mManager->UsingHttps(region));
+//     APSARA_TEST_TRUE(mManager.UsingHttps(region));
 // }
 
 // void SLSClientManagerUnittest::TestProbeNetwork() {
@@ -1132,23 +1132,23 @@ private:
 
 //     // ! means not available
 //     vector<shared_ptr<CandidateHostsInfo>> infos;
-//     infos.push_back(mManager->GetCandidateHostsInfo(
+//     infos.push_back(mManager.GetCandidateHostsInfo(
 //         ProbeNetworkMock::region1, ProbeNetworkMock::project1, EndpointMode::DEFAULT)); // public !internal !private
-//     infos.push_back(mManager->GetCandidateHostsInfo(
+//     infos.push_back(mManager.GetCandidateHostsInfo(
 //         ProbeNetworkMock::region1, ProbeNetworkMock::project1, EndpointMode::ACCELERATE)); // !accelerate public
-//     infos.push_back(mManager->GetCandidateHostsInfo(
+//     infos.push_back(mManager.GetCandidateHostsInfo(
 //         ProbeNetworkMock::region2, ProbeNetworkMock::project2, EndpointMode::DEFAULT)); // accelerate public
-//     infos.push_back(mManager->GetCandidateHostsInfo(
+//     infos.push_back(mManager.GetCandidateHostsInfo(
 //         ProbeNetworkMock::region3, ProbeNetworkMock::project3, EndpointMode::DEFAULT)); // custom
-//     infos.push_back(mManager->GetCandidateHostsInfo(
+//     infos.push_back(mManager.GetCandidateHostsInfo(
 //         ProbeNetworkMock::region3, ProbeNetworkMock::project3, EndpointMode::ACCELERATE)); // !accelerate
 
 //     // probe uninitialized host
-//     mManager->DoProbeUnInitializedHost();
-//     APSARA_TEST_TRUE(mManager->mUnInitializedCandidateHostsInfos.empty());
-//     APSARA_TEST_EQUAL(infos.size(), mManager->mPartiallyInitializedCandidateHostsInfos.size());
+//     mManager.DoProbeUnInitializedHost();
+//     APSARA_TEST_TRUE(mManager.mUnInitializedCandidateHostsInfos.empty());
+//     APSARA_TEST_EQUAL(infos.size(), mManager.mPartiallyInitializedCandidateHostsInfos.size());
 //     for (size_t i = 0; i < infos.size(); ++i) {
-//         APSARA_TEST_EQUAL(infos[i].get(), mManager->mPartiallyInitializedCandidateHostsInfos[i].lock().get());
+//         APSARA_TEST_EQUAL(infos[i].get(), mManager.mPartiallyInitializedCandidateHostsInfos[i].lock().get());
 //     }
 
 //     APSARA_TEST_EQUAL(publicHost1, infos[0]->GetCurrentHost());
@@ -1164,8 +1164,8 @@ private:
 //     }
 
 //     // probe partially initialized host
-//     mManager->DoProbeHost();
-//     APSARA_TEST_TRUE(mManager->mPartiallyInitializedCandidateHostsInfos.empty());
+//     mManager.DoProbeHost();
+//     APSARA_TEST_TRUE(mManager.mPartiallyInitializedCandidateHostsInfos.empty());
 
 //     APSARA_TEST_EQUAL(publicHost1, infos[0]->GetCurrentHost());
 //     APSARA_TEST_EQUAL(publicHost1, infos[1]->GetCurrentHost());
@@ -1191,7 +1191,7 @@ private:
 
 //     // probe all avaialble hosts
 //     INT32_FLAG(sls_hosts_probe_interval_sec) = 0;
-//     mManager->DoProbeHost();
+//     mManager.DoProbeHost();
 
 //     APSARA_TEST_EQUAL(publicHost1, infos[0]->GetCurrentHost());
 //     APSARA_TEST_EQUAL(publicHost1, infos[1]->GetCurrentHost());
@@ -1229,7 +1229,7 @@ private:
 //     // probe all hosts
 //     INT32_FLAG(sls_all_hosts_probe_interval_sec) = 0;
 //     ProbeNetworkMock::enableUnavailableHosts = true;
-//     mManager->DoProbeHost();
+//     mManager.DoProbeHost();
 
 //     APSARA_TEST_EQUAL(publicHost1, infos[0]->GetCurrentHost());
 //     APSARA_TEST_EQUAL(globalHost1, infos[1]->GetCurrentHost());
@@ -1249,86 +1249,86 @@ private:
 //     // expired info
 //     infos[2].reset();
 //     infos[4].reset();
-//     mManager->DoProbeHost();
-//     APSARA_TEST_EQUAL(2U, mManager->mProjectCandidateHostsInfosMap.size());
-//     APSARA_TEST_EQUAL(2U, mManager->mProjectCandidateHostsInfosMap[ProbeNetworkMock::project1].size());
-//     APSARA_TEST_EQUAL(1U, mManager->mProjectCandidateHostsInfosMap[ProbeNetworkMock::project3].size());
-//     APSARA_TEST_EQUAL(2U, mManager->mRegionCandidateHostsInfosMap.size());
-//     APSARA_TEST_EQUAL(2U, mManager->mRegionCandidateHostsInfosMap[ProbeNetworkMock::region1].size());
-//     APSARA_TEST_EQUAL(1U, mManager->mRegionCandidateHostsInfosMap[ProbeNetworkMock::region3].size());
+//     mManager.DoProbeHost();
+//     APSARA_TEST_EQUAL(2U, mManager.mProjectCandidateHostsInfosMap.size());
+//     APSARA_TEST_EQUAL(2U, mManager.mProjectCandidateHostsInfosMap[ProbeNetworkMock::project1].size());
+//     APSARA_TEST_EQUAL(1U, mManager.mProjectCandidateHostsInfosMap[ProbeNetworkMock::project3].size());
+//     APSARA_TEST_EQUAL(2U, mManager.mRegionCandidateHostsInfosMap.size());
+//     APSARA_TEST_EQUAL(2U, mManager.mRegionCandidateHostsInfosMap[ProbeNetworkMock::region1].size());
+//     APSARA_TEST_EQUAL(1U, mManager.mRegionCandidateHostsInfosMap[ProbeNetworkMock::region3].size());
 // }
 
 // void SLSClientManagerUnittest::TestRealIp() {
 //     BOOL_FLAG(send_prefer_real_ip) = true;
-//     mManager->mDoProbeNetwork = GetRealIpMock::DoProbeNetwork;
+//     mManager.mDoProbeNetwork = GetRealIpMock::DoProbeNetwork;
 
 //     const string unknownRegion = "unknown_region";
 //     const string normalRegionEndpoint1 = GetRealIpMock::normalRegion + "-intranet.log.aliyuncs.com";
 //     const string normalRegionEndpoint2 = GetRealIpMock::normalRegion + ".log.aliyuncs.com";
 //     const string unavailableRegionEndpoint = GetRealIpMock::unavailableRegion + ".log.aliyuncs.com";
 //     const string unknownRegionEndpoint = unknownRegion + ".log.aliyuncs.com";
-//     mManager->UpdateRemoteRegionEndpoints(GetRealIpMock::normalRegion, {normalRegionEndpoint1,
-//     normalRegionEndpoint2}); mManager->UpdateRemoteRegionEndpoints(GetRealIpMock::unavailableRegion,
-//     {unavailableRegionEndpoint}); mManager->UpdateRemoteRegionEndpoints(unknownRegion, {unknownRegionEndpoint});
-//     APSARA_TEST_EQUAL(3U, mManager->mRegionRealIpCandidateHostsInfosMap.size());
+//     mManager.UpdateRemoteRegionEndpoints(GetRealIpMock::normalRegion, {normalRegionEndpoint1,
+//     normalRegionEndpoint2}); mManager.UpdateRemoteRegionEndpoints(GetRealIpMock::unavailableRegion,
+//     {unavailableRegionEndpoint}); mManager.UpdateRemoteRegionEndpoints(unknownRegion, {unknownRegionEndpoint});
+//     APSARA_TEST_EQUAL(3U, mManager.mRegionRealIpCandidateHostsInfosMap.size());
 //     {
 //         vector<string> hosts;
-//         mManager->mRegionRealIpCandidateHostsInfosMap.at(GetRealIpMock::normalRegion).GetAllHosts(hosts);
+//         mManager.mRegionRealIpCandidateHostsInfosMap.at(GetRealIpMock::normalRegion).GetAllHosts(hosts);
 //         APSARA_TEST_EQUAL(2U, hosts.size());
 //         APSARA_TEST_EQUAL(normalRegionEndpoint1, hosts[0]);
 //         APSARA_TEST_EQUAL(normalRegionEndpoint2, hosts[1]);
 //     }
 //     {
 //         vector<string> hosts;
-//         mManager->mRegionRealIpCandidateHostsInfosMap.at(GetRealIpMock::unavailableRegion).GetAllHosts(hosts);
+//         mManager.mRegionRealIpCandidateHostsInfosMap.at(GetRealIpMock::unavailableRegion).GetAllHosts(hosts);
 //         APSARA_TEST_EQUAL(1U, hosts.size());
 //         APSARA_TEST_EQUAL(unavailableRegionEndpoint, hosts[0]);
 //     }
 //     {
 //         vector<string> hosts;
-//         mManager->mRegionRealIpCandidateHostsInfosMap.at(unknownRegion).GetAllHosts(hosts);
+//         mManager.mRegionRealIpCandidateHostsInfosMap.at(unknownRegion).GetAllHosts(hosts);
 //         APSARA_TEST_EQUAL(1U, hosts.size());
 //         APSARA_TEST_EQUAL(unknownRegionEndpoint, hosts[0]);
 //     }
 
 //     // no endpoint available
-//     mManager->DoUpdateRealIp();
-//     APSARA_TEST_EQUAL(0U, mManager->mRegionRealIpMap.size());
+//     mManager.DoUpdateRealIp();
+//     APSARA_TEST_EQUAL(0U, mManager.mRegionRealIpMap.size());
 
 //     // probe host
 //     INT32_FLAG(sls_all_hosts_probe_interval_sec) = 0;
-//     mManager->DoProbeHost();
+//     mManager.DoProbeHost();
 //     INT32_FLAG(sls_all_hosts_probe_interval_sec) = 300;
-//     for (const auto& item : mManager->mRegionRealIpCandidateHostsInfosMap) {
+//     for (const auto& item : mManager.mRegionRealIpCandidateHostsInfosMap) {
 //         APSARA_TEST_NOT_EQUAL("", item.second.GetCurrentHost());
 //     }
 
 //     // update all regions
 //     INT32_FLAG(send_switch_real_ip_interval) = 0;
-//     mManager->UpdateOutdatedRealIpRegions(GetRealIpMock::unavailableRegion);
-//     mManager->DoUpdateRealIp();
-//     APSARA_TEST_TRUE(mManager->mOutdatedRealIpRegions.empty());
-//     APSARA_TEST_EQUAL(2U, mManager->mRegionRealIpMap.size());
-//     APSARA_TEST_EQUAL(GetRealIpMock::normalRegionIps[0], mManager->GetRealIp(GetRealIpMock::normalRegion));
-//     APSARA_TEST_EQUAL(GetRealIpMock::unavailableRegionIps[0], mManager->GetRealIp(GetRealIpMock::unavailableRegion));
+//     mManager.UpdateOutdatedRealIpRegions(GetRealIpMock::unavailableRegion);
+//     mManager.DoUpdateRealIp();
+//     APSARA_TEST_TRUE(mManager.mOutdatedRealIpRegions.empty());
+//     APSARA_TEST_EQUAL(2U, mManager.mRegionRealIpMap.size());
+//     APSARA_TEST_EQUAL(GetRealIpMock::normalRegionIps[0], mManager.GetRealIp(GetRealIpMock::normalRegion));
+//     APSARA_TEST_EQUAL(GetRealIpMock::unavailableRegionIps[0], mManager.GetRealIp(GetRealIpMock::unavailableRegion));
 //     INT32_FLAG(send_switch_real_ip_interval) = 60;
 
 //     // update only outdated regions
-//     mManager->UpdateOutdatedRealIpRegions(GetRealIpMock::normalRegion);
-//     mManager->DoUpdateRealIp();
-//     APSARA_TEST_TRUE(mManager->mOutdatedRealIpRegions.empty());
-//     APSARA_TEST_EQUAL(2U, mManager->mRegionRealIpMap.size());
-//     APSARA_TEST_EQUAL(GetRealIpMock::normalRegionIps[1], mManager->GetRealIp(GetRealIpMock::normalRegion));
-//     APSARA_TEST_EQUAL(GetRealIpMock::unavailableRegionIps[0], mManager->GetRealIp(GetRealIpMock::unavailableRegion));
+//     mManager.UpdateOutdatedRealIpRegions(GetRealIpMock::normalRegion);
+//     mManager.DoUpdateRealIp();
+//     APSARA_TEST_TRUE(mManager.mOutdatedRealIpRegions.empty());
+//     APSARA_TEST_EQUAL(2U, mManager.mRegionRealIpMap.size());
+//     APSARA_TEST_EQUAL(GetRealIpMock::normalRegionIps[1], mManager.GetRealIp(GetRealIpMock::normalRegion));
+//     APSARA_TEST_EQUAL(GetRealIpMock::unavailableRegionIps[0], mManager.GetRealIp(GetRealIpMock::unavailableRegion));
 
-//     mManager->mDoProbeNetwork = ProbeNetworkMock::DoProbeNetwork;
+//     mManager.mDoProbeNetwork = ProbeNetworkMock::DoProbeNetwork;
 //     BOOL_FLAG(send_prefer_real_ip) = false;
 // }
 
 void SLSClientManagerUnittest::TestAccessKeyManagement() {
     string accessKeyId, accessKeySecret;
     SLSClientManager::AuthType type;
-    mManager->GetAccessKey("", type, accessKeyId, accessKeySecret);
+    mManager.GetAccessKey("", type, accessKeyId, accessKeySecret);
     APSARA_TEST_EQUAL(SLSClientManager::AuthType::AK, type);
     APSARA_TEST_EQUAL(STRING_FLAG(default_access_key_id), accessKeyId);
     APSARA_TEST_EQUAL(STRING_FLAG(default_access_key), accessKeySecret);
@@ -1339,29 +1339,31 @@ void SLSClientManagerUnittest::TestGetCandidateHostsInfo() {
     const string endpoint = "endpoint";
     CandidateHostsInfo* infoPtr = nullptr;
     {
-        auto info1 = mManager->GetCandidateHostsInfo(project, endpoint);
-        auto info2 = mManager->GetCandidateHostsInfo(project, endpoint);
+        auto info1 = mManager.GetCandidateHostsInfo(project, endpoint);
+        auto info2 = mManager.GetCandidateHostsInfo(project, endpoint);
         infoPtr = info1.get();
         APSARA_TEST_EQUAL(info1.get(), info2.get());
         APSARA_TEST_EQUAL(project, info1->GetProject());
         APSARA_TEST_EQUAL("", info1->GetRegion());
         APSARA_TEST_EQUAL(EndpointMode::CUSTOM, info1->GetMode());
+        APSARA_TEST_TRUE(info1->IsInitialized());
+        APSARA_TEST_EQUAL(project + "." + endpoint, info1->GetCurrentHost());
         APSARA_TEST_EQUAL(1U, info1->mCandidateHosts.size());
         APSARA_TEST_EQUAL(1U, info1->mCandidateHosts[0].size());
         APSARA_TEST_EQUAL(project + "." + endpoint, info1->mCandidateHosts[0][0].GetHostname());
-        APSARA_TEST_EQUAL(chrono::milliseconds::max(), info1->mCandidateHosts[0][0].GetLatency());
-        APSARA_TEST_EQUAL(1U, mManager->mProjectCandidateHostsInfosMap.size());
-        auto& infos = mManager->mProjectCandidateHostsInfosMap[project];
+        APSARA_TEST_EQUAL(chrono::milliseconds(10), info1->mCandidateHosts[0][0].GetLatency());
+        APSARA_TEST_EQUAL(1U, mManager.mProjectCandidateHostsInfosMap.size());
+        auto& infos = mManager.mProjectCandidateHostsInfosMap[project];
         APSARA_TEST_EQUAL(1U, infos.size());
         auto& weakInfo = *infos.begin();
         APSARA_TEST_FALSE(weakInfo.expired());
         APSARA_TEST_EQUAL(info1.get(), weakInfo.lock().get());
     }
     {
-        auto info = mManager->GetCandidateHostsInfo(project, endpoint);
+        auto info = mManager.GetCandidateHostsInfo(project, endpoint);
         APSARA_TEST_NOT_EQUAL(infoPtr, info.get());
-        APSARA_TEST_EQUAL(1U, mManager->mProjectCandidateHostsInfosMap.size());
-        APSARA_TEST_EQUAL(2U, mManager->mProjectCandidateHostsInfosMap[project].size());
+        APSARA_TEST_EQUAL(1U, mManager.mProjectCandidateHostsInfosMap.size());
+        APSARA_TEST_EQUAL(2U, mManager.mProjectCandidateHostsInfosMap[project].size());
     }
 }
 

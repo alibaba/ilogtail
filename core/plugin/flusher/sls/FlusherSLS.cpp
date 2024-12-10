@@ -581,7 +581,7 @@ bool FlusherSLS::FlushAll() {
     return SerializeAndPush(std::move(res));
 }
 
-bool FlusherSLS::BuildRequest(SenderQueueItem* item, unique_ptr<HttpSinkRequest>& req, bool* keepItem) const {
+bool FlusherSLS::BuildRequest(SenderQueueItem* item, unique_ptr<HttpSinkRequest>& req, bool* keepItem) {
     if (mSendCnt) {
         mSendCnt->Add(1);
     }
@@ -593,25 +593,38 @@ bool FlusherSLS::BuildRequest(SenderQueueItem* item, unique_ptr<HttpSinkRequest>
         return false;
     }
 
+
     auto data = static_cast<SLSSenderQueueItem*>(item);
 #ifdef __ENTERPRISE__
     if (BOOL_FLAG(send_prefer_real_ip)) {
         data->mCurrentHost = EnterpriseSLSClientManager::GetInstance()->GetRealIp(mRegion);
         if (data->mCurrentHost.empty()) {
+            auto info
+                = EnterpriseSLSClientManager::GetInstance()->GetCandidateHostsInfo(mRegion, mProject, mEndpointMode);
+            if (mCandidateHostsInfo.get() != info.get()) {
+                mCandidateHostsInfo = info;
+            }
             data->mCurrentHost = mCandidateHostsInfo->GetCurrentHost();
             data->mRealIpFlag = false;
         } else {
             data->mRealIpFlag = true;
         }
     } else {
+        // in case local region endpoint mode is changed, we should always check before sending
+        auto info = EnterpriseSLSClientManager::GetInstance()->GetCandidateHostsInfo(mRegion, mProject, mEndpointMode);
+        if (mCandidateHostsInfo.get() != info.get()) {
+            mCandidateHostsInfo = info;
+        }
 #endif
         data->mCurrentHost = mCandidateHostsInfo->GetCurrentHost();
 #ifdef __ENTERPRISE__
     }
 #endif
     if (data->mCurrentHost.empty()) {
+        if (mCandidateHostsInfo->IsInitialized()) {
+            GetRegionConcurrencyLimiter(mRegion)->OnFail();
+        }
         *keepItem = true;
-        GetRegionConcurrencyLimiter(mRegion)->OnFail();
         return false;
     }
 

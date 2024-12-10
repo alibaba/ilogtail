@@ -644,6 +644,10 @@ shared_ptr<CandidateHostsInfo> SLSClientManager::GetCandidateHostsInfo(const str
     }
     auto info = make_shared<CandidateHostsInfo>(project, "", EndpointMode::CUSTOM);
     info->UpdateHosts({EndpointMode::CUSTOM, {standardEndpoint}});
+    // manually set the endpoint to be available
+    info->UpdateHostInfo(info->GetFirstHost(), chrono::milliseconds(10));
+    info->SelectBestHost();
+    info->SetInitialized();
     {
         lock_guard<mutex> lock(mCandidateHostsInfosMapMux);
         mProjectCandidateHostsInfosMap[project].emplace_back(info);

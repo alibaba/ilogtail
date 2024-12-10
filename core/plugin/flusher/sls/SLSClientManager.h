@@ -86,6 +86,8 @@ public:
     const std::string& GetProject() const { return mProject; }
     const std::string& GetRegion() const { return mRegion; }
     EndpointMode GetMode() const { return mMode; }
+    bool IsInitialized() const { return mInitialized.load(); }
+    void SetInitialized() { mInitialized = true; }
 
 private:
     bool HasValidHost() const;
@@ -95,6 +97,7 @@ private:
     const std::string mProject;
     const std::string mRegion;
     const EndpointMode mMode;
+    std::atomic_bool mInitialized = false;
 
     mutable std::mutex mCurrentHostMux;
     std::string mCurrentHost;
