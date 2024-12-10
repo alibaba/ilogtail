@@ -167,10 +167,10 @@ void eBPFServer::Init() {
     auto configJson = AppConfig::GetInstance()->GetConfig();
     mAdminConfig.LoadEbpfConfig(configJson);
     mEventCB = std::make_unique<EventHandler>(nullptr, -1, 0);
+    mHostMetadataCB = std::make_unique<HostMetadataHandler>(nullptr, -1, 0);
 #ifdef __ENTERPRISE__
     mMeterCB = std::make_unique<ArmsMeterHandler>(nullptr, -1, 0);
     mSpanCB = std::make_unique<ArmsSpanHandler>(nullptr, -1, 0);
-    mHostMetadataCB = std::make_unique<HostMetadataHandler>(nullptr, -1, 0);
     mHostMetadataCB->RegisterUpdatePluginCallback([&](nami::PluginType type, UpdataType updateType, const std::variant<SecurityOptions*, nami::ObserverNetworkOption*> ops) {
         return UpdatePlugin(type, updateType, ops);
     });
