@@ -159,8 +159,6 @@ public:
     // void UpdateOutdatedRealIpRegions(const std::string& region);
     // std::string GetRealIp(const std::string& region) const;
 
-    std::string GetRegionFromEndpoint(const std::string& endpoint); // for backward compatibility
-
 #ifdef APSARA_UNIT_TEST_MAIN
     virtual void Clear();
 #endif

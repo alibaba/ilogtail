@@ -128,6 +128,8 @@ private:
     Batcher<SLSEventBatchStatus> mBatcher;
     std::unique_ptr<EventGroupSerializer> mGroupSerializer;
     std::unique_ptr<Serializer<std::vector<CompressedLogGroup>>> mGroupListSerializer;
+    // This may not be cached. However, this provides a simple way to control the lifetime of a CandidateHostsInfo.
+    // Otherwise, timeout machanisim must be emplyed to clean up unused CandidateHostsInfo.
     std::shared_ptr<CandidateHostsInfo> mCandidateHostsInfo;
 
     CounterPtr mSendCnt;

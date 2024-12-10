@@ -661,19 +661,6 @@ bool SLSClientManager::UsingHttps(const string& region) const {
     // return mHttpsRegions.find(region) != mHttpsRegions.end();
 }
 
-string SLSClientManager::GetRegionFromEndpoint(const string& endpoint) {
-    // lock_guard<mutex> lock(mRegionEndpointEntryMapLock);
-    // for (auto iter = mRegionEndpointEntryMap.begin(); iter != mRegionEndpointEntryMap.end(); ++iter) {
-    //     for (auto epIter = ((iter->second).mEndpointInfoMap).begin(); epIter !=
-    //     ((iter->second).mEndpointInfoMap).end();
-    //          ++epIter) {
-    //         if (epIter->first == endpoint)
-    //             return iter->first;
-    //     }
-    // }
-    return STRING_FLAG(default_region_name);
-}
-
 // void SLSClientManager::UnInitializedHostProbeThread() {
 //     LOG_INFO(sLogger, ("sls uninitialized host probe", "started"));
 //     unique_lock<mutex> lock(mUnInitializedHostProbeThreadRunningMux);

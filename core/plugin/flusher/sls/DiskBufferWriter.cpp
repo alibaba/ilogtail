@@ -798,10 +798,12 @@ SLSResponse DiskBufferWriter::SendBufferFileData(const sls_logs::LogtailBufferMe
                                                  std::string& host) {
     RateLimiter::FlowControl(bufferMeta.rawsize(), mSendLastTime, mSendLastByte, false);
     string region = bufferMeta.region();
+#ifdef __ENTERPRISE__
     // old buffer file which record the endpoint
     if (region.find("http://") == 0) {
-        region = SLSClientManager::GetInstance()->GetRegionFromEndpoint(region);
+        region = EnterpriseSLSClientManager::GetInstance()->GetRegionFromEndpoint(region);
     }
+#endif
 
     SLSClientManager::AuthType type;
     string accessKeyId, accessKeySecret;
