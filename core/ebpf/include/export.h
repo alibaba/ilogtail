@@ -4,13 +4,14 @@
 
 #pragma once
 
-#include <vector>
-#include <string>
-#include <memory>
 #include <functional>
+#include <iostream>
 #include <map>
+#include <memory>
+#include <string>
 #include <variant>
 #include <future>
+#include <vector>
 
 enum class SecureEventType {
   SECURE_EVENT_TYPE_SOCKET_SECURE,
@@ -237,6 +238,24 @@ struct SecurityNetworkFilter {
 struct SecurityOption {
   std::vector<std::string> call_names_;
   std::variant<std::monostate, SecurityFileFilter, SecurityNetworkFilter> filter_;
+
+  SecurityOption() = default;
+
+  SecurityOption(const SecurityOption& other) = default;
+
+  SecurityOption(SecurityOption&& other) noexcept
+      : call_names_(std::move(other.call_names_)), filter_(std::move(other.filter_)) {}
+
+  SecurityOption& operator=(const SecurityOption& other) = default;
+
+  SecurityOption& operator=(SecurityOption&& other) noexcept {
+      call_names_ = other.call_names_;
+      filter_ = other.filter_;
+      return *this;
+  }
+
+  ~SecurityOption() {}
+
   bool operator==(const SecurityOption& other) const {
     return call_names_ == other.call_names_ &&
             filter_ == other.filter_;
@@ -384,4 +403,4 @@ struct eBPFConfig {
   }
 };
 
-};
+}; // namespace nami
