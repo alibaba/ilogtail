@@ -167,11 +167,5 @@ func (s *configUpdateTestSuite) TestHoldOnExitTimeout() {
 	s.Equal(0, checkFlusher.GetLogCount())
 	checkFlusher.Block = false
 	time.Sleep(time.Second * time.Duration(5))
-<<<<<<< HEAD
-	s.Equal(10000, checkFlusher.GetLogCount())
-	time.Sleep(time.Second * 10)
-	s.NoError(Resume())
-=======
 	s.Equal(0, checkFlusher.GetLogCount())
->>>>>>> aab30589 (fix: fix go pipeline stop hang caused by improper component stop order (#1914))
 }
