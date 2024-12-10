@@ -61,6 +61,7 @@ static EndpointMode GetEndpointMode(sls_logs::EndpointMode mode) {
         case sls_logs::EndpointMode::CUSTOM:
             return EndpointMode::CUSTOM;
     }
+    return EndpointMode::DEFAULT;
 }
 
 static sls_logs::EndpointMode GetEndpointMode(EndpointMode mode) {
@@ -72,6 +73,7 @@ static sls_logs::EndpointMode GetEndpointMode(EndpointMode mode) {
         case EndpointMode::CUSTOM:
             return sls_logs::EndpointMode::CUSTOM;
     }
+    return sls_logs::EndpointMode::DEFAULT;
 }
 #endif
 
