@@ -13,6 +13,8 @@
 #include "polling/PollingDirFile.h"
 #include "polling/PollingEventQueue.h"
 #include "polling/PollingModify.h"
+#include "monitor/Monitor.h"
+#include "file_server/FileServer.h"
 #include "processor/daemon/LogProcess.h"
 #include "unittest/Unittest.h"
 
@@ -83,7 +85,7 @@ public:
             bfs::remove_all(AppConfig::GetInstance()->mCheckPointFilePath);
         }
         LogFileProfiler::GetInstance();
-        LoongCollectorMonitor::GetInstance()->Init();
+        LogtailMonitor::GetInstance()->Init();
         PluginRegistry::GetInstance()->LoadPlugins();
         LogProcess::GetInstance()->Start();
         PipelineManager::GetInstance();
