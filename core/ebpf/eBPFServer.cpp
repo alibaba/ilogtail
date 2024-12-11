@@ -168,12 +168,12 @@ void eBPFServer::Init() {
     mAdminConfig.LoadEbpfConfig(configJson);
     mEventCB = std::make_unique<EventHandler>(nullptr, -1, 0);
     mHostMetadataCB = std::make_unique<HostMetadataHandler>(nullptr, -1, 0);
-#ifdef __ENTERPRISE__
-    mMeterCB = std::make_unique<ArmsMeterHandler>(nullptr, -1, 0);
-    mSpanCB = std::make_unique<ArmsSpanHandler>(nullptr, -1, 0);
     mHostMetadataCB->RegisterUpdatePluginCallback([&](nami::PluginType type, UpdataType updateType, const std::variant<SecurityOptions*, nami::ObserverNetworkOption*> ops) {
         return UpdatePlugin(type, updateType, ops);
     });
+#ifdef __ENTERPRISE__
+    mMeterCB = std::make_unique<ArmsMeterHandler>(nullptr, -1, 0);
+    mSpanCB = std::make_unique<ArmsSpanHandler>(nullptr, -1, 0);
 #else
     mMeterCB = std::make_unique<OtelMeterHandler>(nullptr, -1, 0);
     mSpanCB = std::make_unique<OtelSpanHandler>(nullptr, -1, 0);
@@ -304,7 +304,7 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name,
         };
         nconfig.metadata_by_cid_cache_ = [&](const std::string& cid) -> std::unique_ptr<nami::PodMeta> {
             auto info = K8sMetadata::GetInstance().GetInfoByContainerIdFromCache(cid);
-            LOG_INFO(sLogger, 
+            LOG_DEBUG(sLogger, 
                 ("cid", cid) 
                 ("isNull", info == nullptr) 
                 ("appId", info == nullptr ? "null" : info->appId)
@@ -329,7 +329,7 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name,
         };
         nconfig.metadata_by_ip_cache_ = [&](const std::string& ip) -> std::unique_ptr<nami::PodMeta> {
             auto info = K8sMetadata::GetInstance().GetInfoByIpFromCache(ip);
-            LOG_INFO(sLogger, 
+            LOG_DEBUG(sLogger, 
                 ("ip", ip) 
                 ("isNull", info == nullptr) 
                 ("appId", info == nullptr ? "null" : info->appId)
@@ -408,7 +408,7 @@ bool eBPFServer::UpdatePlugin(nami::PluginType type, UpdataType updateType, cons
         nconfig.disable_container_ids_ = opts->mDisableCids;
         eBPFConfig->config_ = nconfig;
         eBPFConfig->type = updateType;
-        LOG_INFO(sLogger, 
+        LOG_DEBUG(sLogger, 
             ("enable_container_ids_ size", nconfig.enable_container_ids_.size()) 
             ("disable_container_ids_ size", nconfig.disable_container_ids_.size()));
         break;

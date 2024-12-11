@@ -164,7 +164,6 @@ void K8sMetadata::DeregisterHostMetadataCallback(uint32_t plugin_index) {
 }
 
 void K8sMetadata::LocalHostMetaRefresher() {
-    LOG_INFO(sLogger, ("enter", "LocalHostMetaRefresher"));
     Json::Value jsonObj;
     jsonObj["keys"].append(mHostIp);
     Json::StreamWriterBuilder writer;
@@ -172,7 +171,7 @@ void K8sMetadata::LocalHostMetaRefresher() {
     while(mFlag) {
         std::vector<std::string> podIpVec;
         bool res = SendRequestToOperator(mServiceHost, output, containerInfoType::HostInfo, podIpVec);
-        LOG_INFO(sLogger, ("begin to fetch localhost pod metadata, host", mHostIp) ("status", res));
+        LOG_DEBUG(sLogger, ("begin to fetch localhost pod metadata, host", mHostIp) ("status", res));
 
         // do callbacks
         if (res && podIpVec.size()) {
@@ -203,9 +202,9 @@ bool K8sMetadata::SendRequestToOperator(const std::string& urlHost,
 
     request = std::make_unique<HttpRequest>(
         "GET", false, mServiceHost, mServicePort, path, "", map<std::string, std::string>({{"Content-Type","application/json"}}), query, 1, 3);
-    LOG_INFO(sLogger, ("host", mServiceHost)("port", mServicePort)("path", path)("query", query));
+    LOG_DEBUG(sLogger, ("host", mServiceHost)("port", mServicePort)("path", path)("query", query));
     bool success = SendHttpRequest(std::move(request), res);
-    LOG_INFO(sLogger, ("res body", *res.GetBody<std::string>()));
+    LOG_DEBUG(sLogger, ("res body", *res.GetBody<std::string>()));
     if (success) {
         if (res.GetStatusCode() != 200) {
             LOG_WARNING(sLogger, ("fetch k8s meta from one operator fail, code is ", res.GetStatusCode()));
@@ -304,7 +303,7 @@ void K8sMetadata::SetIpCache(const Json::Value& root) {
 }
 
 void K8sMetadata::SetExternalIpCache(const std::string& ip) {
-    LOG_INFO(sLogger, (ip, "is external, inset into cache ..."));
+    LOG_DEBUG(sLogger, (ip, "is external, inset into cache ..."));
     externalIpCache.insert(ip, uint8_t(0));
 }
 
@@ -400,7 +399,7 @@ std::vector<std::shared_ptr<k8sContainerInfo>> K8sMetadata::SyncGetPodMetadataBy
     for (size_t i = 0 ; i < ips.size(); i ++ ) {
         if (IsExternalIp(ips[i])) {
             result[i] = nullptr;
-            LOG_INFO(sLogger, (ips[i], "external, set nullptr to metadata"));
+            LOG_DEBUG(sLogger, (ips[i], "external, set nullptr to metadata"));
             continue;
         }
         auto info = GetInfoByIpFromCache(ips[i]);

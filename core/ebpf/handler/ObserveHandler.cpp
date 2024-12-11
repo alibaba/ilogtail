@@ -212,7 +212,7 @@ void HostMetadataHandler::ReportAgentInfo() {
             ReadLock lk(mLock);
             for (const auto& [ip, spi] : mHostPods) {
                 // generate agentinfo
-                LOG_INFO(sLogger, ("AGENT_INFO appid", spi->mAppId)
+                LOG_DEBUG(sLogger, ("AGENT_INFO appid", spi->mAppId)
                     ("appname", spi->mAppName)
                     ("ip", spi->mPodIp) ("hostname", spi->mPodName) ("agentVersion", "1.0.0") ("startTs", std::to_string(spi->mStartTime)));
                 auto logEvent = eventGroup.AddLogEvent();
@@ -266,7 +266,7 @@ bool HostMetadataHandler::handle(uint32_t pluginIndex, std::vector<std::string>&
         auto podInfo = K8sMetadata::GetInstance().GetInfoByIpFromCache(ip);
         if (!podInfo || podInfo->appId == "") {
             // filter appid ...
-            LOG_INFO(sLogger, (ip, "cannot fetch pod metadata or doesn't have arms label"));
+            LOG_DEBUG(sLogger, (ip, "cannot fetch pod metadata or doesn't have arms label"));
             continue;
         }
 
@@ -287,10 +287,10 @@ bool HostMetadataHandler::handle(uint32_t pluginIndex, std::vector<std::string>&
                 addedContainers.push_back(cid);
             }
         }
-        LOG_INFO(sLogger, ("appId", podInfo->appId) ("appName", podInfo->appName) ("podIp", podInfo->podIp) ("podName", podInfo->podName) ("containerId", cids));
+        LOG_DEBUG(sLogger, ("appId", podInfo->appId) ("appName", podInfo->appName) ("podIp", podInfo->podIp) ("podName", podInfo->podName) ("containerId", cids));
     }
 
-    LOG_INFO(sLogger, ("begin to update local host metadata, pod list size:", newPodIps.size()) ("input pod list size", podIpVec.size()) ("host pod list size", mHostPods.size()));
+    LOG_DEBUG(sLogger, ("begin to update local host metadata, pod list size:", newPodIps.size()) ("input pod list size", podIpVec.size()) ("host pod list size", mHostPods.size()));
 
     for (auto& cid : mCids) {
         if (!currentContainers.count(cid)) {
@@ -331,7 +331,7 @@ bool HostMetadataHandler::handle(uint32_t pluginIndex, std::vector<std::string>&
         ops.mEnableCids = addedContainers;
         ops.mEnableCidFilter = true;
         bool ret = mUpdateFunc(nami::PluginType::NETWORK_OBSERVE, UpdataType::OBSERVER_UPDATE_TYPE_CHANGE_WHITELIST, &ops);
-        LOG_INFO(sLogger, ("after update, self pod list size", mHostPods.size()) 
+        LOG_DEBUG(sLogger, ("after update, self pod list size", mHostPods.size()) 
             ("add cids", addPodsStr) 
             ("remove cids", removePodsStr) 
             ("host pods ip", hostPodsStr) 
