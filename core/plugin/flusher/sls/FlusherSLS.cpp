@@ -593,7 +593,6 @@ bool FlusherSLS::BuildRequest(SenderQueueItem* item, unique_ptr<HttpSinkRequest>
         return false;
     }
 
-
     auto data = static_cast<SLSSenderQueueItem*>(item);
 #ifdef __ENTERPRISE__
     if (BOOL_FLAG(send_prefer_real_ip)) {
@@ -629,11 +628,11 @@ bool FlusherSLS::BuildRequest(SenderQueueItem* item, unique_ptr<HttpSinkRequest>
     }
 
     switch (mTelemetryType) {
-        case sls_logs::SLS_TELEMETRY_TYPE_METRICS:
-            req = CreatePostMetricStoreLogsRequest(accessKeyId, accessKeySecret, type, data);
-            break;
         case sls_logs::SLS_TELEMETRY_TYPE_LOGS:
             req = CreatePostLogStoreLogsRequest(accessKeyId, accessKeySecret, type, data);
+            break;
+        case sls_logs::SLS_TELEMETRY_TYPE_METRICS:
+            req = CreatePostMetricStoreLogsRequest(accessKeyId, accessKeySecret, type, data);
             break;
         default:
             break;

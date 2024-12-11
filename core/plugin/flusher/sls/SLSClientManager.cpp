@@ -1115,7 +1115,7 @@ void PreparePostLogStoreLogsRequest(const string& accessKeyId,
     map<string, string> parameterList;
     if (!shardHashKey.empty()) {
         parameterList["key"] = shardHashKey;
-        if (!seqId.has_value()) {
+        if (seqId.has_value()) {
             parameterList["seqid"] = to_string(seqId.value());
         }
     }

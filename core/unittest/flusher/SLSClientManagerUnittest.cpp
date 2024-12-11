@@ -241,6 +241,7 @@ void CandidateHostsInfoUnittest::TestUpdateHosts() {
     const string internalHost = mProject + "." + internalEndpoint;
     const string globalHost = mProject + "." + globalEndpoint;
     const string customHost = mProject + "." + customEndpoint;
+#ifdef __ENTERPRISE__
     {
         // default mode
         CandidateHostsInfo info("project", region, EndpointMode::DEFAULT);
@@ -391,6 +392,7 @@ void CandidateHostsInfoUnittest::TestUpdateHosts() {
             APSARA_TEST_EQUAL(chrono::milliseconds(150), info.mCandidateHosts[0][1].GetLatency());
         }
     }
+#endif
     {
         // custom mode
         CandidateHostsInfo info("project", region, EndpointMode::CUSTOM);

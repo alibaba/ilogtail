@@ -16,6 +16,9 @@ cmake_minimum_required(VERSION 3.22)
 project(flusher_unittest)
 
 add_executable(flusher_sls_unittest FlusherSLSUnittest.cpp)
+if (ENABLE_ENTERPRISE)
+    target_sources(flusher_sls_unittest PRIVATE SLSNetworkRequestMock.cpp)
+endif ()
 target_link_libraries(flusher_sls_unittest ${UT_BASE_TARGET})
 
 add_executable(pack_id_manager_unittest PackIdManagerUnittest.cpp)
@@ -25,8 +28,9 @@ add_executable(sls_client_manager_unittest SLSClientManagerUnittest.cpp)
 target_link_libraries(sls_client_manager_unittest ${UT_BASE_TARGET})
 
 if (ENABLE_ENTERPRISE)
-    add_executable(enterprise_sls_client_manager_unittest EnterpriseSLSClientManagerUnittest.cpp)
+    add_executable(enterprise_sls_client_manager_unittest EnterpriseSLSClientManagerUnittest.cpp SLSNetworkRequestMock.cpp)
     target_link_libraries(enterprise_sls_client_manager_unittest ${UT_BASE_TARGET})
+
     add_executable(enterprise_flusher_sls_monitor_unittest EnterpriseFlusherSLSMonitorUnittest.cpp)
     target_link_libraries(enterprise_flusher_sls_monitor_unittest ${UT_BASE_TARGET})
 endif ()
