@@ -48,6 +48,9 @@ public:
     void Init();
 
     bool StartPlugin(nami::PluginType plugin_type, std::unique_ptr<nami::eBPFConfig> conf);
+
+    bool UpdatePlugin(nami::PluginType plugin_type, std::unique_ptr<nami::eBPFConfig> conf, 
+            UpdataType update_type = UpdataType::SECURE_UPDATE_TYPE_CONFIG_CHAGE);
     
     bool StopPlugin(nami::PluginType plugin_type);
 
@@ -64,7 +67,6 @@ private:
     void FillCommonConf(std::unique_ptr<nami::eBPFConfig>& conf);
     bool LoadDynamicLib(const std::string& lib_name);
     bool DynamicLibSuccess();
-    bool UpdatePlugin(nami::PluginType plugin_type, std::unique_ptr<nami::eBPFConfig> conf);
 
     enum class ebpf_func {
         EBPF_INIT,
