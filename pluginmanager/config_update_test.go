@@ -23,10 +23,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/suite"
+
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/plugins/flusher/checker"
-
-	"github.com/stretchr/testify/suite"
 )
 
 var updateConfigName = "update_mock_block"
