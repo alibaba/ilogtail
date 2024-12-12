@@ -17,6 +17,7 @@
 #pragma once
 
 #include <cstdint>
+#include <ctime>
 #include <string>
 
 #include "common/http/HttpResponse.h"
