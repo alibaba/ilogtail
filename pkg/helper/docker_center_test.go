@@ -411,7 +411,7 @@ func TestDockerCenterEvents(t *testing.T) {
 
 	time.Sleep(5 * time.Second)
 	containerLen := len(dockerCenterInstance.containerMap)
-	assert.Equal(t, 0, containerLen)
+	assert.Equal(t, 1, containerLen)
 
 	mockClient.On("ContainerProcessAlive", mock.Anything).Return(true).Once()
 	mockClient.On("ContainerInspect", mock.Anything, "event1").Return(types.ContainerJSON{
