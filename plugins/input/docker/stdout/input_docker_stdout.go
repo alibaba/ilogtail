@@ -48,6 +48,7 @@ func logPathEmpty(container types.ContainerJSON) bool {
 	if len(container.LogPath) == 0 {
 		return true
 	}
+	return false
 }
 
 type DockerFileSyner struct {
