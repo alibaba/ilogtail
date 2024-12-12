@@ -27,414 +27,414 @@ using namespace std;
 
 namespace logtail {
 
-class HostInfoUnittest : public ::testing::Test {
-public:
-    void TestHostname();
-    void TestLatency();
+// class HostInfoUnittest : public ::testing::Test {
+// public:
+//     void TestHostname();
+//     void TestLatency();
 
-private:
-    const std::string mHostname = "project.endpoint";
-};
+// private:
+//     const std::string mHostname = "project.endpoint";
+// };
 
-void HostInfoUnittest::TestHostname() {
-    HostInfo hostInfo(mHostname);
-    APSARA_TEST_EQUAL(mHostname, hostInfo.GetHostname());
-}
+// void HostInfoUnittest::TestHostname() {
+//     HostInfo hostInfo(mHostname);
+//     APSARA_TEST_EQUAL(mHostname, hostInfo.GetHostname());
+// }
 
-void HostInfoUnittest::TestLatency() {
-    HostInfo hostInfo(mHostname);
-    APSARA_TEST_TRUE(hostInfo.IsForbidden());
+// void HostInfoUnittest::TestLatency() {
+//     HostInfo hostInfo(mHostname);
+//     APSARA_TEST_TRUE(hostInfo.IsForbidden());
 
-    auto latency = chrono::milliseconds(100);
-    hostInfo.SetLatency(latency);
-    APSARA_TEST_EQUAL(latency, hostInfo.GetLatency());
-    APSARA_TEST_FALSE(hostInfo.IsForbidden());
+//     auto latency = chrono::milliseconds(100);
+//     hostInfo.SetLatency(latency);
+//     APSARA_TEST_EQUAL(latency, hostInfo.GetLatency());
+//     APSARA_TEST_FALSE(hostInfo.IsForbidden());
 
-    hostInfo.SetForbidden();
-    APSARA_TEST_EQUAL(chrono::milliseconds::max(), hostInfo.GetLatency());
-}
+//     hostInfo.SetForbidden();
+//     APSARA_TEST_EQUAL(chrono::milliseconds::max(), hostInfo.GetLatency());
+// }
 
-UNIT_TEST_CASE(HostInfoUnittest, TestHostname)
-UNIT_TEST_CASE(HostInfoUnittest, TestLatency)
+// UNIT_TEST_CASE(HostInfoUnittest, TestHostname)
+// UNIT_TEST_CASE(HostInfoUnittest, TestLatency)
 
-class CandidateHostsInfoUnittest : public ::testing::Test {
-public:
-    void TestBasicInfo();
-    void TestHostsInfo();
-    void TestUpdateHosts();
-    void TestFirstHost();
+// class CandidateHostsInfoUnittest : public ::testing::Test {
+// public:
+//     void TestBasicInfo();
+//     void TestHostsInfo();
+//     void TestUpdateHosts();
+//     void TestFirstHost();
 
-private:
-    const string mProject = "project";
-    const string mRegion = "region";
-    const EndpointMode mMode = EndpointMode::DEFAULT;
-};
+// private:
+//     const string mProject = "project";
+//     const string mRegion = "region";
+//     const EndpointMode mMode = EndpointMode::DEFAULT;
+// };
 
-void CandidateHostsInfoUnittest::TestBasicInfo() {
-    CandidateHostsInfo info(mProject, mRegion, mMode);
-    APSARA_TEST_EQUAL(mProject, info.GetProject());
-    APSARA_TEST_EQUAL(mRegion, info.GetRegion());
-    APSARA_TEST_EQUAL(mMode, info.GetMode());
-}
+// void CandidateHostsInfoUnittest::TestBasicInfo() {
+//     CandidateHostsInfo info(mProject, mRegion, mMode);
+//     APSARA_TEST_EQUAL(mProject, info.GetProject());
+//     APSARA_TEST_EQUAL(mRegion, info.GetRegion());
+//     APSARA_TEST_EQUAL(mMode, info.GetMode());
+// }
 
-void CandidateHostsInfoUnittest::TestHostsInfo() {
-    const string host1 = mProject + ".endpoint_1";
-    const string host21 = mProject + ".endpoint_2_1";
-    const string host22 = mProject + ".endpoint_2_2";
-    const string host3 = mProject + ".endpoint_3";
+// void CandidateHostsInfoUnittest::TestHostsInfo() {
+//     const string host1 = mProject + ".endpoint_1";
+//     const string host21 = mProject + ".endpoint_2_1";
+//     const string host22 = mProject + ".endpoint_2_2";
+//     const string host3 = mProject + ".endpoint_3";
 
-    CandidateHostsInfo info(mProject, mRegion, mMode);
-    info.mCandidateHosts.push_back({host1});
-    info.mCandidateHosts.push_back({host21, host22});
-    info.mCandidateHosts.push_back({host3});
+//     CandidateHostsInfo info(mProject, mRegion, mMode);
+//     info.mCandidateHosts.push_back({host1});
+//     info.mCandidateHosts.push_back({host21, host22});
+//     info.mCandidateHosts.push_back({host3});
 
-    // initialized
-    APSARA_TEST_TRUE(info.GetCurrentHost().empty());
-    {
-        vector<string> res;
-        info.GetAllHosts(res);
-        APSARA_TEST_EQUAL(4U, res.size());
-        APSARA_TEST_EQUAL(host1, res[0]);
-        APSARA_TEST_EQUAL(host21, res[1]);
-        APSARA_TEST_EQUAL(host22, res[2]);
-        APSARA_TEST_EQUAL(host3, res[3]);
-    }
-    {
-        vector<string> res;
-        info.GetProbeHosts(res);
-        APSARA_TEST_EQUAL(4U, res.size());
-        APSARA_TEST_EQUAL(host1, res[0]);
-        APSARA_TEST_EQUAL(host21, res[1]);
-        APSARA_TEST_EQUAL(host22, res[2]);
-        APSARA_TEST_EQUAL(host3, res[3]);
-    }
+//     // initialized
+//     APSARA_TEST_TRUE(info.GetCurrentHost().empty());
+//     {
+//         vector<string> res;
+//         info.GetAllHosts(res);
+//         APSARA_TEST_EQUAL(4U, res.size());
+//         APSARA_TEST_EQUAL(host1, res[0]);
+//         APSARA_TEST_EQUAL(host21, res[1]);
+//         APSARA_TEST_EQUAL(host22, res[2]);
+//         APSARA_TEST_EQUAL(host3, res[3]);
+//     }
+//     {
+//         vector<string> res;
+//         info.GetProbeHosts(res);
+//         APSARA_TEST_EQUAL(4U, res.size());
+//         APSARA_TEST_EQUAL(host1, res[0]);
+//         APSARA_TEST_EQUAL(host21, res[1]);
+//         APSARA_TEST_EQUAL(host22, res[2]);
+//         APSARA_TEST_EQUAL(host3, res[3]);
+//     }
 
-    // no valid host
-    info.SelectBestHost();
-    APSARA_TEST_TRUE(info.GetCurrentHost().empty());
+//     // no valid host
+//     info.SelectBestHost();
+//     APSARA_TEST_TRUE(info.GetCurrentHost().empty());
 
-    // some hosts become valid
-    info.UpdateHostInfo(host21, chrono::milliseconds(100));
-    info.SelectBestHost();
+//     // some hosts become valid
+//     info.UpdateHostInfo(host21, chrono::milliseconds(100));
+//     info.SelectBestHost();
 
-    APSARA_TEST_EQUAL(host21, info.GetCurrentHost());
-    {
-        vector<string> res;
-        info.GetProbeHosts(res);
-        APSARA_TEST_EQUAL(1U, res.size());
-        APSARA_TEST_EQUAL(host21, res[0]);
-    }
-    {
-        vector<string> res;
-        info.GetAllHosts(res);
-        APSARA_TEST_EQUAL(4U, res.size());
-        APSARA_TEST_EQUAL(host1, res[0]);
-        APSARA_TEST_EQUAL(host21, res[1]);
-        APSARA_TEST_EQUAL(host22, res[2]);
-        APSARA_TEST_EQUAL(host3, res[3]);
-    }
+//     APSARA_TEST_EQUAL(host21, info.GetCurrentHost());
+//     {
+//         vector<string> res;
+//         info.GetProbeHosts(res);
+//         APSARA_TEST_EQUAL(1U, res.size());
+//         APSARA_TEST_EQUAL(host21, res[0]);
+//     }
+//     {
+//         vector<string> res;
+//         info.GetAllHosts(res);
+//         APSARA_TEST_EQUAL(4U, res.size());
+//         APSARA_TEST_EQUAL(host1, res[0]);
+//         APSARA_TEST_EQUAL(host21, res[1]);
+//         APSARA_TEST_EQUAL(host22, res[2]);
+//         APSARA_TEST_EQUAL(host3, res[3]);
+//     }
 
-    // host with the same priority as the current one has lower latency
-    info.UpdateHostInfo(host22, chrono::milliseconds(50));
-    info.SelectBestHost();
+//     // host with the same priority as the current one has lower latency
+//     info.UpdateHostInfo(host22, chrono::milliseconds(50));
+//     info.SelectBestHost();
 
-    APSARA_TEST_EQUAL(host22, info.GetCurrentHost());
-    {
-        vector<string> res;
-        info.GetProbeHosts(res);
-        APSARA_TEST_EQUAL(2U, res.size());
-        APSARA_TEST_EQUAL(host21, res[0]);
-        APSARA_TEST_EQUAL(host22, res[1]);
-    }
-    {
-        vector<string> res;
-        info.GetAllHosts(res);
-        APSARA_TEST_EQUAL(4U, res.size());
-        APSARA_TEST_EQUAL(host1, res[0]);
-        APSARA_TEST_EQUAL(host21, res[1]);
-        APSARA_TEST_EQUAL(host22, res[2]);
-        APSARA_TEST_EQUAL(host3, res[3]);
-    }
+//     APSARA_TEST_EQUAL(host22, info.GetCurrentHost());
+//     {
+//         vector<string> res;
+//         info.GetProbeHosts(res);
+//         APSARA_TEST_EQUAL(2U, res.size());
+//         APSARA_TEST_EQUAL(host21, res[0]);
+//         APSARA_TEST_EQUAL(host22, res[1]);
+//     }
+//     {
+//         vector<string> res;
+//         info.GetAllHosts(res);
+//         APSARA_TEST_EQUAL(4U, res.size());
+//         APSARA_TEST_EQUAL(host1, res[0]);
+//         APSARA_TEST_EQUAL(host21, res[1]);
+//         APSARA_TEST_EQUAL(host22, res[2]);
+//         APSARA_TEST_EQUAL(host3, res[3]);
+//     }
 
-    // host with higher priority becomes valid
-    info.UpdateHostInfo(host1, chrono::milliseconds(200));
-    info.SelectBestHost();
+//     // host with higher priority becomes valid
+//     info.UpdateHostInfo(host1, chrono::milliseconds(200));
+//     info.SelectBestHost();
 
-    APSARA_TEST_EQUAL(host1, info.GetCurrentHost());
-    {
-        vector<string> res;
-        info.GetProbeHosts(res);
-        APSARA_TEST_EQUAL(3U, res.size());
-        APSARA_TEST_EQUAL(host1, res[0]);
-        APSARA_TEST_EQUAL(host21, res[1]);
-        APSARA_TEST_EQUAL(host22, res[2]);
-    }
-    {
-        vector<string> res;
-        info.GetAllHosts(res);
-        APSARA_TEST_EQUAL(4U, res.size());
-        APSARA_TEST_EQUAL(host1, res[0]);
-        APSARA_TEST_EQUAL(host21, res[1]);
-        APSARA_TEST_EQUAL(host22, res[2]);
-        APSARA_TEST_EQUAL(host3, res[3]);
-    }
+//     APSARA_TEST_EQUAL(host1, info.GetCurrentHost());
+//     {
+//         vector<string> res;
+//         info.GetProbeHosts(res);
+//         APSARA_TEST_EQUAL(3U, res.size());
+//         APSARA_TEST_EQUAL(host1, res[0]);
+//         APSARA_TEST_EQUAL(host21, res[1]);
+//         APSARA_TEST_EQUAL(host22, res[2]);
+//     }
+//     {
+//         vector<string> res;
+//         info.GetAllHosts(res);
+//         APSARA_TEST_EQUAL(4U, res.size());
+//         APSARA_TEST_EQUAL(host1, res[0]);
+//         APSARA_TEST_EQUAL(host21, res[1]);
+//         APSARA_TEST_EQUAL(host22, res[2]);
+//         APSARA_TEST_EQUAL(host3, res[3]);
+//     }
 
-    // no change
-    info.SelectBestHost();
+//     // no change
+//     info.SelectBestHost();
 
-    APSARA_TEST_EQUAL(host1, info.GetCurrentHost());
-    {
-        vector<string> res;
-        info.GetProbeHosts(res);
-        APSARA_TEST_EQUAL(3U, res.size());
-        APSARA_TEST_EQUAL(host1, res[0]);
-        APSARA_TEST_EQUAL(host21, res[1]);
-        APSARA_TEST_EQUAL(host22, res[2]);
-    }
-    {
-        vector<string> res;
-        info.GetAllHosts(res);
-        APSARA_TEST_EQUAL(4U, res.size());
-        APSARA_TEST_EQUAL(host1, res[0]);
-        APSARA_TEST_EQUAL(host21, res[1]);
-        APSARA_TEST_EQUAL(host22, res[2]);
-        APSARA_TEST_EQUAL(host3, res[3]);
-    }
+//     APSARA_TEST_EQUAL(host1, info.GetCurrentHost());
+//     {
+//         vector<string> res;
+//         info.GetProbeHosts(res);
+//         APSARA_TEST_EQUAL(3U, res.size());
+//         APSARA_TEST_EQUAL(host1, res[0]);
+//         APSARA_TEST_EQUAL(host21, res[1]);
+//         APSARA_TEST_EQUAL(host22, res[2]);
+//     }
+//     {
+//         vector<string> res;
+//         info.GetAllHosts(res);
+//         APSARA_TEST_EQUAL(4U, res.size());
+//         APSARA_TEST_EQUAL(host1, res[0]);
+//         APSARA_TEST_EQUAL(host21, res[1]);
+//         APSARA_TEST_EQUAL(host22, res[2]);
+//         APSARA_TEST_EQUAL(host3, res[3]);
+//     }
 
-    // all hosts becomes invalid
-    info.UpdateHostInfo(host1, chrono::milliseconds::max());
-    info.UpdateHostInfo(host21, chrono::milliseconds::max());
-    info.UpdateHostInfo(host22, chrono::milliseconds::max());
-    info.UpdateHostInfo(host3, chrono::milliseconds::max());
-    info.SelectBestHost();
+//     // all hosts becomes invalid
+//     info.UpdateHostInfo(host1, chrono::milliseconds::max());
+//     info.UpdateHostInfo(host21, chrono::milliseconds::max());
+//     info.UpdateHostInfo(host22, chrono::milliseconds::max());
+//     info.UpdateHostInfo(host3, chrono::milliseconds::max());
+//     info.SelectBestHost();
 
-    APSARA_TEST_TRUE(info.GetCurrentHost().empty());
-    {
-        vector<string> res;
-        info.GetProbeHosts(res);
-        APSARA_TEST_EQUAL(4U, res.size());
-        APSARA_TEST_EQUAL(host1, res[0]);
-        APSARA_TEST_EQUAL(host21, res[1]);
-        APSARA_TEST_EQUAL(host22, res[2]);
-        APSARA_TEST_EQUAL(host3, res[3]);
-    }
-    {
-        vector<string> res;
-        info.GetAllHosts(res);
-        APSARA_TEST_EQUAL(4U, res.size());
-        APSARA_TEST_EQUAL(host1, res[0]);
-        APSARA_TEST_EQUAL(host21, res[1]);
-        APSARA_TEST_EQUAL(host22, res[2]);
-        APSARA_TEST_EQUAL(host3, res[3]);
-    }
-}
+//     APSARA_TEST_TRUE(info.GetCurrentHost().empty());
+//     {
+//         vector<string> res;
+//         info.GetProbeHosts(res);
+//         APSARA_TEST_EQUAL(4U, res.size());
+//         APSARA_TEST_EQUAL(host1, res[0]);
+//         APSARA_TEST_EQUAL(host21, res[1]);
+//         APSARA_TEST_EQUAL(host22, res[2]);
+//         APSARA_TEST_EQUAL(host3, res[3]);
+//     }
+//     {
+//         vector<string> res;
+//         info.GetAllHosts(res);
+//         APSARA_TEST_EQUAL(4U, res.size());
+//         APSARA_TEST_EQUAL(host1, res[0]);
+//         APSARA_TEST_EQUAL(host21, res[1]);
+//         APSARA_TEST_EQUAL(host22, res[2]);
+//         APSARA_TEST_EQUAL(host3, res[3]);
+//     }
+// }
 
-void CandidateHostsInfoUnittest::TestUpdateHosts() {
-    const string region = "region";
-    const string publicEndpoint = region + ".log.aliyuncs.com";
-    const string privateEndpoint = region + "-intranet.log.aliyuncs.com";
-    const string internalEndpoint = region + "-internal.log.aliyuncs.com";
-    const string globalEndpoint = "log-global.aliyuncs.com";
-    const string customEndpoint = "custom.endpoint";
-    const string publicHost = mProject + "." + publicEndpoint;
-    const string privateHost = mProject + "." + privateEndpoint;
-    const string internalHost = mProject + "." + internalEndpoint;
-    const string globalHost = mProject + "." + globalEndpoint;
-    const string customHost = mProject + "." + customEndpoint;
-#ifdef __ENTERPRISE__
-    {
-        // default mode
-        CandidateHostsInfo info("project", region, EndpointMode::DEFAULT);
+// void CandidateHostsInfoUnittest::TestUpdateHosts() {
+//     const string region = "region";
+//     const string publicEndpoint = region + ".log.aliyuncs.com";
+//     const string privateEndpoint = region + "-intranet.log.aliyuncs.com";
+//     const string internalEndpoint = region + "-internal.log.aliyuncs.com";
+//     const string globalEndpoint = "log-global.aliyuncs.com";
+//     const string customEndpoint = "custom.endpoint";
+//     const string publicHost = mProject + "." + publicEndpoint;
+//     const string privateHost = mProject + "." + privateEndpoint;
+//     const string internalHost = mProject + "." + internalEndpoint;
+//     const string globalHost = mProject + "." + globalEndpoint;
+//     const string customHost = mProject + "." + customEndpoint;
+// #ifdef __ENTERPRISE__
+//     {
+//         // default mode
+//         CandidateHostsInfo info("project", region, EndpointMode::DEFAULT);
 
-        // from no remote endpoints
-        CandidateEndpoints regionEndpoints{EndpointMode::DEFAULT, {publicEndpoint}, {}};
-        info.UpdateHosts(regionEndpoints);
-        APSARA_TEST_EQUAL(1U, info.mCandidateHosts.size());
-        APSARA_TEST_EQUAL(1U, info.mCandidateHosts[0].size());
-        APSARA_TEST_EQUAL(publicHost, info.mCandidateHosts[0][0].GetHostname());
-        APSARA_TEST_EQUAL(chrono::milliseconds::max(), info.mCandidateHosts[0][0].GetLatency());
+//         // from no remote endpoints
+//         CandidateEndpoints regionEndpoints{EndpointMode::DEFAULT, {publicEndpoint}, {}};
+//         info.UpdateHosts(regionEndpoints);
+//         APSARA_TEST_EQUAL(1U, info.mCandidateHosts.size());
+//         APSARA_TEST_EQUAL(1U, info.mCandidateHosts[0].size());
+//         APSARA_TEST_EQUAL(publicHost, info.mCandidateHosts[0][0].GetHostname());
+//         APSARA_TEST_EQUAL(chrono::milliseconds::max(), info.mCandidateHosts[0][0].GetLatency());
 
-        info.UpdateHostInfo(publicHost, chrono::milliseconds(100));
+//         info.UpdateHostInfo(publicHost, chrono::milliseconds(100));
 
-        // to with remote endpoints
-        regionEndpoints.mRemoteEndpoints = {privateEndpoint, publicEndpoint};
-        info.UpdateHosts(regionEndpoints);
-        APSARA_TEST_EQUAL(2U, info.mCandidateHosts.size());
-        APSARA_TEST_EQUAL(1U, info.mCandidateHosts[0].size());
-        APSARA_TEST_EQUAL(publicHost, info.mCandidateHosts[0][0].GetHostname());
-        APSARA_TEST_EQUAL(chrono::milliseconds(100), info.mCandidateHosts[0][0].GetLatency());
-        APSARA_TEST_EQUAL(1U, info.mCandidateHosts[1].size());
-        APSARA_TEST_EQUAL(privateHost, info.mCandidateHosts[1][0].GetHostname());
-        APSARA_TEST_EQUAL(chrono::milliseconds::max(), info.mCandidateHosts[1][0].GetLatency());
+//         // to with remote endpoints
+//         regionEndpoints.mRemoteEndpoints = {privateEndpoint, publicEndpoint};
+//         info.UpdateHosts(regionEndpoints);
+//         APSARA_TEST_EQUAL(2U, info.mCandidateHosts.size());
+//         APSARA_TEST_EQUAL(1U, info.mCandidateHosts[0].size());
+//         APSARA_TEST_EQUAL(publicHost, info.mCandidateHosts[0][0].GetHostname());
+//         APSARA_TEST_EQUAL(chrono::milliseconds(100), info.mCandidateHosts[0][0].GetLatency());
+//         APSARA_TEST_EQUAL(1U, info.mCandidateHosts[1].size());
+//         APSARA_TEST_EQUAL(privateHost, info.mCandidateHosts[1][0].GetHostname());
+//         APSARA_TEST_EQUAL(chrono::milliseconds::max(), info.mCandidateHosts[1][0].GetLatency());
 
-        info.UpdateHostInfo(publicHost, chrono::milliseconds(50));
-        info.UpdateHostInfo(privateHost, chrono::milliseconds(150));
+//         info.UpdateHostInfo(publicHost, chrono::milliseconds(50));
+//         info.UpdateHostInfo(privateHost, chrono::milliseconds(150));
 
-        // to updated remote endpoints
-        regionEndpoints.mRemoteEndpoints = {internalEndpoint, privateEndpoint, publicEndpoint};
-        info.UpdateHosts(regionEndpoints);
-        APSARA_TEST_EQUAL(3U, info.mCandidateHosts.size());
-        APSARA_TEST_EQUAL(1U, info.mCandidateHosts[0].size());
-        APSARA_TEST_EQUAL(publicHost, info.mCandidateHosts[0][0].GetHostname());
-        APSARA_TEST_EQUAL(chrono::milliseconds(50), info.mCandidateHosts[0][0].GetLatency());
-        APSARA_TEST_EQUAL(1U, info.mCandidateHosts[1].size());
-        APSARA_TEST_EQUAL(internalHost, info.mCandidateHosts[1][0].GetHostname());
-        APSARA_TEST_EQUAL(chrono::milliseconds::max(), info.mCandidateHosts[1][0].GetLatency());
-        APSARA_TEST_EQUAL(1U, info.mCandidateHosts[2].size());
-        APSARA_TEST_EQUAL(privateHost, info.mCandidateHosts[2][0].GetHostname());
-        APSARA_TEST_EQUAL(chrono::milliseconds(150), info.mCandidateHosts[2][0].GetLatency());
-    }
-    {
-        // accelerate mode
-        {
-            CandidateHostsInfo info("project", region, EndpointMode::ACCELERATE);
-            // from no remote endpoints
-            CandidateEndpoints regionEndpoints{EndpointMode::DEFAULT, {publicEndpoint}, {}};
-            info.UpdateHosts(regionEndpoints);
-            APSARA_TEST_EQUAL(1U, info.mCandidateHosts.size());
-            APSARA_TEST_EQUAL(1U, info.mCandidateHosts[0].size());
-            APSARA_TEST_EQUAL(globalHost, info.mCandidateHosts[0][0].GetHostname());
-            APSARA_TEST_EQUAL(chrono::milliseconds::max(), info.mCandidateHosts[0][0].GetLatency());
+//         // to updated remote endpoints
+//         regionEndpoints.mRemoteEndpoints = {internalEndpoint, privateEndpoint, publicEndpoint};
+//         info.UpdateHosts(regionEndpoints);
+//         APSARA_TEST_EQUAL(3U, info.mCandidateHosts.size());
+//         APSARA_TEST_EQUAL(1U, info.mCandidateHosts[0].size());
+//         APSARA_TEST_EQUAL(publicHost, info.mCandidateHosts[0][0].GetHostname());
+//         APSARA_TEST_EQUAL(chrono::milliseconds(50), info.mCandidateHosts[0][0].GetLatency());
+//         APSARA_TEST_EQUAL(1U, info.mCandidateHosts[1].size());
+//         APSARA_TEST_EQUAL(internalHost, info.mCandidateHosts[1][0].GetHostname());
+//         APSARA_TEST_EQUAL(chrono::milliseconds::max(), info.mCandidateHosts[1][0].GetLatency());
+//         APSARA_TEST_EQUAL(1U, info.mCandidateHosts[2].size());
+//         APSARA_TEST_EQUAL(privateHost, info.mCandidateHosts[2][0].GetHostname());
+//         APSARA_TEST_EQUAL(chrono::milliseconds(150), info.mCandidateHosts[2][0].GetLatency());
+//     }
+//     {
+//         // accelerate mode
+//         {
+//             CandidateHostsInfo info("project", region, EndpointMode::ACCELERATE);
+//             // from no remote endpoints
+//             CandidateEndpoints regionEndpoints{EndpointMode::DEFAULT, {publicEndpoint}, {}};
+//             info.UpdateHosts(regionEndpoints);
+//             APSARA_TEST_EQUAL(1U, info.mCandidateHosts.size());
+//             APSARA_TEST_EQUAL(1U, info.mCandidateHosts[0].size());
+//             APSARA_TEST_EQUAL(globalHost, info.mCandidateHosts[0][0].GetHostname());
+//             APSARA_TEST_EQUAL(chrono::milliseconds::max(), info.mCandidateHosts[0][0].GetLatency());
 
-            info.UpdateHostInfo(globalHost, chrono::milliseconds(100));
+//             info.UpdateHostInfo(globalHost, chrono::milliseconds(100));
 
-            // to with remote endpoints
-            regionEndpoints.mRemoteEndpoints = {privateEndpoint, publicEndpoint};
-            info.UpdateHosts(regionEndpoints);
-            APSARA_TEST_EQUAL(1U, info.mCandidateHosts.size());
-            APSARA_TEST_EQUAL(2U, info.mCandidateHosts[0].size());
-            APSARA_TEST_EQUAL(globalHost, info.mCandidateHosts[0][0].GetHostname());
-            APSARA_TEST_EQUAL(chrono::milliseconds(100), info.mCandidateHosts[0][0].GetLatency());
-            APSARA_TEST_EQUAL(publicHost, info.mCandidateHosts[0][1].GetHostname());
-            APSARA_TEST_EQUAL(chrono::milliseconds::max(), info.mCandidateHosts[0][1].GetLatency());
+//             // to with remote endpoints
+//             regionEndpoints.mRemoteEndpoints = {privateEndpoint, publicEndpoint};
+//             info.UpdateHosts(regionEndpoints);
+//             APSARA_TEST_EQUAL(1U, info.mCandidateHosts.size());
+//             APSARA_TEST_EQUAL(2U, info.mCandidateHosts[0].size());
+//             APSARA_TEST_EQUAL(globalHost, info.mCandidateHosts[0][0].GetHostname());
+//             APSARA_TEST_EQUAL(chrono::milliseconds(100), info.mCandidateHosts[0][0].GetLatency());
+//             APSARA_TEST_EQUAL(publicHost, info.mCandidateHosts[0][1].GetHostname());
+//             APSARA_TEST_EQUAL(chrono::milliseconds::max(), info.mCandidateHosts[0][1].GetLatency());
 
-            info.UpdateHostInfo(globalHost, chrono::milliseconds(50));
-            info.UpdateHostInfo(publicHost, chrono::milliseconds(150));
+//             info.UpdateHostInfo(globalHost, chrono::milliseconds(50));
+//             info.UpdateHostInfo(publicHost, chrono::milliseconds(150));
 
-            // to updated remote endpoints
-            regionEndpoints.mRemoteEndpoints = {internalEndpoint, privateEndpoint, publicEndpoint};
-            info.UpdateHosts(regionEndpoints);
-            APSARA_TEST_EQUAL(1U, info.mCandidateHosts.size());
-            APSARA_TEST_EQUAL(2U, info.mCandidateHosts[0].size());
-            APSARA_TEST_EQUAL(globalHost, info.mCandidateHosts[0][0].GetHostname());
-            APSARA_TEST_EQUAL(chrono::milliseconds(50), info.mCandidateHosts[0][0].GetLatency());
-            APSARA_TEST_EQUAL(publicHost, info.mCandidateHosts[0][1].GetHostname());
-            APSARA_TEST_EQUAL(chrono::milliseconds(150), info.mCandidateHosts[0][1].GetLatency());
-        }
-        {
-            CandidateHostsInfo info("project", region, EndpointMode::ACCELERATE);
-            // from no remote endpoints
-            CandidateEndpoints regionEndpoints{EndpointMode::ACCELERATE, {globalEndpoint}, {}};
-            info.UpdateHosts(regionEndpoints);
-            APSARA_TEST_EQUAL(1U, info.mCandidateHosts.size());
-            APSARA_TEST_EQUAL(1U, info.mCandidateHosts[0].size());
-            APSARA_TEST_EQUAL(globalHost, info.mCandidateHosts[0][0].GetHostname());
-            APSARA_TEST_EQUAL(chrono::milliseconds::max(), info.mCandidateHosts[0][0].GetLatency());
+//             // to updated remote endpoints
+//             regionEndpoints.mRemoteEndpoints = {internalEndpoint, privateEndpoint, publicEndpoint};
+//             info.UpdateHosts(regionEndpoints);
+//             APSARA_TEST_EQUAL(1U, info.mCandidateHosts.size());
+//             APSARA_TEST_EQUAL(2U, info.mCandidateHosts[0].size());
+//             APSARA_TEST_EQUAL(globalHost, info.mCandidateHosts[0][0].GetHostname());
+//             APSARA_TEST_EQUAL(chrono::milliseconds(50), info.mCandidateHosts[0][0].GetLatency());
+//             APSARA_TEST_EQUAL(publicHost, info.mCandidateHosts[0][1].GetHostname());
+//             APSARA_TEST_EQUAL(chrono::milliseconds(150), info.mCandidateHosts[0][1].GetLatency());
+//         }
+//         {
+//             CandidateHostsInfo info("project", region, EndpointMode::ACCELERATE);
+//             // from no remote endpoints
+//             CandidateEndpoints regionEndpoints{EndpointMode::ACCELERATE, {globalEndpoint}, {}};
+//             info.UpdateHosts(regionEndpoints);
+//             APSARA_TEST_EQUAL(1U, info.mCandidateHosts.size());
+//             APSARA_TEST_EQUAL(1U, info.mCandidateHosts[0].size());
+//             APSARA_TEST_EQUAL(globalHost, info.mCandidateHosts[0][0].GetHostname());
+//             APSARA_TEST_EQUAL(chrono::milliseconds::max(), info.mCandidateHosts[0][0].GetLatency());
 
-            info.UpdateHostInfo(globalHost, chrono::milliseconds(100));
+//             info.UpdateHostInfo(globalHost, chrono::milliseconds(100));
 
-            // to with remote endpoints
-            regionEndpoints.mRemoteEndpoints = {privateEndpoint, publicEndpoint};
-            info.UpdateHosts(regionEndpoints);
-            APSARA_TEST_EQUAL(1U, info.mCandidateHosts.size());
-            APSARA_TEST_EQUAL(2U, info.mCandidateHosts[0].size());
-            APSARA_TEST_EQUAL(globalHost, info.mCandidateHosts[0][0].GetHostname());
-            APSARA_TEST_EQUAL(chrono::milliseconds(100), info.mCandidateHosts[0][0].GetLatency());
-            APSARA_TEST_EQUAL(publicHost, info.mCandidateHosts[0][1].GetHostname());
-            APSARA_TEST_EQUAL(chrono::milliseconds::max(), info.mCandidateHosts[0][1].GetLatency());
+//             // to with remote endpoints
+//             regionEndpoints.mRemoteEndpoints = {privateEndpoint, publicEndpoint};
+//             info.UpdateHosts(regionEndpoints);
+//             APSARA_TEST_EQUAL(1U, info.mCandidateHosts.size());
+//             APSARA_TEST_EQUAL(2U, info.mCandidateHosts[0].size());
+//             APSARA_TEST_EQUAL(globalHost, info.mCandidateHosts[0][0].GetHostname());
+//             APSARA_TEST_EQUAL(chrono::milliseconds(100), info.mCandidateHosts[0][0].GetLatency());
+//             APSARA_TEST_EQUAL(publicHost, info.mCandidateHosts[0][1].GetHostname());
+//             APSARA_TEST_EQUAL(chrono::milliseconds::max(), info.mCandidateHosts[0][1].GetLatency());
 
-            info.UpdateHostInfo(globalHost, chrono::milliseconds(50));
-            info.UpdateHostInfo(publicHost, chrono::milliseconds(150));
+//             info.UpdateHostInfo(globalHost, chrono::milliseconds(50));
+//             info.UpdateHostInfo(publicHost, chrono::milliseconds(150));
 
-            // to updated remote endpoints
-            regionEndpoints.mRemoteEndpoints = {internalEndpoint, privateEndpoint, publicEndpoint};
-            info.UpdateHosts(regionEndpoints);
-            APSARA_TEST_EQUAL(1U, info.mCandidateHosts.size());
-            APSARA_TEST_EQUAL(2U, info.mCandidateHosts[0].size());
-            APSARA_TEST_EQUAL(globalHost, info.mCandidateHosts[0][0].GetHostname());
-            APSARA_TEST_EQUAL(chrono::milliseconds(50), info.mCandidateHosts[0][0].GetLatency());
-            APSARA_TEST_EQUAL(publicHost, info.mCandidateHosts[0][1].GetHostname());
-            APSARA_TEST_EQUAL(chrono::milliseconds(150), info.mCandidateHosts[0][1].GetLatency());
-        }
-        {
-            CandidateHostsInfo info("project", region, EndpointMode::ACCELERATE);
-            // from no remote endpoints
-            CandidateEndpoints regionEndpoints{EndpointMode::CUSTOM, {customEndpoint}, {}};
-            info.UpdateHosts(regionEndpoints);
-            APSARA_TEST_EQUAL(1U, info.mCandidateHosts.size());
-            APSARA_TEST_EQUAL(1U, info.mCandidateHosts[0].size());
-            APSARA_TEST_EQUAL(globalHost, info.mCandidateHosts[0][0].GetHostname());
-            APSARA_TEST_EQUAL(chrono::milliseconds::max(), info.mCandidateHosts[0][0].GetLatency());
+//             // to updated remote endpoints
+//             regionEndpoints.mRemoteEndpoints = {internalEndpoint, privateEndpoint, publicEndpoint};
+//             info.UpdateHosts(regionEndpoints);
+//             APSARA_TEST_EQUAL(1U, info.mCandidateHosts.size());
+//             APSARA_TEST_EQUAL(2U, info.mCandidateHosts[0].size());
+//             APSARA_TEST_EQUAL(globalHost, info.mCandidateHosts[0][0].GetHostname());
+//             APSARA_TEST_EQUAL(chrono::milliseconds(50), info.mCandidateHosts[0][0].GetLatency());
+//             APSARA_TEST_EQUAL(publicHost, info.mCandidateHosts[0][1].GetHostname());
+//             APSARA_TEST_EQUAL(chrono::milliseconds(150), info.mCandidateHosts[0][1].GetLatency());
+//         }
+//         {
+//             CandidateHostsInfo info("project", region, EndpointMode::ACCELERATE);
+//             // from no remote endpoints
+//             CandidateEndpoints regionEndpoints{EndpointMode::CUSTOM, {customEndpoint}, {}};
+//             info.UpdateHosts(regionEndpoints);
+//             APSARA_TEST_EQUAL(1U, info.mCandidateHosts.size());
+//             APSARA_TEST_EQUAL(1U, info.mCandidateHosts[0].size());
+//             APSARA_TEST_EQUAL(globalHost, info.mCandidateHosts[0][0].GetHostname());
+//             APSARA_TEST_EQUAL(chrono::milliseconds::max(), info.mCandidateHosts[0][0].GetLatency());
 
-            info.UpdateHostInfo(globalHost, chrono::milliseconds(100));
+//             info.UpdateHostInfo(globalHost, chrono::milliseconds(100));
 
-            // to with remote endpoints
-            regionEndpoints.mRemoteEndpoints = {privateEndpoint, publicEndpoint};
-            info.UpdateHosts(regionEndpoints);
-            APSARA_TEST_EQUAL(1U, info.mCandidateHosts.size());
-            APSARA_TEST_EQUAL(2U, info.mCandidateHosts[0].size());
-            APSARA_TEST_EQUAL(globalHost, info.mCandidateHosts[0][0].GetHostname());
-            APSARA_TEST_EQUAL(chrono::milliseconds(100), info.mCandidateHosts[0][0].GetLatency());
-            APSARA_TEST_EQUAL(publicHost, info.mCandidateHosts[0][1].GetHostname());
-            APSARA_TEST_EQUAL(chrono::milliseconds::max(), info.mCandidateHosts[0][1].GetLatency());
+//             // to with remote endpoints
+//             regionEndpoints.mRemoteEndpoints = {privateEndpoint, publicEndpoint};
+//             info.UpdateHosts(regionEndpoints);
+//             APSARA_TEST_EQUAL(1U, info.mCandidateHosts.size());
+//             APSARA_TEST_EQUAL(2U, info.mCandidateHosts[0].size());
+//             APSARA_TEST_EQUAL(globalHost, info.mCandidateHosts[0][0].GetHostname());
+//             APSARA_TEST_EQUAL(chrono::milliseconds(100), info.mCandidateHosts[0][0].GetLatency());
+//             APSARA_TEST_EQUAL(publicHost, info.mCandidateHosts[0][1].GetHostname());
+//             APSARA_TEST_EQUAL(chrono::milliseconds::max(), info.mCandidateHosts[0][1].GetLatency());
 
-            info.UpdateHostInfo(globalHost, chrono::milliseconds(50));
-            info.UpdateHostInfo(publicHost, chrono::milliseconds(150));
+//             info.UpdateHostInfo(globalHost, chrono::milliseconds(50));
+//             info.UpdateHostInfo(publicHost, chrono::milliseconds(150));
 
-            // to updated remote endpoints
-            regionEndpoints.mRemoteEndpoints = {internalEndpoint, privateEndpoint, publicEndpoint};
-            info.UpdateHosts(regionEndpoints);
-            APSARA_TEST_EQUAL(1U, info.mCandidateHosts.size());
-            APSARA_TEST_EQUAL(2U, info.mCandidateHosts[0].size());
-            APSARA_TEST_EQUAL(globalHost, info.mCandidateHosts[0][0].GetHostname());
-            APSARA_TEST_EQUAL(chrono::milliseconds(50), info.mCandidateHosts[0][0].GetLatency());
-            APSARA_TEST_EQUAL(publicHost, info.mCandidateHosts[0][1].GetHostname());
-            APSARA_TEST_EQUAL(chrono::milliseconds(150), info.mCandidateHosts[0][1].GetLatency());
-        }
-    }
-#endif
-    {
-        // custom mode
-        CandidateHostsInfo info("project", region, EndpointMode::CUSTOM);
+//             // to updated remote endpoints
+//             regionEndpoints.mRemoteEndpoints = {internalEndpoint, privateEndpoint, publicEndpoint};
+//             info.UpdateHosts(regionEndpoints);
+//             APSARA_TEST_EQUAL(1U, info.mCandidateHosts.size());
+//             APSARA_TEST_EQUAL(2U, info.mCandidateHosts[0].size());
+//             APSARA_TEST_EQUAL(globalHost, info.mCandidateHosts[0][0].GetHostname());
+//             APSARA_TEST_EQUAL(chrono::milliseconds(50), info.mCandidateHosts[0][0].GetLatency());
+//             APSARA_TEST_EQUAL(publicHost, info.mCandidateHosts[0][1].GetHostname());
+//             APSARA_TEST_EQUAL(chrono::milliseconds(150), info.mCandidateHosts[0][1].GetLatency());
+//         }
+//     }
+// #endif
+//     {
+//         // custom mode
+//         CandidateHostsInfo info("project", region, EndpointMode::CUSTOM);
 
-        // from no remote endpoints
-        CandidateEndpoints regionEndpoints{EndpointMode::CUSTOM, {customEndpoint}, {}};
-        info.UpdateHosts(regionEndpoints);
-        APSARA_TEST_EQUAL(1U, info.mCandidateHosts.size());
-        APSARA_TEST_EQUAL(1U, info.mCandidateHosts[0].size());
-        APSARA_TEST_EQUAL(customHost, info.mCandidateHosts[0][0].GetHostname());
-        APSARA_TEST_EQUAL(chrono::milliseconds::max(), info.mCandidateHosts[0][0].GetLatency());
+//         // from no remote endpoints
+//         CandidateEndpoints regionEndpoints{EndpointMode::CUSTOM, {customEndpoint}, {}};
+//         info.UpdateHosts(regionEndpoints);
+//         APSARA_TEST_EQUAL(1U, info.mCandidateHosts.size());
+//         APSARA_TEST_EQUAL(1U, info.mCandidateHosts[0].size());
+//         APSARA_TEST_EQUAL(customHost, info.mCandidateHosts[0][0].GetHostname());
+//         APSARA_TEST_EQUAL(chrono::milliseconds::max(), info.mCandidateHosts[0][0].GetLatency());
 
-        info.UpdateHostInfo(customHost, chrono::milliseconds(100));
+//         info.UpdateHostInfo(customHost, chrono::milliseconds(100));
 
-        // to with remote endpoints
-        regionEndpoints.mRemoteEndpoints = {privateEndpoint, publicEndpoint};
-        info.UpdateHosts(regionEndpoints);
-        APSARA_TEST_EQUAL(1U, info.mCandidateHosts.size());
-        APSARA_TEST_EQUAL(1U, info.mCandidateHosts[0].size());
-        APSARA_TEST_EQUAL(customHost, info.mCandidateHosts[0][0].GetHostname());
-        APSARA_TEST_EQUAL(chrono::milliseconds(100), info.mCandidateHosts[0][0].GetLatency());
-    }
-}
+//         // to with remote endpoints
+//         regionEndpoints.mRemoteEndpoints = {privateEndpoint, publicEndpoint};
+//         info.UpdateHosts(regionEndpoints);
+//         APSARA_TEST_EQUAL(1U, info.mCandidateHosts.size());
+//         APSARA_TEST_EQUAL(1U, info.mCandidateHosts[0].size());
+//         APSARA_TEST_EQUAL(customHost, info.mCandidateHosts[0][0].GetHostname());
+//         APSARA_TEST_EQUAL(chrono::milliseconds(100), info.mCandidateHosts[0][0].GetLatency());
+//     }
+// }
 
-void CandidateHostsInfoUnittest::TestFirstHost() {
-    const string host1 = mProject + ".endpoint_1";
-    const string host2 = mProject + ".endpoint_2";
+// void CandidateHostsInfoUnittest::TestFirstHost() {
+//     const string host1 = mProject + ".endpoint_1";
+//     const string host2 = mProject + ".endpoint_2";
 
-    CandidateHostsInfo info(mProject, mRegion, mMode);
-    APSARA_TEST_EQUAL("", info.GetFirstHost());
+//     CandidateHostsInfo info(mProject, mRegion, mMode);
+//     APSARA_TEST_EQUAL("", info.GetFirstHost());
 
-    info.mCandidateHosts.push_back({host1, host2});
-    APSARA_TEST_EQUAL(host1, info.GetFirstHost());
+//     info.mCandidateHosts.push_back({host1, host2});
+//     APSARA_TEST_EQUAL(host1, info.GetFirstHost());
 
-    info.mCandidateHosts[0].clear();
-    APSARA_TEST_EQUAL("", info.GetFirstHost());
-}
+//     info.mCandidateHosts[0].clear();
+//     APSARA_TEST_EQUAL("", info.GetFirstHost());
+// }
 
-UNIT_TEST_CASE(CandidateHostsInfoUnittest, TestBasicInfo)
-UNIT_TEST_CASE(CandidateHostsInfoUnittest, TestHostsInfo)
-UNIT_TEST_CASE(CandidateHostsInfoUnittest, TestUpdateHosts)
-UNIT_TEST_CASE(CandidateHostsInfoUnittest, TestFirstHost)
+// UNIT_TEST_CASE(CandidateHostsInfoUnittest, TestBasicInfo)
+// UNIT_TEST_CASE(CandidateHostsInfoUnittest, TestHostsInfo)
+// UNIT_TEST_CASE(CandidateHostsInfoUnittest, TestUpdateHosts)
+// UNIT_TEST_CASE(CandidateHostsInfoUnittest, TestFirstHost)
 
 // class ProbeNetworkMock {
 // public:
@@ -566,7 +566,7 @@ public:
     // void TestProbeNetwork();
     // void TestRealIp();
     void TestAccessKeyManagement();
-    void TestGetCandidateHostsInfo();
+    // void TestGetCandidateHostsInfo();
 
 protected:
     // static void SetUpTestCase() {
@@ -1336,38 +1336,38 @@ void SLSClientManagerUnittest::TestAccessKeyManagement() {
     APSARA_TEST_EQUAL(STRING_FLAG(default_access_key), accessKeySecret);
 }
 
-void SLSClientManagerUnittest::TestGetCandidateHostsInfo() {
-    const string project = "project";
-    const string endpoint = "endpoint";
-    CandidateHostsInfo* infoPtr = nullptr;
-    {
-        auto info1 = mManager.GetCandidateHostsInfo(project, endpoint);
-        auto info2 = mManager.GetCandidateHostsInfo(project, endpoint);
-        infoPtr = info1.get();
-        APSARA_TEST_EQUAL(info1.get(), info2.get());
-        APSARA_TEST_EQUAL(project, info1->GetProject());
-        APSARA_TEST_EQUAL("", info1->GetRegion());
-        APSARA_TEST_EQUAL(EndpointMode::CUSTOM, info1->GetMode());
-        APSARA_TEST_TRUE(info1->IsInitialized());
-        APSARA_TEST_EQUAL(project + "." + endpoint, info1->GetCurrentHost());
-        APSARA_TEST_EQUAL(1U, info1->mCandidateHosts.size());
-        APSARA_TEST_EQUAL(1U, info1->mCandidateHosts[0].size());
-        APSARA_TEST_EQUAL(project + "." + endpoint, info1->mCandidateHosts[0][0].GetHostname());
-        APSARA_TEST_EQUAL(chrono::milliseconds(10), info1->mCandidateHosts[0][0].GetLatency());
-        APSARA_TEST_EQUAL(1U, mManager.mProjectCandidateHostsInfosMap.size());
-        auto& infos = mManager.mProjectCandidateHostsInfosMap[project];
-        APSARA_TEST_EQUAL(1U, infos.size());
-        auto& weakInfo = *infos.begin();
-        APSARA_TEST_FALSE(weakInfo.expired());
-        APSARA_TEST_EQUAL(info1.get(), weakInfo.lock().get());
-    }
-    {
-        auto info = mManager.GetCandidateHostsInfo(project, endpoint);
-        APSARA_TEST_NOT_EQUAL(infoPtr, info.get());
-        APSARA_TEST_EQUAL(1U, mManager.mProjectCandidateHostsInfosMap.size());
-        APSARA_TEST_EQUAL(2U, mManager.mProjectCandidateHostsInfosMap[project].size());
-    }
-}
+// void SLSClientManagerUnittest::TestGetCandidateHostsInfo() {
+//     const string project = "project";
+//     const string endpoint = "endpoint";
+//     CandidateHostsInfo* infoPtr = nullptr;
+//     {
+//         auto info1 = mManager.GetCandidateHostsInfo(project, endpoint);
+//         auto info2 = mManager.GetCandidateHostsInfo(project, endpoint);
+//         infoPtr = info1.get();
+//         APSARA_TEST_EQUAL(info1.get(), info2.get());
+//         APSARA_TEST_EQUAL(project, info1->GetProject());
+//         APSARA_TEST_EQUAL("", info1->GetRegion());
+//         APSARA_TEST_EQUAL(EndpointMode::CUSTOM, info1->GetMode());
+//         APSARA_TEST_TRUE(info1->IsInitialized());
+//         APSARA_TEST_EQUAL(project + "." + endpoint, info1->GetCurrentHost());
+//         APSARA_TEST_EQUAL(1U, info1->mCandidateHosts.size());
+//         APSARA_TEST_EQUAL(1U, info1->mCandidateHosts[0].size());
+//         APSARA_TEST_EQUAL(project + "." + endpoint, info1->mCandidateHosts[0][0].GetHostname());
+//         APSARA_TEST_EQUAL(chrono::milliseconds(10), info1->mCandidateHosts[0][0].GetLatency());
+//         APSARA_TEST_EQUAL(1U, mManager.mProjectCandidateHostsInfosMap.size());
+//         auto& infos = mManager.mProjectCandidateHostsInfosMap[project];
+//         APSARA_TEST_EQUAL(1U, infos.size());
+//         auto& weakInfo = *infos.begin();
+//         APSARA_TEST_FALSE(weakInfo.expired());
+//         APSARA_TEST_EQUAL(info1.get(), weakInfo.lock().get());
+//     }
+//     {
+//         auto info = mManager.GetCandidateHostsInfo(project, endpoint);
+//         APSARA_TEST_NOT_EQUAL(infoPtr, info.get());
+//         APSARA_TEST_EQUAL(1U, mManager.mProjectCandidateHostsInfosMap.size());
+//         APSARA_TEST_EQUAL(2U, mManager.mProjectCandidateHostsInfosMap[project].size());
+//     }
+// }
 
 // UNIT_TEST_CASE(SLSClientManagerUnittest, TestLocalRegionEndpoints)
 // UNIT_TEST_CASE(SLSClientManagerUnittest, TestRemoteRegionEndpoints)
@@ -1377,7 +1377,7 @@ void SLSClientManagerUnittest::TestGetCandidateHostsInfo() {
 // UNIT_TEST_CASE(SLSClientManagerUnittest, TestProbeNetwork)
 // UNIT_TEST_CASE(SLSClientManagerUnittest, TestRealIp)
 UNIT_TEST_CASE(SLSClientManagerUnittest, TestAccessKeyManagement)
-UNIT_TEST_CASE(SLSClientManagerUnittest, TestGetCandidateHostsInfo)
+// UNIT_TEST_CASE(SLSClientManagerUnittest, TestGetCandidateHostsInfo)
 
 } // namespace logtail
 

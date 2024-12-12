@@ -33,6 +33,7 @@
 #endif
 #include "plugin/flusher/sls/SLSClientManager.h"
 #include "plugin/flusher/sls/SLSConstant.h"
+#include "plugin/flusher/sls/SendResult.h"
 #include "protobuf/sls/sls_logs.pb.h"
 #include "provider/Provider.h"
 
@@ -239,7 +240,9 @@ void DiskBufferWriter::BufferSenderThread() {
                                                        "check header of buffer file failed, delete file: " + fileName);
             }
         }
+#ifdef __ENTERPRISE__
         mCandidateHostsInfos.clear();
+#endif
         // mIsSendingBuffer = false;
         lock.lock();
         if (mStopCV.wait_for(lock, chrono::seconds(mCheckPeriod), [this]() { return !mIsSendBufferThreadRunning; })) {
@@ -821,15 +824,6 @@ SLSResponse DiskBufferWriter::SendBufferFileData(const sls_logs::LogtailBufferMe
     }
     auto info = EnterpriseSLSClientManager::GetInstance()->GetCandidateHostsInfo(
         region, bufferMeta.project(), GetEndpointMode(bufferMeta.endpointmode()));
-#else
-    auto info = SLSClientManager::GetInstance()->GetCandidateHostsInfo(bufferMeta.project(), bufferMeta.endpoint());
-    if (info == nullptr) {
-        SLSResponse response;
-        response.mErrorCode = LOGE_REQUEST_ERROR;
-        response.mErrorMsg = "can not get available host";
-        return response;
-    }
-#endif
     mCandidateHostsInfos.insert(info);
 
     host = info->GetCurrentHost();
@@ -839,6 +833,9 @@ SLSResponse DiskBufferWriter::SendBufferFileData(const sls_logs::LogtailBufferMe
         response.mErrorMsg = "can not get available host";
         return response;
     }
+#else
+    host = bufferMeta.project() + "." + bufferMeta.endpoint();
+#endif
 
     bool httpsFlag = SLSClientManager::GetInstance()->UsingHttps(region);
 

@@ -86,238 +86,238 @@ namespace logtail {
 
 // static const string kAccelerationDataEndpoint = "log-global.aliyuncs.com";
 
-const string& EndpointModeToString(EndpointMode mode) {
-    switch (mode) {
-        case EndpointMode::CUSTOM:
-            static string customStr = "custom";
-            return customStr;
-        case EndpointMode::ACCELERATE:
-            static string accelerateStr = "accelerate";
-            return accelerateStr;
-        case EndpointMode::DEFAULT:
-            static string defaultStr = "default";
-            return defaultStr;
-        default:
-            static string unknownStr = "unknown";
-            return unknownStr;
-    }
-}
+// const string& EndpointModeToString(EndpointMode mode) {
+//     switch (mode) {
+//         case EndpointMode::CUSTOM:
+//             static string customStr = "custom";
+//             return customStr;
+//         case EndpointMode::ACCELERATE:
+//             static string accelerateStr = "accelerate";
+//             return accelerateStr;
+//         case EndpointMode::DEFAULT:
+//             static string defaultStr = "default";
+//             return defaultStr;
+//         default:
+//             static string unknownStr = "unknown";
+//             return unknownStr;
+//     }
+// }
 
-chrono::milliseconds HostInfo::GetLatency() const {
-    lock_guard<mutex> lock(mLatencyMux);
-    return mLatency;
-}
+// chrono::milliseconds HostInfo::GetLatency() const {
+//     lock_guard<mutex> lock(mLatencyMux);
+//     return mLatency;
+// }
 
-void HostInfo::SetLatency(const chrono::milliseconds& latency) {
-    lock_guard<mutex> lock(mLatencyMux);
-    mLatency = latency;
-}
+// void HostInfo::SetLatency(const chrono::milliseconds& latency) {
+//     lock_guard<mutex> lock(mLatencyMux);
+//     mLatency = latency;
+// }
 
-void HostInfo::SetForbidden() {
-    lock_guard<mutex> lock(mLatencyMux);
-    mLatency = chrono::milliseconds::max();
-}
+// void HostInfo::SetForbidden() {
+//     lock_guard<mutex> lock(mLatencyMux);
+//     mLatency = chrono::milliseconds::max();
+// }
 
-bool HostInfo::IsForbidden() const {
-    lock_guard<mutex> lock(mLatencyMux);
-    return mLatency == chrono::milliseconds::max();
-}
+// bool HostInfo::IsForbidden() const {
+//     lock_guard<mutex> lock(mLatencyMux);
+//     return mLatency == chrono::milliseconds::max();
+// }
 
-void CandidateHostsInfo::UpdateHosts(const CandidateEndpoints& regionEndpoints) {
-    lock_guard<mutex> lock(mCandidateHostsMux);
-    switch (mMode) {
-#ifdef __ENTERPRISE__
-        case EndpointMode::DEFAULT: {
-            vector<string> endpoints(regionEndpoints.mLocalEndpoints);
-            for (const auto& endpoint : regionEndpoints.mRemoteEndpoints) {
-                bool found = false;
-                for (const auto& existedEndpoint : regionEndpoints.mLocalEndpoints) {
-                    if (existedEndpoint == endpoint) {
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found) {
-                    endpoints.emplace_back(endpoint);
-                }
-            }
-            vector<vector<HostInfo>> infos;
-            for (const auto& endpoint : endpoints) {
-                string host = mProject.empty() ? endpoint : mProject + "." + endpoint;
-                if (mCandidateHosts.empty()) {
-                    infos.emplace_back().emplace_back(host);
-                } else {
-                    bool found = false;
-                    for (const auto& item : mCandidateHosts) {
-                        if (!item.empty() && item[0].GetHostname() == host) {
-                            found = true;
-                            infos.emplace_back(item);
-                            break;
-                        }
-                    }
-                    if (!found) {
-                        infos.emplace_back().emplace_back(host);
-                    }
-                }
-            }
-            mCandidateHosts.swap(infos);
-            break;
-        }
-        case EndpointMode::ACCELERATE: {
-            vector<string> endpoints{kAccelerationDataEndpoint};
-            for (const auto& item : regionEndpoints.mRemoteEndpoints) {
-                if (GetEndpointAddressType(item) == EndpointAddressType::PUBLIC) {
-                    endpoints.emplace_back(item);
-                }
-            }
-            vector<HostInfo> infos;
-            for (const auto& endpoint : endpoints) {
-                string host = mProject.empty() ? endpoint : mProject + "." + endpoint;
-                if (mCandidateHosts.empty()) {
-                    infos.emplace_back(host);
-                } else {
-                    bool found = false;
-                    for (const auto& item : mCandidateHosts[0]) {
-                        if (item.GetHostname() == host) {
-                            found = true;
-                            infos.emplace_back(item);
-                            break;
-                        }
-                    }
-                    if (!found) {
-                        infos.emplace_back(host);
-                    }
-                }
-            }
-            if (mCandidateHosts.empty()) {
-                mCandidateHosts.emplace_back(infos);
-            } else {
-                mCandidateHosts[0].swap(infos);
-            }
-            break;
-        }
-#endif
-        case EndpointMode::CUSTOM: {
-            vector<HostInfo> infos;
-            for (const auto& endpoint : regionEndpoints.mLocalEndpoints) {
-                string host = mProject.empty() ? endpoint : mProject + "." + endpoint;
-                if (mCandidateHosts.empty()) {
-                    infos.emplace_back(host);
-                } else {
-                    bool found = false;
-                    for (const auto& item : mCandidateHosts[0]) {
-                        if (item.GetHostname() == host) {
-                            found = true;
-                            infos.emplace_back(item);
-                            break;
-                        }
-                    }
-                    if (!found) {
-                        infos.emplace_back(host);
-                    }
-                }
-            }
-            if (mCandidateHosts.empty()) {
-                mCandidateHosts.emplace_back(infos);
-            } else {
-                mCandidateHosts[0].swap(infos);
-            }
-            break;
-        }
-        default:
-            break;
-    }
-}
+// void CandidateHostsInfo::UpdateHosts(const CandidateEndpoints& regionEndpoints) {
+//     lock_guard<mutex> lock(mCandidateHostsMux);
+//     switch (mMode) {
+// #ifdef __ENTERPRISE__
+//         case EndpointMode::DEFAULT: {
+//             vector<string> endpoints(regionEndpoints.mLocalEndpoints);
+//             for (const auto& endpoint : regionEndpoints.mRemoteEndpoints) {
+//                 bool found = false;
+//                 for (const auto& existedEndpoint : regionEndpoints.mLocalEndpoints) {
+//                     if (existedEndpoint == endpoint) {
+//                         found = true;
+//                         break;
+//                     }
+//                 }
+//                 if (!found) {
+//                     endpoints.emplace_back(endpoint);
+//                 }
+//             }
+//             vector<vector<HostInfo>> infos;
+//             for (const auto& endpoint : endpoints) {
+//                 string host = mProject.empty() ? endpoint : mProject + "." + endpoint;
+//                 if (mCandidateHosts.empty()) {
+//                     infos.emplace_back().emplace_back(host);
+//                 } else {
+//                     bool found = false;
+//                     for (const auto& item : mCandidateHosts) {
+//                         if (!item.empty() && item[0].GetHostname() == host) {
+//                             found = true;
+//                             infos.emplace_back(item);
+//                             break;
+//                         }
+//                     }
+//                     if (!found) {
+//                         infos.emplace_back().emplace_back(host);
+//                     }
+//                 }
+//             }
+//             mCandidateHosts.swap(infos);
+//             break;
+//         }
+//         case EndpointMode::ACCELERATE: {
+//             vector<string> endpoints{kAccelerationDataEndpoint};
+//             for (const auto& item : regionEndpoints.mRemoteEndpoints) {
+//                 if (GetEndpointAddressType(item) == EndpointAddressType::PUBLIC) {
+//                     endpoints.emplace_back(item);
+//                 }
+//             }
+//             vector<HostInfo> infos;
+//             for (const auto& endpoint : endpoints) {
+//                 string host = mProject.empty() ? endpoint : mProject + "." + endpoint;
+//                 if (mCandidateHosts.empty()) {
+//                     infos.emplace_back(host);
+//                 } else {
+//                     bool found = false;
+//                     for (const auto& item : mCandidateHosts[0]) {
+//                         if (item.GetHostname() == host) {
+//                             found = true;
+//                             infos.emplace_back(item);
+//                             break;
+//                         }
+//                     }
+//                     if (!found) {
+//                         infos.emplace_back(host);
+//                     }
+//                 }
+//             }
+//             if (mCandidateHosts.empty()) {
+//                 mCandidateHosts.emplace_back(infos);
+//             } else {
+//                 mCandidateHosts[0].swap(infos);
+//             }
+//             break;
+//         }
+// #endif
+//         case EndpointMode::CUSTOM: {
+//             vector<HostInfo> infos;
+//             for (const auto& endpoint : regionEndpoints.mLocalEndpoints) {
+//                 string host = mProject.empty() ? endpoint : mProject + "." + endpoint;
+//                 if (mCandidateHosts.empty()) {
+//                     infos.emplace_back(host);
+//                 } else {
+//                     bool found = false;
+//                     for (const auto& item : mCandidateHosts[0]) {
+//                         if (item.GetHostname() == host) {
+//                             found = true;
+//                             infos.emplace_back(item);
+//                             break;
+//                         }
+//                     }
+//                     if (!found) {
+//                         infos.emplace_back(host);
+//                     }
+//                 }
+//             }
+//             if (mCandidateHosts.empty()) {
+//                 mCandidateHosts.emplace_back(infos);
+//             } else {
+//                 mCandidateHosts[0].swap(infos);
+//             }
+//             break;
+//         }
+//         default:
+//             break;
+//     }
+// }
 
-bool CandidateHostsInfo::UpdateHostInfo(const string& hostname, const chrono::milliseconds& latency) {
-    lock_guard<mutex> lock(mCandidateHostsMux);
-    for (auto& item : mCandidateHosts) {
-        for (auto& entry : item) {
-            if (entry.GetHostname() == hostname) {
-                entry.SetLatency(latency);
-                return true;
-            }
-        }
-    }
-    return false;
-}
+// bool CandidateHostsInfo::UpdateHostInfo(const string& hostname, const chrono::milliseconds& latency) {
+//     lock_guard<mutex> lock(mCandidateHostsMux);
+//     for (auto& item : mCandidateHosts) {
+//         for (auto& entry : item) {
+//             if (entry.GetHostname() == hostname) {
+//                 entry.SetLatency(latency);
+//                 return true;
+//             }
+//         }
+//     }
+//     return false;
+// }
 
-void CandidateHostsInfo::GetProbeHosts(vector<string>& hosts) const {
-    if (!HasValidHost()) {
-        return GetAllHosts(hosts);
-    }
-    {
-        lock_guard<mutex> lock(mCandidateHostsMux);
-        for (const auto& item : mCandidateHosts) {
-            for (const auto& entry : item) {
-                if (!entry.IsForbidden()) {
-                    hosts.emplace_back(entry.GetHostname());
-                }
-            }
-        }
-    }
-}
+// void CandidateHostsInfo::GetProbeHosts(vector<string>& hosts) const {
+//     if (!HasValidHost()) {
+//         return GetAllHosts(hosts);
+//     }
+//     {
+//         lock_guard<mutex> lock(mCandidateHostsMux);
+//         for (const auto& item : mCandidateHosts) {
+//             for (const auto& entry : item) {
+//                 if (!entry.IsForbidden()) {
+//                     hosts.emplace_back(entry.GetHostname());
+//                 }
+//             }
+//         }
+//     }
+// }
 
-void CandidateHostsInfo::GetAllHosts(vector<string>& hosts) const {
-    lock_guard<mutex> lock(mCandidateHostsMux);
-    for (const auto& item : mCandidateHosts) {
-        for (const auto& entry : item) {
-            hosts.emplace_back(entry.GetHostname());
-        }
-    }
-}
+// void CandidateHostsInfo::GetAllHosts(vector<string>& hosts) const {
+//     lock_guard<mutex> lock(mCandidateHostsMux);
+//     for (const auto& item : mCandidateHosts) {
+//         for (const auto& entry : item) {
+//             hosts.emplace_back(entry.GetHostname());
+//         }
+//     }
+// }
 
-void CandidateHostsInfo::SelectBestHost() {
-    lock_guard<mutex> lock(mCandidateHostsMux);
-    for (size_t i = 0; i < mCandidateHosts.size(); ++i) {
-        const auto& hosts = mCandidateHosts[i];
-        chrono::milliseconds minLatency = chrono::milliseconds::max();
-        size_t minIdx = numeric_limits<size_t>::max();
-        for (size_t j = 0; j < hosts.size(); ++j) {
-            if (!hosts[j].IsForbidden() && hosts[j].GetLatency() < minLatency) {
-                minLatency = hosts[j].GetLatency();
-                minIdx = j;
-            }
-        }
-        if (minIdx != numeric_limits<size_t>::max()) {
-            const auto& hostname = hosts[minIdx].GetHostname();
-            if (GetCurrentHost() != hostname) {
-                SetCurrentHost(hostname);
-                LOG_INFO(sLogger,
-                         ("switch to the best host", hostname)("latency", minLatency.count())("project", mProject)(
-                             "region", mRegion)("endpoint mode", EndpointModeToString(mMode)));
-            }
-            return;
-        }
-    }
-    SetCurrentHost("");
-    LOG_INFO(sLogger,
-             ("no valid host", "stop sending data and retry later")("project", mProject)("region", mRegion)(
-                 "endpoint mode", EndpointModeToString(mMode)));
-}
+// void CandidateHostsInfo::SelectBestHost() {
+//     lock_guard<mutex> lock(mCandidateHostsMux);
+//     for (size_t i = 0; i < mCandidateHosts.size(); ++i) {
+//         const auto& hosts = mCandidateHosts[i];
+//         chrono::milliseconds minLatency = chrono::milliseconds::max();
+//         size_t minIdx = numeric_limits<size_t>::max();
+//         for (size_t j = 0; j < hosts.size(); ++j) {
+//             if (!hosts[j].IsForbidden() && hosts[j].GetLatency() < minLatency) {
+//                 minLatency = hosts[j].GetLatency();
+//                 minIdx = j;
+//             }
+//         }
+//         if (minIdx != numeric_limits<size_t>::max()) {
+//             const auto& hostname = hosts[minIdx].GetHostname();
+//             if (GetCurrentHost() != hostname) {
+//                 SetCurrentHost(hostname);
+//                 LOG_INFO(sLogger,
+//                          ("switch to the best host", hostname)("latency", minLatency.count())("project", mProject)(
+//                              "region", mRegion)("endpoint mode", EndpointModeToString(mMode)));
+//             }
+//             return;
+//         }
+//     }
+//     SetCurrentHost("");
+//     LOG_INFO(sLogger,
+//              ("no valid host", "stop sending data and retry later")("project", mProject)("region", mRegion)(
+//                  "endpoint mode", EndpointModeToString(mMode)));
+// }
 
-string CandidateHostsInfo::GetCurrentHost() const {
-    lock_guard<mutex> lock(mCurrentHostMux);
-    return mCurrentHost;
-}
+// string CandidateHostsInfo::GetCurrentHost() const {
+//     lock_guard<mutex> lock(mCurrentHostMux);
+//     return mCurrentHost;
+// }
 
-string CandidateHostsInfo::GetFirstHost() const {
-    lock_guard<mutex> lock(mCandidateHostsMux);
-    if (mCandidateHosts.empty() || mCandidateHosts[0].empty()) {
-        return "";
-    }
-    return mCandidateHosts[0][0].GetHostname();
-}
+// string CandidateHostsInfo::GetFirstHost() const {
+//     lock_guard<mutex> lock(mCandidateHostsMux);
+//     if (mCandidateHosts.empty() || mCandidateHosts[0].empty()) {
+//         return "";
+//     }
+//     return mCandidateHosts[0][0].GetHostname();
+// }
 
-bool CandidateHostsInfo::HasValidHost() const {
-    lock_guard<mutex> lock(mCurrentHostMux);
-    return !mCurrentHost.empty();
-}
+// bool CandidateHostsInfo::HasValidHost() const {
+//     lock_guard<mutex> lock(mCurrentHostMux);
+//     return !mCurrentHost.empty();
+// }
 
-void CandidateHostsInfo::SetCurrentHost(const string& host) {
-    lock_guard<mutex> lock(mCurrentHostMux);
-    mCurrentHost = host;
-}
+// void CandidateHostsInfo::SetCurrentHost(const string& host) {
+//     lock_guard<mutex> lock(mCurrentHostMux);
+//     mCurrentHost = host;
+// }
 
 // SLSClientManager::ProbeNetworkHttpRequest::ProbeNetworkHttpRequest(
 //     const string& region, const string& project, EndpointMode mode, const string& host, bool httpsFlag)
@@ -614,46 +614,46 @@ bool SLSClientManager::GetAccessKey(const string& aliuid,
 //     return it->second.UpdateHostInfo(host, latency);
 // }
 
-shared_ptr<CandidateHostsInfo> SLSClientManager::GetCandidateHostsInfo(const string& project, const string& endpoint) {
-    if (endpoint.empty()) {
-        // this should only occur on first update, where we try find any available info
-        lock_guard<mutex> lock(mCandidateHostsInfosMapMux);
-        auto& hostsInfo = mProjectCandidateHostsInfosMap[project];
-        for (auto& item : hostsInfo) {
-            if (item.expired()) {
-                continue;
-            }
-            return item.lock();
-        }
-        return nullptr;
-    }
+// shared_ptr<CandidateHostsInfo> SLSClientManager::GetCandidateHostsInfo(const string& project, const string& endpoint) {
+//     if (endpoint.empty()) {
+//         // this should only occur on first update, where we try find any available info
+//         lock_guard<mutex> lock(mCandidateHostsInfosMapMux);
+//         auto& hostsInfo = mProjectCandidateHostsInfosMap[project];
+//         for (auto& item : hostsInfo) {
+//             if (item.expired()) {
+//                 continue;
+//             }
+//             return item.lock();
+//         }
+//         return nullptr;
+//     }
 
-    string standardEndpoint = ExtractEndpoint(endpoint);
-    {
-        lock_guard<mutex> lock(mCandidateHostsInfosMapMux);
-        auto& hostsInfo = mProjectCandidateHostsInfosMap[project];
-        for (auto& item : hostsInfo) {
-            if (item.expired()) {
-                continue;
-            }
-            auto info = item.lock();
-            if (info->GetFirstHost() == project + "." + standardEndpoint) {
-                return info;
-            }
-        }
-    }
-    auto info = make_shared<CandidateHostsInfo>(project, "", EndpointMode::CUSTOM);
-    info->UpdateHosts({EndpointMode::CUSTOM, {standardEndpoint}});
-    // manually set the endpoint to be available
-    info->UpdateHostInfo(info->GetFirstHost(), chrono::milliseconds(10));
-    info->SelectBestHost();
-    info->SetInitialized();
-    {
-        lock_guard<mutex> lock(mCandidateHostsInfosMapMux);
-        mProjectCandidateHostsInfosMap[project].emplace_back(info);
-    }
-    return info;
-}
+//     string standardEndpoint = ExtractEndpoint(endpoint);
+//     {
+//         lock_guard<mutex> lock(mCandidateHostsInfosMapMux);
+//         auto& hostsInfo = mProjectCandidateHostsInfosMap[project];
+//         for (auto& item : hostsInfo) {
+//             if (item.expired()) {
+//                 continue;
+//             }
+//             auto info = item.lock();
+//             if (info->GetFirstHost() == project + "." + standardEndpoint) {
+//                 return info;
+//             }
+//         }
+//     }
+//     auto info = make_shared<CandidateHostsInfo>(project, "", EndpointMode::CUSTOM);
+//     info->UpdateHosts({EndpointMode::CUSTOM, {standardEndpoint}});
+//     // manually set the endpoint to be available
+//     info->UpdateHostInfo(info->GetFirstHost(), chrono::milliseconds(10));
+//     info->SelectBestHost();
+//     info->SetInitialized();
+//     {
+//         lock_guard<mutex> lock(mCandidateHostsInfosMapMux);
+//         mProjectCandidateHostsInfosMap[project].emplace_back(info);
+//     }
+//     return info;
+// }
 
 bool SLSClientManager::UsingHttps(const string& region) const {
     return true;
@@ -1057,11 +1057,11 @@ bool SLSClientManager::PingEndpoint(const string& host, const string& path) {
                            response);
 }
 
-#ifdef APSARA_UNIT_TEST_MAIN
-void SLSClientManager::Clear() {
-    mProjectCandidateHostsInfosMap.clear();
-}
-#endif
+// #ifdef APSARA_UNIT_TEST_MAIN
+// void SLSClientManager::Clear() {
+//     mProjectCandidateHostsInfosMap.clear();
+// }
+// #endif
 
 void PreparePostLogStoreLogsRequest(const string& accessKeyId,
                                     const string& accessKeySecret,

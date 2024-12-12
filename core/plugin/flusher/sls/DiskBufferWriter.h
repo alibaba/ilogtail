@@ -16,17 +16,26 @@
 
 #pragma once
 
+#include <atomic>
 #include <condition_variable>
 #include <cstdint>
+#include <ctime>
 #include <future>
+#include <memory>
 #include <mutex>
 #include <string>
+#ifdef __ENTERPRIRSE__
+#include <unordered_set>
+#endif
 #include <vector>
 
 #include "common/SafeQueue.h"
 #include "pipeline/queue/SenderQueueItem.h"
+#ifdef __ENTERPRISE__
+#include "plugin/flusher/sls/EnterpriseSLSClientManager.h"
+#endif
 #include "plugin/flusher/sls/SLSClientManager.h"
-#include "plugin/flusher/sls/SendResult.h"
+#include "plugin/flusher/sls/SLSResponse.h"
 #include "protobuf/sls/logtail_buffer_meta.pb.h"
 
 namespace logtail {
@@ -93,6 +102,7 @@ private:
     bool mIsSendBufferThreadRunning = true;
     mutable std::condition_variable mStopCV;
 
+#ifdef __ENTERPRISE__
     struct PointerHash {
         std::size_t operator()(const std::shared_ptr<CandidateHostsInfo>& ptr) const {
             return std::hash<CandidateHostsInfo*>()(ptr.get());
@@ -107,6 +117,7 @@ private:
     };
 
     std::unordered_set<std::shared_ptr<CandidateHostsInfo>, PointerHash, PointerEqual> mCandidateHostsInfos;
+#endif
 
     mutable std::mutex mBufferFileLock;
     std::string mBufferFilePath;

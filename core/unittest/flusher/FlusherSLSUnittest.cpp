@@ -88,7 +88,9 @@ protected:
         QueueKeyManager::GetInstance()->Clear();
         SenderQueueManager::GetInstance()->Clear();
         ExactlyOnceQueueManager::GetInstance()->Clear();
-        SLSClientManager::GetInstance()->Clear();
+#ifdef __ENTERPRISE__
+        EnterpriseSLSClientManager::GetInstance()->Clear();
+#endif
     }
 
 private:
@@ -123,7 +125,6 @@ void FlusherSLSUnittest::OnSuccessfulInit() {
     APSARA_TEST_EQUAL(STRING_FLAG(default_region_name), flusher->mRegion);
 #ifndef __ENTERPRISE__
     APSARA_TEST_EQUAL("test_region.log.aliyuncs.com", flusher->mEndpoint);
-    APSARA_TEST_EQUAL("test_project.test_region.log.aliyuncs.com", flusher->mCandidateHostsInfo->GetFirstHost());
 #endif
     APSARA_TEST_EQUAL("", flusher->mAliuid);
     APSARA_TEST_EQUAL(sls_logs::SlsTelemetryType::SLS_TELEMETRY_TYPE_LOGS, flusher->mTelemetryType);
@@ -245,7 +246,7 @@ void FlusherSLSUnittest::OnSuccessfulInit() {
 
 #ifdef __ENTERPRISE__
     // EndpointMode && Endpoint
-    SLSClientManager::GetInstance()->Clear();
+    EnterpriseSLSClientManager::GetInstance()->Clear();
     // Endpoint ignored in acclerate mode
     configStr = R"(
         {
@@ -338,7 +339,7 @@ void FlusherSLSUnittest::OnSuccessfulInit() {
     flusher->SetContext(ctx);
     flusher->SetMetricsRecordRef(FlusherSLS::sName, "1");
     APSARA_TEST_TRUE(flusher->Init(configJson, optionalGoPipeline));
-    APSARA_TEST_EQUAL("test_project.test_region.log.aliyuncs.com", flusher->mCandidateHostsInfo->GetFirstHost());
+    APSARA_TEST_EQUAL("test_region.log.aliyuncs.com", flusher->mEndpoint);
     SenderQueueManager::GetInstance()->Clear();
 #endif
 

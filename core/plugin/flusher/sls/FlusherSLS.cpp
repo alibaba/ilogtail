@@ -397,7 +397,6 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
                            mContext->GetLogstoreName(),
                            mContext->GetRegion());
     }
-    mCandidateHostsInfo = SLSClientManager::GetInstance()->GetCandidateHostsInfo(mProject, mEndpoint);
 #endif
 
     // TelemetryType
@@ -614,11 +613,8 @@ bool FlusherSLS::BuildRequest(SenderQueueItem* item, unique_ptr<HttpSinkRequest>
         if (mCandidateHostsInfo.get() != info.get()) {
             mCandidateHostsInfo = info;
         }
-#endif
         data->mCurrentHost = mCandidateHostsInfo->GetCurrentHost();
-#ifdef __ENTERPRISE__
     }
-#endif
     if (data->mCurrentHost.empty()) {
         if (mCandidateHostsInfo->IsInitialized()) {
             GetRegionConcurrencyLimiter(mRegion)->OnFail();
@@ -626,6 +622,10 @@ bool FlusherSLS::BuildRequest(SenderQueueItem* item, unique_ptr<HttpSinkRequest>
         *keepItem = true;
         return false;
     }
+#else
+    static string host = mProject + "." + mEndpoint;
+    data->mCurrentHost = host;
+#endif
 
     switch (mTelemetryType) {
         case sls_logs::SLS_TELEMETRY_TYPE_LOGS:

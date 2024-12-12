@@ -32,6 +32,9 @@
 #include "pipeline/plugin/interface/HttpFlusher.h"
 #include "pipeline/queue/SLSSenderQueueItem.h"
 #include "pipeline/serializer/SLSSerializer.h"
+#ifdef __ENTERPRISE__
+#include "plugin/flusher/sls/EnterpriseSLSClientManager.h"
+#endif
 #include "plugin/flusher/sls/SLSClientManager.h"
 #include "protobuf/sls/sls_logs.pb.h"
 
@@ -128,9 +131,11 @@ private:
     Batcher<SLSEventBatchStatus> mBatcher;
     std::unique_ptr<EventGroupSerializer> mGroupSerializer;
     std::unique_ptr<Serializer<std::vector<CompressedLogGroup>>> mGroupListSerializer;
+#ifdef __ENTERPRISE__
     // This may not be cached. However, this provides a simple way to control the lifetime of a CandidateHostsInfo.
     // Otherwise, timeout machanisim must be emplyed to clean up unused CandidateHostsInfo.
     std::shared_ptr<CandidateHostsInfo> mCandidateHostsInfo;
+#endif
 
     CounterPtr mSendCnt;
     CounterPtr mSendDoneCnt;
