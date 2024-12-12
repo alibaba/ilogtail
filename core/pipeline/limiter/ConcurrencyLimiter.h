@@ -28,14 +28,21 @@ namespace logtail {
 
 class ConcurrencyLimiter {
 public:
+    enum FallbackMode {
+        Fast,
+        Slow
+    };
+
     ConcurrencyLimiter(const std::string& description,
                        uint32_t maxConcurrency,
-                       uint32_t maxRetryIntervalSecs = 3600,
-                       uint32_t minRetryIntervalSecs = 30,
+                       FallbackMode fallbackMode = Fast,
+                       uint32_t maxRetryIntervalSecs = 60,
+                       uint32_t minRetryIntervalSecs = 5,
                        double retryIntervalUpRatio = 1.5,
                        double concurrencyDownRatio = 0.5)
         : mDescription(description),
           mMaxConcurrency(maxConcurrency),
+          mFallbackMode(fallbackMode),
           mCurrenctConcurrency(maxConcurrency),
           mMaxRetryIntervalSecs(maxRetryIntervalSecs),
           mMinRetryIntervalSecs(minRetryIntervalSecs),
@@ -77,6 +84,8 @@ private:
     std::atomic_uint32_t mInSendingCnt = 0U;
 
     uint32_t mMaxConcurrency = 0;
+
+    FallbackMode mFallbackMode;
 
     mutable std::mutex mLimiterMux;
     uint32_t mCurrenctConcurrency = 0;

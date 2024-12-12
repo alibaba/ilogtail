@@ -123,12 +123,12 @@ shared_ptr<ConcurrencyLimiter> FlusherSLS::GetLogstoreConcurrencyLimiter(const s
 
     auto iter = sLogstoreConcurrencyLimiterMap.find(key);
     if (iter == sLogstoreConcurrencyLimiterMap.end()) {
-        auto limiter = GetConcurrencyLimiter(sName + "#quota#logstore#" + key);
+        auto limiter = make_shared<ConcurrencyLimiter>(sName + "#quota#logstore#" + key, AppConfig::GetInstance()->GetSendRequestConcurrency(), ConcurrencyLimiter::FallbackMode::Slow, 10, 5);
         sLogstoreConcurrencyLimiterMap.try_emplace(key, limiter);
         return limiter;
     }
     if (iter->second.expired()) {
-        auto limiter = GetConcurrencyLimiter(sName + "#quota#logstore#" + key);
+        auto limiter = make_shared<ConcurrencyLimiter>(sName + "#quota#logstore#" + key, AppConfig::GetInstance()->GetSendRequestConcurrency(), ConcurrencyLimiter::FallbackMode::Slow, 10, 5);
         iter->second = limiter;
         return limiter;
     }
@@ -139,12 +139,12 @@ shared_ptr<ConcurrencyLimiter> FlusherSLS::GetProjectConcurrencyLimiter(const st
     lock_guard<mutex> lock(sMux);
     auto iter = sProjectConcurrencyLimiterMap.find(project);
     if (iter == sProjectConcurrencyLimiterMap.end()) {
-        auto limiter = GetConcurrencyLimiter(sName + "#quota#project#" + project);
+        auto limiter = make_shared<ConcurrencyLimiter>(sName + "#quota#project#" + project, AppConfig::GetInstance()->GetSendRequestConcurrency(), ConcurrencyLimiter::FallbackMode::Slow, 10, 5);
         sProjectConcurrencyLimiterMap.try_emplace(project, limiter);
         return limiter;
     }
     if (iter->second.expired()) {
-        auto limiter = GetConcurrencyLimiter(sName + "#quota#project#" + project);
+        auto limiter = make_shared<ConcurrencyLimiter>(sName + "#quota#project#" + project, AppConfig::GetInstance()->GetSendRequestConcurrency(), ConcurrencyLimiter::FallbackMode::Slow, 10, 5);
         iter->second = limiter;
         return limiter;
     }
