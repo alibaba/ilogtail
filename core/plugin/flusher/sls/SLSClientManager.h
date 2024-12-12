@@ -57,6 +57,10 @@ protected:
 
 private:
     virtual void GenerateUserAgent();
+
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class SLSClientManagerUnittest;
+#endif
 };
 
 void PreparePostLogStoreLogsRequest(const std::string& accessKeyId,
