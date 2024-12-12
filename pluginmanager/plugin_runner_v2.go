@@ -357,7 +357,7 @@ func (p *pluginv2Runner) runFlusherInternal(cc *pipeline.AsyncControl) {
 					}
 					break
 				}
-				if !p.LogstoreConfig.FlushOutFlag {
+				if !p.LogstoreConfig.FlushOutFlag.Load() {
 					time.Sleep(time.Duration(10) * time.Millisecond)
 					continue
 				}
@@ -375,7 +375,7 @@ func (p *pluginv2Runner) Stop(exit bool) error {
 	for _, flusher := range p.FlusherPlugins {
 		flusher.SetUrgent(exit)
 	}
-	p.LogstoreConfig.FlushOutFlag = true
+	p.LogstoreConfig.FlushOutFlag.Store(true)
 
 	for _, serviceInput := range p.ServicePlugins {
 		_ = serviceInput.Stop()

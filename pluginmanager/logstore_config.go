@@ -94,7 +94,7 @@ type LogstoreConfig struct {
 	ConfigName           string
 	ConfigNameWithSuffix string
 	LogstoreKey          int64
-	FlushOutFlag         bool
+	FlushOutFlag         atomic.Bool
 	// Each LogstoreConfig can have its independent GlobalConfig if the "global" field
 	//   is offered in configuration, see build-in StatisticsConfig and AlarmConfig.
 	GlobalConfig *config.GlobalConfig
@@ -147,7 +147,7 @@ func (p *LogstoreStatistics) Init(context pipeline.Context) {
 //  4. Start inputs (including metrics and services), just like aggregator, each input
 //     has its own goroutine.
 func (lc *LogstoreConfig) Start() {
-	lc.FlushOutFlag = false
+	lc.FlushOutFlag.Store(false)
 	logger.Info(lc.Context.GetRuntimeContext(), "config start", "begin")
 
 	lc.pauseChan = make(chan struct{}, 1)
