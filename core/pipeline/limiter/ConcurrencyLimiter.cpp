@@ -77,6 +77,8 @@ void ConcurrencyLimiter::OnSuccess() {
     }
     if (mCurrenctConcurrency != mMaxConcurrency) {
         ++mCurrenctConcurrency;
+         LOG_INFO(sLogger,
+                     ("increase send concurrency", mDescription)("concurrency", mCurrenctConcurrency));
         if (mCurrenctConcurrency == mMaxConcurrency) {
             LOG_INFO(sLogger,
                      ("increase send concurrency to maximum, type", mDescription)("concurrency", mCurrenctConcurrency));
@@ -88,22 +90,38 @@ void ConcurrencyLimiter::OnSuccess() {
     }
 }
 
+
 void ConcurrencyLimiter::OnFail() {
     lock_guard<mutex> lock(mLimiterMux);
-    if (mCurrenctConcurrency != 0) {
-        auto old = mCurrenctConcurrency;
-        mCurrenctConcurrency = static_cast<uint32_t>(mCurrenctConcurrency * mConcurrencyDownRatio);
-        LOG_INFO(sLogger, ("decrease send concurrency, type", mDescription)("from", old)("to", mCurrenctConcurrency));
-    } else {
-        if (mRetryIntervalSecs != mMaxRetryIntervalSecs) {
-            auto old = mRetryIntervalSecs;
-            mRetryIntervalSecs
-                = min(mMaxRetryIntervalSecs, static_cast<uint32_t>(mRetryIntervalSecs * mRetryIntervalUpRatio));
-            LOG_INFO(sLogger,
-                     ("increase send retry interval, type",
-                      mDescription)("from", ToString(old) + "s")("to", ToString(mRetryIntervalSecs) + "s"));
-        }
+    switch (mFallbackMode) {
+        case (Fast):
+            if (mCurrenctConcurrency != 0) {
+                auto old = mCurrenctConcurrency;
+                mCurrenctConcurrency = static_cast<uint32_t>(mCurrenctConcurrency * mConcurrencyDownRatio);
+                LOG_INFO(sLogger, ("decrease send concurrency, type", mDescription)("from", old)("to", mCurrenctConcurrency));
+            } else {
+                if (mRetryIntervalSecs != mMaxRetryIntervalSecs) {
+                    auto old = mRetryIntervalSecs;
+                    mRetryIntervalSecs
+                        = min(mMaxRetryIntervalSecs, static_cast<uint32_t>(mRetryIntervalSecs * mRetryIntervalUpRatio));
+                    LOG_INFO(sLogger,
+                            ("increase send retry interval, type",
+                            mDescription)("from", ToString(old) + "s")("to", ToString(mRetryIntervalSecs) + "s"));
+                }
+                
+            }
+            break;
+        case (Slow):
+            if (mCurrenctConcurrency != 0) {
+                mCurrenctConcurrency = mCurrenctConcurrency - 1;
+                LOG_INFO(sLogger, ("decrease send concurrency, type", mDescription)("to", mCurrenctConcurrency));
+            } else {
+                mCurrenctConcurrency = 1;
+                LOG_INFO(sLogger, ("decrease send concurrency to min, type", mDescription)("to", mCurrenctConcurrency));
+            }
+            break;
     }
+    
 }
 
 } // namespace logtail
