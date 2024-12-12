@@ -18,10 +18,16 @@
 #include "CurlImp.h"
 #include "Exception.h"
 #include "Result.h"
-#include "logger/Logger.h"
-#include "plugin/flusher/sls/SLSClientManager.h"
 #include "app_config/AppConfig.h"
+#include "common/Flags.h"
+#include "logger/Logger.h"
 #include "monitor/Monitor.h"
+#include "plugin/flusher/sls/SLSClientManager.h"
+#ifdef __ENTERPRISE__
+#include "plugin/flusher/sls/EnterpriseSLSClientManager.h"
+#endif
+
+DECLARE_FLAG_STRING(default_aliuid);
 
 namespace logtail {
 namespace sdk {
@@ -214,7 +220,17 @@ namespace sdk {
         SLSClientManager::AuthType type;
         string accessKeyId, accessKeySecret;
         if (!SLSClientManager::GetInstance()->GetAccessKey(mAliuid, type, accessKeyId, accessKeySecret)) {
-            throw LOGException(LOGE_UNAUTHORIZED, "");
+#ifdef __ENTERPRISE__
+            static auto manager = static_cast<EnterpriseSLSClientManager*>(SLSClientManager::GetInstance());
+            auto status = manager->GetProjectAnonymousWriteStatus(project);
+            if (status == EnterpriseSLSClientManager::ProjectAnonymousWriteStatus::INVALID
+                || status == EnterpriseSLSClientManager::ProjectAnonymousWriteStatus::PENDDING) {
+                return throw LOGException(LOGE_UNAUTHORIZED, "");
+                ;
+            }
+            SLSClientManager::GetInstance()->GetAccessKey(
+                STRING_FLAG(default_aliuid), type, accessKeyId, accessKeySecret);
+#endif
         }
         if (type == SLSClientManager::AuthType::ANONYMOUS) {
             header[X_LOG_KEYPROVIDER] = MD5_SHA1_SALT_KEYPROVIDER;
@@ -232,8 +248,17 @@ namespace sdk {
         if (mPort == 80 && mUsingHTTPS) {
             port = 443;
         }
-        mClient->Send(
-            httpMethod, host, port, url, queryString, header, body, mTimeout, httpMessage, AppConfig::GetInstance()->GetBindInterface(), mUsingHTTPS);
+        mClient->Send(httpMethod,
+                      host,
+                      port,
+                      url,
+                      queryString,
+                      header,
+                      body,
+                      mTimeout,
+                      httpMessage,
+                      AppConfig::GetInstance()->GetBindInterface(),
+                      mUsingHTTPS);
 
         if (httpMessage.statusCode != 200) {
             if (realIpPtr != NULL) {
@@ -252,7 +277,16 @@ namespace sdk {
         SLSClientManager::AuthType type;
         string accessKeyId, accessKeySecret;
         if (!SLSClientManager::GetInstance()->GetAccessKey(mAliuid, type, accessKeyId, accessKeySecret)) {
-            return nullptr;
+#ifdef __ENTERPRISE__
+            static auto manager = static_cast<EnterpriseSLSClientManager*>(SLSClientManager::GetInstance());
+            auto status = manager->GetProjectAnonymousWriteStatus(project);
+            if (status == EnterpriseSLSClientManager::ProjectAnonymousWriteStatus::INVALID
+                || status == EnterpriseSLSClientManager::ProjectAnonymousWriteStatus::PENDDING) {
+                return nullptr;
+            }
+            SLSClientManager::GetInstance()->GetAccessKey(
+                STRING_FLAG(default_aliuid), type, accessKeyId, accessKeySecret);
+#endif
         }
         if (type == SLSClientManager::AuthType::ANONYMOUS) {
             httpHeader[X_LOG_KEYPROVIDER] = MD5_SHA1_SALT_KEYPROVIDER;
@@ -280,7 +314,16 @@ namespace sdk {
         SLSClientManager::AuthType type;
         string accessKeyId, accessKeySecret;
         if (!SLSClientManager::GetInstance()->GetAccessKey(mAliuid, type, accessKeyId, accessKeySecret)) {
-            return nullptr;
+#ifdef __ENTERPRISE__
+            static auto manager = static_cast<EnterpriseSLSClientManager*>(SLSClientManager::GetInstance());
+            auto status = manager->GetProjectAnonymousWriteStatus(project);
+            if (status == EnterpriseSLSClientManager::ProjectAnonymousWriteStatus::INVALID
+                || status == EnterpriseSLSClientManager::ProjectAnonymousWriteStatus::PENDDING) {
+                return nullptr;
+            }
+            SLSClientManager::GetInstance()->GetAccessKey(
+                STRING_FLAG(default_aliuid), type, accessKeyId, accessKeySecret);
+#endif
         }
         if (type == SLSClientManager::AuthType::ANONYMOUS) {
             httpHeader[X_LOG_KEYPROVIDER] = MD5_SHA1_SALT_KEYPROVIDER;
