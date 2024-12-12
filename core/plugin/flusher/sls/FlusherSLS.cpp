@@ -374,6 +374,9 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
     }
     mCandidateHostsInfo
         = EnterpriseSLSClientManager::GetInstance()->GetCandidateHostsInfo(mRegion, mProject, mEndpointMode);
+    LOG_INFO(mContext->GetLogger(),
+             ("get candidate hosts info, region", mRegion)("project", mProject)("logstore", mLogstore)(
+                 "endpoint mode", EndpointModeToString(mCandidateHostsInfo->GetMode())));
 #else
     // Endpoint
     if (!GetMandatoryStringParam(config, "Endpoint", mEndpoint, errorMsg)) {
@@ -600,6 +603,10 @@ bool FlusherSLS::BuildRequest(SenderQueueItem* item, unique_ptr<HttpSinkRequest>
             auto info
                 = EnterpriseSLSClientManager::GetInstance()->GetCandidateHostsInfo(mRegion, mProject, mEndpointMode);
             if (mCandidateHostsInfo.get() != info.get()) {
+                LOG_INFO(sLogger,
+                         ("update candidate hosts info, region", mRegion)("project", mProject)("logstore", mLogstore)(
+                             "from", EndpointModeToString(mCandidateHostsInfo->GetMode()))(
+                             "to", EndpointModeToString(info->GetMode())));
                 mCandidateHostsInfo = info;
             }
             data->mCurrentHost = mCandidateHostsInfo->GetCurrentHost();
@@ -611,6 +618,10 @@ bool FlusherSLS::BuildRequest(SenderQueueItem* item, unique_ptr<HttpSinkRequest>
         // in case local region endpoint mode is changed, we should always check before sending
         auto info = EnterpriseSLSClientManager::GetInstance()->GetCandidateHostsInfo(mRegion, mProject, mEndpointMode);
         if (mCandidateHostsInfo.get() != info.get()) {
+            LOG_INFO(sLogger,
+                     ("update candidate hosts info, region", mRegion)("project", mProject)("logstore", mLogstore)(
+                         "from", EndpointModeToString(mCandidateHostsInfo->GetMode()))(
+                         "to", EndpointModeToString(info->GetMode())));
             mCandidateHostsInfo = info;
         }
         data->mCurrentHost = mCandidateHostsInfo->GetCurrentHost();
