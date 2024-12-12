@@ -45,10 +45,7 @@ func logDriverSupported(container types.ContainerJSON) bool {
 }
 
 func logPathEmpty(container types.ContainerJSON) bool {
-	if len(container.LogPath) == 0 {
-		return true
-	}
-	return false
+	return len(container.LogPath) == 0
 }
 
 type DockerFileSyner struct {
