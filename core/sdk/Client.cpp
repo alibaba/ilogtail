@@ -224,7 +224,7 @@ namespace sdk {
             static auto manager = static_cast<EnterpriseSLSClientManager*>(SLSClientManager::GetInstance());
             auto status = manager->GetProjectAnonymousWriteStatus(project);
             if (status == EnterpriseSLSClientManager::ProjectAnonymousWriteStatus::INVALID
-                || status == EnterpriseSLSClientManager::ProjectAnonymousWriteStatus::PENDDING) {
+                || status == EnterpriseSLSClientManager::ProjectAnonymousWriteStatus::PENDING) {
                 return throw LOGException(LOGE_UNAUTHORIZED, "");
                 ;
             }
@@ -281,7 +281,7 @@ namespace sdk {
             static auto manager = static_cast<EnterpriseSLSClientManager*>(SLSClientManager::GetInstance());
             auto status = manager->GetProjectAnonymousWriteStatus(project);
             if (status == EnterpriseSLSClientManager::ProjectAnonymousWriteStatus::INVALID
-                || status == EnterpriseSLSClientManager::ProjectAnonymousWriteStatus::PENDDING) {
+                || status == EnterpriseSLSClientManager::ProjectAnonymousWriteStatus::PENDING) {
                 return nullptr;
             }
             SLSClientManager::GetInstance()->GetAccessKey(
@@ -318,7 +318,7 @@ namespace sdk {
             static auto manager = static_cast<EnterpriseSLSClientManager*>(SLSClientManager::GetInstance());
             auto status = manager->GetProjectAnonymousWriteStatus(project);
             if (status == EnterpriseSLSClientManager::ProjectAnonymousWriteStatus::INVALID
-                || status == EnterpriseSLSClientManager::ProjectAnonymousWriteStatus::PENDDING) {
+                || status == EnterpriseSLSClientManager::ProjectAnonymousWriteStatus::PENDING) {
                 return nullptr;
             }
             SLSClientManager::GetInstance()->GetAccessKey(
