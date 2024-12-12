@@ -16,7 +16,6 @@ package helper
 
 import (
 	"context"
-	"errors"
 	"hash/fnv"
 	"io"
 	"path"
@@ -1101,11 +1100,8 @@ func (dc *DockerCenter) fetchOne(containerID string, tryFindSandbox bool) error 
 		dc.setLastError(err, "inspect container error "+containerID)
 		return err
 	}
-	if !dc.client.ContainerProcessAlive(containerDetail.State.Pid) {
-		errMsg := "inspect time out container " + containerID
-		err = errors.New(errMsg)
-		dc.setLastError(err, errMsg)
-		return err
+	if containerDetail.State.Status == ContainerStatusRunning && !ContainerProcessAlive(containerDetail.State.Pid) {
+		containerDetail.State.Status = ContainerStatusExited
 	}
 	// docker 场景下
 	// tryFindSandbox如果是false, 那么fetchOne的地方应该会调用两次，一次是sandbox的id，一次是业务容器的id
