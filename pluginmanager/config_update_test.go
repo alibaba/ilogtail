@@ -67,7 +67,7 @@ func (s *configUpdateTestSuite) TestConfigUpdate() {
 	s.Equal(0, checkFlusher.GetLogCount(), "the hold on block flusher checker doesn't have any logs")
 	err := LoadMockConfig(updateConfigName, updateConfigName, updateConfigName, GetTestConfig(updateConfigName))
 	s.NoError(err)
-	//s.True(strings.Contains(err.Error(), "failed to create config because timeout stop has happened on it"))
+	// s.True(strings.Contains(err.Error(), "failed to create config because timeout stop has happened on it"))
 	s.NoError(LoadMockConfig(noblockUpdateConfigName, noblockUpdateConfigName, noblockUpdateConfigName, GetTestConfig(noblockUpdateConfigName)))
 	s.NoError(Resume())
 	s.NotNil(LogtailConfig[updateConfigName])
