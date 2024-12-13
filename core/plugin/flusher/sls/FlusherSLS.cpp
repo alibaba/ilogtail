@@ -596,7 +596,7 @@ bool FlusherSLS::BuildRequest(SenderQueueItem* item, unique_ptr<HttpSinkRequest>
     if (!SLSClientManager::GetInstance()->GetAccessKey(mAliuid, type, accessKeyId, accessKeySecret)) {
 #ifdef __ENTERPRISE__
         if (!EnterpriseSLSClientManager::GetInstance()->GetAccessKeyIfProjectSupportsAnonymousWrite(
-                project, type, accessKeyId, accessKeySecret)) {
+                mProject, type, accessKeyId, accessKeySecret)) {
             *keepItem = true;
             return false;
         }
@@ -671,6 +671,7 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
     int32_t curTime = time(NULL);
     auto curSystemTime = chrono::system_clock::now();
     bool hasAuthError = false;
+    SendResult sendResult = SEND_OK;
     if (slsResponse.mStatusCode == 200) {
         auto& cpt = data->mExactlyOnceCheckpoint;
         if (cpt) {
@@ -698,7 +699,7 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
         }
     } else {
         OperationOnFail operation;
-        SendResult sendResult = ConvertErrorCode(slsResponse.mErrorCode);
+        sendResult = ConvertErrorCode(slsResponse.mErrorCode);
         ostringstream failDetail, suggestion;
         if (sendResult == SEND_NETWORK_ERROR || sendResult == SEND_SERVER_ERROR) {
             if (sendResult == SEND_NETWORK_ERROR) {
@@ -880,10 +881,11 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
                 break;
         }
     }
-    SLSClientManager::GetInstance()->UpdateAccessKeyStatus(mAliuid, !hasAuthError);
 #ifdef __ENTERPRISE__
-    static auto manager = static_cast<EnterpriseSLSClientManager*>(SLSClientManager::GetInstance());
-    manager->UpdateProjectAnonymousWriteStatus(mProject, !hasAuthError);
+    if (sendResult != SEND_NETWORK_ERROR && sendResult != SEND_SERVER_ERROR) {
+        EnterpriseSLSClientManager::GetInstance()->UpdateAccessKeyStatus(mAliuid, !hasAuthError);
+        EnterpriseSLSClientManager::GetInstance()->UpdateProjectAnonymousWriteStatus(mProject, !hasAuthError);
+    }
 #endif
 }
 

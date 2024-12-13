@@ -43,7 +43,6 @@ public:
 
     virtual bool
     GetAccessKey(const std::string& aliuid, AuthType& type, std::string& accessKeyId, std::string& accessKeySecret);
-    virtual void UpdateAccessKeyStatus(const std::string& aliuid, bool success) {}
 
     virtual bool UsingHttps(const std::string& region) const { return true; }
 

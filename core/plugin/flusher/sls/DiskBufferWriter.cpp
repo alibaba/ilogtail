@@ -576,7 +576,14 @@ void DiskBufferWriter::SendEncryptionBuffer(const std::string& filename, int32_t
                                 discardCount++;
                                 break;
                         }
-                        SLSClientManager::GetInstance()->UpdateAccessKeyStatus(bufferMeta.aliuid(), !hasAuthError);
+#ifdef __ENTERPRISE__
+                        if (sendRes != SEND_NETWORK_ERROR && sendRes != SEND_SERVER_ERROR) {
+                            EnterpriseSLSClientManager::GetInstance()->UpdateAccessKeyStatus(bufferMeta.aliuid(),
+                                                                                             !hasAuthError);
+                            EnterpriseSLSClientManager::GetInstance()->UpdateProjectAnonymousWriteStatus(
+                                bufferMeta.project(), !hasAuthError);
+                        }
+#endif
                         if (time(nullptr) - beginTime >= INT32_FLAG(discard_send_fail_interval)) {
                             sendResult = true;
                             discardCount++;
@@ -813,7 +820,7 @@ SLSResponse DiskBufferWriter::SendBufferFileData(const sls_logs::LogtailBufferMe
     if (!SLSClientManager::GetInstance()->GetAccessKey(bufferMeta.aliuid(), type, accessKeyId, accessKeySecret)) {
 #ifdef __ENTERPRISE__
         if (!EnterpriseSLSClientManager::GetInstance()->GetAccessKeyIfProjectSupportsAnonymousWrite(
-                project, type, accessKeyId, accessKeySecret)) {
+                bufferMeta.project(), type, accessKeyId, accessKeySecret)) {
             SLSResponse response;
             response.mErrorCode = LOGE_UNAUTHORIZED;
             response.mErrorMsg = "can not get valid access key";
