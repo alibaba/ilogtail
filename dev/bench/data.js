@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1733710918846,
+  "lastUpdate": 1734053034229,
   "repoUrl": "https://github.com/alibaba/loongcollector",
   "entries": {
     "benchmark": [
@@ -119,6 +119,46 @@ window.BENCHMARK_DATA = {
           {
             "name": "Memory_Usage_Avg - performance_file_to_blackhole_ilogtail",
             "value": 37.96566133720931,
+            "unit": "MB"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "alibaba",
+            "username": "alibaba"
+          },
+          "committer": {
+            "name": "alibaba",
+            "username": "alibaba"
+          },
+          "id": "814638be89ca168d42afe4e546e24f6abba2e97f",
+          "message": "Revert \"Fix the issue of missing container information caused by the event sequence when docker compose is repeatedly up. (#1875)\"",
+          "timestamp": "2024-12-12T14:23:30Z",
+          "url": "https://github.com/alibaba/loongcollector/pull/1962/commits/814638be89ca168d42afe4e546e24f6abba2e97f"
+        },
+        "date": 1734053033892,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "CPU_Usage_Max - performance_file_to_blackhole_ilogtail",
+            "value": 43.22436857496673,
+            "unit": "%"
+          },
+          {
+            "name": "CPU_Usage_Avg - performance_file_to_blackhole_ilogtail",
+            "value": 37.75999410024988,
+            "unit": "%"
+          },
+          {
+            "name": "Memory_Usage_Max - performance_file_to_blackhole_ilogtail",
+            "value": 44.375,
+            "unit": "MB"
+          },
+          {
+            "name": "Memory_Usage_Avg - performance_file_to_blackhole_ilogtail",
+            "value": 40.026740579044144,
             "unit": "MB"
           }
         ]
