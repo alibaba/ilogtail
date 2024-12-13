@@ -27,8 +27,6 @@
 #include "plugin/flusher/sls/EnterpriseSLSClientManager.h"
 #endif
 
-DECLARE_FLAG_STRING(default_aliuid);
-
 namespace logtail {
 namespace sdk {
 
@@ -221,15 +219,10 @@ namespace sdk {
         string accessKeyId, accessKeySecret;
         if (!SLSClientManager::GetInstance()->GetAccessKey(mAliuid, type, accessKeyId, accessKeySecret)) {
 #ifdef __ENTERPRISE__
-            static auto manager = static_cast<EnterpriseSLSClientManager*>(SLSClientManager::GetInstance());
-            auto status = manager->GetProjectAnonymousWriteStatus(project);
-            if (status == EnterpriseSLSClientManager::ProjectAnonymousWriteStatus::INVALID
-                || status == EnterpriseSLSClientManager::ProjectAnonymousWriteStatus::PENDING) {
-                return throw LOGException(LOGE_UNAUTHORIZED, "");
-                ;
+            static auto* manager = static_cast<EnterpriseSLSClientManager*>(SLSClientManager::GetInstance());
+            if (!manager->GetAccessKeyIfProjectSupportsAnonymousWrite(project, type, accessKeyId, accessKeySecret)) {
+                throw LOGException(LOGE_UNAUTHORIZED, "");
             }
-            SLSClientManager::GetInstance()->GetAccessKey(
-                STRING_FLAG(default_aliuid), type, accessKeyId, accessKeySecret);
 #endif
         }
         if (type == SLSClientManager::AuthType::ANONYMOUS) {
@@ -278,14 +271,10 @@ namespace sdk {
         string accessKeyId, accessKeySecret;
         if (!SLSClientManager::GetInstance()->GetAccessKey(mAliuid, type, accessKeyId, accessKeySecret)) {
 #ifdef __ENTERPRISE__
-            static auto manager = static_cast<EnterpriseSLSClientManager*>(SLSClientManager::GetInstance());
-            auto status = manager->GetProjectAnonymousWriteStatus(project);
-            if (status == EnterpriseSLSClientManager::ProjectAnonymousWriteStatus::INVALID
-                || status == EnterpriseSLSClientManager::ProjectAnonymousWriteStatus::PENDING) {
+            static auto* manager = static_cast<EnterpriseSLSClientManager*>(SLSClientManager::GetInstance());
+            if (!manager->GetAccessKeyIfProjectSupportsAnonymousWrite(project, type, accessKeyId, accessKeySecret)) {
                 return nullptr;
             }
-            SLSClientManager::GetInstance()->GetAccessKey(
-                STRING_FLAG(default_aliuid), type, accessKeyId, accessKeySecret);
 #endif
         }
         if (type == SLSClientManager::AuthType::ANONYMOUS) {
@@ -315,14 +304,10 @@ namespace sdk {
         string accessKeyId, accessKeySecret;
         if (!SLSClientManager::GetInstance()->GetAccessKey(mAliuid, type, accessKeyId, accessKeySecret)) {
 #ifdef __ENTERPRISE__
-            static auto manager = static_cast<EnterpriseSLSClientManager*>(SLSClientManager::GetInstance());
-            auto status = manager->GetProjectAnonymousWriteStatus(project);
-            if (status == EnterpriseSLSClientManager::ProjectAnonymousWriteStatus::INVALID
-                || status == EnterpriseSLSClientManager::ProjectAnonymousWriteStatus::PENDING) {
+            static auto* manager = static_cast<EnterpriseSLSClientManager*>(SLSClientManager::GetInstance());
+            if (!manager->GetAccessKeyIfProjectSupportsAnonymousWrite(project, type, accessKeyId, accessKeySecret)) {
                 return nullptr;
             }
-            SLSClientManager::GetInstance()->GetAccessKey(
-                STRING_FLAG(default_aliuid), type, accessKeyId, accessKeySecret);
 #endif
         }
         if (type == SLSClientManager::AuthType::ANONYMOUS) {
