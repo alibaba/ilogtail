@@ -536,7 +536,6 @@ void DiskBufferWriter::SendEncryptionBuffer(const std::string& filename, int32_t
                         string host;
                         auto response = SendBufferFileData(bufferMeta, logData, host);
                         auto sendRes = ConvertErrorCode(response.mErrorCode);
-                        bool hasAuthError = false;
                         switch (sendRes) {
                             case SEND_OK:
                                 sendResult = true;
@@ -568,7 +567,6 @@ void DiskBufferWriter::SendEncryptionBuffer(const std::string& filename, int32_t
                                 usleep(INT32_FLAG(quota_exceed_wait_interval));
                                 break;
                             case SEND_UNAUTHORIZED:
-                                hasAuthError = true;
                                 usleep(INT32_FLAG(unauthorized_wait_interval));
                                 break;
                             default:
@@ -578,6 +576,7 @@ void DiskBufferWriter::SendEncryptionBuffer(const std::string& filename, int32_t
                         }
 #ifdef __ENTERPRISE__
                         if (sendRes != SEND_NETWORK_ERROR && sendRes != SEND_SERVER_ERROR) {
+                            bool hasAuthError = sendRes == SEND_UNAUTHORIZED;
                             EnterpriseSLSClientManager::GetInstance()->UpdateAccessKeyStatus(bufferMeta.aliuid(),
                                                                                              !hasAuthError);
                             EnterpriseSLSClientManager::GetInstance()->UpdateProjectAnonymousWriteStatus(

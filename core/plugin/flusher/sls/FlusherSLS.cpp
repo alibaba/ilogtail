@@ -670,7 +670,6 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
     bool isProfileData = GetProfileSender()->IsProfileData(mRegion, mProject, data->mLogstore);
     int32_t curTime = time(NULL);
     auto curSystemTime = chrono::system_clock::now();
-    bool hasAuthError = false;
     SendResult sendResult = SEND_OK;
     if (slsResponse.mStatusCode == 200) {
         auto& cpt = data->mExactlyOnceCheckpoint;
@@ -758,7 +757,6 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
             failDetail << "write unauthorized";
             suggestion << "check access keys provided";
             operation = OperationOnFail::RETRY_LATER;
-            hasAuthError = true;
             if (mUnauthErrorCnt) {
                 mUnauthErrorCnt->Add(1);
             }
@@ -883,6 +881,7 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
     }
 #ifdef __ENTERPRISE__
     if (sendResult != SEND_NETWORK_ERROR && sendResult != SEND_SERVER_ERROR) {
+        bool hasAuthError = sendResult == SEND_UNAUTHORIZED;
         EnterpriseSLSClientManager::GetInstance()->UpdateAccessKeyStatus(mAliuid, !hasAuthError);
         EnterpriseSLSClientManager::GetInstance()->UpdateProjectAnonymousWriteStatus(mProject, !hasAuthError);
     }
