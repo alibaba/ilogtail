@@ -811,10 +811,15 @@ SLSResponse DiskBufferWriter::SendBufferFileData(const sls_logs::LogtailBufferMe
     SLSClientManager::AuthType type;
     string accessKeyId, accessKeySecret;
     if (!SLSClientManager::GetInstance()->GetAccessKey(bufferMeta.aliuid(), type, accessKeyId, accessKeySecret)) {
-        SLSResponse response;
-        response.mErrorCode = LOGE_UNAUTHORIZED;
-        response.mErrorMsg = "can not get valid access key";
-        return response;
+#ifdef __ENTERPRISE__
+        if (!EnterpriseSLSClientManager::GetInstance()->GetAccessKeyIfProjectSupportsAnonymousWrite(
+                project, type, accessKeyId, accessKeySecret)) {
+            SLSResponse response;
+            response.mErrorCode = LOGE_UNAUTHORIZED;
+            response.mErrorMsg = "can not get valid access key";
+            return response;
+        }
+#endif
     }
 
 #ifdef __ENTERPRISE__
