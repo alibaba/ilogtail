@@ -690,7 +690,9 @@ void FlusherSLSUnittest::TestBuildRequest() {
     bool keepItem = false;
 #ifdef __ENTERPRISE__
     {
-        // empty ak
+        // empty ak, first try
+        APSARA_TEST_FALSE(flusher.BuildRequest(&item, req, &keepItem));
+        // empty ak, second try
         APSARA_TEST_FALSE(flusher.BuildRequest(&item, req, &keepItem));
         APSARA_TEST_EQUAL(nullptr, req);
         APSARA_TEST_TRUE(keepItem);
