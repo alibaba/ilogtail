@@ -568,7 +568,7 @@ AppConfig::AppConfig() {
     mNoInotify = false;
     mSendDataPort = 80;
     mShennongSocket = true;
-#ifdef ___CORP__
+#ifdef __CORP__
     mInotifyBlackList.insert("/tmp"); // The constant creation and deletion of files in the /tmp directory by Pangu 2.0
                                       // may lead to increased resource consumption and system fluctuations for iLogtail
                                       // which rely on inotify_add_watch and inotify_rm_watch for filesystem monitoring.
