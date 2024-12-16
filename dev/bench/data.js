@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1734326805777,
+  "lastUpdate": 1734336973702,
   "repoUrl": "https://github.com/alibaba/loongcollector",
   "entries": {
     "benchmark": [
@@ -239,6 +239,46 @@ window.BENCHMARK_DATA = {
           {
             "name": "Memory_Usage_Avg - performance_file_to_blackhole_ilogtail",
             "value": 39.45321180555553,
+            "unit": "MB"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "alibaba",
+            "username": "alibaba"
+          },
+          "committer": {
+            "name": "alibaba",
+            "username": "alibaba"
+          },
+          "id": "98ade31e3e95858370db7fd3da161db47ca7b773",
+          "message": "Fix the problem of increasing container meta information in Docker Center and add UT to this module",
+          "timestamp": "2024-12-16T04:51:01Z",
+          "url": "https://github.com/alibaba/loongcollector/pull/1938/commits/98ade31e3e95858370db7fd3da161db47ca7b773"
+        },
+        "date": 1734336973308,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "CPU_Usage_Max - performance_file_to_blackhole_ilogtail",
+            "value": 47.02735811234678,
+            "unit": "%"
+          },
+          {
+            "name": "CPU_Usage_Avg - performance_file_to_blackhole_ilogtail",
+            "value": 39.77025586955595,
+            "unit": "%"
+          },
+          {
+            "name": "Memory_Usage_Max - performance_file_to_blackhole_ilogtail",
+            "value": 43.56640625,
+            "unit": "MB"
+          },
+          {
+            "name": "Memory_Usage_Avg - performance_file_to_blackhole_ilogtail",
+            "value": 39.573128633720934,
             "unit": "MB"
           }
         ]
