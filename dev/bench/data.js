@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1734082225102,
+  "lastUpdate": 1734326805777,
   "repoUrl": "https://github.com/alibaba/loongcollector",
   "entries": {
     "benchmark": [
@@ -199,6 +199,46 @@ window.BENCHMARK_DATA = {
           {
             "name": "Memory_Usage_Avg - performance_file_to_blackhole_ilogtail",
             "value": 37.93488581730768,
+            "unit": "MB"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "alibaba",
+            "username": "alibaba"
+          },
+          "committer": {
+            "name": "alibaba",
+            "username": "alibaba"
+          },
+          "id": "02bfe244612f151e8e500620f9dd5e61ad6decc4",
+          "message": "fix event pool unittest memory leak",
+          "timestamp": "2024-12-16T02:29:54Z",
+          "url": "https://github.com/alibaba/loongcollector/pull/1968/commits/02bfe244612f151e8e500620f9dd5e61ad6decc4"
+        },
+        "date": 1734326805372,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "CPU_Usage_Max - performance_file_to_blackhole_ilogtail",
+            "value": 44.923231309439736,
+            "unit": "%"
+          },
+          {
+            "name": "CPU_Usage_Avg - performance_file_to_blackhole_ilogtail",
+            "value": 37.91718820922012,
+            "unit": "%"
+          },
+          {
+            "name": "Memory_Usage_Max - performance_file_to_blackhole_ilogtail",
+            "value": 43.39453125,
+            "unit": "MB"
+          },
+          {
+            "name": "Memory_Usage_Avg - performance_file_to_blackhole_ilogtail",
+            "value": 39.45321180555553,
             "unit": "MB"
           }
         ]
