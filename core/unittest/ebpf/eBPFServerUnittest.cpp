@@ -73,6 +73,7 @@ protected:
         config_->mProfileProbeConfig.mProfileUploadDuration = 10;
         config_->mProcessProbeConfig.mEnableOOMDetect = false;
     }
+    void TearDown() override { delete config_; }
 private:
     template <typename T>
     void setJSON(Json::Value& v, const std::string& key, const T& value) {
@@ -433,7 +434,7 @@ void eBPFServerUnittest::GenerateBatchMeasure(nami::NamiHandleBatchMeasureFunc c
             batch_app_measures.emplace_back(std::move(app_measure_ptr));
         }
     }
-    cb(std::move(batch_app_measures), 100000);
+    cb(batch_app_measures, 100000);
 }
 
 void eBPFServerUnittest::GenerateBatchAppEvent(nami::NamiHandleBatchEventFunc cb) {
@@ -451,7 +452,7 @@ void eBPFServerUnittest::GenerateBatchAppEvent(nami::NamiHandleBatchEventFunc cb
         batch_app_events.emplace_back(std::move(appEvent));
     }
 
-    if (cb) cb(std::move(batch_app_events));
+    if (cb) cb(batch_app_events);
 
     return;
 }
@@ -500,7 +501,6 @@ void eBPFServerUnittest::HandleStats(nami::NamiStatisticsHandler cb, int plus) {
     stats.emplace_back(std::move(networkSecurityStat));
     stats.emplace_back(std::move(processSecurityStat));
     stats.emplace_back(std::move(fileSecurityStat));
-    std::cout << "3" << std::endl;
     if (cb) cb(stats);
 }
 
@@ -539,7 +539,7 @@ void eBPFServerUnittest::GenerateBatchSpan(nami::NamiHandleBatchSpanFunc cb) {
         batch_spans->single_spans_.emplace_back(std::move(single_span));
     }
     batch_app_spans.emplace_back(std::move(batch_spans));
-    cb(std::move(batch_app_spans));
+    cb(batch_app_spans);
 }
 
 void eBPFServerUnittest::GenerateBatchEvent(nami::NamiHandleBatchDataEventFn cb, SecureEventType type) {
@@ -555,7 +555,7 @@ void eBPFServerUnittest::GenerateBatchEvent(nami::NamiHandleBatchDataEventFn cb,
         auto event = std::make_unique<AbstractSecurityEvent> (std::move(tags), type, 1000);
         events.emplace_back(std::move(event));
     }
-    cb(std::move(events));
+    cb(events);
 }
 
 void eBPFServerUnittest::InitSecurityOpts() {
@@ -601,18 +601,16 @@ void eBPFServerUnittest::TestEnableNetworkPlugin() {
     bool res = ebpf::InitObserverNetworkOption(configJson, network_option, &ctx, "test");
     EXPECT_TRUE(res);
     // observer_options.Init(ObserverType::NETWORK, configJson, &ctx, "test");
-    auto input = new InputNetworkObserver();
+    std::shared_ptr<InputNetworkObserver> input(new InputNetworkObserver());
     input->SetContext(ctx);
     input->SetMetricsRecordRef("test", "1");    
     auto initStatus = input->Init(configJson, optionalGoPipeline);
     EXPECT_TRUE(initStatus);
-    std::cout << "1" << std::endl;
     res = ebpf::eBPFServer::GetInstance()->EnablePlugin(
         "test", 1,
         nami::PluginType::NETWORK_OBSERVE,
         &ctx,
         &network_option, input->mPluginMgr);
-    std::cout << "2" << std::endl;
 
     EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mMonitorMgr->mInited[int(nami::PluginType::NETWORK_OBSERVE)], true);
     auto& mgr = ebpf::eBPFServer::GetInstance()->mMonitorMgr->mSelfMonitors[int(nami::PluginType::NETWORK_OBSERVE)];
@@ -627,7 +625,6 @@ void eBPFServerUnittest::TestEnableNetworkPlugin() {
     EXPECT_TRUE(res);
     auto conf = ebpf::eBPFServer::GetInstance()->mSourceManager->mConfig.get();
     HandleStats(conf->stats_handler_, 1);
-    std::cout << "3" << std::endl;
     auto network_conf = std::get<nami::NetworkObserveConfig>(conf->config_);
     EXPECT_EQ(conf->plugin_type_, nami::PluginType::NETWORK_OBSERVE);
     EXPECT_EQ(conf->type, UpdataType::SECURE_UPDATE_TYPE_ENABLE_PROBE);
@@ -695,7 +692,7 @@ void eBPFServerUnittest::TestEnableProcessPlugin() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     SecurityOptions security_options;
     security_options.Init(SecurityProbeType::PROCESS, configJson, &ctx, "input_process_security");
-    auto input = new InputProcessSecurity();
+    std::shared_ptr<InputProcessSecurity> input(new InputProcessSecurity());
     input->SetContext(ctx);
     input->SetMetricsRecordRef("test", "1");
     input->Init(configJson, optionalGoPipeline);
@@ -753,7 +750,7 @@ void eBPFServerUnittest::TestEnableNetworkSecurePlugin() {
             }
         }
     )";
-    auto input = new InputNetworkSecurity();
+    std::shared_ptr<InputNetworkSecurity> input(new InputNetworkSecurity());
     input->SetContext(ctx);
     input->SetMetricsRecordRef("test", "1");
     
@@ -824,7 +821,7 @@ void eBPFServerUnittest::TestEnableFileSecurePlugin() {
         }
     )";
 
-    auto input = new InputFileSecurity();
+    std::shared_ptr<InputFileSecurity> input(new InputFileSecurity());
     input->SetContext(ctx);
     input->SetMetricsRecordRef("test", "1");
 

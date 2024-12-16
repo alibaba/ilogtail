@@ -19,9 +19,9 @@
 #include <atomic>
 
 #include "ebpf/include/export.h"
-#include "monitor/PluginMetricManager.h"
+#include "monitor/metric_models/ReentrantMetricsRecord.h"
 #include "common/Lock.h"
-#include "monitor/MetricTypes.h"
+#include "monitor/metric_models/MetricTypes.h"
 #include "monitor/metric_constants/MetricConstants.h"
 
 namespace logtail {
@@ -125,7 +125,7 @@ public:
     void Init(const nami::PluginType type, PluginMetricManagerPtr mgr, const std::string& name, const std::string& project);
     void Release(const nami::PluginType type);
     void Suspend(const nami::PluginType type);
-    void HandleStatistic(std::vector<nami::eBPFStatistics>&& stats);
+    void HandleStatistic(std::vector<nami::eBPFStatistics>& stats);
 private:
     // `mLock` is used to protect mSelfMonitors
     ReadWriteLock mLock;

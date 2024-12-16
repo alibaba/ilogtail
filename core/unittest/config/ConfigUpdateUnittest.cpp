@@ -19,53 +19,22 @@
 #include <vector>
 
 #include "config/PipelineConfig.h"
+#include "config/common_provider/CommonConfigProvider.h"
+#ifdef __ENTERPRISE__
+#include "config/provider/EnterpriseConfigProvider.h"
+#endif
 #include "config/watcher/PipelineConfigWatcher.h"
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineManager.h"
 #include "pipeline/plugin/PluginRegistry.h"
 #include "task_pipeline/TaskPipelineManager.h"
 #include "unittest/Unittest.h"
+#include "unittest/config/PipelineManagerMock.h"
 #include "unittest/plugin/PluginMock.h"
 
 using namespace std;
 
 namespace logtail {
-
-class PipelineMock : public Pipeline {
-public:
-    bool Init(PipelineConfig&& config) {
-        mConfig = std::move(config.mDetail);
-        WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
-            mMetricsRecordRef,
-            MetricCategory::METRIC_CATEGORY_PIPELINE,
-            {{METRIC_LABEL_KEY_PROJECT, mContext.GetProjectName()}, {METRIC_LABEL_KEY_PIPELINE_NAME, mName}});
-        mStartTime = mMetricsRecordRef.CreateIntGauge(METRIC_PIPELINE_START_TIME);
-        return (*mConfig)["valid"].asBool();
-    }
-};
-
-class PipelineManagerMock : public PipelineManager {
-public:
-    static PipelineManagerMock* GetInstance() {
-        static PipelineManagerMock instance;
-        return &instance;
-    }
-
-    void ClearEnvironment() {
-        mPipelineNameEntityMap.clear();
-        mPluginCntMap.clear();
-    }
-
-private:
-    shared_ptr<Pipeline> BuildPipeline(PipelineConfig&& config) override {
-        // this should be synchronized with PipelineManager::BuildPipeline, except for the pointer type.
-        shared_ptr<PipelineMock> p = make_shared<PipelineMock>();
-        if (!p->Init(std::move(config))) {
-            return nullptr;
-        }
-        return p;
-    }
-};
 
 class ConfigUpdateUnittest : public testing::Test {
 public:
@@ -267,7 +236,11 @@ private:
 
 void ConfigUpdateUnittest::OnStartUp() const {
     auto diff = PipelineConfigWatcher::GetInstance()->CheckConfigDiff();
-    APSARA_TEST_EQUAL(1U, diff.first.mAdded.size());
+    size_t builtinPipelineCnt = 0;
+#ifdef __ENTERPRISE__
+    builtinPipelineCnt += EnterpriseConfigProvider::GetInstance()->GetAllBuiltInPipelineConfigs().size();
+#endif
+    APSARA_TEST_EQUAL(0U + builtinPipelineCnt, diff.first.mAdded.size());
     APSARA_TEST_TRUE(diff.second.IsEmpty());
 
     GenerateInitialConfigs();
