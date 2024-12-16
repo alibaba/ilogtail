@@ -457,7 +457,7 @@ type DockerCenter struct {
 	// sandbox meta would be saved to its bound container.
 	containerMap                   map[string]*DockerInfoDetail // all containers will in this map
 	client                         DockerCenterClientInterface
-	containerHelper                *DockerCenterHelperWrapper
+	containerHelper                ContainerHelperInterface
 	lastErrMu                      sync.Mutex
 	lastErr                        error
 	lock                           sync.RWMutex
@@ -477,14 +477,14 @@ type DockerCenterClientInterface interface {
 	Events(ctx context.Context, options types.EventsOptions) (<-chan events.Message, <-chan error)
 }
 
-type DockerCenterHelperInterface interface {
+type ContainerHelperInterface interface {
 	ContainerProcessAlive(pid int) bool
 }
 
-type DockerCenterHelperWrapper struct {
+type ContainerHelperWrapper struct {
 }
 
-func (r *DockerCenterHelperWrapper) ContainerProcessAlive(pid int) bool {
+func (r *ContainerHelperWrapper) ContainerProcessAlive(pid int) bool {
 	return ContainerProcessAlive(pid)
 }
 
@@ -653,7 +653,7 @@ func getDockerCenterInstance() *DockerCenter {
 		// load EnvTags first
 		LoadEnvTags()
 		dockerCenterInstance = &DockerCenter{
-			containerHelper: &DockerCenterHelperWrapper{},
+			containerHelper: &ContainerHelperWrapper{},
 		}
 		dockerCenterInstance.imageCache = make(map[string]string)
 		dockerCenterInstance.containerMap = make(map[string]*DockerInfoDetail)
