@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/docker/docker/api/types"
+	docker "github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
 
 	"github.com/alibaba/ilogtail/pkg/helper"
@@ -83,7 +84,7 @@ type stdoutSyner struct {
 	ExternalK8sLabelTag map[string]string
 
 	info                 *helper.DockerInfoDetail
-	client               helper.DockerCenterClientInterface
+	client               *docker.Client
 	startCheckPoint      string
 	lock                 sync.Mutex
 	stdoutCheckPoint     *StdoutCheckPoint
@@ -360,7 +361,7 @@ type ServiceDockerStdout struct {
 	K8sFilter         *helper.K8SFilter
 
 	synerMap         map[string]*stdoutSyner
-	client           helper.DockerCenterClientInterface
+	client           *docker.Client
 	shutdown         chan struct{}
 	waitGroup        sync.WaitGroup
 	context          pipeline.Context

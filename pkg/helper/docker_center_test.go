@@ -17,7 +17,6 @@ package helper
 import (
 	"context"
 	"errors"
-	"io"
 	"os"
 	"sync"
 	"testing"
@@ -349,6 +348,10 @@ type DockerClientMock struct {
 	mock.Mock
 }
 
+type ContainerHelperMock struct {
+	mock.Mock
+}
+
 // Events 实现了 DockerClient 的 Events 方法
 func (m *DockerClientMock) Events(ctx context.Context, options types.EventsOptions) (<-chan events.Message, <-chan error) {
 	args := m.Called(ctx, options)
@@ -369,14 +372,9 @@ func (m *DockerClientMock) ContainerList(ctx context.Context, options types.Cont
 	return args.Get(0).([]types.Container), args.Error(1)
 }
 
-func (m *DockerClientMock) ContainerProcessAlive(pid int) bool {
+func (m *ContainerHelperMock) ContainerProcessAlive(pid int) bool {
 	args := m.Called(pid)
 	return args.Get(0).(bool)
-}
-
-func (m *DockerClientMock) ContainerLogs(ctx context.Context, container string, options types.ContainerLogsOptions) (io.ReadCloser, error) {
-	args := m.Called(ctx, container, options)
-	return args.Get(0).(io.ReadCloser), args.Error(1)
 }
 
 func TestDockerCenterEvents(t *testing.T) {
@@ -387,6 +385,8 @@ func TestDockerCenterEvents(t *testing.T) {
 	mockClient := DockerClientMock{}
 	dockerCenterInstance.client = &mockClient
 
+	containerHelper := ContainerHelperMock{}
+
 	// 创建一个模拟的事件通道
 	eventChan := make(chan events.Message, 1)
 	errChan := make(chan error, 1)
@@ -395,7 +395,7 @@ func TestDockerCenterEvents(t *testing.T) {
 
 	go dockerCenterInstance.eventListener()
 
-	mockClient.On("ContainerProcessAlive", mock.Anything).Return(false).Once()
+	containerHelper.On("ContainerProcessAlive", mock.Anything).Return(false).Once()
 	mockClient.On("ContainerInspect", mock.Anything, "event1").Return(types.ContainerJSON{
 		ContainerJSONBase: &types.ContainerJSONBase{
 			ID:    "event1",
@@ -413,7 +413,7 @@ func TestDockerCenterEvents(t *testing.T) {
 	containerLen := len(dockerCenterInstance.containerMap)
 	assert.Equal(t, 1, containerLen)
 
-	mockClient.On("ContainerProcessAlive", mock.Anything).Return(true).Once()
+	containerHelper.On("ContainerProcessAlive", mock.Anything).Return(true).Once()
 	mockClient.On("ContainerInspect", mock.Anything, "event1").Return(types.ContainerJSON{
 		ContainerJSONBase: &types.ContainerJSONBase{
 			ID:    "event1",
@@ -442,13 +442,15 @@ func TestDockerCenterFetchAll(t *testing.T) {
 	mockClient := DockerClientMock{}
 	dockerCenterInstance.client = &mockClient
 
+	containerHelper := ContainerHelperMock{}
+
 	mockContainerListResult := []types.Container{
 		{ID: "id1"},
 		{ID: "id2"},
 		{ID: "id3"},
 	}
 
-	mockClient.On("ContainerProcessAlive", mock.Anything).Return(true)
+	containerHelper.On("ContainerProcessAlive", mock.Anything).Return(true)
 
 	mockClient.On("ContainerList", mock.Anything, mock.Anything).Return(mockContainerListResult, nil).Once()
 
@@ -525,6 +527,8 @@ func TestDockerCenterFetchAllAndOne(t *testing.T) {
 	mockClient := DockerClientMock{}
 	dockerCenterInstance.client = &mockClient
 
+	containerHelper := ContainerHelperMock{}
+
 	mockContainerListResult := []types.Container{
 		{ID: "id1"},
 		{ID: "id2"},
@@ -553,7 +557,7 @@ func TestDockerCenterFetchAllAndOne(t *testing.T) {
 		},
 	}, nil)
 
-	mockClient.On("ContainerProcessAlive", mock.Anything).Return(true).Times(2)
+	containerHelper.On("ContainerProcessAlive", mock.Anything).Return(true).Times(2)
 
 	err := dockerCenterInstance.fetchAll()
 	assert.Nil(t, err)
@@ -561,7 +565,7 @@ func TestDockerCenterFetchAllAndOne(t *testing.T) {
 	dockerCenterInstance.markRemove("id1")
 	dockerCenterInstance.markRemove("id2")
 
-	mockClient.On("ContainerProcessAlive", mock.Anything).Return(false).Times(2)
+	containerHelper.On("ContainerProcessAlive", mock.Anything).Return(false).Times(2)
 	err = dockerCenterInstance.fetchAll()
 	assert.Nil(t, err)
 

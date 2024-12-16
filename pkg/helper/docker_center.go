@@ -17,7 +17,6 @@ package helper
 import (
 	"context"
 	"hash/fnv"
-	"io"
 	"path"
 	"regexp"
 	"runtime"
@@ -28,7 +27,6 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/events"
-	docker "github.com/docker/docker/client"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/util"
@@ -459,6 +457,7 @@ type DockerCenter struct {
 	// sandbox meta would be saved to its bound container.
 	containerMap                   map[string]*DockerInfoDetail // all containers will in this map
 	client                         DockerCenterClientInterface
+	containerHelper                *DockerCenterHelperWrapper
 	lastErrMu                      sync.Mutex
 	lastErr                        error
 	lock                           sync.RWMutex
@@ -476,36 +475,17 @@ type DockerCenterClientInterface interface {
 	ImageInspectWithRaw(ctx context.Context, imageID string) (types.ImageInspect, []byte, error)
 	ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error)
 	Events(ctx context.Context, options types.EventsOptions) (<-chan events.Message, <-chan error)
-	ContainerLogs(ctx context.Context, container string, options types.ContainerLogsOptions) (io.ReadCloser, error)
+}
+
+type DockerCenterHelperInterface interface {
 	ContainerProcessAlive(pid int) bool
 }
 
-type DockerClientWrapper struct {
-	client *docker.Client
+type DockerCenterHelperWrapper struct {
 }
 
-func (r *DockerClientWrapper) ContainerList(ctx context.Context, options types.ContainerListOptions) ([]types.Container, error) {
-	return r.client.ContainerList(ctx, options)
-}
-
-func (r *DockerClientWrapper) ImageInspectWithRaw(ctx context.Context, imageID string) (types.ImageInspect, []byte, error) {
-	return r.client.ImageInspectWithRaw(ctx, imageID)
-}
-
-func (r *DockerClientWrapper) ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error) {
-	return r.client.ContainerInspect(ctx, containerID)
-}
-
-func (r *DockerClientWrapper) Events(ctx context.Context, options types.EventsOptions) (<-chan events.Message, <-chan error) {
-	return r.client.Events(ctx, options)
-}
-
-func (r *DockerClientWrapper) ContainerProcessAlive(pid int) bool {
+func (r *DockerCenterHelperWrapper) ContainerProcessAlive(pid int) bool {
 	return ContainerProcessAlive(pid)
-}
-
-func (r *DockerClientWrapper) ContainerLogs(ctx context.Context, container string, options types.ContainerLogsOptions) (io.ReadCloser, error) {
-	return r.client.ContainerLogs(ctx, container, options)
 }
 
 func getIPByHosts(hostFileName, hostname string) string {
@@ -672,7 +652,9 @@ func getDockerCenterInstance() *DockerCenter {
 		logger.InitLogger()
 		// load EnvTags first
 		LoadEnvTags()
-		dockerCenterInstance = &DockerCenter{}
+		dockerCenterInstance = &DockerCenter{
+			containerHelper: &DockerCenterHelperWrapper{},
+		}
 		dockerCenterInstance.imageCache = make(map[string]string)
 		dockerCenterInstance.containerMap = make(map[string]*DockerInfoDetail)
 		// containerFindingManager works in a producer-consumer model
@@ -1080,7 +1062,7 @@ func (dc *DockerCenter) fetchAll() error {
 			time.Sleep(time.Second * 5)
 		}
 		if err == nil {
-			if !dc.client.ContainerProcessAlive(containerDetail.State.Pid) {
+			if !dc.containerHelper.ContainerProcessAlive(containerDetail.State.Pid) {
 				continue
 			}
 			containerMap[container.ID] = dc.CreateInfoDetail(containerDetail, envConfigPrefix, false)
@@ -1100,7 +1082,7 @@ func (dc *DockerCenter) fetchOne(containerID string, tryFindSandbox bool) error 
 		dc.setLastError(err, "inspect container error "+containerID)
 		return err
 	}
-	if containerDetail.State.Status == ContainerStatusRunning && !ContainerProcessAlive(containerDetail.State.Pid) {
+	if containerDetail.State.Status == ContainerStatusRunning && !dc.containerHelper.ContainerProcessAlive(containerDetail.State.Pid) {
 		containerDetail.State.Status = ContainerStatusExited
 	}
 	// docker 场景下
@@ -1114,7 +1096,7 @@ func (dc *DockerCenter) fetchOne(containerID string, tryFindSandbox bool) error 
 			if err != nil {
 				dc.setLastError(err, "inspect sandbox container error "+id)
 			} else {
-				if containerDetail.State.Status == ContainerStatusRunning && !dc.client.ContainerProcessAlive(containerDetail.State.Pid) {
+				if containerDetail.State.Status == ContainerStatusRunning && !dc.containerHelper.ContainerProcessAlive(containerDetail.State.Pid) {
 					containerDetail.State.Status = ContainerStatusExited
 				}
 				dc.updateContainer(id, dc.CreateInfoDetail(containerDetail, envConfigPrefix, false))
