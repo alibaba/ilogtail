@@ -130,7 +130,6 @@ void EnvManager::InitEnvInfo() {
     LOG_WARNING(sLogger, 
         ("not redhat release, will not start eBPF plugin ...", ""));
     m310Support = false;
-    return;
 }
 
 bool eBPFServer::IsSupportedEnv(nami::PluginType type) {

@@ -671,10 +671,6 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
     }
 
     auto data = static_cast<SLSSenderQueueItem*>(item);
-    std::shared_ptr<Pipeline> pipeline; // preserve self pipeline while this method is executing
-    if (data->mPipeline) {
-        pipeline = data->mPipeline;
-    }
     string configName = HasContext() ? GetContext().GetConfigName() : "";
     bool isProfileData = GetProfileSender()->IsProfileData(mRegion, mProject, data->mLogstore);
     int32_t curTime = time(NULL);

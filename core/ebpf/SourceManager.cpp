@@ -57,10 +57,9 @@ namespace ebpf {
 SourceManager::SourceManager() = default;
 
 SourceManager::~SourceManager() {
-  if (!DynamicLibSuccess()) {
-    LOG_WARNING(sLogger, ("dynamic lib not load, just exit", "need check"));
-    return;
-  }
+    if (!DynamicLibSuccess()) {
+        return;
+    }
 
   for (size_t i = 0; i < mRunning.size(); i++) {
     auto& x = mRunning[i];
@@ -76,7 +75,12 @@ SourceManager::~SourceManager() {
 #endif
 
   // call deinit
-  auto deinit_f = (deinit_func)mFuncs[(int)ebpf_func::EBPF_DEINIT];
+  void* f = mFuncs[(int)ebpf_func::EBPF_DEINIT];
+  if (!f) {
+      return;
+  }
+
+  auto deinit_f = (deinit_func)f;
   deinit_f();
 }
 
