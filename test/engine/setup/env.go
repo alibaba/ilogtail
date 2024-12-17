@@ -58,3 +58,13 @@ func SetAgentPID(ctx context.Context) (context.Context, error) {
 	}
 	return context.WithValue(ctx, config.AgentPIDKey, result), nil
 }
+
+func RunCommandOnSource(ctx context.Context, command string) (context.Context, error) {
+	_, err := Env.ExecOnSource(ctx, command)
+	return ctx, err
+}
+
+func RunCommandOnLoongCollector(ctx context.Context, command string) (context.Context, error) {
+	_, err := Env.ExecOnLoongCollector(command)
+	return ctx, err
+}
