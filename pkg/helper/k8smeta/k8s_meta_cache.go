@@ -142,9 +142,9 @@ func (m *k8sMetaCache) getFactoryInformer() (informers.SharedInformerFactory, ca
 	var factory informers.SharedInformerFactory
 	switch m.resourceType {
 	case POD:
-		factory = informers.NewSharedInformerFactory(m.clientset, time.Hour*24)
+		factory = informers.NewSharedInformerFactory(m.clientset, time.Minute*1)
 	default:
-		factory = informers.NewSharedInformerFactory(m.clientset, time.Hour*1)
+		factory = informers.NewSharedInformerFactory(m.clientset, time.Minute*1)
 	}
 	var informer cache.SharedIndexInformer
 	switch m.resourceType {
@@ -199,18 +199,19 @@ func getIdxRules(resourceType string) []IdxFunc {
 }
 
 func (m *k8sMetaCache) preProcess(obj interface{}) interface{} {
+	obj = m.preProcessCommon(obj)
 	switch m.resourceType {
 	case POD:
 		return m.preProcessPod(obj)
-	default:
-		return m.preProcessCommon(obj)
 	}
+	return obj
 }
 
 func (m *k8sMetaCache) preProcessCommon(obj interface{}) interface{} {
 	runtimeObj, ok := obj.(runtime.Object)
 	if !ok {
 		logger.Error(context.Background(), "K8S_META_PRE_PROCESS_ERROR", "object is not runtime object", obj)
+		return obj
 	}
 	metaObj, err := meta.Accessor(runtimeObj)
 	if err != nil {
@@ -235,9 +236,9 @@ func (m *k8sMetaCache) preProcessCommon(obj interface{}) interface{} {
 }
 
 func (m *k8sMetaCache) preProcessPod(obj interface{}) interface{} {
-	m.preProcessCommon(obj)
 	pod, ok := obj.(*v1.Pod)
 	if !ok {
+		logger.Error(context.Background(), "K8S_META_PRE_PROCESS_ERROR", "object is not pod", obj)
 		return obj
 	}
 	pod.ManagedFields = nil
@@ -291,7 +292,7 @@ func generateHostIPKey(obj interface{}) ([]string, error) {
 	if !ok {
 		return []string{}, fmt.Errorf("object is not a pod")
 	}
-	return []string{pod.Status.HostIP}, nil
+	return []string{"host:" + pod.Status.HostIP}, nil
 }
 
 func generateServiceIPKey(obj interface{}) ([]string, error) {
