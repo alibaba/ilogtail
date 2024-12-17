@@ -1,9 +1,10 @@
 package main
 
 import (
+	"crypto/rand"
 	"flag"
 	"fmt"
-	"math/rand"
+	"math/big"
 	"os"
 	"path/filepath"
 	"strings"
@@ -18,10 +19,8 @@ func main() {
 	flag.Parse()
 
 	for {
-		select {
-		case <-time.After(5 * time.Minute):
-			triggerOneRound(*name)
-		}
+		triggerOneRound(*name)
+		time.Sleep(5 * time.Minute)
 	}
 }
 
@@ -44,9 +43,12 @@ func triggerOneRound(name string) {
 		return
 	}
 	fmt.Printf("found %d files\n", len(files))
-	rand.Seed(time.Now().UnixNano())
-	randomIndex := rand.Intn(len(files))
-	fmt.Printf("run %s\n", files[randomIndex])
+	randomIndex, err := rand.Int(rand.Reader, big.NewInt(int64(len(files))))
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Printf("run %s\n", files[randomIndex.Int64()])
 	fmt.Println("=====================================")
 
 	// run godog
@@ -55,11 +57,11 @@ func triggerOneRound(name string) {
 		ScenarioInitializer: engine.ScenarioInitializer,
 		Options: &godog.Options{
 			Format: "pretty",
-			Paths:  []string{files[randomIndex]},
+			Paths:  []string{files[randomIndex.Int64()]},
 		},
 	}
 	if suite.Run() != 0 {
-		fmt.Printf("run %s failed\n", files[randomIndex])
+		fmt.Printf("run %s failed\n", files[randomIndex.Int64()])
 		return
 	}
 }
