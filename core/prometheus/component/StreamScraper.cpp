@@ -111,7 +111,8 @@ void PromStreamScraper::Reset() {
     mScrapeSamplesScraped = 0;
 }
 
-void PromStreamScraper::SetAutoMetricMeta(double scrapeDurationSeconds, bool upState) {
+void PromStreamScraper::SetAutoMetricMeta(double scrapeDurationSeconds, bool upState, const string& scrapeState) {
+    mEventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_STATE, scrapeState);
     mEventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_TIMESTAMP_MILLISEC,
                             ToString(mScrapeTimestampMilliSec));
     mEventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SAMPLES_SCRAPED, ToString(mScrapeSamplesScraped));

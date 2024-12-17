@@ -21,7 +21,7 @@ public:
     void FlushCache();
     void SendMetrics();
     void Reset();
-    void SetAutoMetricMeta(double scrapeDurationSeconds, bool upState);
+    void SetAutoMetricMeta(double scrapeDurationSeconds, bool upState, const std::string& scrapeState);
 
     void SetScrapeTime(std::chrono::system_clock::time_point scrapeTime);
 
