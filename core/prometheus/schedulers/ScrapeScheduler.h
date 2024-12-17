@@ -68,6 +68,13 @@ private:
 
     // pipeline
     QueueKey mQueueKey;
+    size_t mInputIndex;
+
+    // auto metrics
+    uint64_t mScrapeTimestampMilliSec = 0;
+    double mScrapeDurationSeconds = 0;
+    uint64_t mScrapeResponseSizeBytes = 0;
+    bool mUpState = true;
 
     // self monitor
     std::shared_ptr<PromSelfMonitorUnsafe> mSelfMonitor;

@@ -28,6 +28,7 @@
 #include "pipeline/queue/ProcessQueueManager.h"
 #include "pipeline/queue/QueueKey.h"
 #include "prometheus/Constants.h"
+#include "prometheus/Utils.h"
 #include "prometheus/async/PromFuture.h"
 #include "prometheus/async/PromHttpRequest.h"
 #include "prometheus/component/StreamScraper.h"
@@ -69,22 +70,31 @@ void ScrapeScheduler::OnMetricResult(HttpResponse& response, uint64_t) {
     mSelfMonitor->AddCounter(METRIC_PLUGIN_OUT_SIZE_BYTES, response.GetStatusCode(), mPromStreamScraper.mRawSize);
     mSelfMonitor->AddCounter(METRIC_PLUGIN_PROM_SCRAPE_TIME_MS, response.GetStatusCode(), scrapeDurationMilliSeconds);
 
+    const auto& networkStatus = response.GetNetworkStatus();
+    string scrapeState;
+    if (networkStatus.mCode != NetworkCode::Ok) {
+        // not 0 means curl error
+        scrapeState = prom::NetworkCodeToState(networkStatus.mCode);
+    } else if (response.GetStatusCode() != 200) {
+        scrapeState = prom::HttpCodeToState(response.GetStatusCode());
+    } else {
+        // 0 means success
+        scrapeState = prom::NetworkCodeToState(NetworkCode::Ok);
+    }
 
+    mScrapeDurationSeconds = scrapeDurationMilliSeconds * sRate;
+    mUpState = response.GetStatusCode() == 200;
     if (response.GetStatusCode() != 200) {
-        string headerStr;
-        for (const auto& [k, v] : mScrapeConfigPtr->mRequestHeaders) {
-            headerStr.append(k).append(":").append(v).append(";");
-        }
-        LOG_WARNING(
-            sLogger,
-            ("scrape failed, status code", response.GetStatusCode())("target", mHash)("http header", headerStr));
+        LOG_WARNING(sLogger,
+                    ("scrape failed, status code",
+                     response.GetStatusCode())("target", mHash)("curl msg", response.GetNetworkStatus().mMessage));
     }
 
     auto mScrapeDurationSeconds = scrapeDurationMilliSeconds * sRate;
     auto mUpState = response.GetStatusCode() == 200;
     mPromStreamScraper.mStreamIndex++;
     mPromStreamScraper.FlushCache();
-    mPromStreamScraper.SetAutoMetricMeta(mScrapeDurationSeconds, mUpState);
+    mPromStreamScraper.SetAutoMetricMeta(mScrapeDurationSeconds, mUpState, scrapeState);
     mPromStreamScraper.SendMetrics();
     mPromStreamScraper.Reset();
 
@@ -194,11 +204,10 @@ void ScrapeScheduler::InitSelfMonitor(const MetricLabels& defaultLabels) {
     MetricLabels labels = defaultLabels;
     labels.emplace_back(METRIC_LABEL_KEY_INSTANCE, mInstance);
 
-    static const std::unordered_map<std::string, MetricType> sScrapeMetricKeys = {
-        {METRIC_PLUGIN_OUT_EVENTS_TOTAL, MetricType::METRIC_TYPE_COUNTER},
-        {METRIC_PLUGIN_OUT_SIZE_BYTES, MetricType::METRIC_TYPE_COUNTER},
-        {METRIC_PLUGIN_PROM_SCRAPE_TIME_MS, MetricType::METRIC_TYPE_COUNTER},
-    };
+    static const std::unordered_map<std::string, MetricType> sScrapeMetricKeys
+        = {{METRIC_PLUGIN_OUT_EVENTS_TOTAL, MetricType::METRIC_TYPE_COUNTER},
+           {METRIC_PLUGIN_OUT_SIZE_BYTES, MetricType::METRIC_TYPE_COUNTER},
+           {METRIC_PLUGIN_PROM_SCRAPE_TIME_MS, MetricType::METRIC_TYPE_COUNTER}};
 
     mSelfMonitor->InitMetricManager(sScrapeMetricKeys, labels);
 

@@ -27,7 +27,9 @@
 #include "prometheus/Constants.h"
 
 using namespace std;
+
 DECLARE_FLAG_STRING(_pod_name_);
+
 namespace logtail {
 
 const string ProcessorPromRelabelMetricNative::sName = "processor_prom_relabel_metric_native";
@@ -206,6 +208,13 @@ void ProcessorPromRelabelMetricNative::AddAutoMetrics(PipelineEventGroup& eGroup
 
     // up metric must be the last one
     AddMetric(eGroup, prometheus::UP, 1.0 * autoMetric.mUp, timestamp, nanoSec, targetTags);
+
+    if (eGroup.HasMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_STATE)) {
+        auto scrapeState = eGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_STATE);
+        AddMetric(eGroup, prometheus::SCRAPE_STATE, 1.0 * autoMetric.mUp, timestamp, nanoSec, targetTags);
+        auto& last = eGroup.MutableEvents()[eGroup.GetEvents().size() - 1];
+        last.Cast<MetricEvent>().SetTag(METRIC_LABEL_KEY_STATUS, scrapeState);
+    }
 }
 
 void ProcessorPromRelabelMetricNative::AddMetric(PipelineEventGroup& metricGroup,
