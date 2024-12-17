@@ -2,9 +2,11 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "Labels.h"
 #include "models/PipelineEventGroup.h"
+#include "pipeline/queue/ProcessQueueItem.h"
 #include "pipeline/queue/QueueKey.h"
 
 
@@ -49,6 +51,8 @@ private:
 
     // auto metrics
     uint64_t mScrapeTimestampMilliSec = 0;
-
+#ifdef APSARA_UNIT_TEST_MAIN
+    mutable std::vector<std::unique_ptr<ProcessQueueItem>> mItem;
+#endif
 };
 } // namespace logtail::prom

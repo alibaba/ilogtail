@@ -33,6 +33,7 @@ namespace prom {
         // uint64_t mPostRelabel;
         uint64_t mScrapeSamplesScraped;
         uint64_t mScrapeTimeoutSeconds;
+        std::string mScrapeState;
         bool mUp;
     };
 } // namespace prom

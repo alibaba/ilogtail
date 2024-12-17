@@ -80,7 +80,7 @@ void PromStreamScraper::SetTargetLabels(PipelineEventGroup& eGroup) const {
 void PromStreamScraper::PushEventGroup(PipelineEventGroup&& eGroup) const {
     auto item = make_unique<ProcessQueueItem>(std::move(eGroup), mInputIndex);
 #ifdef APSARA_UNIT_TEST_MAIN
-    mItem.push_back(std::move(item));
+    mItem.emplace_back(std::move(item));
     return;
 #endif
     while (true) {
