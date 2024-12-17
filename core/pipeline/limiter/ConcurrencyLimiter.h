@@ -54,8 +54,14 @@ public:
     void PostPop();
     void OnSendDone();
 
-    void OnSuccess();
-    void OnFail();
+    void Increase();
+    void Decrease(FallbackMode fallbackMode);
+
+    void OnSuccess(std::chrono::system_clock::time_point time);
+    void OnFail(std::chrono::system_clock::time_point time);
+
+
+    void AdjustConcurrency(bool success, std::chrono::system_clock::time_point time);
 
     static std::string GetLimiterMetricName(const std::string& limiter) {
         if (limiter == "region") {
@@ -99,6 +105,14 @@ private:
     double mConcurrencyDownRatio = 0.0;
 
     std::chrono::system_clock::time_point mLastCheckTime;
+
+
+
+    mutable std::mutex mStatisticsMux;
+    std::chrono::system_clock::time_point mLastStatisticsTime;
+    uint32_t mStatisticsTotal;
+    uint32_t mStatisticsFailTotal;
+
 };
 
 } // namespace logtail

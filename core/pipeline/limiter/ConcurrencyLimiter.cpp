@@ -69,7 +69,17 @@ void ConcurrencyLimiter::OnSendDone() {
     --mInSendingCnt;
 }
 
-void ConcurrencyLimiter::OnSuccess() {
+void ConcurrencyLimiter::OnSuccess(std::chrono::system_clock::time_point time) {
+    AdjustConcurrency(true, time);
+}
+
+void ConcurrencyLimiter::OnFail(std::chrono::system_clock::time_point time) {
+    AdjustConcurrency(false, time);
+}
+
+
+
+void ConcurrencyLimiter::Increase() {
     lock_guard<mutex> lock(mLimiterMux);
     if (mCurrenctConcurrency <= 0) {
         mRetryIntervalSecs = mMinRetryIntervalSecs;
@@ -90,10 +100,9 @@ void ConcurrencyLimiter::OnSuccess() {
     }
 }
 
-
-void ConcurrencyLimiter::OnFail() {
+void ConcurrencyLimiter::Decrease(FallbackMode fallbackMode) {
     lock_guard<mutex> lock(mLimiterMux);
-    switch (mFallbackMode) {
+    switch (fallbackMode) {
         case (Fast):
             if (mCurrenctConcurrency != 0) {
                 auto old = mCurrenctConcurrency;
@@ -108,7 +117,6 @@ void ConcurrencyLimiter::OnFail() {
                             ("increase send retry interval, type",
                             mDescription)("from", ToString(old) + "s")("to", ToString(mRetryIntervalSecs) + "s"));
                 }
-                
             }
             break;
         case (Slow):
@@ -121,7 +129,44 @@ void ConcurrencyLimiter::OnFail() {
             }
             break;
     }
-    
 }
+
+
+
+
+void ConcurrencyLimiter::AdjustConcurrency(bool success, std::chrono::system_clock::time_point time) {
+    lock_guard<mutex> lock(mStatisticsMux);
+    mStatisticsTotal ++;
+    if (!success) {
+        mStatisticsFailTotal ++;
+    }
+    if (mLastStatisticsTime == std::chrono::system_clock::time_point()) {
+        mLastStatisticsTime = time;
+    }
+    // 等10次，或者最大等10s，开始进行统计
+    if (mStatisticsTotal == 10 || chrono::duration_cast<chrono::seconds>(time - mLastStatisticsTime).count() > 10) {
+        uint32_t failPercentage = mStatisticsFailTotal*100/mStatisticsTotal;
+        mStatisticsTotal = 0;
+        mStatisticsFailTotal = 0;
+        mLastStatisticsTime = time;
+        if (failPercentage > 90) {
+            // 不调整
+            LOG_INFO(sLogger, ("failPercentage > 90, no adjust", ""));
+        } else if (failPercentage > 70) {
+            // 慢回退
+            LOG_INFO(sLogger, ("failPercentage > 70, adjust slow", ""));
+            Decrease(Slow);
+        } else if (failPercentage > 0) {
+            // 快速回退
+            LOG_INFO(sLogger, ("failPercentage > 0, adjust fast", ""));
+            Decrease(Fast);
+        } else {
+            // 成功
+            LOG_INFO(sLogger, ("success, Increase", ""));
+            Increase();
+        }
+    }
+}
+
 
 } // namespace logtail
