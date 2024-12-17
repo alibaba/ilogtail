@@ -76,7 +76,7 @@ bool TextParser::ParseLine(StringView line, MetricEvent& metricEvent) {
 
 std::optional<size_t> TextParser::FindFirstLetter(const char* s, size_t len, char target) {
     size_t res = 0;
-#if defined(__ENABLE_SSE4_2__)
+#if !defined(__EXCLUDE_SSE4_2__)
     __m128i targetVec = _mm_set1_epi8(target);
 
     while (res + 16 < len) {
@@ -106,7 +106,7 @@ std::optional<size_t> TextParser::FindFirstLetter(const char* s, size_t len, cha
 std::optional<size_t> TextParser::FindFirstWhiteSpace(const char* s, size_t len) {
     size_t res = 0;
 
-#if defined(__ENABLE_SSE4_2__)
+#if !defined(__EXCLUDE_SSE4_2__)
     static __m128i sTargetVec1 = _mm_set1_epi8(' ');
     static __m128i sTargetVec2 = _mm_set1_epi8('\t');
 
@@ -142,7 +142,7 @@ std::optional<size_t> TextParser::FindFirstWhiteSpace(const char* s, size_t len)
 std::optional<size_t> TextParser::FindWhiteSpaceAndExemplar(const char* s, size_t len) {
     size_t res = 0;
 
-#if defined(__ENABLE_SSE4_2__)
+#if !defined(__EXCLUDE_SSE4_2__)
     static __m128i sTargetVec1 = _mm_set1_epi8(' ');
     static __m128i sTargetVec2 = _mm_set1_epi8('\t');
     static __m128i sTargetVec3 = _mm_set1_epi8('#');
