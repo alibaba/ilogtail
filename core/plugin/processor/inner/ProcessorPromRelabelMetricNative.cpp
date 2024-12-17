@@ -47,13 +47,13 @@ bool ProcessorPromRelabelMetricNative::Init(const Json::Value& config) {
     return true;
 }
 
-void ProcessorPromRelabelMetricNative::Process(PipelineEventGroup& eGroup) {
+void ProcessorPromRelabelMetricNative::Process(PipelineEventGroup& metricGroup) {
     // if mMetricRelabelConfigs is empty and honor_labels is true, skip it
-    auto targetTags = eGroup.GetTags();
+    auto targetTags = metricGroup.GetTags();
     auto toDelete = GetToDeleteTargetLabels(targetTags);
 
     if (!mScrapeConfigPtr->mMetricRelabelConfigs.Empty() || !targetTags.empty()) {
-        EventsContainer& events = eGroup.MutableEvents();
+        EventsContainer& events = metricGroup.MutableEvents();
         size_t wIdx = 0;
         for (size_t rIdx = 0; rIdx < events.size(); ++rIdx) {
             if (ProcessEvent(events[rIdx], targetTags, toDelete)) {
@@ -68,19 +68,19 @@ void ProcessorPromRelabelMetricNative::Process(PipelineEventGroup& eGroup) {
 
     // delete mTags when key starts with __
     for (const auto& k : toDelete) {
-        eGroup.DelTag(k);
+        metricGroup.DelTag(k);
     }
 
-    if (eGroup.HasMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_TOTAL)) {
+    if (metricGroup.HasMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_TOTAL)) {
         auto autoMetric = prom::AutoMetric();
-        UpdateAutoMetrics(eGroup, autoMetric);
-        AddAutoMetrics(eGroup, autoMetric);
+        UpdateAutoMetrics(metricGroup, autoMetric);
+        AddAutoMetrics(metricGroup, autoMetric);
     }
 
 
     // delete all tags
     for (const auto& [k, v] : targetTags) {
-        eGroup.DelTag(k);
+        metricGroup.DelTag(k);
     }
 }
 

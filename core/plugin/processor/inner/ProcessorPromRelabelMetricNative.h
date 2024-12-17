@@ -23,8 +23,6 @@
 #include "pipeline/plugin/interface/Processor.h"
 #include "prometheus/schedulers/ScrapeConfig.h"
 
-DECLARE_FLAG_INT32(process_thread_count);
-
 namespace logtail {
 
 namespace prom {
@@ -45,7 +43,7 @@ public:
 
     const std::string& Name() const override { return sName; }
     bool Init(const Json::Value& config) override;
-    void Process(PipelineEventGroup&) override;
+    void Process(PipelineEventGroup& metricGroup) override;
 
 protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
