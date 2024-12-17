@@ -20,14 +20,14 @@ DEFINE_FLAG_BOOL(enable_prom_stream_scrape, "enable prom stream scrape", true);
 using namespace std;
 
 namespace logtail::prom {
-size_t PromStreamScraper::MetricWriteCallback(char* buffer, size_t size, size_t nmemb, void* data) {
+size_t StreamScraper::MetricWriteCallback(char* buffer, size_t size, size_t nmemb, void* data) {
     uint64_t sizes = size * nmemb;
 
     if (buffer == nullptr || data == nullptr) {
         return 0;
     }
 
-    auto* body = static_cast<PromStreamScraper*>(data);
+    auto* body = static_cast<StreamScraper*>(data);
 
     size_t begin = 0;
     for (size_t end = begin; end < sizes; ++end) {
@@ -57,7 +57,7 @@ size_t PromStreamScraper::MetricWriteCallback(char* buffer, size_t size, size_t 
     return sizes;
 }
 
-void PromStreamScraper::AddEvent(const char* line, size_t len) {
+void StreamScraper::AddEvent(const char* line, size_t len) {
     if (IsValidMetric(StringView(line, len))) {
         auto* e = mEventGroup.AddRawEvent(true, mEventPool);
         auto sb = mEventGroup.GetSourceBuffer()->CopyString(line, len);
@@ -66,18 +66,18 @@ void PromStreamScraper::AddEvent(const char* line, size_t len) {
     }
 }
 
-void PromStreamScraper::FlushCache() {
+void StreamScraper::FlushCache() {
     if (!mCache.empty()) {
         AddEvent(mCache.data(), mCache.size());
         mCache.clear();
     }
 }
 
-void PromStreamScraper::SetTargetLabels(PipelineEventGroup& eGroup) const {
+void StreamScraper::SetTargetLabels(PipelineEventGroup& eGroup) const {
     mTargetLabels.Range([&eGroup](const std::string& key, const std::string& value) { eGroup.SetTag(key, value); });
 }
 
-void PromStreamScraper::PushEventGroup(PipelineEventGroup&& eGroup) const {
+void StreamScraper::PushEventGroup(PipelineEventGroup&& eGroup) const {
     auto item = make_unique<ProcessQueueItem>(std::move(eGroup), mInputIndex);
 #ifdef APSARA_UNIT_TEST_MAIN
     mItem.emplace_back(std::move(item));
@@ -91,7 +91,7 @@ void PromStreamScraper::PushEventGroup(PipelineEventGroup&& eGroup) const {
     }
 }
 
-void PromStreamScraper::SendMetrics() {
+void StreamScraper::SendMetrics() {
     mEventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_TIMESTAMP_MILLISEC,
                             ToString(mScrapeTimestampMilliSec));
     mEventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_ID, GetId() + ToString(mScrapeTimestampMilliSec));
@@ -102,7 +102,7 @@ void PromStreamScraper::SendMetrics() {
     mCurrStreamSize = 0;
 }
 
-void PromStreamScraper::Reset() {
+void StreamScraper::Reset() {
     mEventGroup = PipelineEventGroup(std::make_shared<SourceBuffer>());
     mRawSize = 0;
     mCurrStreamSize = 0;
@@ -111,7 +111,7 @@ void PromStreamScraper::Reset() {
     mScrapeSamplesScraped = 0;
 }
 
-void PromStreamScraper::SetAutoMetricMeta(double scrapeDurationSeconds, bool upState, const string& scrapeState) {
+void StreamScraper::SetAutoMetricMeta(double scrapeDurationSeconds, bool upState, const string& scrapeState) {
     mEventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_STATE, scrapeState);
     mEventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_TIMESTAMP_MILLISEC,
                             ToString(mScrapeTimestampMilliSec));
@@ -122,10 +122,10 @@ void PromStreamScraper::SetAutoMetricMeta(double scrapeDurationSeconds, bool upS
     mEventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_ID, GetId() + ToString(mScrapeTimestampMilliSec));
     mEventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_STREAM_TOTAL, ToString(mStreamIndex));
 }
-std::string PromStreamScraper::GetId() {
+std::string StreamScraper::GetId() {
     return mHash;
 }
-void PromStreamScraper::SetScrapeTime(std::chrono::system_clock::time_point scrapeTime) {
+void StreamScraper::SetScrapeTime(std::chrono::system_clock::time_point scrapeTime) {
     mScrapeTimestampMilliSec
         = std::chrono::duration_cast<std::chrono::milliseconds>(scrapeTime.time_since_epoch()).count();
 }

@@ -177,7 +177,7 @@ std::unique_ptr<TimerEvent> ScrapeScheduler::BuildScrapeTimerEvent(std::chrono::
         mScrapeConfigPtr->mRequestHeaders,
         "",
         HttpResponse(
-            &mPromStreamScraper, [](void*) {}, prom::PromStreamScraper::MetricWriteCallback),
+            &mPromStreamScraper, [](void*) {}, prom::StreamScraper::MetricWriteCallback),
         mScrapeConfigPtr->mScrapeTimeoutSeconds,
         retry,
         this->mFuture,

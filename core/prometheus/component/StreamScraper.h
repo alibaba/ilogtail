@@ -2,18 +2,21 @@
 
 #include <memory>
 #include <string>
-#include <vector>
 
 #include "Labels.h"
 #include "models/PipelineEventGroup.h"
-#include "pipeline/queue/ProcessQueueItem.h"
 #include "pipeline/queue/QueueKey.h"
 
+#ifdef APSARA_UNIT_TEST_MAIN
+#include <vector>
+
+#include "pipeline/queue/ProcessQueueItem.h"
+#endif
 
 namespace logtail::prom {
-class PromStreamScraper {
+class StreamScraper {
 public:
-    PromStreamScraper(Labels labels, QueueKey queueKey, size_t inputIndex)
+    StreamScraper(Labels labels, QueueKey queueKey, size_t inputIndex)
         : mEventGroup(PipelineEventGroup(std::make_shared<SourceBuffer>())),
           mQueueKey(queueKey),
           mInputIndex(inputIndex),
@@ -54,6 +57,7 @@ private:
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorParsePrometheusMetricUnittest;
     friend class ScrapeSchedulerUnittest;
+    friend class StreamScraperUnittest;
     mutable std::vector<std::shared_ptr<ProcessQueueItem>> mItem;
 #endif
 };

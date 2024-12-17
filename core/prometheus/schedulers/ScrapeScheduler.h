@@ -58,7 +58,7 @@ public:
 private:
     std::unique_ptr<TimerEvent> BuildScrapeTimerEvent(std::chrono::steady_clock::time_point execTime);
 
-    prom::PromStreamScraper mPromStreamScraper;
+    prom::StreamScraper mPromStreamScraper;
 
     std::shared_ptr<ScrapeConfig> mScrapeConfigPtr;
     std::string mHash;
