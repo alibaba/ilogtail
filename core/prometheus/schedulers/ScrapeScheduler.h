@@ -68,7 +68,6 @@ private:
 
     // pipeline
     QueueKey mQueueKey;
-    size_t mInputIndex;
 
     // auto metrics
     uint64_t mScrapeTimestampMilliSec = 0;
@@ -84,7 +83,6 @@ private:
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorParsePrometheusMetricUnittest;
     friend class ScrapeSchedulerUnittest;
-    std::vector<std::shared_ptr<ProcessQueueItem>> mItem;
 #endif
 };
 

@@ -52,7 +52,9 @@ private:
     // auto metrics
     uint64_t mScrapeTimestampMilliSec = 0;
 #ifdef APSARA_UNIT_TEST_MAIN
-    mutable std::vector<std::unique_ptr<ProcessQueueItem>> mItem;
+    friend class ProcessorParsePrometheusMetricUnittest;
+    friend class ScrapeSchedulerUnittest;
+    mutable std::vector<std::shared_ptr<ProcessQueueItem>> mItem;
 #endif
 };
 } // namespace logtail::prom
