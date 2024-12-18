@@ -20,6 +20,7 @@
 
 #include "common/JsonUtil.h"
 #include "config/PipelineConfig.h"
+#include "file_server/FileServer.h"
 #include "file_server/event_handler/LogInput.h"
 #include "pipeline/plugin/PluginRegistry.h"
 #include "unittest/Unittest.h"
@@ -31,12 +32,15 @@ namespace logtail {
 
 class PipelineUpdateUnittest : public testing::Test {
 public:
-    void TestRunner() const;
+    void TestFileServerStart() const;
 
 protected:
     static void SetUpTestCase() { PluginRegistry::GetInstance()->LoadPlugins(); }
 
-    static void TearDownTestCase() { PluginRegistry::GetInstance()->UnloadPlugins(); }
+    static void TearDownTestCase() {
+        PluginRegistry::GetInstance()->UnloadPlugins();
+        FileServer::GetInstance()->Stop();
+    }
 
     void SetUp() override {}
 
@@ -88,29 +92,26 @@ private:
         })";
 };
 
-void PipelineUpdateUnittest::TestRunner() const {
-    { // input_file
-        Json::Value nativePipelineConfigJson
-            = GeneratePipelineConfigJson(nativeInputConfig, nativeProcessorConfig, nativeFlusherConfig);
-        Json::Value goPipelineConfigJson
-            = GeneratePipelineConfigJson(goInputConfig, goProcessorConfig, goFlusherConfig);
-        auto pipelineManager = PipelineManagerMock::GetInstance();
-        PipelineConfigDiff diff;
-        PipelineConfig nativePipelineConfigObj
-            = PipelineConfig("test1", make_unique<Json::Value>(nativePipelineConfigJson));
-        nativePipelineConfigObj.Parse();
-        diff.mAdded.push_back(std::move(nativePipelineConfigObj));
-        PipelineConfig goPipelineConfigObj = PipelineConfig("test2", make_unique<Json::Value>(goPipelineConfigJson));
-        goPipelineConfigObj.Parse();
-        diff.mAdded.push_back(std::move(goPipelineConfigObj));
+void PipelineUpdateUnittest::TestFileServerStart() const {
+    Json::Value nativePipelineConfigJson
+        = GeneratePipelineConfigJson(nativeInputConfig, nativeProcessorConfig, nativeFlusherConfig);
+    Json::Value goPipelineConfigJson = GeneratePipelineConfigJson(goInputConfig, goProcessorConfig, goFlusherConfig);
+    auto pipelineManager = PipelineManagerMock::GetInstance();
+    PipelineConfigDiff diff;
+    PipelineConfig nativePipelineConfigObj
+        = PipelineConfig("test1", make_unique<Json::Value>(nativePipelineConfigJson));
+    nativePipelineConfigObj.Parse();
+    diff.mAdded.push_back(std::move(nativePipelineConfigObj));
+    PipelineConfig goPipelineConfigObj = PipelineConfig("test2", make_unique<Json::Value>(goPipelineConfigJson));
+    goPipelineConfigObj.Parse();
+    diff.mAdded.push_back(std::move(goPipelineConfigObj));
 
-        pipelineManager->UpdatePipelines(diff);
-        APSARA_TEST_EQUAL_FATAL(2U, pipelineManager->GetAllPipelines().size());
-        APSARA_TEST_EQUAL_FATAL(false, LogInput::GetInstance()->mInteruptFlag);
-    }
+    pipelineManager->UpdatePipelines(diff);
+    APSARA_TEST_EQUAL_FATAL(2U, pipelineManager->GetAllPipelines().size());
+    APSARA_TEST_EQUAL_FATAL(false, LogInput::GetInstance()->mInteruptFlag);
 }
 
-UNIT_TEST_CASE(PipelineUpdateUnittest, TestRunner)
+UNIT_TEST_CASE(PipelineUpdateUnittest, TestFileServerStart)
 
 } // namespace logtail
 
