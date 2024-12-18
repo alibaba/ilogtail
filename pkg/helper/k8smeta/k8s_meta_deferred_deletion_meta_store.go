@@ -69,7 +69,15 @@ func (m *DeferredDeletionMetaStore) Get(key []string) map[string][]*ObjectWrappe
 			continue
 		}
 		for _, realKey := range realKeys {
-			result[k] = append(result[k], m.Items[realKey])
+			if obj, ok := m.Items[realKey]; ok {
+				if obj.Raw != nil {
+					result[k] = append(result[k], obj)
+				} else {
+					logger.Error(context.Background(), "K8S_META_HANDLE_ALARM", "raw object not found", realKey)
+				}
+			} else {
+				logger.Error(context.Background(), "K8S_META_HANDLE_ALARM", "key not found", realKey)
+			}
 		}
 	}
 	return result
