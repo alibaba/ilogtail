@@ -143,6 +143,12 @@ void ProcessorRunner::Run(uint32_t threadNo) {
         // if the pipeline is updated, the pointer will be released, so we need to update it to the new pipeline
         if (hasOldPipeline) {
             pipeline = PipelineManager::GetInstance()->FindConfigByName(configName);
+            if (!pipeline) {
+                LOG_INFO(sLogger,
+                         ("pipeline not found during processing, perhaps due to config deletion",
+                          "discard data")("config", configName));
+                continue;
+            }
         }
 
         if (pipeline->IsFlushingThroughGoPipeline()) {
