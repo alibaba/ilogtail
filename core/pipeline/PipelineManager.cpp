@@ -48,20 +48,20 @@ PipelineManager::PipelineManager()
 static shared_ptr<Pipeline> sEmptyPipeline;
 
 void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
-#ifndef APSARA_UNIT_TEST_MAIN
     // 过渡使用
     static bool isFileServerStarted = false;
     bool isFileServerInputChanged = CheckIfFileServerUpdated(diff);
 
+#ifndef APSARA_UNIT_TEST_MAIN
 #if defined(__ENTERPRISE__) && defined(__linux__) && !defined(__ANDROID__)
     if (AppConfig::GetInstance()->ShennongSocketEnabled()) {
         ShennongManager::GetInstance()->Pause();
     }
 #endif
+#endif
     if (isFileServerStarted && isFileServerInputChanged) {
         FileServer::GetInstance()->Pause();
     }
-#endif
 
     for (const auto& name : diff.mRemoved) {
         auto iter = mPipelineNameEntityMap.find(name);
@@ -125,7 +125,6 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
                                                                                      ConfigFeedbackStatus::APPLIED);
     }
 
-#ifndef APSARA_UNIT_TEST_MAIN
     // 在Flusher改造完成前，先不执行如下步骤，不会造成太大影响
     // Sender::CleanUnusedAk();
 
@@ -138,6 +137,7 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
         }
     }
 
+#ifndef APSARA_UNIT_TEST_MAIN
 #if defined(__ENTERPRISE__) && defined(__linux__) && !defined(__ANDROID__)
     if (AppConfig::GetInstance()->ShennongSocketEnabled()) {
         ShennongManager::GetInstance()->Resume();
