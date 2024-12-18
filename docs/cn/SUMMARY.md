@@ -117,7 +117,7 @@
     * [ClickHouse](plugins/flusher/extended/flusher-clickhouse.md)
     * [ElasticSearch](plugins/flusher/extended/flusher-elasticsearch.md)
     * [HTTP](plugins/flusher/extended/flusher-http.md)
-    * [kafkaV2](plugins/flusher/extended/flusher-kafka-v2.md)
+    * [KafkaV2](plugins/flusher/extended/flusher-kafka-v2.md)
     * [Kafka（Deprecated）](plugins/flusher/extended/flusher-kafka.md)
     * [OTLP日志](plugins/flusher/extended/flusher-otlp.md)
     * [Prometheus](plugins/flusher/extended/flusher-prometheus.md)
