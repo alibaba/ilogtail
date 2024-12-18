@@ -283,7 +283,8 @@ func (m *DeferredDeletionMetaStore) handleDeferredDeleteEvent(event *K8sMetaEven
 			for _, idxKey := range idxKeys {
 				for i, k := range m.Index[idxKey] {
 					if k == key {
-						m.Index[idxKey] = append(m.Index[idxKey][:i], m.Index[idxKey][i+1:]...)
+						copy(m.Index[idxKey][i:], m.Index[idxKey][i+1:])
+						m.Index[idxKey] = m.Index[idxKey][:len(m.Index[idxKey])-1]
 						break
 					}
 				}
