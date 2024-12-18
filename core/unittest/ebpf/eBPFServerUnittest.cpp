@@ -596,14 +596,16 @@ void eBPFServerUnittest::TestEnableNetworkPlugin() {
     std::string errorMsg;
     Json::Value configJson, optionalGoPipeline;
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    
+    std::cout << "1" << std::endl;
     nami::ObserverNetworkOption network_option;
     bool res = ebpf::InitObserverNetworkOption(configJson, network_option, &ctx, "test");
     EXPECT_TRUE(res);
+    std::cout << "2" << std::endl;
     // observer_options.Init(ObserverType::NETWORK, configJson, &ctx, "test");
     std::shared_ptr<InputNetworkObserver> input(new InputNetworkObserver());
     input->SetContext(ctx);
     input->SetMetricsRecordRef("test", "1");    
+    std::cout << "3" << std::endl;
     auto initStatus = input->Init(configJson, optionalGoPipeline);
     EXPECT_TRUE(initStatus);
     res = ebpf::eBPFServer::GetInstance()->EnablePlugin(
@@ -611,7 +613,7 @@ void eBPFServerUnittest::TestEnableNetworkPlugin() {
         nami::PluginType::NETWORK_OBSERVE,
         &ctx,
         &network_option, input->mPluginMgr);
-
+    std::cout << "4" << std::endl;
     EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mMonitorMgr->mInited[int(nami::PluginType::NETWORK_OBSERVE)], true);
     auto& mgr = ebpf::eBPFServer::GetInstance()->mMonitorMgr->mSelfMonitors[int(nami::PluginType::NETWORK_OBSERVE)];
     auto mgrPtr = mgr.get();

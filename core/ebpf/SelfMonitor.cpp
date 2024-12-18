@@ -164,6 +164,9 @@ void NetworkObserverSelfMonitor::HandleStatistic(nami::eBPFStatistics& stats) {
     // recv kernel events metric
     assert(stats.plugin_type_ == nami::PluginType::NETWORK_OBSERVE);
     nami::NetworkObserverStatistics* currNetworkStatsPtr = static_cast<nami::NetworkObserverStatistics*>(&stats);
+    if (currNetworkStatsPtr == nullptr) {
+        return;
+    }
 
     mRecvConnStatsTotal->Add(currNetworkStatsPtr->recv_conn_stat_events_total_);
     mRecvCtrlEventsTotal->Add(currNetworkStatsPtr->recv_ctrl_events_total_);

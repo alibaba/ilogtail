@@ -83,6 +83,28 @@ bool InitObserverNetworkOptionInner(const Json::Value& probeConfig,
                              mContext->GetLogstoreName(),
                              mContext->GetRegion());
     }
+    // EnableMetric (Optional)
+    if (!GetOptionalBoolParam(probeConfig, "EnableCidFilter", thisObserverNetworkOption.mEnableCidFilter, errorMsg)) {
+        PARAM_WARNING_IGNORE(mContext->GetLogger(),
+                             mContext->GetAlarm(),
+                             errorMsg,
+                             sName,
+                             mContext->GetConfigName(),
+                             mContext->GetProjectName(),
+                             mContext->GetLogstoreName(),
+                             mContext->GetRegion());
+    }
+    // EnableMetric (Optional)
+    if (!GetOptionalListParam<std::string>(probeConfig, "EnableCids", thisObserverNetworkOption.mEnableCids, errorMsg)) {
+        PARAM_WARNING_IGNORE(mContext->GetLogger(),
+                             mContext->GetAlarm(),
+                             errorMsg,
+                             sName,
+                             mContext->GetConfigName(),
+                             mContext->GetProjectName(),
+                             mContext->GetLogstoreName(),
+                             mContext->GetRegion());
+    }
     // MeterHandlerType (Optional)
     if (!GetOptionalStringParam(probeConfig, "MeterHandlerType", thisObserverNetworkOption.mMeterHandlerType, errorMsg)) {
         PARAM_WARNING_IGNORE(mContext->GetLogger(),
