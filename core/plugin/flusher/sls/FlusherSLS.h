@@ -48,6 +48,7 @@ public:
     static std::shared_ptr<ConcurrencyLimiter> GetRegionConcurrencyLimiter(const std::string& region);
     static void ClearInvalidConcurrencyLimiters();
 
+    static void InitResource();
     static void RecycleResourceIfNotUsed();
 
     static std::string GetDefaultRegion();
@@ -90,8 +91,6 @@ public:
     std::unique_ptr<Compressor> mCompressor;
 
 private:
-    static void InitResource();
-
     static void IncreaseProjectRegionReferenceCnt(const std::string& project, const std::string& region);
     static void DecreaseProjectRegionReferenceCnt(const std::string& project, const std::string& region);
 

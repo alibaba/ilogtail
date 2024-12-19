@@ -550,7 +550,6 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
 
 bool FlusherSLS::Start() {
     Flusher::Start();
-    InitResource();
 
     IncreaseProjectRegionReferenceCnt(mProject, mRegion);
     return true;
@@ -625,6 +624,10 @@ bool FlusherSLS::BuildRequest(SenderQueueItem* item, unique_ptr<HttpSinkRequest>
     } else {
         // in case local region endpoint mode is changed, we should always check before sending
         auto info = EnterpriseSLSClientManager::GetInstance()->GetCandidateHostsInfo(mRegion, mProject, mEndpointMode);
+        if (mCandidateHostsInfo == nullptr) {
+            // TODO: temporarily used here, for send logtail alarm only, should be removed after alarm is refactored
+            mCandidateHostsInfo = info;
+        }
         if (mCandidateHostsInfo.get() != info.get()) {
             LOG_INFO(sLogger,
                      ("update candidate hosts info, region", mRegion)("project", mProject)("logstore", mLogstore)(
@@ -833,11 +836,11 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
             operation = OperationOnFail::DISCARD;
         }
 #ifdef __ENTERPRISE__
-    if (sendResult != SEND_NETWORK_ERROR && sendResult != SEND_SERVER_ERROR) {
-        bool hasAuthError = sendResult == SEND_UNAUTHORIZED;
-        EnterpriseSLSClientManager::GetInstance()->UpdateAccessKeyStatus(mAliuid, !hasAuthError);
-        EnterpriseSLSClientManager::GetInstance()->UpdateProjectAnonymousWriteStatus(mProject, !hasAuthError);
-    }
+        if (sendResult != SEND_NETWORK_ERROR && sendResult != SEND_SERVER_ERROR) {
+            bool hasAuthError = sendResult == SEND_UNAUTHORIZED;
+            EnterpriseSLSClientManager::GetInstance()->UpdateAccessKeyStatus(mAliuid, !hasAuthError);
+            EnterpriseSLSClientManager::GetInstance()->UpdateProjectAnonymousWriteStatus(mProject, !hasAuthError);
+        }
 #endif
 
 #define LOG_PATTERN \

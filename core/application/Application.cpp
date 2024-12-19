@@ -46,6 +46,7 @@
 #include "pipeline/queue/ExactlyOnceQueueManager.h"
 #include "pipeline/queue/SenderQueueManager.h"
 #include "plugin/flusher/sls/DiskBufferWriter.h"
+#include "plugin/flusher/sls/FlusherSLS.h"
 #include "plugin/input/InputFeedbackInterfaceRegistry.h"
 #include "prometheus/PrometheusInputRunner.h"
 #include "runner/FlusherRunner.h"
@@ -196,11 +197,13 @@ void Application::Start() { // GCOVR_EXCL_START
 #if defined(__ENTERPRISE__) && defined(_MSC_VER)
     InitWindowsSignalObject();
 #endif
-    BoundedSenderQueueInterface::SetFeedback(ProcessQueueManager::GetInstance());
 
-    HttpSink::GetInstance()->Init();
-    FlusherRunner::GetInstance()->Init();
+    // resource monitor
+    // TODO: move metric related initialization to input Init
+    LoongCollectorMonitor::GetInstance()->Init();
+    LogtailMonitor::GetInstance()->Init();
 
+    // config provider
     {
         // add local config dir
         filesystem::path localConfigPath = filesystem::path(AppConfig::GetInstance()->GetLoongcollectorConfDir())
@@ -214,7 +217,6 @@ void Application::Start() { // GCOVR_EXCL_START
         }
         PipelineConfigWatcher::GetInstance()->AddSource(localConfigPath.string());
     }
-
 #ifdef __ENTERPRISE__
     EnterpriseConfigProvider::GetInstance()->Start();
     LegacyConfigProvider::GetInstance()->Init("legacy");
@@ -222,10 +224,16 @@ void Application::Start() { // GCOVR_EXCL_START
     InitRemoteConfigProviders();
 #endif
 
-    AlarmManager::GetInstance()->Init();
-    LoongCollectorMonitor::GetInstance()->Init();
-    LogtailMonitor::GetInstance()->Init();
+    // runner
+    BoundedSenderQueueInterface::SetFeedback(ProcessQueueManager::GetInstance());
+    HttpSink::GetInstance()->Init();
+    FlusherRunner::GetInstance()->Init();
+    ProcessorRunner::GetInstance()->Init();
 
+    // flusher_sls resource should be explicitly initialized to allow internal metrics and alarms to be sent
+    FlusherSLS::InitResource();
+
+    // plugin registration
     PluginRegistry::GetInstance()->LoadPlugins();
     InputFeedbackInterfaceRegistry::GetInstance()->LoadFeedbackInterfaces();
 
@@ -255,10 +263,10 @@ void Application::Start() { // GCOVR_EXCL_START
         LogtailPlugin::GetInstance()->LoadPluginBase();
     }
 
-    ProcessorRunner::GetInstance()->Init();
+    // TODO: this should be refactored to internal pipeline
+    AlarmManager::GetInstance()->Init();
 
-    time_t curTime = 0, lastConfigCheckTime = 0, lastUpdateMetricTime = 0,
-           lastCheckTagsTime = 0, lastQueueGCTime = 0;
+    time_t curTime = 0, lastConfigCheckTime = 0, lastUpdateMetricTime = 0, lastCheckTagsTime = 0, lastQueueGCTime = 0;
 #ifndef LOGTAIL_NO_TC_MALLOC
     time_t lastTcmallocReleaseMemTime = 0;
 #endif

@@ -535,18 +535,24 @@ void DiskBufferWriter::SendEncryptionBuffer(const std::string& filename, int32_t
                     while (true) {
                         string host;
                         auto response = SendBufferFileData(bufferMeta, logData, host);
-                        auto sendRes = ConvertErrorCode(response.mErrorCode);
+                        SendResult sendRes = SEND_OK;
+                        if (response.mStatusCode != 200) {
+                            sendRes = ConvertErrorCode(response.mErrorCode);
+                        }
                         switch (sendRes) {
                             case SEND_OK:
                                 sendResult = true;
                                 break;
                             case SEND_NETWORK_ERROR:
                             case SEND_SERVER_ERROR:
-                                LOG_WARNING(sLogger,
-                                            ("send data to SLS fail", "retry later")("error_code", response.mErrorCode)(
-                                                "error_message", response.mErrorMsg)("endpoint", host)(
-                                                "projectName", bufferMeta.project())("logstore", bufferMeta.logstore())(
-                                                "rawsize", bufferMeta.rawsize()));
+                                if (response.mErrorMsg != "can not get available host") {
+                                    LOG_WARNING(
+                                        sLogger,
+                                        ("send data to SLS fail", "retry later")("request id", response.mRequestId)(
+                                            "error_code", response.mErrorCode)("error_message", response.mErrorMsg)(
+                                            "endpoint", host)("projectName", bufferMeta.project())(
+                                            "logstore", bufferMeta.logstore())("rawsize", bufferMeta.rawsize()));
+                                }
                                 usleep(INT32_FLAG(send_retry_sleep_interval));
                                 break;
                             case SEND_QUOTA_EXCEED:
@@ -560,10 +566,10 @@ void DiskBufferWriter::SendEncryptionBuffer(const std::string& filename, int32_t
                                 if (!GetProfileSender()->IsProfileData("", bufferMeta.project(), bufferMeta.logstore()))
                                     LOG_WARNING(
                                         sLogger,
-                                        ("send data to SLS fail, error_code",
-                                         response.mErrorCode)("error_message", response.mErrorMsg)("endpoint", host)(
-                                            "projectName", bufferMeta.project())("logstore", bufferMeta.logstore())(
-                                            "rawsize", bufferMeta.rawsize()));
+                                        ("send data to SLS fail", "retry later")("request id", response.mRequestId)(
+                                            "error_code", response.mErrorCode)("error_message", response.mErrorMsg)(
+                                            "endpoint", host)("projectName", bufferMeta.project())(
+                                            "logstore", bufferMeta.logstore())("rawsize", bufferMeta.rawsize()));
                                 usleep(INT32_FLAG(quota_exceed_wait_interval));
                                 break;
                             case SEND_UNAUTHORIZED:
@@ -576,7 +582,8 @@ void DiskBufferWriter::SendEncryptionBuffer(const std::string& filename, int32_t
                         }
 #ifdef __ENTERPRISE__
                         if (sendRes != SEND_NETWORK_ERROR && sendRes != SEND_SERVER_ERROR) {
-                            bool hasAuthError = sendRes == SEND_UNAUTHORIZED;
+                            bool hasAuthError
+                                = sendRes == SEND_UNAUTHORIZED && response.mErrorMsg != "can not get valid access key";
                             EnterpriseSLSClientManager::GetInstance()->UpdateAccessKeyStatus(bufferMeta.aliuid(),
                                                                                              !hasAuthError);
                             EnterpriseSLSClientManager::GetInstance()->UpdateProjectAnonymousWriteStatus(
@@ -857,6 +864,17 @@ SLSResponse DiskBufferWriter::SendBufferFileData(const sls_logs::LogtailBufferMe
         dataType = RawDataType::EVENT_GROUP;
     }
     if (bufferMeta.has_telemetrytype() && bufferMeta.telemetrytype() == sls_logs::SLS_TELEMETRY_TYPE_METRICS) {
+        return PostMetricStoreLogs(accessKeyId,
+                                   accessKeySecret,
+                                   type,
+                                   host,
+                                   httpsFlag,
+                                   bufferMeta.project(),
+                                   bufferMeta.logstore(),
+                                   GetSLSCompressTypeString(bufferMeta.compresstype()),
+                                   logData,
+                                   bufferMeta.rawsize());
+    } else {
         return PostLogStoreLogs(accessKeyId,
                                 accessKeySecret,
                                 type,
@@ -869,17 +887,6 @@ SLSResponse DiskBufferWriter::SendBufferFileData(const sls_logs::LogtailBufferMe
                                 logData,
                                 bufferMeta.rawsize(),
                                 bufferMeta.has_shardhashkey() ? bufferMeta.shardhashkey() : "");
-    } else {
-        return PostMetricStoreLogs(accessKeyId,
-                                   accessKeySecret,
-                                   type,
-                                   host,
-                                   httpsFlag,
-                                   bufferMeta.project(),
-                                   bufferMeta.logstore(),
-                                   GetSLSCompressTypeString(bufferMeta.compresstype()),
-                                   logData,
-                                   bufferMeta.rawsize());
     }
 }
 

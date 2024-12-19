@@ -219,7 +219,7 @@ bool SendHttpRequest(unique_ptr<HttpRequest>&& request, HttpResponse& response) 
         } else if (request->mTryCnt < request->mMaxTryCnt) {
             LOG_WARNING(sLogger,
                         ("failed to send http request", "retry immediately")("request address", request.get())(
-                            "try cnt", request->mTryCnt)("errMsg", curl_easy_strerror(res)));
+                            "host", request->mHost)("try cnt", request->mTryCnt)("errMsg", curl_easy_strerror(res)));
             ++request->mTryCnt;
         } else {
             break;
@@ -294,16 +294,17 @@ void HandleCompletedAsynRequests(CURLM* multiCurl, int& runningHandlers) {
                     request->mResponse.SetResponseTime(responseTimeMs);
                     request->OnSendDone(request->mResponse);
                     LOG_DEBUG(sLogger,
-                              ("send http request succeeded, request address",
-                               request)("response time", ToString(responseTimeMs.count()) + "ms")(
-                                  "try cnt", ToString(request->mTryCnt)));
+                              ("send http request succeeded, request address", request)("host", request->mHost)(
+                                  "response time",
+                                  ToString(responseTimeMs.count()) + "ms")("try cnt", ToString(request->mTryCnt)));
                     break;
                 }
                 default:
                     // considered as network error
                     if (request->mTryCnt < request->mMaxTryCnt) {
-                        LOG_WARNING(sLogger,
-                                    ("failed to send http request", "retry immediately")("request address", request)(
+                        LOG_DEBUG(sLogger,
+                                    ("failed to send http request",
+                                     "retry immediately")("request address", request)("host", request->mHost)(
                                         "try cnt", request->mTryCnt)("errMsg", curl_easy_strerror(msg->data.result)));
                         // free first，becase mPrivateData will be reset in AddRequestToMultiCurlHandler
                         if (request->mPrivateData) {
@@ -320,7 +321,7 @@ void HandleCompletedAsynRequests(CURLM* multiCurl, int& runningHandlers) {
                         request->OnSendDone(request->mResponse);
                         LOG_DEBUG(sLogger,
                                   ("failed to send http request", "abort")("request address", request)(
-                                      "response time", ToString(responseTimeMs.count()) + "ms")(
+                                      "host", request->mHost)("response time", ToString(responseTimeMs.count()) + "ms")(
                                       "try cnt", ToString(request->mTryCnt))("errMsg", errMsg));
                     }
                     break;
