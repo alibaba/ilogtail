@@ -259,7 +259,7 @@ public:
 
         auto& k8sMetadata = K8sMetadata::GetInstance();
         k8sMetadata.SetIpCache(root);
-        k8sMetadata.GetByLocalHostFromServer();
+        //k8sMetadata.GetByLocalHostFromServer();
         unique_ptr<SpanEvent> mSpanEvent;
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
