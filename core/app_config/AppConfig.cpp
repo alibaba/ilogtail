@@ -427,11 +427,7 @@ string GetAgentLoggersPrefix() {
 }
 
 string GetAgentLogName() {
-    if (BOOL_FLAG(logtail_mode)) {
-        return "ilogtail.LOG";
-    } else {
-        return "loongcollector.LOG";
-    }
+    return "loongcollector.LOG";
 }
 
 string GetObserverEbpfHostPath() {
@@ -485,19 +481,11 @@ string GetContinuousPipelineConfigDir() {
 }
 
 string GetPluginLogName() {
-    if (BOOL_FLAG(logtail_mode)) {
-        return "logtail_plugin.LOG";
-    } else {
-        return "go_plugin.LOG";
-    }
+    return "go_plugin.LOG";
 }
 
 std::string GetVersionTag() {
-    if (BOOL_FLAG(logtail_mode)) {
-        return "logtail_version";
-    } else {
-        return "loongcollector_version";
-    }
+    return "loongcollector_version";
 }
 
 std::string GetGoPluginCheckpoint() {
@@ -509,19 +497,11 @@ std::string GetGoPluginCheckpoint() {
 }
 
 std::string GetAgentName() {
-    if (BOOL_FLAG(logtail_mode)) {
-        return "ilogtail";
-    } else {
-        return "loongcollector";
-    }
+    return "loongcollector";
 }
 
 std::string GetMonitorInfoFileName() {
-    if (BOOL_FLAG(logtail_mode)) {
-        return "logtail_monitor_info";
-    } else {
-        return "loongcollector_monitor_info";
-    }
+    return "loongcollector_monitor_info";
 }
 
 std::string GetSymLinkName() {
@@ -529,19 +509,11 @@ std::string GetSymLinkName() {
 }
 
 std::string GetPidFileName() {
-    if (BOOL_FLAG(logtail_mode)) {
-        return GetProcessExecutionDir() + ILOGTAIL_PREFIX + ILOGTAIL_VERSION + ILOGTAIL_PIDFILE_SUFFIX;
-    } else {
-        return GetAgentRunDir() + "loongcollector.pid";
-    }
+    return GetAgentRunDir() + "loongcollector.pid";
 }
 
 std::string GetAgentPrefix() {
-    if (BOOL_FLAG(logtail_mode)) {
-        return ILOGTAIL_PREFIX;
-    } else {
-        return LOONGCOLLECTOR_PREFIX;
-    }
+    return LOONGCOLLECTOR_PREFIX;
 }
 
 AppConfig::AppConfig() {
