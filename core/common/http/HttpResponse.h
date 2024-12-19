@@ -18,8 +18,6 @@
 
 #include <curl/curl.h>
 
-#include <curl/curl.h>
-
 #include <chrono>
 #include <cstdint>
 #include <functional>
@@ -85,6 +83,8 @@ public:
         : mHeader(compareHeader), mBody(body, bodyDeleter), mWriteCallback(callback) {}
 
     int32_t GetStatusCode() const { return mStatusCode; }
+    void SetStatusCode(int32_t code) { mStatusCode = code; }
+
     const std::map<std::string, std::string, decltype(compareHeader)*>& GetHeader() const { return mHeader; }
 
     template <class T>
@@ -97,19 +97,10 @@ public:
         return static_cast<T*>(mBody.get());
     }
 
-    void SetStatusCode(int32_t code) { mStatusCode = code; }
     void SetResponseTime(const std::chrono::milliseconds& time) { mResponseTime = time; }
     std::chrono::milliseconds GetResponseTime() const { return mResponseTime; }
 
-#ifdef APSARA_UNIT_TEST_MAIN
-    template <class T>
-    void SetBody(const T& body) {
-        *mBody = body;
-    }
-
-    void AddHeader(const std::string& key, const std::string& value) { mHeader[key] = value; }
-#endif
-
+    NetworkStatus GetNetworkStatus() { return mNetworkStatus; }
     void SetNetworkStatus(CURLcode code) {
         mNetworkStatus.mMessage = curl_easy_strerror(code);
         // please refer to https://curl.se/libcurl/c/libcurl-errors.html
@@ -161,13 +152,18 @@ public:
         }
     }
 
-    const NetworkStatus& GetNetworkStatus() { return mNetworkStatus; }
+#ifdef APSARA_UNIT_TEST_MAIN
+    template <class T>
+    void SetBody(const T& body) {
+        *mBody = body;
+    }
 
-    
+    void AddHeader(const std::string& key, const std::string& value) { mHeader[key] = value; }
+#endif
 
 private:
     int32_t mStatusCode = 0; // 0 means no response from server
-    NetworkStatus mNetworkStatus; // 0 means no error
+    NetworkStatus mNetworkStatus;
     std::map<std::string, std::string, decltype(compareHeader)*> mHeader;
     std::unique_ptr<void, std::function<void(void*)>> mBody;
     size_t (*mWriteCallback)(char*, size_t, size_t, void*) = nullptr;

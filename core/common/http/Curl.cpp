@@ -211,6 +211,7 @@ bool AddRequestToMultiCurlHandler(CURLM* multiCurl, unique_ptr<AsynHttpRequest>&
                                    request->mTls);
     if (curl == NULL) {
         LOG_ERROR(sLogger, ("failed to send request", "failed to init curl handler")("request address", request.get()));
+        request->mResponse.SetNetworkStatus(CURLE_FAILED_INIT);
         request->OnSendDone(request->mResponse);
         return false;
     }
@@ -223,6 +224,7 @@ bool AddRequestToMultiCurlHandler(CURLM* multiCurl, unique_ptr<AsynHttpRequest>&
         LOG_ERROR(sLogger,
                   ("failed to send request", "failed to add the easy curl handle to multi_handle")(
                       "errMsg", curl_multi_strerror(res))("request address", request.get()));
+        request->mResponse.SetNetworkStatus(CURLE_FAILED_INIT);
         request->OnSendDone(request->mResponse);
         curl_easy_cleanup(curl);
         return false;
@@ -247,6 +249,7 @@ void HandleCompletedAsynRequests(CURLM* multiCurl, int& runningHandlers) {
                 case CURLE_OK: {
                     long statusCode = 0;
                     curl_easy_getinfo(handler, CURLINFO_RESPONSE_CODE, &statusCode);
+                    request->mResponse.SetNetworkStatus(CURLE_OK);
                     request->mResponse.SetStatusCode(statusCode);
                     request->mResponse.SetResponseTime(responseTimeMs);
                     request->OnSendDone(request->mResponse);
@@ -272,6 +275,7 @@ void HandleCompletedAsynRequests(CURLM* multiCurl, int& runningHandlers) {
                         ++runningHandlers;
                         requestReused = true;
                     } else {
+                        request->mResponse.SetNetworkStatus(msg->data.result);
                         request->OnSendDone(request->mResponse);
                         LOG_DEBUG(sLogger,
                                   ("failed to send http request", "abort")("request address", request)(
