@@ -60,7 +60,7 @@ std::string GetGoPluginCheckpoint();
 std::string GetAgentName();
 std::string GetMonitorInfoFileName();
 std::string GetSymLinkName();
-std::string GetPidFileName();
+std::vector<std::string> GetPidFileName();
 std::string GetAgentPrefix();
 
 template <class T>
