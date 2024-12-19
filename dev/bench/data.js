@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1734542199714,
+  "lastUpdate": 1734579139690,
   "repoUrl": "https://github.com/alibaba/loongcollector",
   "entries": {
     "benchmark": [
@@ -359,6 +359,46 @@ window.BENCHMARK_DATA = {
           {
             "name": "Memory_Usage_Avg - performance_file_to_blackhole_ilogtail",
             "value": 38.553474195075765,
+            "unit": "MB"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "alibaba",
+            "username": "alibaba"
+          },
+          "committer": {
+            "name": "alibaba",
+            "username": "alibaba"
+          },
+          "id": "2521cb408287bd663b76ee809827771f5c640e4a",
+          "message": "test: soak test and migrate ilogtail to loongcollector",
+          "timestamp": "2024-12-19T02:21:40Z",
+          "url": "https://github.com/alibaba/loongcollector/pull/1971/commits/2521cb408287bd663b76ee809827771f5c640e4a"
+        },
+        "date": 1734579139247,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "CPU_Usage_Max - performance_file_to_blackhole_ilogtail",
+            "value": 42.234388967831855,
+            "unit": "%"
+          },
+          {
+            "name": "CPU_Usage_Avg - performance_file_to_blackhole_ilogtail",
+            "value": 37.41010517514263,
+            "unit": "%"
+          },
+          {
+            "name": "Memory_Usage_Max - performance_file_to_blackhole_ilogtail",
+            "value": 44.19921875,
+            "unit": "MB"
+          },
+          {
+            "name": "Memory_Usage_Avg - performance_file_to_blackhole_ilogtail",
+            "value": 39.74794089147289,
             "unit": "MB"
           }
         ]
