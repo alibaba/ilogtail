@@ -508,13 +508,6 @@ std::string GetSymLinkName() {
     return GetProcessExecutionDir() + "loongcollector";
 }
 
-std::vector<std::string> GetPidFileNames() {
-    std::vector<std::string> pidFileNames;
-    pidFileNames.push_back(GetProcessExecutionDir() + ILOGTAIL_PREFIX + ILOGTAIL_VERSION + ILOGTAIL_PIDFILE_SUFFIX);
-    pidFileNames.push_back(GetProcessExecutionDir() + "loongcollector.pid");
-    return pidFileNames;
-}
-
 std::string GetAgentPrefix() {
     return LOONGCOLLECTOR_PREFIX;
 }
