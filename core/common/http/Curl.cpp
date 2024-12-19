@@ -28,6 +28,46 @@ using namespace std;
 
 namespace logtail {
 
+NetworkCode GetNetworkStatus(CURLcode code) {
+    // please refer to https://curl.se/libcurl/c/libcurl-errors.html
+    switch (code) {
+        case CURLE_OK:
+            return NetworkCode::Ok;
+        case CURLE_COULDNT_CONNECT:
+            return NetworkCode::ConnectionFailed;
+        case CURLE_LOGIN_DENIED:
+        case CURLE_REMOTE_ACCESS_DENIED:
+            return NetworkCode::RemoteAccessDenied;
+        case CURLE_OPERATION_TIMEDOUT:
+            return NetworkCode::Timeout;
+        case CURLE_SSL_CONNECT_ERROR:
+            return NetworkCode::SSLConnectError;
+        case CURLE_SSL_CERTPROBLEM:
+        case CURLE_SSL_CACERT:
+            return NetworkCode::SSLCertError;
+        case CURLE_SEND_ERROR:
+        case CURLE_SEND_FAIL_REWIND:
+            return NetworkCode::SendDataFailed;
+        case CURLE_RECV_ERROR:
+            return NetworkCode::RecvDataFailed;
+        case CURLE_SSL_PINNEDPUBKEYNOTMATCH:
+        case CURLE_SSL_INVALIDCERTSTATUS:
+        case CURLE_SSL_CACERT_BADFILE:
+        case CURLE_SSL_CIPHER:
+        case CURLE_SSL_ENGINE_NOTFOUND:
+        case CURLE_SSL_ENGINE_SETFAILED:
+        case CURLE_USE_SSL_FAILED:
+        case CURLE_SSL_ENGINE_INITFAILED:
+        case CURLE_SSL_CRL_BADFILE:
+        case CURLE_SSL_ISSUER_ERROR:
+        case CURLE_SSL_SHUTDOWN_FAILED:
+            return NetworkCode::SSLOtherProblem;
+        case CURLE_FAILED_INIT:
+        default:
+            return NetworkCode::Other;
+    }
+}
+
 static size_t header_write_callback(char* buffer,
                                     size_t size,
                                     size_t nmemb,
@@ -211,7 +251,7 @@ bool AddRequestToMultiCurlHandler(CURLM* multiCurl, unique_ptr<AsynHttpRequest>&
                                    request->mTls);
     if (curl == NULL) {
         LOG_ERROR(sLogger, ("failed to send request", "failed to init curl handler")("request address", request.get()));
-        request->mResponse.SetNetworkStatus(CURLE_FAILED_INIT);
+        request->mResponse.SetNetworkStatus(NetworkCode::Other, "failed to init curl handler");
         request->OnSendDone(request->mResponse);
         return false;
     }
@@ -224,7 +264,7 @@ bool AddRequestToMultiCurlHandler(CURLM* multiCurl, unique_ptr<AsynHttpRequest>&
         LOG_ERROR(sLogger,
                   ("failed to send request", "failed to add the easy curl handle to multi_handle")(
                       "errMsg", curl_multi_strerror(res))("request address", request.get()));
-        request->mResponse.SetNetworkStatus(CURLE_FAILED_INIT);
+        request->mResponse.SetNetworkStatus(NetworkCode::Other, "failed to add the easy curl handle to multi_handle");
         request->OnSendDone(request->mResponse);
         curl_easy_cleanup(curl);
         return false;
@@ -249,7 +289,7 @@ void HandleCompletedAsynRequests(CURLM* multiCurl, int& runningHandlers) {
                 case CURLE_OK: {
                     long statusCode = 0;
                     curl_easy_getinfo(handler, CURLINFO_RESPONSE_CODE, &statusCode);
-                    request->mResponse.SetNetworkStatus(CURLE_OK);
+                    request->mResponse.SetNetworkStatus(NetworkCode::Ok, "");
                     request->mResponse.SetStatusCode(statusCode);
                     request->mResponse.SetResponseTime(responseTimeMs);
                     request->OnSendDone(request->mResponse);
@@ -275,12 +315,13 @@ void HandleCompletedAsynRequests(CURLM* multiCurl, int& runningHandlers) {
                         ++runningHandlers;
                         requestReused = true;
                     } else {
-                        request->mResponse.SetNetworkStatus(msg->data.result);
+                        auto errMsg = curl_easy_strerror(msg->data.result);
+                        request->mResponse.SetNetworkStatus(GetNetworkStatus(msg->data.result), errMsg);
                         request->OnSendDone(request->mResponse);
                         LOG_DEBUG(sLogger,
                                   ("failed to send http request", "abort")("request address", request)(
-                                      "response time",
-                                      ToString(responseTimeMs.count()) + "ms")("try cnt", ToString(request->mTryCnt)));
+                                      "response time", ToString(responseTimeMs.count()) + "ms")(
+                                      "try cnt", ToString(request->mTryCnt))("errMsg", errMsg));
                     }
                     break;
             }

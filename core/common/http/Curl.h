@@ -28,6 +28,8 @@
 
 namespace logtail {
 
+NetworkCode GetNetworkStatus(CURLcode code);
+
 CURL* CreateCurlHandler(const std::string& method,
                         bool httpsFlag,
                         const std::string& host,
