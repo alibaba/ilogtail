@@ -28,14 +28,21 @@ namespace logtail {
 
 class ConcurrencyLimiter {
 public:
+    enum FallbackMode {
+        Fast,
+        Slow
+    };
+
     ConcurrencyLimiter(const std::string& description,
                        uint32_t maxConcurrency,
-                       uint32_t maxRetryIntervalSecs = 3600,
-                       uint32_t minRetryIntervalSecs = 30,
+                       FallbackMode fallbackMode = Fast,
+                       uint32_t maxRetryIntervalSecs = 60,
+                       uint32_t minRetryIntervalSecs = 5,
                        double retryIntervalUpRatio = 1.5,
                        double concurrencyDownRatio = 0.5)
         : mDescription(description),
           mMaxConcurrency(maxConcurrency),
+          mFallbackMode(fallbackMode),
           mCurrenctConcurrency(maxConcurrency),
           mMaxRetryIntervalSecs(maxRetryIntervalSecs),
           mMinRetryIntervalSecs(minRetryIntervalSecs),
@@ -47,8 +54,14 @@ public:
     void PostPop();
     void OnSendDone();
 
-    void OnSuccess();
-    void OnFail();
+    void Increase();
+    void Decrease(FallbackMode fallbackMode);
+
+    void OnSuccess(std::chrono::system_clock::time_point time);
+    void OnFail(std::chrono::system_clock::time_point time);
+
+
+    void AdjustConcurrency(bool success, std::chrono::system_clock::time_point time);
 
     static std::string GetLimiterMetricName(const std::string& limiter) {
         if (limiter == "region") {
@@ -78,6 +91,8 @@ private:
 
     uint32_t mMaxConcurrency = 0;
 
+    FallbackMode mFallbackMode;
+
     mutable std::mutex mLimiterMux;
     uint32_t mCurrenctConcurrency = 0;
 
@@ -90,6 +105,14 @@ private:
     double mConcurrencyDownRatio = 0.0;
 
     std::chrono::system_clock::time_point mLastCheckTime;
+
+
+
+    mutable std::mutex mStatisticsMux;
+    std::chrono::system_clock::time_point mLastStatisticsTime;
+    uint32_t mStatisticsTotal;
+    uint32_t mStatisticsFailTotal;
+
 };
 
 } // namespace logtail
