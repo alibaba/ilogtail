@@ -1809,8 +1809,7 @@ void AgentsightManagerUnittest::TestMemoryLimitRecoversAfterDrain() {
     // Usage back under the limit → admission resumes with no hysteresis and no extra state.
     feedLlmBatch(*mgr, 1);
     APSARA_TEST_TRUE(mEventQueue->try_dequeue(e));
-    APSARA_TEST_TRUE(static_cast<AgentsightLlmRecord*>(e.get())->GetAccountedBytesForTest()
-                     >= kMemLimitTestPayload);
+    APSARA_TEST_TRUE(static_cast<AgentsightLlmRecord*>(e.get())->GetAccountedBytesForTest() >= kMemLimitTestPayload);
     APSARA_TEST_EQUAL(static_cast<uint64_t>(1), mgr->GetMemoryBudgetForTest().DroppedEvents()); // unchanged
     e.reset();
     APSARA_TEST_EQUAL(static_cast<uint64_t>(0), mgr->GetMemoryBudgetForTest().Used());
@@ -1902,8 +1901,7 @@ void AgentsightManagerUnittest::TestMemoryLimitHotUpdateKeepsUsedConsistent() {
     // New events flow unaccounted while disabled.
     feedLlmBatch(*mgr, 1);
     APSARA_TEST_TRUE(mEventQueue->try_dequeue(e));
-    APSARA_TEST_EQUAL(static_cast<uint64_t>(0),
-                      static_cast<AgentsightLlmRecord*>(e.get())->GetAccountedBytesForTest());
+    APSARA_TEST_EQUAL(static_cast<uint64_t>(0), static_cast<AgentsightLlmRecord*>(e.get())->GetAccountedBytesForTest());
     APSARA_TEST_EQUAL(static_cast<uint64_t>(0), mgr->GetMemoryBudgetForTest().Used());
     e.reset();
 

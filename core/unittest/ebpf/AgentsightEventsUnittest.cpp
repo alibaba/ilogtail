@@ -196,8 +196,7 @@ void AgentsightEventsUnittest::TestEstimateRecordBytes() {
         std::memset(d.cmdline, 'x', sizeof(d.cmdline));
         static const char kSid[] = "sess-estimate";
         d.session_id = kSid;
-        APSARA_TEST_EQUAL(EstimateAgentsightLlmRecordBytes(d) - base,
-                          static_cast<uint64_t>(128 + sizeof(kSid) - 1));
+        APSARA_TEST_EQUAL(EstimateAgentsightLlmRecordBytes(d) - base, static_cast<uint64_t>(128 + sizeof(kSid) - 1));
     }
 }
 

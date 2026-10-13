@@ -117,10 +117,9 @@ uint64_t EstimateAgentsightLlmRecordBytes(const AgentsightLLMData& d) {
     uint64_t bytes = sizeof(AgentsightLlmRecord);
     bytes += EstimateFixedBufferBytes(d.process_name, 16U);
     bytes += EstimateFixedBufferBytes(d.cmdline, 128U);
-    bytes += EstimateCStrBytes(d.session_id) + EstimateCStrBytes(d.conversation_id)
-        + EstimateCStrBytes(d.response_id) + EstimateCStrBytes(d.agent_name) + EstimateCStrBytes(d.container_id)
-        + EstimateCStrBytes(d.request_url) + EstimateCStrBytes(d.provider) + EstimateCStrBytes(d.model)
-        + EstimateCStrBytes(d.finish_reason);
+    bytes += EstimateCStrBytes(d.session_id) + EstimateCStrBytes(d.conversation_id) + EstimateCStrBytes(d.response_id)
+        + EstimateCStrBytes(d.agent_name) + EstimateCStrBytes(d.container_id) + EstimateCStrBytes(d.request_url)
+        + EstimateCStrBytes(d.provider) + EstimateCStrBytes(d.model) + EstimateCStrBytes(d.finish_reason);
     bytes += static_cast<uint64_t>(d.request_messages_len) + static_cast<uint64_t>(d.input_message_delta_len)
         + static_cast<uint64_t>(d.response_messages_len) + static_cast<uint64_t>(d.tools_len);
     return bytes;

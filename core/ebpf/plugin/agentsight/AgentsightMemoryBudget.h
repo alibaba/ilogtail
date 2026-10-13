@@ -14,8 +14,9 @@
 
 #pragma once
 
-#include <atomic>
 #include <cstdint>
+
+#include <atomic>
 
 namespace logtail::ebpf {
 
@@ -66,10 +67,8 @@ public:
     /// Give n bytes back. Saturating: a stray or duplicated Release can never underflow the counter.
     void Release(uint64_t n) {
         uint64_t prev = mUsedBytes.load(std::memory_order_relaxed);
-        while (!mUsedBytes.compare_exchange_weak(prev,
-                                                 prev > n ? prev - n : 0,
-                                                 std::memory_order_acq_rel,
-                                                 std::memory_order_relaxed)) {
+        while (!mUsedBytes.compare_exchange_weak(
+            prev, prev > n ? prev - n : 0, std::memory_order_acq_rel, std::memory_order_relaxed)) {
         }
     }
 

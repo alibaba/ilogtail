@@ -305,8 +305,8 @@ std::string BuildAgentsightRuntimeLimitsJson(uint64_t limitMB) {
         + ",\"event_channel_policy\":\"backpressure\"" + ",\"event_channel_max_bytes_mb\":"
         + std::to_string(channelBytesMB) + ",\"pending_genai_max_count\":" + std::to_string(pendingCount)
         + ",\"pending_genai_max_bytes_mb\":" + std::to_string(channelBytesMB) + ",\"pid_cache_size\":1024"
-        + ",\"max_connection_body_mb\":8" + ",\"connection_idle_timeout_secs\":60" + ",\"ring_buffer_mb\":"
-        + std::to_string(ringMB) + "}}";
+        + ",\"max_connection_body_mb\":8" + ",\"connection_idle_timeout_secs\":60"
+        + ",\"ring_buffer_mb\":" + std::to_string(ringMB) + "}}";
 }
 
 void ApplyAgentsightRulesToConfig(AgentsightConfigHandle* cfg,
@@ -984,8 +984,7 @@ bool AgentsightManager::RestartAgentSightLocked(const SecurityOptions& opts) {
                 LOG_WARNING(sLogger,
                             ("AgentSight",
                              "MemoryLimit: agentsight_config_load_config failed; libagentsight keeps its default "
-                             "runtime limits, C++-side byte accounting still enforced")("last_error",
-                                                                                        err ? err : "")(
+                             "runtime limits, C++-side byte accounting still enforced")("last_error", err ? err : "")(
                                 "memory_limit_mb", limitMB));
             } else {
                 LOG_INFO(sLogger,
@@ -1183,8 +1182,8 @@ void AgentsightManager::OnMemoryLimitDrop(uint64_t eventBytes, StreamMetrics& st
     if (nowSec - mLastMemLimitLogSec >= 30) {
         mLastMemLimitLogSec = nowSec;
         LOG_WARNING(sLogger,
-                    ("AgentSight memory limit exceeded, dropping new events", streamName)(
-                        "used_bytes", mMemBudget->Used())("cpp_limit_bytes", mMemBudget->Limit())(
+                    ("AgentSight memory limit exceeded, dropping new events",
+                     streamName)("used_bytes", mMemBudget->Used())("cpp_limit_bytes", mMemBudget->Limit())(
                         "event_bytes", eventBytes)("dropped_events_total", mMemBudget->DroppedEvents())(
                         "dropped_bytes_total", mMemBudget->DroppedBytes()));
     }
@@ -1194,10 +1193,10 @@ void AgentsightManager::NoteMemoryLimitRecovered() {
     if (mMemLimitDropping) {
         mMemLimitDropping = false;
         LOG_INFO(sLogger,
-                 ("AgentSight memory usage back under limit, accepting events again", "")(
-                     "used_bytes", mMemBudget->Used())("cpp_limit_bytes", mMemBudget->Limit())(
-                     "dropped_events_total", mMemBudget->DroppedEvents())(
-                     "dropped_bytes_total", mMemBudget->DroppedBytes()));
+                 ("AgentSight memory usage back under limit, accepting events again",
+                  "")("used_bytes", mMemBudget->Used())("cpp_limit_bytes", mMemBudget->Limit())(
+                     "dropped_events_total", mMemBudget->DroppedEvents())("dropped_bytes_total",
+                                                                          mMemBudget->DroppedBytes()));
     }
 }
 

@@ -300,7 +300,7 @@ bool EBPFAdapter::tryLoadAgentSightDylib() {
              ("[EBPFAdapter] AgentSight symbols loaded", STRING_FLAG(ebpf_agentsight_dylib_base_name))(
                  "raw_https_api", sym.config_set_enable_raw_https != nullptr)(
                  "procfs_root_api", sym.config_set_procfs_root != nullptr)("load_config_api",
-                                                                          sym.config_load_config != nullptr));
+                                                                           sym.config_load_config != nullptr));
     return true;
 }
 
