@@ -47,7 +47,13 @@ struct AgentSightSymbolTable {
     /// push tightened runtime_limits for the AgentSight memory limit. Returns 0 on success, < 0 on
     /// parse failure (details via last_error). Left null by older libraries; callers must
     /// null-check before use.
+    /// NOTE: symbol presence alone does NOT prove the library understands runtime_limits — older
+    /// libraries silently ignore unknown JSON fields and still return success. Callers must gate on
+    /// version() as well (runtime_limits needs >= 0.6.1, event_channel_max_bytes_mb >= 0.11.1).
     int (*config_load_config)(AgentsightConfigHandle*, const char*) = nullptr;
+    /// Optional: library version string ("major.minor.patch", possibly with a suffix). Used for
+    /// capability gating (see config_load_config). Left null by libraries that lack it.
+    const char* (*version)() = nullptr;
     void (*config_add_cmdline_rule)(AgentsightConfigHandle*, const char* const*, const char*, int) = nullptr;
     void (*config_add_https)(AgentsightConfigHandle*, const char*) = nullptr;
     int (*config_add_http)(AgentsightConfigHandle*, const char*) = nullptr;

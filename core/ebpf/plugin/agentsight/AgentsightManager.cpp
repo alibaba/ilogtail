@@ -18,6 +18,7 @@
 
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <functional>
 #include <utility>
 #include <vector>
@@ -28,7 +29,6 @@
 #include "collection_pipeline/queue/ProcessQueueManager.h"
 #include "common/FileSystemUtil.h"
 #include "common/StringView.h"
-#include "common/TimeKeeper.h"
 #include "common/UUIDUtil.h"
 #include "common/magic_enum.hpp"
 #include "constants/TagConstants.h"
@@ -271,6 +271,43 @@ static const std::vector<const char*>& GetBuiltinHttpsAllowRules() {
         "*.maas.aliyuncs.com",
     };
     return kRules;
+}
+
+/// Compares a library version string ("major.minor.patch", any suffix like "-rc1" ignored) against
+/// a required minimum. Returns false for null/unparsable/short versions: when capability cannot be
+/// VERIFIED, treat the library as too old and degrade with a warning — old serde silently ignores
+/// unknown runtime_limits keys while still returning success, so a false "applied" is worse than an
+/// honest degradation.
+bool AgentsightVersionAtLeast(const char* version, unsigned major, unsigned minor, unsigned patch) {
+    if (!version || *version == '\0') {
+        return false;
+    }
+    unsigned parts[3] = {0, 0, 0};
+    const char* p = version;
+    for (int idx = 0; idx < 3; ++idx) {
+        if (*p < '0' || *p > '9') {
+            return false; // missing or non-numeric component
+        }
+        unsigned value = 0;
+        while (*p >= '0' && *p <= '9') {
+            value = value * 10 + static_cast<unsigned>(*p - '0');
+            ++p;
+        }
+        parts[idx] = value;
+        if (idx < 2) {
+            if (*p != '.') {
+                return false;
+            }
+            ++p;
+        }
+    }
+    if (parts[0] != major) {
+        return parts[0] > major;
+    }
+    if (parts[1] != minor) {
+        return parts[1] > minor;
+    }
+    return parts[2] >= patch;
 }
 
 /// Builds the runtime_limits JSON pushed down via agentsight_config_load_config when
@@ -977,7 +1014,13 @@ bool AgentsightManager::RestartAgentSightLocked(const SecurityOptions& opts) {
     mMemBudget->SetLimit(opts.mAgentsightMemoryLimitEnabled ? opts.mAgentsightMemoryLimitBytes : 0);
     if (opts.mAgentsightMemoryLimitEnabled) {
         const uint64_t limitMB = opts.mAgentsightMemoryLimitBytes / (1024 * 1024);
-        if (sym->config_load_config) {
+        // Capability gate: the load_config SYMBOL exists since libagentsight 0.4.0, but the
+        // runtime_limits block only since 0.6.1 and event_channel_max_bytes_mb only since 0.11.1 —
+        // and older libraries' serde silently ignores unknown JSON keys while still returning
+        // success, so symbol presence alone would log a bogus "applied". Require >= 0.11.1;
+        // unknown/too-old degrades to C++-side accounting only (warn and continue, never fail).
+        const char* libVersion = sym->version ? sym->version() : nullptr;
+        if (sym->config_load_config && AgentsightVersionAtLeast(libVersion, 0, 11, 1)) {
             const std::string limitsJson = BuildAgentsightRuntimeLimitsJson(limitMB);
             if (sym->config_load_config(cfg, limitsJson.c_str()) != 0) {
                 const char* err = sym->last_error ? sym->last_error() : nullptr;
@@ -985,19 +1028,23 @@ bool AgentsightManager::RestartAgentSightLocked(const SecurityOptions& opts) {
                             ("AgentSight",
                              "MemoryLimit: agentsight_config_load_config failed; libagentsight keeps its default "
                              "runtime limits, C++-side byte accounting still enforced")("last_error", err ? err : "")(
-                                "memory_limit_mb", limitMB));
+                                "libagentsight_version", libVersion)("memory_limit_mb", limitMB));
             } else {
                 LOG_INFO(sLogger,
                          ("AgentSight", "MemoryLimit runtime limits applied")("memory_limit_mb", limitMB)(
-                             "cpp_inflight_limit_bytes", opts.mAgentsightMemoryLimitBytes)("runtime_limits_json",
-                                                                                           limitsJson));
+                             "libagentsight_version",
+                             libVersion)("cpp_inflight_limit_bytes",
+                                         opts.mAgentsightMemoryLimitBytes)("runtime_limits_json", limitsJson));
             }
         } else {
             LOG_WARNING(sLogger,
                         ("AgentSight",
-                         "MemoryLimitEnabled requested but agentsight_config_load_config symbol not found; "
-                         "libagentsight keeps its default runtime limits, C++-side byte accounting still "
-                         "enforced (requires libagentsight >= 0.4.0)")("memory_limit_mb", limitMB));
+                         "MemoryLimitEnabled requested but libagentsight cannot honour runtime_limits: "
+                         "agentsight_config_load_config symbol missing, or library version too old/unverifiable "
+                         "(the runtime_limits fields used here require >= 0.11.1); libagentsight keeps its default "
+                         "runtime limits, C++-side byte accounting still enforced")(
+                            "libagentsight_version", libVersion ? libVersion : "unknown")(
+                            "load_config_api", sym->config_load_config != nullptr)("memory_limit_mb", limitMB));
         }
     }
 
@@ -1114,12 +1161,20 @@ void AgentsightManager::OnLlmCallback(const AgentsightLLMData* data, void* user_
     }
     auto* self = static_cast<AgentsightManager*>(user_data);
     // Do not lock mLibMutex here: runs inside handle_read → DrainReadsLocked while OnEpollReadable holds mLibMutex.
-    // Estimate BEFORE the deep copy: an event the memory limit rejects must not pay for the copy.
-    const uint64_t eventBytes = EstimateAgentsightLlmRecordBytes(*data);
-    const auto acq = self->mMemBudget->TryAcquire(eventBytes);
-    if (acq == AgentsightByteBudget::AcquireResult::kRejected) {
-        self->OnMemoryLimitDrop(eventBytes, self->mGenAiMetrics, "gen_ai");
-        return;
+    // Disarmed limit → skip the estimate entirely: with the feature off this callback must do no
+    // work beyond the pre-feature path (the estimate's string scans would be per-event overhead on
+    // a hot path). Reading Limit() is race-free here: callbacks and config updates are serialised
+    // under mLibMutex, and TryAcquire re-checks the limit anyway.
+    uint64_t eventBytes = 0;
+    auto acq = AgentsightByteBudget::AcquireResult::kDisabled;
+    if (self->mMemBudget->Limit() != 0) {
+        // Estimate BEFORE the deep copy: an event the memory limit rejects must not pay for the copy.
+        eventBytes = EstimateAgentsightLlmRecordBytes(*data);
+        acq = self->mMemBudget->TryAcquire(eventBytes);
+        if (acq == AgentsightByteBudget::AcquireResult::kRejected) {
+            self->OnMemoryLimitDrop(eventBytes, self->mGenAiMetrics, "gen_ai");
+            return;
+        }
     }
     const std::string configName = self->mConfigName;
     auto evt = std::make_shared<AgentsightLlmRecord>(configName, *data);
@@ -1144,13 +1199,17 @@ void AgentsightManager::OnHttpsCallback(const AgentsightHttpsData* data, void* u
         return;
     }
     auto* self = static_cast<AgentsightManager*>(user_data);
-    // Same locking contract as OnLlmCallback: runs inside handle_read while OnEpollReadable already
-    // holds mLibMutex, so taking it here would deadlock.
-    const uint64_t eventBytes = EstimateAgentsightHttpsRecordBytes(*data);
-    const auto acq = self->mMemBudget->TryAcquire(eventBytes);
-    if (acq == AgentsightByteBudget::AcquireResult::kRejected) {
-        self->OnMemoryLimitDrop(eventBytes, self->mRawHttpMetrics, "raw_http");
-        return;
+    // Same locking contract and same disarmed fast path as OnLlmCallback: runs inside handle_read
+    // while OnEpollReadable already holds mLibMutex, so taking it here would deadlock.
+    uint64_t eventBytes = 0;
+    auto acq = AgentsightByteBudget::AcquireResult::kDisabled;
+    if (self->mMemBudget->Limit() != 0) {
+        eventBytes = EstimateAgentsightHttpsRecordBytes(*data);
+        acq = self->mMemBudget->TryAcquire(eventBytes);
+        if (acq == AgentsightByteBudget::AcquireResult::kRejected) {
+            self->OnMemoryLimitDrop(eventBytes, self->mRawHttpMetrics, "raw_http");
+            return;
+        }
     }
     const std::string configName = self->mConfigName;
     auto evt = std::make_shared<AgentsightHttpsRecord>(configName, *data);
@@ -1178,7 +1237,11 @@ void AgentsightManager::OnMemoryLimitDrop(uint64_t eventBytes, StreamMetrics& st
     // 30s time gate (same pattern as EventHandler's push-blocked alarm); the first drop logs
     // immediately because mLastMemLimitLogSec starts at 0. An event larger than the whole budget is
     // dropped forever — event_bytes in the log is what makes that diagnosable.
-    const int64_t nowSec = TimeKeeper::GetInstance()->NowSec();
+    // steady_clock instead of the TimeKeeper singleton: a rate gate only needs a monotonic source,
+    // and this keeps the callback path free of singleton lifetime concerns (TimeKeeper lazily
+    // spawns an update thread that unit-test binaries then have to tear down at exit).
+    const int64_t nowSec
+        = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
     if (nowSec - mLastMemLimitLogSec >= 30) {
         mLastMemLimitLogSec = nowSec;
         LOG_WARNING(sLogger,

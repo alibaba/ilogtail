@@ -117,12 +117,22 @@ int g_ut_load_config_ret = 0;
 /// Simulates a libagentsight without agentsight_config_load_config (pre-0.4.x), where EBPFAdapter
 /// leaves the optional symbol null.
 bool g_ut_omit_load_config_symbol = false;
+/// Version reported by fake_agentsight_version. Tests lower it to simulate libraries that HAVE the
+/// load_config symbol but predate (parts of) the runtime_limits schema — symbol presence alone must
+/// not be trusted, because old serde ignores unknown JSON keys and still returns success.
+const char* g_ut_agentsight_version = "0.12.1";
+/// Simulates a library without the agentsight_version symbol (capability unverifiable → degrade).
+bool g_ut_omit_version_symbol = false;
 
 int fake_config_load_config(AgentsightConfigHandle* cfg, const char* json) {
     (void)cfg;
     ++g_ut_load_config_calls;
     g_ut_load_config_json = json ? json : "";
     return g_ut_load_config_ret;
+}
+
+const char* fake_agentsight_version() {
+    return g_ut_agentsight_version;
 }
 
 void fake_config_add_cmdline_rule(AgentsightConfigHandle* cfg,
@@ -284,6 +294,7 @@ std::unique_ptr<AgentSightSymbolTable> makeFullSymbolTable() {
     t->config_set_log_path = fake_config_set_log_path;
     t->config_set_enable_raw_https = g_ut_omit_raw_https_symbol ? nullptr : fake_config_set_enable_raw_https;
     t->config_load_config = g_ut_omit_load_config_symbol ? nullptr : fake_config_load_config;
+    t->version = g_ut_omit_version_symbol ? nullptr : fake_agentsight_version;
     t->config_add_cmdline_rule = fake_config_add_cmdline_rule;
     t->config_add_https = fake_config_add_https;
     t->config_add_http = fake_config_add_http;
@@ -463,6 +474,8 @@ public:
         g_ut_load_config_json.clear();
         g_ut_load_config_ret = 0;
         g_ut_omit_load_config_symbol = false;
+        g_ut_agentsight_version = "0.12.1";
+        g_ut_omit_version_symbol = false;
         mAgentSightAdapter = std::make_shared<AgentSightTestEBPFAdapter>();
         mAgentSightAdapter->setAgentSightSymbols(makeFullSymbolTable());
         auto& o = agentsightOptions();
@@ -631,6 +644,9 @@ public:
     void TestMemoryLimitHotUpdateKeepsUsedConsistent();
     void TestMemoryLimitStaleConfigDropReleasesBytes();
     void TestMemoryLimitHttpsStreamAccounted();
+    void TestMemoryLimitOldLibraryVersionDegrades();
+    void TestMemoryLimitVersionGateBoundary();
+    void TestMemoryLimitMissingVersionSymbolDegrades();
 
 protected:
     std::shared_ptr<AgentSightTestEBPFAdapter> mAgentSightAdapter;
@@ -1964,6 +1980,84 @@ void AgentsightManagerUnittest::TestMemoryLimitHttpsStreamAccounted() {
     mgr->Destroy();
 }
 
+void AgentsightManagerUnittest::TestMemoryLimitOldLibraryVersionDegrades() {
+    // 0.6.1 HAS agentsight_config_load_config and even the runtime_limits block, but not
+    // event_channel_max_bytes_mb (0.11.1): its serde would silently ignore that key and return
+    // success. The version gate must refuse to push the JSON at all and degrade honestly — while
+    // the C++-side budget keeps enforcing.
+    g_ut_agentsight_version = "0.6.1";
+    auto& o = agentsightOptions();
+    o.mAgentsightMemoryLimitEnabled = true;
+    o.mAgentsightMemoryLimitBytes = kMemLimitTestLimit;
+
+    auto mgr = makeManager();
+    registerConfig(*mgr, "p_mem_oldver");
+    APSARA_TEST_EQUAL(1, mgr->RegisteredConfigCount());
+    APSARA_TEST_EQUAL(0, g_ut_load_config_calls); // gated off despite the symbol being present
+    APSARA_TEST_EQUAL(kMemLimitTestLimit, mgr->GetMemoryBudgetForTest().Limit());
+
+    feedLlmBatch(*mgr, 3);
+    APSARA_TEST_EQUAL(static_cast<uint64_t>(1), mgr->GetMemoryBudgetForTest().DroppedEvents());
+
+    std::shared_ptr<CommonEvent> e;
+    while (mEventQueue->try_dequeue(e)) {
+        e.reset();
+    }
+    mgr->Destroy();
+}
+
+void AgentsightManagerUnittest::TestMemoryLimitVersionGateBoundary() {
+    // Just below the floor: rejected. At the floor: accepted and the JSON is pushed.
+    {
+        g_ut_agentsight_version = "0.11.0";
+        agentsightOptions().mAgentsightMemoryLimitEnabled = true;
+        auto mgr = makeManager();
+        registerConfig(*mgr, "p_mem_ver_lo");
+        APSARA_TEST_EQUAL(0, g_ut_load_config_calls);
+        mgr->Destroy();
+    }
+    {
+        g_ut_agentsight_version = "0.11.1";
+        auto mgr = makeManager();
+        registerConfig(*mgr, "p_mem_ver_hi");
+        APSARA_TEST_EQUAL(1, g_ut_load_config_calls);
+        mgr->Destroy();
+    }
+    // Unparsable version strings fail closed (treated as too old), never fail open. The call
+    // counter is cumulative across this test's blocks: still exactly the one call from "0.11.1".
+    {
+        g_ut_agentsight_version = "not-a-version";
+        auto mgr = makeManager();
+        registerConfig(*mgr, "p_mem_ver_bad");
+        APSARA_TEST_EQUAL(1, g_ut_load_config_calls);
+        mgr->Destroy();
+    }
+}
+
+void AgentsightManagerUnittest::TestMemoryLimitMissingVersionSymbolDegrades() {
+    // No agentsight_version symbol → capability unverifiable → same honest degradation as an old
+    // library: no JSON push, C++ accounting still enforced.
+    g_ut_omit_version_symbol = true;
+    mAgentSightAdapter->setAgentSightSymbols(makeFullSymbolTable());
+    auto& o = agentsightOptions();
+    o.mAgentsightMemoryLimitEnabled = true;
+    o.mAgentsightMemoryLimitBytes = kMemLimitTestLimit;
+
+    auto mgr = makeManager();
+    registerConfig(*mgr, "p_mem_nover");
+    APSARA_TEST_EQUAL(1, mgr->RegisteredConfigCount());
+    APSARA_TEST_EQUAL(0, g_ut_load_config_calls);
+
+    feedLlmBatch(*mgr, 3);
+    APSARA_TEST_EQUAL(static_cast<uint64_t>(1), mgr->GetMemoryBudgetForTest().DroppedEvents());
+
+    std::shared_ptr<CommonEvent> e;
+    while (mEventQueue->try_dequeue(e)) {
+        e.reset();
+    }
+    mgr->Destroy();
+}
+
 UNIT_TEST_CASE(AgentsightManagerUnittest, TestGetPluginType);
 UNIT_TEST_CASE(AgentsightManagerUnittest, TestAddOrUpdateValidation);
 UNIT_TEST_CASE(AgentsightManagerUnittest, TestAddOrUpdateNoSymbols);
@@ -2013,5 +2107,8 @@ UNIT_TEST_CASE(AgentsightManagerUnittest, TestMemoryLimitLoadConfigFailureDegrad
 UNIT_TEST_CASE(AgentsightManagerUnittest, TestMemoryLimitHotUpdateKeepsUsedConsistent);
 UNIT_TEST_CASE(AgentsightManagerUnittest, TestMemoryLimitStaleConfigDropReleasesBytes);
 UNIT_TEST_CASE(AgentsightManagerUnittest, TestMemoryLimitHttpsStreamAccounted);
+UNIT_TEST_CASE(AgentsightManagerUnittest, TestMemoryLimitOldLibraryVersionDegrades);
+UNIT_TEST_CASE(AgentsightManagerUnittest, TestMemoryLimitVersionGateBoundary);
+UNIT_TEST_CASE(AgentsightManagerUnittest, TestMemoryLimitMissingVersionSymbolDegrades);
 
 UNIT_TEST_MAIN

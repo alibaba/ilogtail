@@ -35,7 +35,7 @@ dev
 |  ProbeConfig.EventStreamFormat  |  bool  |  否  |  `true`  |  为 `true` 时，每次 LLM 调用在同一 `PipelineEventGroup` 内输出两条日志（各有 `event.id`）：`event.name=gen_ai.model.request`（请求开始时间戳）与 `gen_ai.model.response`（请求结束时间戳）。为 `false` 时输出单条合并日志，**无** `event.name` / `event.id`。  |
 |  ProbeConfig.MessageDeltaOnly  |  bool  |  否  |  `true`  |  为 `true` 时**不**输出全量 `gen_ai.input.messages`；仍输出 `gen_ai.input.messages_delta`、`gen_ai.system_instructions_hash` / `gen_ai.tool.definitions_hash`（非空时），以及 hash 相对上一轮变化时的 `gen_ai.system_instructions` / `gen_ai.tool.definitions`。为 `false` 时**每次**输出非空的全量 `gen_ai.input.messages`。**不影响** `gen_ai.output.messages`；`messages_delta` 及 session 状态维护**不受**本开关影响。  |
 |  ProbeConfig.RawHttpsFallback  |  bool  |  否  |  `false`  |  为 `true` 时，**无法解析为 LLM 语义**的流量（未知 API path、非标准 body）不再被丢弃，而是以原始 HTTP 形式上报（`event.name=http.request` / `http.response`，见下文）。需要 `libagentsight >= 0.9.0`；旧版动态库上该开关无效（日志告警后自动降级为关闭）。**默认关闭**：原始 body 未做任何脱敏。  |
-|  ProbeConfig.MemoryLimitEnabled  |  bool  |  否  |  `false`  |  为 `true` 时对 AgentSight 链路持有的缓冲施加内存上限（`MemoryLimitMB`）：C++ 侧在途事件按字节记账，超限**丢弃新事件**（限频告警日志、占用回落后自动恢复），同时按比例收紧 libagentsight 内部运行时限额。**不会**重启进程，与整进程的 `mem_usage_limit` 互不影响。旧版动态库缺 `agentsight_config_load_config` 符号时仅 C++ 侧记账生效（日志告警后自动降级）。详见下文「内存上限」。  |
+|  ProbeConfig.MemoryLimitEnabled  |  bool  |  否  |  `false`  |  为 `true` 时对 AgentSight 链路持有的缓冲施加内存上限（`MemoryLimitMB`）：C++ 侧在途事件按字节记账，超限**丢弃新事件**（限频告警日志、占用回落后自动恢复），同时按比例收紧 libagentsight 内部运行时限额。**不会**重启进程，与整进程的 `mem_usage_limit` 互不影响。旧版动态库（缺符号或版本低于 0.11.1）无法接收收紧的运行时限额，仅 C++ 侧记账生效（日志告警后自动降级）。详见下文「内存上限」。  |
 |  ProbeConfig.MemoryLimitMB  |  uint  |  否  |  `256`  |  内存上限（MB），仅 `MemoryLimitEnabled: true` 时生效。取值范围 `[32, 8192]`，越界自动钳制。**注意不是进程 RSS 上限**，覆盖范围见下文「内存上限」。  |
 
 ### 容器元信息标签（自动附加）
@@ -509,7 +509,7 @@ inputs:
   - `ebpf_agentsight_memory_limit_dropped_events_total`
   - `ebpf_agentsight_memory_limit_dropped_bytes_total`
 
-**版本与降级**：完整功能需要 `libagentsight >= 0.4.0`（`agentsight_config_load_config` 符号）。旧版动态库上开启该配置时，日志告警后 Rust 侧维持库默认限额，**C++ 侧记账与丢弃仍然生效**（部分保护），采集不中断。
+**版本与降级**：完整功能需要 `libagentsight >= 0.11.1`。版本门槛而非仅符号探测：`agentsight_config_load_config` 符号自 0.4.0 存在，但 `runtime_limits` 配置区块 0.6.1 才引入、其中探针通道字节限额 0.11.1 才引入，更旧的库会**静默忽略**不认识的 JSON 字段并返回成功——因此按 `agentsight_version` 报告的版本判断能力，版本过低或无法获取时不依赖"下发成功"的假象。降级行为：日志告警后 Rust 侧维持库默认限额，**C++ 侧记账与丢弃仍然生效**（部分保护），采集不中断。
 
 ## 样例
 
