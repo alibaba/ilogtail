@@ -43,6 +43,11 @@ struct AgentSightSymbolTable {
     /// container can read a bind-mounted host procfs instead of its own /proc.
     /// Left null by older libraries; callers must null-check before use.
     void (*config_set_procfs_root)(AgentsightConfigHandle*, const char*) = nullptr;
+    /// Optional (present since libagentsight 0.4.x): merge a JSON config into the handle. Used to
+    /// push tightened runtime_limits for the AgentSight memory limit. Returns 0 on success, < 0 on
+    /// parse failure (details via last_error). Left null by older libraries; callers must
+    /// null-check before use.
+    int (*config_load_config)(AgentsightConfigHandle*, const char*) = nullptr;
     void (*config_add_cmdline_rule)(AgentsightConfigHandle*, const char* const*, const char*, int) = nullptr;
     void (*config_add_https)(AgentsightConfigHandle*, const char*) = nullptr;
     int (*config_add_http)(AgentsightConfigHandle*, const char*) = nullptr;

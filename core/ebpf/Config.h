@@ -46,6 +46,12 @@ struct AgentsightCmdlineAllowRule {
     std::vector<std::string> patterns;
 };
 
+/// AgentSight memory limit defaults and bounds, in MiB. The minimum keeps the Rust-side runtime
+/// limits (ring buffer, per-connection body floor, channel budgets) meaningful.
+inline constexpr uint32_t kAgentsightMemoryLimitMBDefault = 256;
+inline constexpr uint32_t kAgentsightMemoryLimitMBMin = 32;
+inline constexpr uint32_t kAgentsightMemoryLimitMBMax = 8192;
+
 class SecurityOptions {
 public:
     bool Init(SecurityProbeType filterType,
@@ -75,6 +81,18 @@ public:
     /// (AgentsightHttpsData) instead of being dropped. Off by default: the payload is unredacted
     /// request/response bytes, and it requires libagentsight >= 0.9.0.
     bool mAgentsightRawHttpsFallback = false;
+    /// When true, cap the buffers held by the AgentSight pipeline: in-flight events on the C++ side
+    /// are byte-accounted against mAgentsightMemoryLimitBytes (new events are dropped when over),
+    /// and the libagentsight runtime limits are tightened proportionally via
+    /// agentsight_config_load_config (optional symbol; older libraries degrade to C++-side
+    /// accounting only). Off by default.
+    /// NOTE: this is a pipeline-buffer budget, NOT a process RSS cap. Pages that tcmalloc has freed
+    /// but not returned to the OS, and the C++ session input cache, are not accounted for.
+    bool mAgentsightMemoryLimitEnabled = false;
+    /// Byte budget for the C++-side in-flight events, effective only when
+    /// mAgentsightMemoryLimitEnabled. Parsed from MemoryLimitMB clamped to
+    /// [kAgentsightMemoryLimitMBMin, kAgentsightMemoryLimitMBMax].
+    uint64_t mAgentsightMemoryLimitBytes = static_cast<uint64_t>(kAgentsightMemoryLimitMBDefault) * 1024 * 1024;
 };
 
 /////////////////////  /////////////////////

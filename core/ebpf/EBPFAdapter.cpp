@@ -265,6 +265,11 @@ bool EBPFAdapter::tryLoadAgentSightDylib() {
         tmpLib->LoadMethod("agentsight_config_set_enable_raw_https", optSymErr));
     sym.config_set_procfs_root = reinterpret_cast<decltype(sym.config_set_procfs_root)>(
         tmpLib->LoadMethod("agentsight_config_set_procfs_root", optSymErr));
+    // Optional symbol (present since libagentsight 0.4.x): merges a JSON config (used to push
+    // tightened runtime_limits for the memory limit). Same discipline as the other optional
+    // symbols: own error string, kept out of the `ok` check, callers null-check and degrade.
+    sym.config_load_config = reinterpret_cast<decltype(sym.config_load_config)>(
+        tmpLib->LoadMethod("agentsight_config_load_config", optSymErr));
     sym.config_add_cmdline_rule = reinterpret_cast<decltype(sym.config_add_cmdline_rule)>(
         tmpLib->LoadMethod("agentsight_config_add_cmdline_rule", symErr));
     sym.config_add_https
@@ -293,8 +298,9 @@ bool EBPFAdapter::tryLoadAgentSightDylib() {
     mAgentSightSymbols = std::make_unique<AgentSightSymbolTable>(sym);
     LOG_INFO(sLogger,
              ("[EBPFAdapter] AgentSight symbols loaded", STRING_FLAG(ebpf_agentsight_dylib_base_name))(
-                 "raw_https_api", sym.config_set_enable_raw_https != nullptr)("procfs_root_api",
-                                                                              sym.config_set_procfs_root != nullptr));
+                 "raw_https_api", sym.config_set_enable_raw_https != nullptr)(
+                 "procfs_root_api", sym.config_set_procfs_root != nullptr)("load_config_api",
+                                                                          sym.config_load_config != nullptr));
     return true;
 }
 

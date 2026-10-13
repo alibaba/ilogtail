@@ -28,6 +28,7 @@
 #include "collection_pipeline/queue/ProcessQueueManager.h"
 #include "common/FileSystemUtil.h"
 #include "common/StringView.h"
+#include "common/TimeKeeper.h"
 #include "common/UUIDUtil.h"
 #include "common/magic_enum.hpp"
 #include "constants/TagConstants.h"
@@ -270,6 +271,42 @@ static const std::vector<const char*>& GetBuiltinHttpsAllowRules() {
         "*.maas.aliyuncs.com",
     };
     return kRules;
+}
+
+/// Builds the runtime_limits JSON pushed down via agentsight_config_load_config when
+/// MemoryLimitEnabled is on.
+///
+/// IMPORTANT: load_from_json REPLACES the whole runtime_limits block — a sub-key missing from this
+/// JSON falls back to the Rust DEFAULT_* constant, not to the previous value (config.rs
+/// JsonRuntimeLimits parsing). Always emit all nine keys. This function is the only construction
+/// point; keep it that way.
+///
+/// Tightening policy (fidelity first): only the genuinely loose segments shrink, and every formula
+/// is min(current default, share of L), so the Rust side is never looser than today:
+/// - event_channel_capacity   min(10000, max(512, L*4)) — one knob, two effects: probe channel
+///   slots AND FFI output queue slots (ffi.rs builds the queue with this value); the FFI queue has
+///   no byte accounting of its own, so the slot count is the only handle on it.
+/// - event_channel_max_bytes_mb / pending_genai_max_bytes_mb   min(64, max(4, L/8))
+/// - pending_genai_max_count  min(1000, max(128, L*2)) — count backstop because the library
+///   estimates 512 B per pending event (PendingGenAI::estimated_bytes), a severe underestimate for
+///   LLM calls carrying full messages.
+/// - max_connection_body_mb   stays at the 8 MB floor on purpose: tightening it would truncate
+///   large LLM contexts (the product's core payload) while saving little in realistic loads — the
+///   24-connection LRU already bounds the aggregate to 192 MB.
+/// - ring_buffer_mb           L >= 256 ? 32 : 8 (must be a power of two).
+/// - connection_idle_timeout_secs / pid_cache_size / event_channel_policy: unchanged defaults.
+std::string BuildAgentsightRuntimeLimitsJson(uint64_t limitMB) {
+    const uint64_t l = std::max<uint64_t>(limitMB, 1);
+    const uint64_t channelCapacity = std::min<uint64_t>(10000, std::max<uint64_t>(512, l * 4));
+    const uint64_t channelBytesMB = std::min<uint64_t>(64, std::max<uint64_t>(4, l / 8));
+    const uint64_t pendingCount = std::min<uint64_t>(1000, std::max<uint64_t>(128, l * 2));
+    const uint64_t ringMB = l >= 256 ? 32 : 8;
+    return std::string("{\"runtime_limits\":{") + "\"event_channel_capacity\":" + std::to_string(channelCapacity)
+        + ",\"event_channel_policy\":\"backpressure\"" + ",\"event_channel_max_bytes_mb\":"
+        + std::to_string(channelBytesMB) + ",\"pending_genai_max_count\":" + std::to_string(pendingCount)
+        + ",\"pending_genai_max_bytes_mb\":" + std::to_string(channelBytesMB) + ",\"pid_cache_size\":1024"
+        + ",\"max_connection_body_mb\":8" + ",\"connection_idle_timeout_secs\":60" + ",\"ring_buffer_mb\":"
+        + std::to_string(ringMB) + "}}";
 }
 
 void ApplyAgentsightRulesToConfig(AgentsightConfigHandle* cfg,
@@ -860,7 +897,8 @@ AgentsightManager::AgentsightManager(const std::shared_ptr<ProcessCacheManager>&
                                      const size_t sessionInputCacheMaxSize)
     : AbstractManager(processCacheManager, eBPFAdapter, queue, pool),
       mHostRootPath(std::move(hostRootPath)),
-      mSessionInputCache(sessionInputCacheMaxSize, 0) {
+      mSessionInputCache(sessionInputCacheMaxSize, 0),
+      mMemBudget(std::make_shared<AgentsightByteBudget>()) {
 }
 
 int AgentsightManager::Init() {
@@ -925,6 +963,45 @@ bool AgentsightManager::RestartAgentSightLocked(const SecurityOptions& opts) {
         LogAgentSightError("config_new returned null");
         return false;
     }
+
+    // Memory limit. Two independent halves:
+    // 1) C++-side byte budget for in-flight events — always armed here (limit 0 = disabled). SetLimit
+    //    never clears Used: records from a previous generation still hold their bytes and release
+    //    them through their destructors, so hot updates stay conservative.
+    // 2) Rust-side runtime limits, pushed as JSON through the optional agentsight_config_load_config
+    //    symbol. Must run BEFORE the explicit setters below: load_from_json merges scalar fields one
+    //    by one but replaces the runtime_limits block wholesale, and going first guarantees the
+    //    setters (verbose, log path, ...) always have the last word. Missing symbol / parse failure
+    //    degrades to C++-side accounting only — warn and continue, same discipline as
+    //    RawHttpsFallback below; never fail the restart over it.
+    mMemBudget->SetLimit(opts.mAgentsightMemoryLimitEnabled ? opts.mAgentsightMemoryLimitBytes : 0);
+    if (opts.mAgentsightMemoryLimitEnabled) {
+        const uint64_t limitMB = opts.mAgentsightMemoryLimitBytes / (1024 * 1024);
+        if (sym->config_load_config) {
+            const std::string limitsJson = BuildAgentsightRuntimeLimitsJson(limitMB);
+            if (sym->config_load_config(cfg, limitsJson.c_str()) != 0) {
+                const char* err = sym->last_error ? sym->last_error() : nullptr;
+                LOG_WARNING(sLogger,
+                            ("AgentSight",
+                             "MemoryLimit: agentsight_config_load_config failed; libagentsight keeps its default "
+                             "runtime limits, C++-side byte accounting still enforced")("last_error",
+                                                                                        err ? err : "")(
+                                "memory_limit_mb", limitMB));
+            } else {
+                LOG_INFO(sLogger,
+                         ("AgentSight", "MemoryLimit runtime limits applied")("memory_limit_mb", limitMB)(
+                             "cpp_inflight_limit_bytes", opts.mAgentsightMemoryLimitBytes)("runtime_limits_json",
+                                                                                           limitsJson));
+            }
+        } else {
+            LOG_WARNING(sLogger,
+                        ("AgentSight",
+                         "MemoryLimitEnabled requested but agentsight_config_load_config symbol not found; "
+                         "libagentsight keeps its default runtime limits, C++-side byte accounting still "
+                         "enforced (requires libagentsight >= 0.4.0)")("memory_limit_mb", limitMB));
+        }
+    }
+
     sym->config_set_verbose(cfg, static_cast<int>(opts.mVerbose));
     if (!opts.mLogPath.empty()) {
         sym->config_set_log_path(cfg, opts.mLogPath.c_str());
@@ -1038,10 +1115,24 @@ void AgentsightManager::OnLlmCallback(const AgentsightLLMData* data, void* user_
     }
     auto* self = static_cast<AgentsightManager*>(user_data);
     // Do not lock mLibMutex here: runs inside handle_read → DrainReadsLocked while OnEpollReadable holds mLibMutex.
+    // Estimate BEFORE the deep copy: an event the memory limit rejects must not pay for the copy.
+    const uint64_t eventBytes = EstimateAgentsightLlmRecordBytes(*data);
+    const auto acq = self->mMemBudget->TryAcquire(eventBytes);
+    if (acq == AgentsightByteBudget::AcquireResult::kRejected) {
+        self->OnMemoryLimitDrop(eventBytes, self->mGenAiMetrics, "gen_ai");
+        return;
+    }
     const std::string configName = self->mConfigName;
     auto evt = std::make_shared<AgentsightLlmRecord>(configName, *data);
+    if (acq == AgentsightByteBudget::AcquireResult::kAcquired) {
+        // Adopt before try_enqueue: once enqueued, the handler thread may destroy the record at any
+        // time, so writing the accounting fields afterwards would be a data race. If the enqueue
+        // fails below, the record's destructor releases the adopted bytes — no manual roll-back.
+        evt->AdoptMemoryAccounting(self->mMemBudget, eventBytes);
+    }
     if (self->mCommonEventQueue.try_enqueue(evt)) {
         ADD_COUNTER(self->mGenAiMetrics.inEventsTotal, 1);
+        self->NoteMemoryLimitRecovered();
     } else {
         ADD_COUNTER(self->mLossKernelEventsTotal, 1);
         ADD_COUNTER(self->mGenAiMetrics.lossEventsTotal, 1);
@@ -1056,14 +1147,57 @@ void AgentsightManager::OnHttpsCallback(const AgentsightHttpsData* data, void* u
     auto* self = static_cast<AgentsightManager*>(user_data);
     // Same locking contract as OnLlmCallback: runs inside handle_read while OnEpollReadable already
     // holds mLibMutex, so taking it here would deadlock.
+    const uint64_t eventBytes = EstimateAgentsightHttpsRecordBytes(*data);
+    const auto acq = self->mMemBudget->TryAcquire(eventBytes);
+    if (acq == AgentsightByteBudget::AcquireResult::kRejected) {
+        self->OnMemoryLimitDrop(eventBytes, self->mRawHttpMetrics, "raw_http");
+        return;
+    }
     const std::string configName = self->mConfigName;
     auto evt = std::make_shared<AgentsightHttpsRecord>(configName, *data);
+    if (acq == AgentsightByteBudget::AcquireResult::kAcquired) {
+        evt->AdoptMemoryAccounting(self->mMemBudget, eventBytes); // before try_enqueue — see OnLlmCallback
+    }
     if (self->mCommonEventQueue.try_enqueue(evt)) {
         ADD_COUNTER(self->mRawHttpMetrics.inEventsTotal, 1);
+        self->NoteMemoryLimitRecovered();
     } else {
         ADD_COUNTER(self->mLossKernelEventsTotal, 1);
         ADD_COUNTER(self->mRawHttpMetrics.lossEventsTotal, 1);
         LOG_WARNING(sLogger, ("AgentSight raw HTTP event enqueue failed", ""));
+    }
+}
+
+void AgentsightManager::OnMemoryLimitDrop(uint64_t eventBytes, StreamMetrics& stream, const char* streamName) {
+    ADD_COUNTER(stream.memoryLimitDroppedEventsTotal, 1);
+    ADD_COUNTER(stream.memoryLimitDroppedBytesTotal, eventBytes);
+    // Folded into the general loss totals as well, so "events lost" stays complete without the
+    // memory-limit-specific counters; those exist to attribute drops to the limit itself.
+    ADD_COUNTER(mLossKernelEventsTotal, 1);
+    ADD_COUNTER(stream.lossEventsTotal, 1);
+    mMemLimitDropping = true;
+    // 30s time gate (same pattern as EventHandler's push-blocked alarm); the first drop logs
+    // immediately because mLastMemLimitLogSec starts at 0. An event larger than the whole budget is
+    // dropped forever — event_bytes in the log is what makes that diagnosable.
+    const int64_t nowSec = TimeKeeper::GetInstance()->NowSec();
+    if (nowSec - mLastMemLimitLogSec >= 30) {
+        mLastMemLimitLogSec = nowSec;
+        LOG_WARNING(sLogger,
+                    ("AgentSight memory limit exceeded, dropping new events", streamName)(
+                        "used_bytes", mMemBudget->Used())("cpp_limit_bytes", mMemBudget->Limit())(
+                        "event_bytes", eventBytes)("dropped_events_total", mMemBudget->DroppedEvents())(
+                        "dropped_bytes_total", mMemBudget->DroppedBytes()));
+    }
+}
+
+void AgentsightManager::NoteMemoryLimitRecovered() {
+    if (mMemLimitDropping) {
+        mMemLimitDropping = false;
+        LOG_INFO(sLogger,
+                 ("AgentSight memory usage back under limit, accepting events again", "")(
+                     "used_bytes", mMemBudget->Used())("cpp_limit_bytes", mMemBudget->Limit())(
+                     "dropped_events_total", mMemBudget->DroppedEvents())(
+                     "dropped_bytes_total", mMemBudget->DroppedBytes()));
     }
 }
 
@@ -1100,6 +1234,10 @@ int AgentsightManager::AddOrUpdateConfig(const CollectionPipelineContext* ctx,
             metrics.pushLogsTotal = ref->GetCounter(METRIC_PLUGIN_OUT_EVENTS_TOTAL);
             metrics.pushLogGroupTotal = ref->GetCounter(METRIC_PLUGIN_OUT_EVENT_GROUPS_TOTAL);
             metrics.lossEventsTotal = ref->GetCounter(METRIC_PLUGIN_EBPF_LOSS_KERNEL_EVENTS_TOTAL);
+            metrics.memoryLimitDroppedEventsTotal
+                = ref->GetCounter(METRIC_PLUGIN_EBPF_AGENTSIGHT_MEMORY_LIMIT_DROPPED_EVENTS_TOTAL);
+            metrics.memoryLimitDroppedBytesTotal
+                = ref->GetCounter(METRIC_PLUGIN_EBPF_AGENTSIGHT_MEMORY_LIMIT_DROPPED_BYTES_TOTAL);
             return metrics;
         };
         mRawHttpMetrics = initStreamMetrics(METRIC_LABEL_VALUE_RECORD_TYPE_RAW_HTTP);
@@ -1163,6 +1301,10 @@ int AgentsightManager::RemoveConfig(const std::string&) {
     mEventStreamFormat = true;
     mMessageDeltaOnly = true;
     mRawHttpsFallback = false;
+    // Disarm the budget but never clear Used: records still queued release their bytes through
+    // their destructors after this point.
+    mMemBudget->SetLimit(0);
+    mMemLimitDropping = false;
     StopAgentSightLocked();
     return 0;
 }
@@ -1180,6 +1322,8 @@ int AgentsightManager::Destroy() {
     mEventStreamFormat = true;
     mMessageDeltaOnly = true;
     mRawHttpsFallback = false;
+    mMemBudget->SetLimit(0); // see RemoveConfig: Used stays, queued records release via destructors
+    mMemLimitDropping = false;
     mInited = false;
     return 0;
 }

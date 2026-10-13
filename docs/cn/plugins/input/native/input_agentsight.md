@@ -35,6 +35,8 @@ dev
 |  ProbeConfig.EventStreamFormat  |  bool  |  否  |  `true`  |  为 `true` 时，每次 LLM 调用在同一 `PipelineEventGroup` 内输出两条日志（各有 `event.id`）：`event.name=gen_ai.model.request`（请求开始时间戳）与 `gen_ai.model.response`（请求结束时间戳）。为 `false` 时输出单条合并日志，**无** `event.name` / `event.id`。  |
 |  ProbeConfig.MessageDeltaOnly  |  bool  |  否  |  `true`  |  为 `true` 时**不**输出全量 `gen_ai.input.messages`；仍输出 `gen_ai.input.messages_delta`、`gen_ai.system_instructions_hash` / `gen_ai.tool.definitions_hash`（非空时），以及 hash 相对上一轮变化时的 `gen_ai.system_instructions` / `gen_ai.tool.definitions`。为 `false` 时**每次**输出非空的全量 `gen_ai.input.messages`。**不影响** `gen_ai.output.messages`；`messages_delta` 及 session 状态维护**不受**本开关影响。  |
 |  ProbeConfig.RawHttpsFallback  |  bool  |  否  |  `false`  |  为 `true` 时，**无法解析为 LLM 语义**的流量（未知 API path、非标准 body）不再被丢弃，而是以原始 HTTP 形式上报（`event.name=http.request` / `http.response`，见下文）。需要 `libagentsight >= 0.9.0`；旧版动态库上该开关无效（日志告警后自动降级为关闭）。**默认关闭**：原始 body 未做任何脱敏。  |
+|  ProbeConfig.MemoryLimitEnabled  |  bool  |  否  |  `false`  |  为 `true` 时对 AgentSight 链路持有的缓冲施加内存上限（`MemoryLimitMB`）：C++ 侧在途事件按字节记账，超限**丢弃新事件**（限频告警日志、占用回落后自动恢复），同时按比例收紧 libagentsight 内部运行时限额。**不会**重启进程，与整进程的 `mem_usage_limit` 互不影响。旧版动态库缺 `agentsight_config_load_config` 符号时仅 C++ 侧记账生效（日志告警后自动降级）。详见下文「内存上限」。  |
+|  ProbeConfig.MemoryLimitMB  |  uint  |  否  |  `256`  |  内存上限（MB），仅 `MemoryLimitEnabled: true` 时生效。取值范围 `[32, 8192]`，越界自动钳制。**注意不是进程 RSS 上限**，覆盖范围见下文「内存上限」。  |
 
 ### 容器元信息标签（自动附加）
 
@@ -468,6 +470,46 @@ Http:
 - 每次 LLM 调用 **一条** 日志，**无** `event.name`、**无** `event.id`；时间戳为请求开始时刻。
 - **有**：关联字段、HTTP/`usage` 元数据、`gen_ai.input.messages_delta`（非空时）、system/tools hash（非空时）、hash 变化时的 system/tools 全文、`gen_ai.output.messages`。
 - **无**：全量 `gen_ai.input.messages`、拆分后的 `gen_ai.model.request` / `gen_ai.model.response`。
+
+### 内存上限（`MemoryLimitEnabled`）
+
+默认关闭。开启后对 **AgentSight 链路当前还持有的缓冲**施加预算，防止大流量或下游消费变慢时事件积压把内存顶上去。超限只**丢弃新事件**（打限频告警日志），**不会**让采集进程 Suicide/重启；占用回落到上限以下后自动恢复采集，无需干预。
+
+```yaml
+# 关闭（默认，行为与未引入本功能时一致）
+inputs:
+  - Type: input_agentsight
+
+# 开启，上限 256MB
+inputs:
+  - Type: input_agentsight
+    ProbeConfig:
+      MemoryLimitEnabled: true
+      MemoryLimitMB: 256
+```
+
+**上限卡的是哪两段内存**：
+
+| 段 | 机制 |
+| --- | --- |
+| C++ 侧在途事件（已收到、尚未推入处理队列） | 按 payload 字节**精确记账**，硬上限 = `MemoryLimitMB` 全额；超限的新事件在深拷贝前直接丢弃 |
+| libagentsight（Rust）内部缓冲 | 启动/热更新时按比例**收紧**运行时限额下发给动态库：探针事件通道字节预算与 FFI 输出队列槽位、`pending_genai` 字节与条数、eBPF ring buffer。单连接请求体上限**保留 8MB 地板不收紧**，避免截断大上下文 LLM 请求 |
+
+**明确不计入本上限的部分**（重要，避免误读）：
+
+1. **这不是进程 RSS 上限**。tcmalloc 已经 free、但尚未归还操作系统的页不计入（其 300 秒归还周期不受本配置影响）；进程级内存管控仍由 LoongCollector 自身的 `mem_usage_limit` 负责，两者互不影响。
+2. C++ 侧的会话输入缓存（`MessageDeltaOnly` 去重状态，LRU 有界）不计入。
+3. Rust 内部缓冲只保证「收紧到有界」，**不逐字节计入** `MemoryLimitMB`：病态最坏情况（24 条连接同时持有 8MB 请求体等）下链路总占用可能超过配置值，但结构有界、不会无限增长；压测实测正常运行远低于上限。
+4. C++ 侧记账口径为 payload 字节，不含 string 容量冗余与分配器开销，实际 RSS 占用比记账值略高（约 10–20%）。
+
+**超限时可观测**：
+
+- 限频 WARNING 日志（30 秒一条）：当前占用、上限、触发丢弃的事件大小、累计丢弃事件数/字节数；恢复时打一条 INFO。
+- 自监控指标（按 `record_type=raw_http/gen_ai` 归因，同时计入既有 loss 口径）：
+  - `ebpf_agentsight_memory_limit_dropped_events_total`
+  - `ebpf_agentsight_memory_limit_dropped_bytes_total`
+
+**版本与降级**：完整功能需要 `libagentsight >= 0.4.0`（`agentsight_config_load_config` 符号）。旧版动态库上开启该配置时，日志告警后 Rust 侧维持库默认限额，**C++ 侧记账与丢弃仍然生效**（部分保护），采集不中断。
 
 ## 样例
 
