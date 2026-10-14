@@ -1809,7 +1809,11 @@ void AgentsightManagerUnittest::TestMemoryLimitRecoversAfterDrain() {
     o.mAgentsightMemoryLimitBytes = kMemLimitTestLimit;
 
     auto mgr = makeManager();
-    registerConfig(*mgr, "p_mem_recover");
+    // Success-path HandleEvent pushes ProcessQueueItems holding LogEvents allocated from the
+    // fixture's EventPool. They must be popped and destroyed BEFORE the fixture dies: the
+    // ProcessQueueManager singleton outlives every fixture, and a residue there is a
+    // heap-use-after-free at process exit (caught by ASan in CI). Hence poppable queue + drain.
+    registerConfigWithPoppableQueue(*mgr, "p_mem_recover");
 
     feedLlmBatch(*mgr, 3); // 2 accepted, 1 dropped
     APSARA_TEST_EQUAL(static_cast<uint64_t>(1), mgr->GetMemoryBudgetForTest().DroppedEvents());
@@ -1820,6 +1824,7 @@ void AgentsightManagerUnittest::TestMemoryLimitRecoversAfterDrain() {
         mgr->HandleEvent(e);
         e.reset();
     }
+    drainProcessQueues(); // destroy what HandleEvent pushed, while the EventPool is still alive
     APSARA_TEST_EQUAL(static_cast<uint64_t>(0), mgr->GetMemoryBudgetForTest().Used());
 
     // Usage back under the limit → admission resumes with no hysteresis and no extra state.
@@ -1890,10 +1895,12 @@ void AgentsightManagerUnittest::TestMemoryLimitHotUpdateKeepsUsedConsistent() {
     o.mAgentsightMemoryLimitBytes = kMemLimitTestLimit;
 
     auto mgr = makeManager();
+    // Same lifetime discipline as TestMemoryLimitRecoversAfterDrain: HandleEvent below pushes into
+    // a real queue, so use a poppable one and drain it before the fixture's EventPool dies.
+    const QueueKey queueKey = registerConfigWithPoppableQueue(*mgr, "p_mem_hot");
     CollectionPipelineContext ctx;
     ctx.SetConfigName("p_mem_hot");
-    ctx.SetProcessQueueKey(1);
-    APSARA_TEST_EQUAL(0, mgr->AddOrUpdateConfig(&ctx, 0, nullptr, asVariant()));
+    ctx.SetProcessQueueKey(queueKey);
 
     feedLlmBatch(*mgr, 2); // both accepted, left IN the queue across the hot update
     const uint64_t usedBefore = mgr->GetMemoryBudgetForTest().Used();
@@ -1912,6 +1919,7 @@ void AgentsightManagerUnittest::TestMemoryLimitHotUpdateKeepsUsedConsistent() {
         mgr->HandleEvent(e);
         e.reset();
     }
+    drainProcessQueues(); // destroy pushed items while the fixture's EventPool is still alive
     APSARA_TEST_EQUAL(static_cast<uint64_t>(0), mgr->GetMemoryBudgetForTest().Used());
 
     // New events flow unaccounted while disabled.
