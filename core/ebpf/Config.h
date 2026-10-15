@@ -46,8 +46,9 @@ struct AgentsightCmdlineAllowRule {
     std::vector<std::string> patterns;
 };
 
-/// AgentSight memory limit defaults and bounds, in MiB. The minimum keeps the Rust-side runtime
-/// limits (ring buffer, per-connection body floor, channel budgets) meaningful.
+/// Defaults and bounds for the AgentSight C++-side in-flight byte budget (MemoryLimitMB), in MiB.
+/// The bounds only sanity-check the operator's sizing; the Rust-side runtime limits are configured
+/// separately via RuntimeLimitsJson.
 inline constexpr uint32_t kAgentsightMemoryLimitMBDefault = 256;
 inline constexpr uint32_t kAgentsightMemoryLimitMBMin = 32;
 inline constexpr uint32_t kAgentsightMemoryLimitMBMax = 8192;
@@ -81,11 +82,10 @@ public:
     /// (AgentsightHttpsData) instead of being dropped. Off by default: the payload is unredacted
     /// request/response bytes, and it requires libagentsight >= 0.9.0.
     bool mAgentsightRawHttpsFallback = false;
-    /// When true, cap the buffers held by the AgentSight pipeline: in-flight events on the C++ side
-    /// are byte-accounted against mAgentsightMemoryLimitBytes (new events are dropped when over),
-    /// and the libagentsight runtime limits are tightened proportionally via
-    /// agentsight_config_load_config (optional symbol; older libraries degrade to C++-side
-    /// accounting only). Off by default.
+    /// When true, cap the C++-side in-flight events held by the AgentSight pipeline: events are
+    /// byte-accounted against mAgentsightMemoryLimitBytes and new events are dropped when over
+    /// (rate-limited warning + auto recovery). Off by default. The Rust-side runtime limits are
+    /// NOT derived from this switch; configure them explicitly via mAgentsightRuntimeLimitsJson.
     /// NOTE: this is a pipeline-buffer budget, NOT a process RSS cap. Pages that tcmalloc has freed
     /// but not returned to the OS, and the C++ session input cache, are not accounted for.
     bool mAgentsightMemoryLimitEnabled = false;
@@ -93,6 +93,14 @@ public:
     /// mAgentsightMemoryLimitEnabled. Parsed from MemoryLimitMB clamped to
     /// [kAgentsightMemoryLimitMBMin, kAgentsightMemoryLimitMBMax].
     uint64_t mAgentsightMemoryLimitBytes = static_cast<uint64_t>(kAgentsightMemoryLimitMBDefault) * 1024 * 1024;
+    /// Verbatim libagentsight runtime_limits overrides, pushed through the optional
+    /// agentsight_config_load_config symbol (gated on libagentsight >= 0.11.1; older libraries
+    /// degrade to library defaults with a warning). Accepts either a flat runtime_limits object
+    /// ({"event_channel_capacity":1024,...}) or a wrapped document ({"runtime_limits":{...}}).
+    /// Empty (default) = push nothing, the library keeps its own defaults. Independent of
+    /// mAgentsightMemoryLimitEnabled. NOTE: the library replaces the whole runtime_limits block —
+    /// sub-keys absent from this JSON fall back to library defaults, not to previous values.
+    std::string mAgentsightRuntimeLimitsJson;
 };
 
 /////////////////////  /////////////////////

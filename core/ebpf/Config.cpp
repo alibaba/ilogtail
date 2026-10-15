@@ -694,6 +694,7 @@ bool SecurityOptions::Init(SecurityProbeType probeType,
         mAgentsightRawHttpsFallback = false;
         mAgentsightMemoryLimitEnabled = false;
         mAgentsightMemoryLimitBytes = static_cast<uint64_t>(kAgentsightMemoryLimitMBDefault) * 1024 * 1024;
+        mAgentsightRuntimeLimitsJson.clear();
     }
 
     SecurityOption thisSecurityOption;
@@ -776,6 +777,14 @@ bool SecurityOptions::Init(SecurityProbeType probeType,
                     // a sizing mistake, not a config error worth failing the pipeline over.
                     memoryLimitMB = std::clamp(memoryLimitMB, kAgentsightMemoryLimitMBMin, kAgentsightMemoryLimitMBMax);
                     mAgentsightMemoryLimitBytes = static_cast<uint64_t>(memoryLimitMB) * 1024 * 1024;
+                }
+                if (innerConfig.isMember("RuntimeLimitsJson")) {
+                    // Verbatim passthrough; JSON well-formedness is validated where it is pushed
+                    // (AgentsightManager), keeping the config layer free of a rapidjson dependency.
+                    if (!GetOptionalStringParam(
+                            innerConfig, "RuntimeLimitsJson", mAgentsightRuntimeLimitsJson, errorMsg)) {
+                        warnOptionalParse();
+                    }
                 }
                 return true;
             }

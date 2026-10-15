@@ -486,6 +486,7 @@ public:
         o.mAgentsightRawHttpsFallback = false;
         o.mAgentsightMemoryLimitEnabled = false;
         o.mAgentsightMemoryLimitBytes = static_cast<uint64_t>(kAgentsightMemoryLimitMBDefault) * 1024 * 1024;
+        o.mAgentsightRuntimeLimitsJson.clear();
     }
 
     void TearDown() override {
@@ -636,7 +637,10 @@ public:
     void TestContainerTagsAttachedForHttpsEvent();
     void TestContainerTagsMissDegradesSilently();
     void TestMemoryLimitDisabledByDefault();
-    void TestMemoryLimitLoadConfigJson();
+    void TestRuntimeLimitsJsonPassthrough();
+    void TestRuntimeLimitsJsonWrappedAndUnknownKeys();
+    void TestRuntimeLimitsJsonBadJsonIgnored();
+    void TestRuntimeLimitsJsonIndependentOfByteGate();
     void TestMemoryLimitDropsOversizedNewEvents();
     void TestMemoryLimitRecoversAfterDrain();
     void TestMemoryLimitMissingLoadConfigSymbol();
@@ -1701,7 +1705,8 @@ void AgentsightManagerUnittest::TestContainerTagsMissDegradesSilently() {
 }
 
 // ================================================================================================
-// Memory limit (MemoryLimitEnabled / MemoryLimitMB)
+// Memory limit: C++ byte gate (MemoryLimitEnabled / MemoryLimitMB) and the independent Rust-side
+// runtime_limits passthrough (RuntimeLimitsJson)
 // ================================================================================================
 
 namespace {
@@ -1742,10 +1747,12 @@ void AgentsightManagerUnittest::TestMemoryLimitDisabledByDefault() {
     mgr->Destroy();
 }
 
-void AgentsightManagerUnittest::TestMemoryLimitLoadConfigJson() {
+void AgentsightManagerUnittest::TestRuntimeLimitsJsonPassthrough() {
     auto& o = agentsightOptions();
-    o.mAgentsightMemoryLimitEnabled = true;
-    o.mAgentsightMemoryLimitBytes = 256ULL * 1024 * 1024;
+    // Verbatim passthrough: exactly the operator's keys are sent, wrapped into the config document
+    // shape. Missing sub-keys are NOT completed from any formula — they fall back to the library
+    // defaults on the Rust side (load_from_json replaces the whole runtime_limits block).
+    o.mAgentsightRuntimeLimitsJson = R"({"event_channel_capacity":2048,"ring_buffer_mb":8})";
 
     auto mgr = makeManager();
     registerConfig(*mgr, "p_mem_json");
@@ -1755,21 +1762,82 @@ void AgentsightManagerUnittest::TestMemoryLimitLoadConfigJson() {
     std::string err;
     APSARA_TEST_TRUE(ParseJsonTable(g_ut_load_config_json, root, err));
     const Json::Value& rl = root["runtime_limits"];
-    // load_from_json replaces the runtime_limits block wholesale — all nine keys must be present
-    // with the P2 formula values for L=256: min(default, share), body keeps its 8MB floor.
-    APSARA_TEST_EQUAL(9U, rl.size());
-    APSARA_TEST_EQUAL(1024U, rl["event_channel_capacity"].asUInt()); // min(10000, max(512, L*4))
-    APSARA_TEST_EQUAL(std::string("backpressure"), rl["event_channel_policy"].asString());
-    APSARA_TEST_EQUAL(32U, rl["event_channel_max_bytes_mb"].asUInt()); // min(64, max(4, L/8))
-    APSARA_TEST_EQUAL(512U, rl["pending_genai_max_count"].asUInt()); // min(1000, max(128, L*2))
-    APSARA_TEST_EQUAL(32U, rl["pending_genai_max_bytes_mb"].asUInt());
-    APSARA_TEST_EQUAL(1024U, rl["pid_cache_size"].asUInt());
-    APSARA_TEST_EQUAL(8U, rl["max_connection_body_mb"].asUInt()); // P2: floor kept, no truncation
-    APSARA_TEST_EQUAL(60U, rl["connection_idle_timeout_secs"].asUInt());
-    APSARA_TEST_EQUAL(32U, rl["ring_buffer_mb"].asUInt()); // L >= 256 → 32
-    // P2: the C++ in-flight budget gets the FULL configured limit, not a split share.
-    APSARA_TEST_EQUAL(256ULL * 1024 * 1024, mgr->GetMemoryBudgetForTest().Limit());
+    APSARA_TEST_EQUAL(2U, rl.size());
+    APSARA_TEST_EQUAL(2048U, rl["event_channel_capacity"].asUInt());
+    APSARA_TEST_EQUAL(8U, rl["ring_buffer_mb"].asUInt());
+    // Independent of the C++ byte gate: gate untouched → budget stays disarmed.
+    APSARA_TEST_EQUAL(static_cast<uint64_t>(0), mgr->GetMemoryBudgetForTest().Limit());
 
+    mgr->Destroy();
+}
+
+void AgentsightManagerUnittest::TestRuntimeLimitsJsonWrappedAndUnknownKeys() {
+    auto& o = agentsightOptions();
+    // The wrapped document form (mirroring the library's own agentsight.json) is accepted and
+    // re-wrapped; unknown sub-keys pass through verbatim (forward compatibility with newer
+    // libraries that add keys) — warned about, never silently dropped.
+    o.mAgentsightRuntimeLimitsJson = R"({"runtime_limits":{"max_connection_body_mb":4,"some_future_key":7}})";
+
+    auto mgr = makeManager();
+    registerConfig(*mgr, "p_mem_wrap");
+
+    APSARA_TEST_EQUAL(1, g_ut_load_config_calls);
+    Json::Value root;
+    std::string err;
+    APSARA_TEST_TRUE(ParseJsonTable(g_ut_load_config_json, root, err));
+    const Json::Value& rl = root["runtime_limits"];
+    APSARA_TEST_EQUAL(2U, rl.size());
+    APSARA_TEST_EQUAL(4U, rl["max_connection_body_mb"].asUInt());
+    APSARA_TEST_EQUAL(7U, rl["some_future_key"].asUInt());
+
+    mgr->Destroy();
+}
+
+void AgentsightManagerUnittest::TestRuntimeLimitsJsonBadJsonIgnored() {
+    {
+        // Malformed JSON: warn and skip the push; registration must still succeed.
+        agentsightOptions().mAgentsightRuntimeLimitsJson = "{not-json";
+        auto mgr = makeManager();
+        registerConfig(*mgr, "p_mem_badjson");
+        APSARA_TEST_EQUAL(1, mgr->RegisteredConfigCount());
+        APSARA_TEST_EQUAL(0, g_ut_load_config_calls);
+        mgr->Destroy();
+    }
+    {
+        // A non-object runtime_limits member is equally unusable — same honest skip.
+        agentsightOptions().mAgentsightRuntimeLimitsJson = R"({"runtime_limits":42})";
+        auto mgr = makeManager();
+        registerConfig(*mgr, "p_mem_badwrap");
+        APSARA_TEST_EQUAL(1, mgr->RegisteredConfigCount());
+        APSARA_TEST_EQUAL(0, g_ut_load_config_calls);
+        mgr->Destroy();
+    }
+}
+
+void AgentsightManagerUnittest::TestRuntimeLimitsJsonIndependentOfByteGate() {
+    auto& o = agentsightOptions();
+    // Both halves at once: the JSON rides to the Rust side while the C++ byte gate arms separately.
+    o.mAgentsightRuntimeLimitsJson = R"({"pending_genai_max_count":256})";
+    o.mAgentsightMemoryLimitEnabled = true;
+    o.mAgentsightMemoryLimitBytes = kMemLimitTestLimit;
+
+    auto mgr = makeManager();
+    registerConfig(*mgr, "p_mem_both");
+
+    APSARA_TEST_EQUAL(1, g_ut_load_config_calls);
+    Json::Value root;
+    std::string err;
+    APSARA_TEST_TRUE(ParseJsonTable(g_ut_load_config_json, root, err));
+    APSARA_TEST_EQUAL(256U, root["runtime_limits"]["pending_genai_max_count"].asUInt());
+    APSARA_TEST_EQUAL(kMemLimitTestLimit, mgr->GetMemoryBudgetForTest().Limit());
+
+    feedLlmBatch(*mgr, 3); // 2 × 4MB fit under 10MB; the 3rd is rejected by the gate
+    APSARA_TEST_EQUAL(static_cast<uint64_t>(1), mgr->GetMemoryBudgetForTest().DroppedEvents());
+
+    std::shared_ptr<CommonEvent> e;
+    while (mEventQueue->try_dequeue(e)) {
+        e.reset();
+    }
     mgr->Destroy();
 }
 
@@ -1844,6 +1912,7 @@ void AgentsightManagerUnittest::TestMemoryLimitMissingLoadConfigSymbol() {
     g_ut_omit_load_config_symbol = true;
     mAgentSightAdapter->setAgentSightSymbols(makeFullSymbolTable());
     auto& o = agentsightOptions();
+    o.mAgentsightRuntimeLimitsJson = R"({"ring_buffer_mb":8})";
     o.mAgentsightMemoryLimitEnabled = true;
     o.mAgentsightMemoryLimitBytes = kMemLimitTestLimit;
 
@@ -1871,6 +1940,7 @@ void AgentsightManagerUnittest::TestMemoryLimitLoadConfigFailureDegrades() {
     // restart must not fail and the C++ budget keeps enforcing.
     g_ut_load_config_ret = -1;
     auto& o = agentsightOptions();
+    o.mAgentsightRuntimeLimitsJson = R"({"ring_buffer_mb":8})";
     o.mAgentsightMemoryLimitEnabled = true;
     o.mAgentsightMemoryLimitBytes = kMemLimitTestLimit;
 
@@ -1995,6 +2065,7 @@ void AgentsightManagerUnittest::TestMemoryLimitOldLibraryVersionDegrades() {
     // the C++-side budget keeps enforcing.
     g_ut_agentsight_version = "0.6.1";
     auto& o = agentsightOptions();
+    o.mAgentsightRuntimeLimitsJson = R"({"ring_buffer_mb":8})";
     o.mAgentsightMemoryLimitEnabled = true;
     o.mAgentsightMemoryLimitBytes = kMemLimitTestLimit;
 
@@ -2018,7 +2089,7 @@ void AgentsightManagerUnittest::TestMemoryLimitVersionGateBoundary() {
     // Just below the floor: rejected. At the floor: accepted and the JSON is pushed.
     {
         g_ut_agentsight_version = "0.11.0";
-        agentsightOptions().mAgentsightMemoryLimitEnabled = true;
+        agentsightOptions().mAgentsightRuntimeLimitsJson = R"({"ring_buffer_mb":8})";
         auto mgr = makeManager();
         registerConfig(*mgr, "p_mem_ver_lo");
         APSARA_TEST_EQUAL(0, g_ut_load_config_calls);
@@ -2048,6 +2119,7 @@ void AgentsightManagerUnittest::TestMemoryLimitMissingVersionSymbolDegrades() {
     g_ut_omit_version_symbol = true;
     mAgentSightAdapter->setAgentSightSymbols(makeFullSymbolTable());
     auto& o = agentsightOptions();
+    o.mAgentsightRuntimeLimitsJson = R"({"ring_buffer_mb":8})";
     o.mAgentsightMemoryLimitEnabled = true;
     o.mAgentsightMemoryLimitBytes = kMemLimitTestLimit;
 
@@ -2107,7 +2179,10 @@ UNIT_TEST_CASE(AgentsightManagerUnittest, TestContainerTagsAttachedForLlmEvent);
 UNIT_TEST_CASE(AgentsightManagerUnittest, TestContainerTagsAttachedForHttpsEvent);
 UNIT_TEST_CASE(AgentsightManagerUnittest, TestContainerTagsMissDegradesSilently);
 UNIT_TEST_CASE(AgentsightManagerUnittest, TestMemoryLimitDisabledByDefault);
-UNIT_TEST_CASE(AgentsightManagerUnittest, TestMemoryLimitLoadConfigJson);
+UNIT_TEST_CASE(AgentsightManagerUnittest, TestRuntimeLimitsJsonPassthrough);
+UNIT_TEST_CASE(AgentsightManagerUnittest, TestRuntimeLimitsJsonWrappedAndUnknownKeys);
+UNIT_TEST_CASE(AgentsightManagerUnittest, TestRuntimeLimitsJsonBadJsonIgnored);
+UNIT_TEST_CASE(AgentsightManagerUnittest, TestRuntimeLimitsJsonIndependentOfByteGate);
 UNIT_TEST_CASE(AgentsightManagerUnittest, TestMemoryLimitDropsOversizedNewEvents);
 UNIT_TEST_CASE(AgentsightManagerUnittest, TestMemoryLimitRecoversAfterDrain);
 UNIT_TEST_CASE(AgentsightManagerUnittest, TestMemoryLimitMissingLoadConfigSymbol);

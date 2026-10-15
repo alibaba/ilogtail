@@ -335,6 +335,26 @@ void SecurityOptionsUnittest::TestAgentsightMemoryLimitDefaultAndParse() {
     APSARA_TEST_TRUE(opt.Init(SecurityProbeType::AGENTSIGHT_OBSERVE, config, &ctx, "input_agentsight"));
     APSARA_TEST_FALSE(opt.mAgentsightMemoryLimitEnabled);
     APSARA_TEST_EQUAL(kDefaultBytes, opt.mAgentsightMemoryLimitBytes);
+    APSARA_TEST_TRUE(opt.mAgentsightRuntimeLimitsJson.empty());
+
+    // TC-07: RuntimeLimitsJson is a verbatim string passthrough (well-formedness is validated where
+    // it is pushed, not here); default empty, wrong type warns and keeps empty, no residue.
+    APSARA_TEST_TRUE(ParseJsonTable(R"({"ProbeConfig":{"RuntimeLimitsJson":"{\"ring_buffer_mb\":8}"}})", config, err));
+    APSARA_TEST_TRUE(opt.Init(SecurityProbeType::AGENTSIGHT_OBSERVE, config, &ctx, "input_agentsight"));
+    APSARA_TEST_EQUAL(std::string(R"({"ring_buffer_mb":8})"), opt.mAgentsightRuntimeLimitsJson);
+    // The field is independent of the byte-gate switch: JSON present, gate still off by default.
+    APSARA_TEST_FALSE(opt.mAgentsightMemoryLimitEnabled);
+
+    APSARA_TEST_TRUE(ParseJsonTable(R"({"ProbeConfig":{"RuntimeLimitsJson":42}})", config, err));
+    APSARA_TEST_TRUE(opt.Init(SecurityProbeType::AGENTSIGHT_OBSERVE, config, &ctx, "input_agentsight"));
+    APSARA_TEST_TRUE(opt.mAgentsightRuntimeLimitsJson.empty());
+
+    APSARA_TEST_TRUE(ParseJsonTable(R"({"ProbeConfig":{"RuntimeLimitsJson":"{\"pid_cache_size\":64}"}})", config, err));
+    APSARA_TEST_TRUE(opt.Init(SecurityProbeType::AGENTSIGHT_OBSERVE, config, &ctx, "input_agentsight"));
+    APSARA_TEST_EQUAL(std::string(R"({"pid_cache_size":64})"), opt.mAgentsightRuntimeLimitsJson);
+    APSARA_TEST_TRUE(ParseJsonTable(R"({"ProbeConfig":{}})", config, err));
+    APSARA_TEST_TRUE(opt.Init(SecurityProbeType::AGENTSIGHT_OBSERVE, config, &ctx, "input_agentsight"));
+    APSARA_TEST_TRUE(opt.mAgentsightRuntimeLimitsJson.empty()); // residue guard
 }
 
 UNIT_TEST_CASE(SecurityOptionsUnittest, TestAgentsightNoProbeConfigFallsBackToBuiltin)

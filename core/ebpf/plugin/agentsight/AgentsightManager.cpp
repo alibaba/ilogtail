@@ -15,6 +15,7 @@
 #include "ebpf/plugin/agentsight/AgentsightManager.h"
 
 #include <cctype>
+#include <cstring>
 
 #include <algorithm>
 #include <array>
@@ -24,6 +25,8 @@
 #include <vector>
 
 #include "rapidjson/document.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/writer.h"
 
 #include "collection_pipeline/queue/ProcessQueueItem.h"
 #include "collection_pipeline/queue/ProcessQueueManager.h"
@@ -310,40 +313,73 @@ bool AgentsightVersionAtLeast(const char* version, unsigned major, unsigned mino
     return parts[2] >= patch;
 }
 
-/// Builds the runtime_limits JSON pushed down via agentsight_config_load_config when
-/// MemoryLimitEnabled is on.
+/// Validates the operator-supplied RuntimeLimitsJson and wraps it into the full config JSON
+/// expected by agentsight_config_load_config. Returns an empty string when the input is not a
+/// usable JSON object; the caller warns and skips the push (never fails the restart over it).
 ///
-/// IMPORTANT: load_from_json REPLACES the whole runtime_limits block — a sub-key missing from this
-/// JSON falls back to the Rust DEFAULT_* constant, not to the previous value (config.rs
-/// JsonRuntimeLimits parsing). Always emit all nine keys. This function is the only construction
-/// point; keep it that way.
+/// Accepted shapes: a flat runtime_limits object ({"event_channel_capacity":1024,...}) or a wrapped
+/// document ({"runtime_limits":{...}}, mirroring the library's own agentsight.json). Sub-keys
+/// absent from the input fall back to the Rust DEFAULT_* constants — load_from_json REPLACES the
+/// whole runtime_limits block, it does not merge into previous values (config.rs JsonRuntimeLimits
+/// parsing). That is intentional passthrough semantics: what the operator omits is the library's
+/// business, not ours.
 ///
-/// Tightening policy (fidelity first): only the genuinely loose segments shrink, and every formula
-/// is min(current default, share of L), so the Rust side is never looser than today:
-/// - event_channel_capacity   min(10000, max(512, L*4)) — one knob, two effects: probe channel
-///   slots AND FFI output queue slots (ffi.rs builds the queue with this value); the FFI queue has
-///   no byte accounting of its own, so the slot count is the only handle on it.
-/// - event_channel_max_bytes_mb / pending_genai_max_bytes_mb   min(64, max(4, L/8))
-/// - pending_genai_max_count  min(1000, max(128, L*2)) — count backstop because the library
-///   estimates 512 B per pending event (PendingGenAI::estimated_bytes), a severe underestimate for
-///   LLM calls carrying full messages.
-/// - max_connection_body_mb   stays at the 8 MB floor on purpose: tightening it would truncate
-///   large LLM contexts (the product's core payload) while saving little in realistic loads — the
-///   24-connection LRU already bounds the aggregate to 192 MB.
-/// - ring_buffer_mb           L >= 256 ? 32 : 8 (must be a power of two).
-/// - connection_idle_timeout_secs / pid_cache_size / event_channel_policy: unchanged defaults.
-std::string BuildAgentsightRuntimeLimitsJson(uint64_t limitMB) {
-    const uint64_t l = std::max<uint64_t>(limitMB, 1);
-    const uint64_t channelCapacity = std::min<uint64_t>(10000, std::max<uint64_t>(512, l * 4));
-    const uint64_t channelBytesMB = std::min<uint64_t>(64, std::max<uint64_t>(4, l / 8));
-    const uint64_t pendingCount = std::min<uint64_t>(1000, std::max<uint64_t>(128, l * 2));
-    const uint64_t ringMB = l >= 256 ? 32 : 8;
-    return std::string("{\"runtime_limits\":{") + "\"event_channel_capacity\":" + std::to_string(channelCapacity)
-        + ",\"event_channel_policy\":\"backpressure\"" + ",\"event_channel_max_bytes_mb\":"
-        + std::to_string(channelBytesMB) + ",\"pending_genai_max_count\":" + std::to_string(pendingCount)
-        + ",\"pending_genai_max_bytes_mb\":" + std::to_string(channelBytesMB) + ",\"pid_cache_size\":1024"
-        + ",\"max_connection_body_mb\":8" + ",\"connection_idle_timeout_secs\":60"
-        + ",\"ring_buffer_mb\":" + std::to_string(ringMB) + "}}";
+/// Unknown sub-keys are passed through untouched (forward compatibility with newer libraries that
+/// add keys) but warned about, since a typo silently degrades to the library default.
+std::string BuildAgentsightRuntimeLimitsPushJson(const std::string& userJson) {
+    rapidjson::Document doc;
+    if (doc.Parse(userJson.c_str(), userJson.size()).HasParseError() || !doc.IsObject()) {
+        return "";
+    }
+    const rapidjson::Value* limits = &doc;
+    if (doc.HasMember("runtime_limits")) {
+        if (!doc["runtime_limits"].IsObject()) {
+            return "";
+        }
+        limits = &doc["runtime_limits"];
+    }
+    static const std::array<const char*, 9> kKnownKeys = {"event_channel_capacity",
+                                                          "event_channel_policy",
+                                                          "event_channel_max_bytes_mb",
+                                                          "pending_genai_max_count",
+                                                          "pending_genai_max_bytes_mb",
+                                                          "pid_cache_size",
+                                                          "max_connection_body_mb",
+                                                          "connection_idle_timeout_secs",
+                                                          "ring_buffer_mb"};
+    std::string unknownKeys;
+    for (auto it = limits->MemberBegin(); it != limits->MemberEnd(); ++it) {
+        const char* key = it->name.GetString();
+        const bool known = std::any_of(
+            kKnownKeys.begin(), kKnownKeys.end(), [key](const char* k) { return std::strcmp(key, k) == 0; });
+        if (!known) {
+            if (!unknownKeys.empty()) {
+                unknownKeys += ",";
+            }
+            unknownKeys += key;
+        }
+    }
+    if (!unknownKeys.empty()) {
+        LOG_WARNING(sLogger,
+                    ("AgentSight",
+                     "RuntimeLimitsJson contains keys unknown to libagentsight 0.11.x; passed through "
+                     "verbatim — a typo here silently falls back to the library default")("unknown_keys", unknownKeys));
+    }
+    if (limits->MemberCount() == 0) {
+        LOG_WARNING(sLogger,
+                    ("AgentSight",
+                     "RuntimeLimitsJson is an empty object; pushing it resets the whole runtime_limits "
+                     "block to library defaults"));
+    }
+    rapidjson::Document out;
+    out.SetObject();
+    rapidjson::Value wrapped;
+    wrapped.CopyFrom(*limits, out.GetAllocator());
+    out.AddMember("runtime_limits", wrapped, out.GetAllocator());
+    rapidjson::StringBuffer sb;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
+    out.Accept(writer);
+    return std::string(sb.GetString(), sb.GetSize());
 }
 
 void ApplyAgentsightRulesToConfig(AgentsightConfigHandle* cfg,
@@ -1001,50 +1037,54 @@ bool AgentsightManager::RestartAgentSightLocked(const SecurityOptions& opts) {
         return false;
     }
 
-    // Memory limit. Two independent halves:
+    // Memory controls. Two independent halves:
     // 1) C++-side byte budget for in-flight events — always armed here (limit 0 = disabled). SetLimit
     //    never clears Used: records from a previous generation still hold their bytes and release
     //    them through their destructors, so hot updates stay conservative.
-    // 2) Rust-side runtime limits, pushed as JSON through the optional agentsight_config_load_config
-    //    symbol. Must run BEFORE the explicit setters below: load_from_json merges scalar fields one
-    //    by one but replaces the runtime_limits block wholesale, and going first guarantees the
-    //    setters (verbose, log path, ...) always have the last word. Missing symbol / parse failure
-    //    degrades to C++-side accounting only — warn and continue, same discipline as
-    //    RawHttpsFallback below; never fail the restart over it.
+    // 2) Rust-side runtime limits — verbatim passthrough of the operator-supplied RuntimeLimitsJson,
+    //    pushed through the optional agentsight_config_load_config symbol, independent of the byte
+    //    budget above. Must run BEFORE the explicit setters below: load_from_json merges scalar
+    //    fields one by one but replaces the runtime_limits block wholesale, and going first
+    //    guarantees the setters (verbose, log path, ...) always have the last word. Malformed JSON /
+    //    missing symbol / too-old library all degrade to library defaults — warn and continue, same
+    //    discipline as RawHttpsFallback below; never fail the restart over it.
     mMemBudget->SetLimit(opts.mAgentsightMemoryLimitEnabled ? opts.mAgentsightMemoryLimitBytes : 0);
-    if (opts.mAgentsightMemoryLimitEnabled) {
-        const uint64_t limitMB = opts.mAgentsightMemoryLimitBytes / (1024 * 1024);
+    if (!opts.mAgentsightRuntimeLimitsJson.empty()) {
         // Capability gate: the load_config SYMBOL exists since libagentsight 0.4.0, but the
         // runtime_limits block only since 0.6.1 and event_channel_max_bytes_mb only since 0.11.1 —
         // and older libraries' serde silently ignores unknown JSON keys while still returning
         // success, so symbol presence alone would log a bogus "applied". Require >= 0.11.1;
-        // unknown/too-old degrades to C++-side accounting only (warn and continue, never fail).
+        // unknown/too-old degrades to library defaults (warn and continue, never fail).
         const char* libVersion = sym->version ? sym->version() : nullptr;
-        if (sym->config_load_config && AgentsightVersionAtLeast(libVersion, 0, 11, 1)) {
-            const std::string limitsJson = BuildAgentsightRuntimeLimitsJson(limitMB);
-            if (sym->config_load_config(cfg, limitsJson.c_str()) != 0) {
+        const std::string pushJson = BuildAgentsightRuntimeLimitsPushJson(opts.mAgentsightRuntimeLimitsJson);
+        if (pushJson.empty()) {
+            LOG_WARNING(sLogger,
+                        ("AgentSight",
+                         "RuntimeLimitsJson is not a valid JSON object; ignored, libagentsight keeps its "
+                         "default runtime limits")("runtime_limits_json", opts.mAgentsightRuntimeLimitsJson));
+        } else if (sym->config_load_config && AgentsightVersionAtLeast(libVersion, 0, 11, 1)) {
+            if (sym->config_load_config(cfg, pushJson.c_str()) != 0) {
                 const char* err = sym->last_error ? sym->last_error() : nullptr;
                 LOG_WARNING(sLogger,
                             ("AgentSight",
-                             "MemoryLimit: agentsight_config_load_config failed; libagentsight keeps its default "
-                             "runtime limits, C++-side byte accounting still enforced")("last_error", err ? err : "")(
-                                "libagentsight_version", libVersion)("memory_limit_mb", limitMB));
+                             "RuntimeLimitsJson: agentsight_config_load_config failed; libagentsight keeps its "
+                             "default runtime limits")("last_error", err ? err : "")(
+                                "libagentsight_version", libVersion)("runtime_limits_json", pushJson));
             } else {
                 LOG_INFO(sLogger,
-                         ("AgentSight", "MemoryLimit runtime limits applied")("memory_limit_mb", limitMB)(
-                             "libagentsight_version",
-                             libVersion)("cpp_inflight_limit_bytes",
-                                         opts.mAgentsightMemoryLimitBytes)("runtime_limits_json", limitsJson));
+                         ("AgentSight", "RuntimeLimitsJson applied")("libagentsight_version",
+                                                                     libVersion)("runtime_limits_json", pushJson)(
+                             "cpp_inflight_limit_bytes",
+                             opts.mAgentsightMemoryLimitEnabled ? opts.mAgentsightMemoryLimitBytes : 0));
             }
         } else {
             LOG_WARNING(sLogger,
                         ("AgentSight",
-                         "MemoryLimitEnabled requested but libagentsight cannot honour runtime_limits: "
+                         "RuntimeLimitsJson configured but libagentsight cannot honour runtime_limits: "
                          "agentsight_config_load_config symbol missing, or library version too old/unverifiable "
-                         "(the runtime_limits fields used here require >= 0.11.1); libagentsight keeps its default "
-                         "runtime limits, C++-side byte accounting still enforced")(
-                            "libagentsight_version", libVersion ? libVersion : "unknown")(
-                            "load_config_api", sym->config_load_config != nullptr)("memory_limit_mb", limitMB));
+                         "(the runtime_limits fields used here require >= 0.11.1); libagentsight keeps its "
+                         "default runtime limits")("libagentsight_version", libVersion ? libVersion : "unknown")(
+                            "load_config_api", sym->config_load_config != nullptr));
         }
     }
 
