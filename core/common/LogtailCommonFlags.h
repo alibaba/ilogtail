@@ -30,6 +30,7 @@ DECLARE_FLAG_STRING(working_interface);
 
 // checkpoint
 DECLARE_FLAG_INT32(unused_checkpoints_clear_interval_sec);
+DECLARE_FLAG_BOOL(enable_checkpoint_fs_uuid);
 
 // epoll
 DECLARE_FLAG_INT32(ilogtail_epoll_time_out);
