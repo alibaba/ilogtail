@@ -1664,11 +1664,11 @@ void AgentsightManagerUnittest::TestComputedFieldsSurviveRecordDeath() {
     agentsightOptions().mAgentsightEventStreamFormat = true;
     registerConfigWithPoppableQueue(*mgr, kConfig);
 
-    static const char kMessages[] = R"([{"role":"user","parts":[{"type":"text","text":"hi-survive"}]}])";
+    static const std::string kMessages = R"([{"role":"user","parts":[{"type":"text","text":"hi-survive"}]}])";
     std::unique_ptr<ProcessQueueItem> item;
     std::vector<LogEvent*> logs;
     {
-        auto rec = makeMinimalLlmRecord(kConfig, "sess-survive", nullptr, kMessages);
+        auto rec = makeMinimalLlmRecord(kConfig, "sess-survive", nullptr, kMessages.c_str());
         APSARA_TEST_EQUAL(0, mgr->HandleEvent(rec));
         logs = popLogEvents(item);
         // rec (and its arena reference) dies here; the group must keep the bytes alive.

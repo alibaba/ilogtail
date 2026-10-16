@@ -172,29 +172,29 @@ void AgentsightEventsUnittest::TestHttpsRecordCopiesPayloadsAndIdentity() {
 void AgentsightEventsUnittest::TestRecordsOwnCopiedBytesInArena() {
     // The FFI pointers die when the callback returns; every non-empty view must point into the
     // record's own SourceBuffer arena, never at the caller-provided buffers.
-    static const char kSession[] = "session-1";
-    static const char kReq[] = {'{', 'a'};
+    static const std::string kSession = "session-1";
+    static const std::string kReq = "{a";
 
     AgentsightLLMData d{};
-    d.session_id = kSession;
-    d.request_messages = kReq;
+    d.session_id = kSession.c_str();
+    d.request_messages = kReq.data();
     d.request_messages_len = 2;
 
     AgentsightLlmRecord r("pipe-a", d);
     APSARA_TEST_TRUE(r.GetSourceBuffer() != nullptr);
-    APSARA_TEST_TRUE(r.mSessionId.data() != static_cast<const char*>(kSession));
-    APSARA_TEST_TRUE(r.mRequestMessagesJson.data() != static_cast<const char*>(kReq));
+    APSARA_TEST_TRUE(r.mSessionId.data() != kSession.c_str());
+    APSARA_TEST_TRUE(r.mRequestMessagesJson.data() != kReq.data());
     APSARA_TEST_EQUAL("session-1", r.mSessionId);
     APSARA_TEST_EQUAL("{a", r.mRequestMessagesJson);
 
-    static const char kBody[] = {'x', 'y'};
+    static const std::string kBody = "xy";
     AgentsightHttpsData hd{};
-    hd.request_body = kBody;
+    hd.request_body = kBody.data();
     hd.request_body_len = 2;
     AgentsightHttpsRecord hr("pipe-raw", hd);
     APSARA_TEST_TRUE(hr.GetSourceBuffer() != nullptr);
-    APSARA_TEST_TRUE(hr.mRequestBody.data() != static_cast<const char*>(kBody));
-    APSARA_TEST_EQUAL(std::string(kBody, 2), hr.mRequestBody);
+    APSARA_TEST_TRUE(hr.mRequestBody.data() != kBody.data());
+    APSARA_TEST_EQUAL(kBody, hr.mRequestBody);
 }
 
 void AgentsightEventsUnittest::TestZeroInitializedDataYieldsEmptyViews() {

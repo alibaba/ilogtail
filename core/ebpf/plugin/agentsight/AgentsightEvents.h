@@ -45,9 +45,13 @@ class AgentsightLlmRecord : public CommonEvent {
 public:
     AgentsightLlmRecord(std::string pipelineConfigName, const AgentsightLLMData& d);
     // StringView members over a shared arena make a shallow copy a lifetime hazard; records are
-    // only ever handled through shared_ptr<CommonEvent>.
+    // only ever handled through shared_ptr<CommonEvent> (constructed in place, never moved).
+    // Destructor is virtual through CommonEvent.
+    ~AgentsightLlmRecord() override = default;
     AgentsightLlmRecord(const AgentsightLlmRecord&) = delete;
     AgentsightLlmRecord& operator=(const AgentsightLlmRecord&) = delete;
+    AgentsightLlmRecord(AgentsightLlmRecord&&) = delete;
+    AgentsightLlmRecord& operator=(AgentsightLlmRecord&&) = delete;
 
     PluginType GetPluginType() const override { return PluginType::AGENTSIGHT_OBSERVE; }
 
@@ -116,8 +120,12 @@ public:
 class AgentsightHttpsRecord : public CommonEvent {
 public:
     AgentsightHttpsRecord(std::string pipelineConfigName, const AgentsightHttpsData& d);
+    // Same arena-ownership rule-of-five rationale as AgentsightLlmRecord.
+    ~AgentsightHttpsRecord() override = default;
     AgentsightHttpsRecord(const AgentsightHttpsRecord&) = delete;
     AgentsightHttpsRecord& operator=(const AgentsightHttpsRecord&) = delete;
+    AgentsightHttpsRecord(AgentsightHttpsRecord&&) = delete;
+    AgentsightHttpsRecord& operator=(AgentsightHttpsRecord&&) = delete;
 
     PluginType GetPluginType() const override { return PluginType::AGENTSIGHT_OBSERVE; }
 
