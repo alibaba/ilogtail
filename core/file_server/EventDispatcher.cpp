@@ -611,7 +611,7 @@ EventDispatcher::ValidateCheckpointResult EventDispatcher::validateCheckpoint(
     }
     auto const searchResult
         = SearchFilePathByDevInodeInDirectory(path, searchDepth, checkpoint->mDevInode, &cachePathDevInodeMap);
-    if (!searchResult && BOOL_FLAG(enable_checkpoint_fs_uuid) && !checkpoint->mFsUuid.empty()) {
+    if (!searchResult && !checkpoint->mFsUuid.empty()) {
         DevInode matched;
         auto const uuidSearch = SearchFilePathByInodeAndFsUuid(
             path, searchDepth, checkpoint->mDevInode.inode, checkpoint->mFsUuid, &matched);
@@ -692,27 +692,23 @@ void EventDispatcher::AddExistedCheckPointFileEvents() {
             // residency clock so CheckTimeoutCheckPoint will not evict a rescued
             // handoff by its first enqueue time.
             iter->second->mMemInsertTime = (int32_t)time(NULL);
-            if (BOOL_FLAG(enable_checkpoint_fs_uuid)) {
-                const DevInode current = iter->second->mDevInode;
-                const std::string uuid = GetFileSystemUuid(current.dev);
-                if (!(current == oldKey.mDevInode) || (iter->second->mFsUuid.empty() && !uuid.empty())) {
-                    rekeyKeyVec.push_back(oldKey);
-                }
+            const DevInode current = iter->second->mDevInode;
+            const std::string uuid = GetFileSystemUuid(current.dev);
+            if (!(current == oldKey.mDevInode) || (iter->second->mFsUuid.empty() && !uuid.empty())) {
+                rekeyKeyVec.push_back(oldKey);
             }
         }
     }
     for (size_t i = 0; i < deleteKeyVec.size(); ++i) {
         CheckPointManager::Instance()->DeleteCheckPoint(deleteKeyVec[i].mDevInode, deleteKeyVec[i].mConfigName);
     }
-    if (BOOL_FLAG(enable_checkpoint_fs_uuid)) {
-        for (size_t i = 0; i < rekeyKeyVec.size(); ++i) {
-            auto it = checkPointMap.find(rekeyKeyVec[i]);
-            if (it == checkPointMap.end()) {
-                continue;
-            }
-            const DevInode current = it->second->mDevInode;
-            CheckPointManager::Instance()->RekeyCheckPoint(rekeyKeyVec[i], current, GetFileSystemUuid(current.dev));
+    for (size_t i = 0; i < rekeyKeyVec.size(); ++i) {
+        auto it = checkPointMap.find(rekeyKeyVec[i]);
+        if (it == checkPointMap.end()) {
+            continue;
         }
+        const DevInode current = it->second->mDevInode;
+        CheckPointManager::Instance()->RekeyCheckPoint(rekeyKeyVec[i], current, GetFileSystemUuid(current.dev));
     }
     LOG_INFO(sLogger,
              ("checkpoint verification ends, generated event count", eventVec.size())("checkpoint deletion count",

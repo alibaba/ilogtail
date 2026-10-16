@@ -137,9 +137,6 @@ std::string ReadUuidFromSysfs(uint64_t dev) {
 } // namespace
 
 std::string GetFileSystemUuid(uint64_t dev) {
-    if (!BOOL_FLAG(enable_checkpoint_fs_uuid)) {
-        return "";
-    }
     std::function<std::string(uint64_t)> resolver;
     {
         std::lock_guard<std::mutex> guard(gCacheMutex);

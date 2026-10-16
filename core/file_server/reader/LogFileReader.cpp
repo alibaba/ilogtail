@@ -377,9 +377,7 @@ void LogFileReader::DumpMetaToMem(bool checkConfigFlag, int32_t idxInReaderArray
     checkPointPtr->mLastUpdateTime = mLastEventTime;
     checkPointPtr->mCache = mCache;
     checkPointPtr->mIdxInReaderArray = idxInReaderArray;
-    if (BOOL_FLAG(enable_checkpoint_fs_uuid)) {
-        checkPointPtr->mFsUuid = GetFileSystemUuid(mDevInode.dev);
-    }
+    checkPointPtr->mFsUuid = GetFileSystemUuid(mDevInode.dev);
     CheckPointManager::Instance()->AddCheckPoint(checkPointPtr);
 }
 
@@ -414,7 +412,7 @@ void LogFileReader::InitReader(bool tailExisted, FileReadPolicy policy, uint32_t
         CheckPointPtr checkPointSharePtr;
         bool foundCheckpoint = checkPointManagerPtr->GetCheckPoint(mDevInode, GetConfigName(), checkPointSharePtr);
         DevInode checkpointDev = mDevInode;
-        if (!foundCheckpoint && BOOL_FLAG(enable_checkpoint_fs_uuid)) {
+        if (!foundCheckpoint) {
             const std::string fsUuid = GetFileSystemUuid(mDevInode.dev);
             if (!fsUuid.empty()
                 && checkPointManagerPtr->GetCheckPointByFsUuid(
@@ -530,7 +528,7 @@ void LogFileReader::initExactlyOnce(uint32_t concurrency) {
             std::vector<std::string> rangeCptKeys;
             CheckpointManagerV2::AppendRangeKeys(primaryCptKey, concurrency, rangeCptKeys);
             sCptM->DeleteCheckpoints(rangeCptKeys);
-        } else if (BOOL_FLAG(enable_checkpoint_fs_uuid)) {
+        } else {
             bool identityChanged = false;
             if (primaryCpt.dev() != mDevInode.dev) {
                 primaryCpt.set_dev(mDevInode.dev);
@@ -556,11 +554,9 @@ void LogFileReader::initExactlyOnce(uint32_t concurrency) {
         primaryCpt.set_real_path(mRealLogPath.empty() ? mHostLogPath : mRealLogPath);
         primaryCpt.set_dev(mDevInode.dev);
         primaryCpt.set_inode(mDevInode.inode);
-        if (BOOL_FLAG(enable_checkpoint_fs_uuid)) {
-            const std::string fsUuid = GetFileSystemUuid(mDevInode.dev);
-            if (!fsUuid.empty()) {
-                primaryCpt.set_fs_uuid(fsUuid);
-            }
+        const std::string fsUuid = GetFileSystemUuid(mDevInode.dev);
+        if (!fsUuid.empty()) {
+            primaryCpt.set_fs_uuid(fsUuid);
         }
         detail::updatePrimaryCheckpoint(mEOOption->primaryCheckpointKey, primaryCpt, "all (new)");
     }
@@ -639,7 +635,7 @@ bool LogFileReader::validatePrimaryCheckpoint(const PrimaryCheckpointPB& cpt) {
                 filePath = newFilePath;
                 return true;
             }
-            if (BOOL_FLAG(enable_checkpoint_fs_uuid) && cpt.has_fs_uuid() && !cpt.fs_uuid().empty()) {
+            if (cpt.has_fs_uuid() && !cpt.fs_uuid().empty()) {
                 DevInode matched;
                 const uint64_t inode = cpt.has_inode() ? cpt.inode() : mDevInode.inode;
                 auto const uuidSearch

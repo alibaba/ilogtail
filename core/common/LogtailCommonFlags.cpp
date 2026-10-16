@@ -46,9 +46,6 @@ DEFINE_FLAG_STRING(working_interface,
 
 // checkpoint
 DEFINE_FLAG_INT32(unused_checkpoints_clear_interval_sec, "", 600);
-DEFINE_FLAG_BOOL(enable_checkpoint_fs_uuid,
-                 "Linux: recover file checkpoints by filesystem UUID + inode when the block device number changes",
-                 false);
 
 // epoll
 DEFINE_FLAG_INT32(ilogtail_epoll_time_out, "default time out is 1s", 1);

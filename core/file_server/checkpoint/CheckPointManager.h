@@ -42,7 +42,7 @@ class CheckPoint {
 public:
     DevInode mDevInode;
     // Filesystem UUID of the block device that held the file. Empty for checkpoints
-    // written before enable_checkpoint_fs_uuid, and for filesystems without a UUID.
+    // written before this field existed, and for filesystems without a UUID.
     std::string mFsUuid;
     int64_t mOffset = 0;
     uint64_t mSignatureHash = 0;

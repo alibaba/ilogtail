@@ -65,7 +65,6 @@ public:
         AppConfig::GetInstance()->mCheckPointFilePath = (bfs::path(kTestRootDir) / "file_check_point").string();
         bfs::remove(AppConfig::GetInstance()->mCheckPointFilePath);
         bfs::remove(AppConfig::GetInstance()->mCheckPointFilePath + ".bak");
-        BOOL_FLAG(enable_checkpoint_fs_uuid) = false;
         ClearFileSystemUuidCacheForTest();
     }
 
@@ -73,7 +72,6 @@ public:
         CheckPointManager::Instance()->RemoveAllCheckPoint();
         bfs::remove(AppConfig::GetInstance()->mCheckPointFilePath);
         bfs::remove(AppConfig::GetInstance()->mCheckPointFilePath + ".bak");
-        BOOL_FLAG(enable_checkpoint_fs_uuid) = false;
         ClearFileSystemUuidCacheForTest();
     }
 
@@ -102,7 +100,7 @@ public:
     void TestRekeyCheckPointUpdatesDevAndFsUuid();
     void TestRekeyPendingSurvivesDumpRound();
     void TestDumpLoadFsUuid();
-    void TestFileSystemUuidDisabledByDefault();
+    void TestFileSystemUuidUsesResolver();
     void TestSearchFilePathByInodeAndFsUuid();
 
 private:
@@ -165,7 +163,7 @@ UNIT_TEST_CASE(CheckpointManagerUnittest, TestGcRespectsCheckInterval);
 UNIT_TEST_CASE(CheckpointManagerUnittest, TestRekeyCheckPointUpdatesDevAndFsUuid);
 UNIT_TEST_CASE(CheckpointManagerUnittest, TestRekeyPendingSurvivesDumpRound);
 UNIT_TEST_CASE(CheckpointManagerUnittest, TestDumpLoadFsUuid);
-UNIT_TEST_CASE(CheckpointManagerUnittest, TestFileSystemUuidDisabledByDefault);
+UNIT_TEST_CASE(CheckpointManagerUnittest, TestFileSystemUuidUsesResolver);
 UNIT_TEST_CASE(CheckpointManagerUnittest, TestSearchFilePathByInodeAndFsUuid);
 
 void CheckpointManagerUnittest::TestSearchFilePathByDevInodeInDirectory() {
@@ -789,14 +787,12 @@ void CheckpointManagerUnittest::TestDumpLoadFsUuid() {
     EXPECT_TRUE(manager->GetCheckPointByFsUuid("uuid-dump", devInode.inode, "cfg_uuid", found));
 }
 
-void CheckpointManagerUnittest::TestFileSystemUuidDisabledByDefault() {
-    BOOL_FLAG(enable_checkpoint_fs_uuid) = false;
-    SetFileSystemUuidResolverForTest([](uint64_t) { return std::string("should-not-be-used"); });
-    EXPECT_EQ(GetFileSystemUuid(1), "");
+void CheckpointManagerUnittest::TestFileSystemUuidUsesResolver() {
+    SetFileSystemUuidResolverForTest([](uint64_t) { return std::string("resolver-uuid"); });
+    EXPECT_EQ(GetFileSystemUuid(1), "resolver-uuid");
 }
 
 void CheckpointManagerUnittest::TestSearchFilePathByInodeAndFsUuid() {
-    BOOL_FLAG(enable_checkpoint_fs_uuid) = true;
     const std::string path = CreateFile("uuid_search.log");
     const DevInode devInode = GetFileDevInode(path);
     SetFileSystemUuidResolverForTest([devInode](uint64_t dev) {

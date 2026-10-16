@@ -22,8 +22,8 @@
 
 namespace logtail {
 
-// Filesystem UUID for a block device (ext4 / xfs). Empty when the feature flag is off,
-// the filesystem type is unsupported, or sysfs cannot be read. Result is cached per dev.
+// Filesystem UUID for a block device (ext4 / xfs). Empty when the filesystem type is
+// unsupported or sysfs cannot be read. Result is cached per dev.
 std::string GetFileSystemUuid(uint64_t dev);
 
 // Test hook. An empty function clears the override. Also drops the dev cache.
