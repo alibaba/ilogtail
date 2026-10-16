@@ -37,10 +37,16 @@ inline constexpr uint32_t kAgentsightRecordChunkSize = 1024;
 /// One LLM record handed over by the AgentSight FFI.
 ///
 /// Construction (on the AgentSight poller thread, inside the FFI callback) copies every FFI
-/// string exactly once into mSourceBuffer and keeps StringView members aliasing it; the FFI
-/// pointers die when the callback returns and are never retained. HandleLlmEvent then hands the
-/// arena to the PipelineEventGroup as its main SourceBuffer, so emitted log contents alias these
-/// bytes with no second copy (SetContentNoCopy) and the arena outlives the record until flush.
+/// string exactly once; the FFI pointers die when the callback returns and are never retained.
+/// Storage is split by lifetime role:
+/// - **Emit fields** (StringView members) alias mSourceBuffer. HandleLlmEvent hands that arena to
+///   the PipelineEventGroup as its main SourceBuffer, so emitted contents reference these bytes
+///   with no second copy (SetContentNoCopy) and the arena outlives the record until flush.
+/// - **Compute-only fields** (plain std::string members, marked below) are consumed inside
+///   HandleLlmEvent (delta/hash extraction) and — in the default MessageDeltaOnly mode — never
+///   emitted. They are deliberately NOT in the arena: owned by value, they die with the record at
+///   the end of the handler batch, so un-emitted MiB-sized history is not pinned inside the event
+///   group (and the Batcher holding it) until flush, invisible to PipelineEventGroup::DataSize().
 class AgentsightLlmRecord : public CommonEvent {
 public:
     AgentsightLlmRecord(std::string pipelineConfigName, const AgentsightLLMData& d);
@@ -58,7 +64,8 @@ public:
     const std::string& GetPipelineConfigName() const { return mPipelineConfigName; }
 
     /// Arena backing every StringView member. Valid for the record's lifetime; after HandleLlmEvent
-    /// the event group co-owns it, keeping the bytes alive until the group is flushed.
+    /// the event group co-owns it, keeping the bytes alive until the group is flushed. Must not
+    /// back any compute-only field (see class comment) — those die with the record on purpose.
     const std::shared_ptr<SourceBuffer>& GetSourceBuffer() const { return mSourceBuffer; }
 
     std::string mPipelineConfigName;
@@ -91,19 +98,23 @@ public:
     StringView mModel{kEmptyStringView};
     StringView mFinishReason{kEmptyStringView};
     // NOTE: AgentsightLLMData.input_message_delta is deliberately NOT retained — the delta is
-    // recomputed locally (ComputeInputMessagesDelta) and nothing ever read the FFI copy; keeping
-    // it would pin one of the largest JSON blobs per record until the group is flushed.
-    StringView mRequestMessagesJson{kEmptyStringView};
+    // recomputed locally (ComputeInputMessagesDelta) and nothing ever read the FFI copy.
     StringView mResponseMessagesJson{kEmptyStringView};
-    StringView mToolDefinitionsJson{kEmptyStringView};
+
+    // Compute-only fields (see class comment): value-owned, released with the record at handler
+    // batch end, never referenced by an emitted view. When they do get emitted (full-fidelity
+    // mode / first-or-changed tools round) the fill code copies them into the group arena.
+    std::string mRequestMessagesJson;
+    std::string mToolDefinitionsJson;
 };
 
 /// Raw HTTP exchange reported when AgentSight could not parse the traffic into LLM semantics
 /// (unknown API path or unrecognised body shape). Requires `RawHttpsFallback: true` plus
 /// libagentsight >= 0.9.0; see AgentsightManager::OnHttpsCallback.
 ///
-/// Memory model matches AgentsightLlmRecord: one arena copy at construction (FFI callback),
-/// StringView members aliasing it, arena handed to the PipelineEventGroup in HandleHttpsEvent.
+/// Memory model matches AgentsightLlmRecord: emitted fields are StringViews over mSourceBuffer
+/// (handed to the PipelineEventGroup in HandleHttpsEvent, zero second copy); the two header blobs
+/// are compute-only std::strings (parsed into per-header copies, then released with the record).
 ///
 /// Emitted as an `http.request` / `http.response` pair sharing one `http.exchange.id` (the pairing
 /// key; each log keeps its own unique `event.id`, and `event.sequence` orders the two). The response
@@ -156,25 +167,30 @@ public:
     uint16_t mStatusCode = 0;
     uint8_t mIsSse = 0;
     // Length-delimited payloads: AgentsightHttpsData reports these as (ptr, len) pairs and they may
-    // contain embedded NULs (compressed or binary bodies), so they are copied by length into the
-    // record's arena, not by NUL scan, and may not be valid UTF-8. Consumers must stay
-    // length-bounded (StringView / rapidjson two-argument Parse).
+    // contain embedded NULs (compressed or binary bodies), so they are copied by length, not by NUL
+    // scan, and may not be valid UTF-8. Consumers must stay length-bounded (StringView / rapidjson
+    // two-argument Parse).
     //
-    // Filtered through an ALLOWLIST (kAllowedRequestHeaders) before anything is emitted, because this
-    // is where credentials live — Authorization / x-api-key / cookie — and this path does no
-    // redaction. Survivors go out as `http.request.header.<name>`; host and user-agent are salvaged
-    // into `server.address` / `server.port` / `user_agent.original` instead. Anything unrecognised is
-    // dropped from the output. See ExtractRequestHeaderFields / FillAgentsightHttpRequestLog.
-    // Note: filtered-out bytes are still present in the arena until the event group is flushed
-    // (zero-copy trade-off) — they are never referenced by any emitted view.
-    StringView mRequestHeaders{kEmptyStringView};
+    // Bodies are emitted verbatim as arena-backed views (zero-copy); headers are compute-only
+    // std::strings, parsed into per-header copies by the handler and released with the record.
     StringView mRequestBody{kEmptyStringView};
-    // Mirror image: filtered through a DENYLIST (kSensitiveResponseHeaders — set-cookie,
-    // www-authenticate, ...) and otherwise emitted as `http.response.header.<name>`. An allowlist here
-    // would hide most of what makes this fallback diagnostically useful, and the credential-bearing
-    // response header names are a short, known set. See EmitHttpResponseHeaders.
-    StringView mResponseHeaders{kEmptyStringView};
     StringView mResponseBody{kEmptyStringView};
+
+    // Compute-only header blobs (see AgentsightLlmRecord class comment for the lifetime split).
+    //
+    // mRequestHeaders is filtered through an ALLOWLIST (kAllowedRequestHeaders) before anything is
+    // emitted, because this is where credentials live — Authorization / x-api-key / cookie — and
+    // this path does no redaction. Survivors go out as `http.request.header.<name>` (copied); host
+    // and user-agent are salvaged into `server.address` / `server.port` / `user_agent.original`
+    // instead. Anything unrecognised is dropped from the output AND from memory at handler batch
+    // end: since the blob is record-owned (not in the group arena), filtered-out credential bytes
+    // never outlive the record. See ExtractRequestHeaderFields / FillAgentsightHttpRequestLog.
+    std::string mRequestHeaders;
+    // Mirror image: filtered through a DENYLIST (kSensitiveResponseHeaders — set-cookie,
+    // www-authenticate, ...) and otherwise emitted as `http.response.header.<name>` (copied). An
+    // allowlist here would hide most of what makes this fallback diagnostically useful, and the
+    // credential-bearing response header names are a short, known set. See EmitHttpResponseHeaders.
+    std::string mResponseHeaders;
 };
 
 } // namespace logtail::ebpf

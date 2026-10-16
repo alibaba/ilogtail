@@ -465,8 +465,12 @@ void FillAgentsightRequestInputFields(const AgentsightLlmRecord& rec,
                                       logtail::LogEvent* log,
                                       bool messageDeltaOnly,
                                       const AgentsightLlmEmitPayload& payload) {
+    // mRequestMessagesJson / mToolDefinitionsJson are compute-only record fields (value-owned
+    // std::strings that die with the record at batch end, see AgentsightEvents.h): when they are
+    // emitted at all — full-fidelity mode, or the first/changed tools round — the bytes must be
+    // COPIED into the group arena. NoCopy here would dangle as soon as the record is released.
     if (!messageDeltaOnly) {
-        SetNoCopyIfNotEmpty(log, StringView("gen_ai.input.messages"), rec.mRequestMessagesJson);
+        SetCopyIfNotEmpty(log, StringView("gen_ai.input.messages"), rec.mRequestMessagesJson);
     }
     if (!payload.systemInstructionsHash.empty()) {
         SetCopyIfNotEmpty(log, StringView("gen_ai.system_instructions_hash"), payload.systemInstructionsHash);
@@ -478,7 +482,7 @@ void FillAgentsightRequestInputFields(const AgentsightLlmRecord& rec,
         SetCopyIfNotEmpty(log, StringView("gen_ai.tool.definitions_hash"), payload.toolDefinitionsHash);
     }
     if (payload.emitToolDefinitions) {
-        SetNoCopyIfNotEmpty(log, StringView("gen_ai.tool.definitions"), rec.mToolDefinitionsJson);
+        SetCopyIfNotEmpty(log, StringView("gen_ai.tool.definitions"), rec.mToolDefinitionsJson);
     }
     SetCopyIfNotEmpty(log, StringView("gen_ai.input.messages_delta"), payload.precomputedDelta);
 }
@@ -1271,9 +1275,11 @@ int AgentsightManager::HandleHttpsEvent(const AgentsightHttpsRecord* rec) {
         pluginIndex = mPluginIndex;
     }
 
-    // The record's arena becomes the group's main SourceBuffer: emitted contents alias the record
-    // bytes (SetContentNoCopy) with no second copy, and computed values are appended into the same
-    // arena by SetContent. The group co-owns the arena, so views stay valid until flush.
+    // The record's EMIT arena becomes the group's main SourceBuffer: emitted views alias it with
+    // no second copy (SetContentNoCopy), and computed values are appended into it by SetContent.
+    // The group co-owns the arena, so these views stay valid until flush. Compute-only record
+    // fields (value-owned std::strings, see AgentsightEvents.h) are NOT in this arena — they are
+    // released with the record at batch end and must be copied when emitted.
     PipelineEventGroup eventGroup(rec->GetSourceBuffer());
     // Correlation mirrors the gen_ai.* path's split of responsibilities (see FillAgentsightHttpCommon):
     // one shared http.exchange.id pairs the two halves, each log gets its own event.id, and
@@ -1387,9 +1393,11 @@ int AgentsightManager::HandleLlmEvent(AgentsightLlmRecord* rec) {
         mSessionInputCache.insert(sessionKey, std::move(sessionState));
     }
 
-    // The record's arena becomes the group's main SourceBuffer: emitted contents alias the record
-    // bytes (SetContentNoCopy) with no second copy, and computed values are appended into the same
-    // arena by SetContent. The group co-owns the arena, so views stay valid until flush.
+    // The record's EMIT arena becomes the group's main SourceBuffer: emitted views alias it with
+    // no second copy (SetContentNoCopy), and computed values are appended into it by SetContent.
+    // The group co-owns the arena, so these views stay valid until flush. Compute-only record
+    // fields (value-owned std::strings, see AgentsightEvents.h) are NOT in this arena — they are
+    // released with the record at batch end and must be copied when emitted.
     PipelineEventGroup eventGroup(rec->GetSourceBuffer());
     const size_t logCount = eventStreamFormat ? 2U : 1U;
     for (size_t i = 0; i < logCount; ++i) {

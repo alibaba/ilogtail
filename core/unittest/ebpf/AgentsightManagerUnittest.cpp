@@ -567,6 +567,7 @@ public:
     void TestContainerTagsMissDegradesSilently();
     void TestRecordFieldsEmittedNoCopy();
     void TestComputedFieldsSurviveRecordDeath();
+    void TestUnemittedComputeFieldsReleasedWithRecord();
 
 protected:
     std::shared_ptr<AgentSightTestEBPFAdapter> mAgentSightAdapter;
@@ -1681,6 +1682,75 @@ void AgentsightManagerUnittest::TestComputedFieldsSurviveRecordDeath() {
     mgr->Destroy();
 }
 
+/// Memory-lifetime regression for the zero-copy refactor (PR review follow-up): in the default
+/// MessageDeltaOnly mode the full request-messages JSON is compute-only and must NOT be pinned
+/// inside the event group. Multi-round shape mirroring a long LLM session: round 1 commits a large
+/// (~64 KiB) context into the session cache; round 2 resends that context plus one small new
+/// message and emits only the small delta. Asserts the full context is neither emitted nor hidden
+/// in the group's arena (DataSize stays small), and that after the record dies at batch end the
+/// emitted arena-backed views remain valid via the group's co-ownership.
+void AgentsightManagerUnittest::TestUnemittedComputeFieldsReleasedWithRecord() {
+    const char* kConfig = "p_compute_release";
+    auto mgr = makeManager();
+    // Both flags are static state shared across tests; pin the production defaults explicitly.
+    agentsightOptions().mAgentsightEventStreamFormat = true;
+    agentsightOptions().mAgentsightMessageDeltaOnly = true;
+    registerConfigWithPoppableQueue(*mgr, kConfig);
+
+    const std::string fillerText(64 * 1024, 'x');
+    const std::string fillerMsg = R"({"role":"user","parts":[{"type":"text","text":")" + fillerText + R"("}]})";
+    const std::string freshMsg = R"({"role":"user","parts":[{"type":"text","text":"fresh-tail"}]})";
+    const std::string round1 = "[" + fillerMsg + "]";
+    const std::string round2 = "[" + fillerMsg + "," + freshMsg + "]";
+
+    // Round 1: seeds the session cache (messageCount=1, messagesHash over the filler message).
+    {
+        std::unique_ptr<ProcessQueueItem> item;
+        auto rec = makeMinimalLlmRecord(kConfig, "sess-bigctx", nullptr, round1.c_str());
+        APSARA_TEST_EQUAL(0, mgr->HandleEvent(rec));
+        const auto logs = popLogEvents(item);
+        APSARA_TEST_TRUE(!logs.empty());
+        // First round in session: delta is the whole (system-free) array.
+        APSARA_TEST_TRUE(contentOf(*logs[0], "gen_ai.input.messages_delta").find(fillerText) != std::string::npos);
+    }
+
+    // Round 2: same big context + one small new message.
+    std::unique_ptr<ProcessQueueItem> item;
+    std::vector<LogEvent*> logs;
+    std::weak_ptr<SourceBuffer> emitArenaWeak;
+    StringView sessionIdView;
+    {
+        auto rec = makeMinimalLlmRecord(kConfig, "sess-bigctx", nullptr, round2.c_str());
+        emitArenaWeak = rec->GetSourceBuffer();
+        APSARA_TEST_EQUAL(0, mgr->HandleEvent(rec));
+        logs = popLogEvents(item);
+        APSARA_TEST_EQUAL(2UL, logs.size());
+
+        // Delta-only mode: the full request messages are never emitted...
+        APSARA_TEST_TRUE(logs[0]->GetContent(StringView("gen_ai.input.messages")).empty());
+        // ...only the small new tail is.
+        const std::string delta = contentOf(*logs[0], "gen_ai.input.messages_delta");
+        APSARA_TEST_TRUE(delta.find("fresh-tail") != std::string::npos);
+        APSARA_TEST_TRUE(delta.find(fillerText) == std::string::npos);
+        APSARA_TEST_TRUE(delta.size() * 8 < fillerText.size());
+
+        // Accounting: the group only carries what was emitted — the un-emitted 64 KiB context is
+        // not hidden inside its arena, so size-based batching/flush sees the true footprint.
+        APSARA_TEST_TRUE(item->mEventGroup.DataSize() < fillerText.size());
+
+        // Arena-backed fields are emitted zero-copy (pointer identity), checked while rec lives.
+        sessionIdView = logs[0]->GetContent(StringView("gen_ai.session.id"));
+        APSARA_TEST_EQUAL(rec->mSessionId.data(), sessionIdView.data());
+        // rec dies here = end of the handler batch; the compute-only std::strings die with it.
+    }
+
+    // The group co-owns the emit arena: emitted views stay valid after the record's death.
+    APSARA_TEST_TRUE(!emitArenaWeak.expired());
+    APSARA_TEST_EQUAL("sess-bigctx", std::string(sessionIdView.data(), sessionIdView.size()));
+    APSARA_TEST_TRUE(contentOf(*logs[0], "gen_ai.input.messages_delta").find("fresh-tail") != std::string::npos);
+    mgr->Destroy();
+}
+
 UNIT_TEST_CASE(AgentsightManagerUnittest, TestGetPluginType);
 UNIT_TEST_CASE(AgentsightManagerUnittest, TestAddOrUpdateValidation);
 UNIT_TEST_CASE(AgentsightManagerUnittest, TestAddOrUpdateNoSymbols);
@@ -1723,5 +1793,6 @@ UNIT_TEST_CASE(AgentsightManagerUnittest, TestContainerTagsAttachedForHttpsEvent
 UNIT_TEST_CASE(AgentsightManagerUnittest, TestContainerTagsMissDegradesSilently);
 UNIT_TEST_CASE(AgentsightManagerUnittest, TestRecordFieldsEmittedNoCopy);
 UNIT_TEST_CASE(AgentsightManagerUnittest, TestComputedFieldsSurviveRecordDeath);
+UNIT_TEST_CASE(AgentsightManagerUnittest, TestUnemittedComputeFieldsReleasedWithRecord);
 
 UNIT_TEST_MAIN

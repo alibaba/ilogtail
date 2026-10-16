@@ -18,10 +18,12 @@
 
 namespace logtail::ebpf {
 
-// Records copy every FFI string exactly once into their own SourceBuffer arena: the FFI pointers
-// (RustCString / JsonBuffer holders, or borrows into HttpRecord) die when the callback returns and
-// must not be retained. StringView members alias the arena; HandleLlmEvent/HandleHttpsEvent hand
-// the arena to the PipelineEventGroup so emitted contents need no second copy.
+// Records copy every FFI string exactly once: the FFI pointers (RustCString / JsonBuffer holders,
+// or borrows into HttpRecord) die when the callback returns and must not be retained. Emit fields
+// land in the record's SourceBuffer arena (StringView members) — HandleLlmEvent/HandleHttpsEvent
+// hand that arena to the PipelineEventGroup so emitted contents need no second copy. Compute-only
+// fields (never emitted by default) are value-owned std::strings that die with the record at
+// handler batch end, so un-emitted payloads are not pinned inside the group until flush.
 //
 // All helpers short-circuit on null/zero so CopyString never sees (nullptr, 0).
 
@@ -39,14 +41,23 @@ static StringView CopyCStr(SourceBuffer& sb, const char* s) {
 }
 
 static StringView CopyBuffer(SourceBuffer& sb, const char* p, uint32_t len) {
-    // agentsight.h: request_messages / response_messages / tools and the raw HTTPS payloads are
-    // (ptr, len), not necessarily NUL-terminated in the middle; copy exactly len bytes (no read
-    // past len). Embedded NULs are preserved — consumers stay length-bounded.
+    // agentsight.h: response_messages and the raw HTTPS bodies are (ptr, len), not necessarily
+    // NUL-terminated in the middle; copy exactly len bytes (no read past len). Embedded NULs are
+    // preserved — consumers stay length-bounded.
     if (p == nullptr || len == 0) {
         return kEmptyStringView;
     }
     const StringBuffer buf = sb.CopyString(p, len);
     return StringView(buf.data, buf.size);
+}
+
+// Same (ptr, len) contract as CopyBuffer, but for compute-only fields: value-owned std::string,
+// deliberately kept out of the arena so the bytes are released with the record.
+static std::string CopyBufferStr(const char* p, uint32_t len) {
+    if (p == nullptr || len == 0) {
+        return {};
+    }
+    return std::string(p, len);
 }
 
 static StringView CopyProcessName(SourceBuffer& sb, const char name[16]) {
@@ -87,9 +98,10 @@ AgentsightLlmRecord::AgentsightLlmRecord(std::string pipelineConfigName, const A
     mModel = CopyCStr(sb, d.model);
     mFinishReason = CopyCStr(sb, d.finish_reason);
     // d.input_message_delta is deliberately not retained; see header note on the record layout.
-    mRequestMessagesJson = CopyBuffer(sb, d.request_messages, d.request_messages_len);
     mResponseMessagesJson = CopyBuffer(sb, d.response_messages, d.response_messages_len);
-    mToolDefinitionsJson = CopyBuffer(sb, d.tools, d.tools_len);
+    // Compute-only (header comment): value-owned, released with the record.
+    mRequestMessagesJson = CopyBufferStr(d.request_messages, d.request_messages_len);
+    mToolDefinitionsJson = CopyBufferStr(d.tools, d.tools_len);
 }
 
 AgentsightHttpsRecord::AgentsightHttpsRecord(std::string pipelineConfigName, const AgentsightHttpsData& d)
@@ -109,10 +121,12 @@ AgentsightHttpsRecord::AgentsightHttpsRecord(std::string pipelineConfigName, con
     mPath = CopyCStr(sb, d.path);
     mStatusCode = d.status_code;
     mIsSse = d.is_sse;
-    mRequestHeaders = CopyBuffer(sb, d.request_headers, d.request_headers_len);
     mRequestBody = CopyBuffer(sb, d.request_body, d.request_body_len);
-    mResponseHeaders = CopyBuffer(sb, d.response_headers, d.response_headers_len);
     mResponseBody = CopyBuffer(sb, d.response_body, d.response_body_len);
+    // Compute-only (header comment): parsed into per-header copies by the handler, then released
+    // with the record — filtered-out credential bytes never reach the event group.
+    mRequestHeaders = CopyBufferStr(d.request_headers, d.request_headers_len);
+    mResponseHeaders = CopyBufferStr(d.response_headers, d.response_headers_len);
 }
 
 } // namespace logtail::ebpf
