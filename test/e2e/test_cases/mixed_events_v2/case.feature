@@ -1,12 +1,20 @@
 @flusher
 Feature: mixed log metric span v2
-  Mixed Log + Metric + Span through an explicit StructureType: v2 pipeline
-  to flusher_http and flusher_prometheus.
-  Log (metric_debug_file.Read) and Metric (metric_mock.Read) share one v2
-  pipeline so processor_add_fields mutates only Log and passes Metric through.
-  Span is produced by processor_otel_trace ("v2场景下输入Log输出Span") in a
-  sibling v2 pipeline: that processor replaces the source Log, so it cannot
-  share a pipeline with logs we still need to assert.
+  B6 regression gate (#2605 / Epic #2595 / Discussion #1928): after B3/B4,
+  an explicit StructureType: v2 pipeline must carry mixed Log + Metric + Span
+  without dropping or mis-typing events. This is the prerequisite for C1.
+
+  Existing e2e cases are single-kind (processor_v2 = Log, flusher_http =
+  Metric, input_internal_metrics_prometheus = Metric). This case is the
+  first that asserts all three kinds on the v2 path.
+
+  Contract:
+    - processor_add_fields mutates Log and pass-through Metric (B4
+      ProcessLogEventsOnly)
+    - flusher_http serializes Log / Metric / Span via custom_single v2
+    - flusher_prometheus keeps Metric identity when Log/Span also reach Export
+  Span runs in a sibling v2 pipeline: processor_otel_trace replaces the
+  source Log, so it cannot share the pipeline with logs we still assert.
 
   @e2e @docker-compose
   Scenario: TestMixedEventsFlusherHTTP
